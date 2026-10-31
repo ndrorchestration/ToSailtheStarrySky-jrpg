@@ -33,6 +33,15 @@ bool FTSTSSFirstWakeOrderTest::RunTest(const FString& Parameters)
         State->AdvanceTo(ETSTSSFirstWakeBeat::Launched));
     TestFalse(TEXT("Generic progression cannot forge sea contact"),
         State->AdvanceTo(ETSTSSFirstWakeBeat::SeaContact));
+    TestFalse(TEXT("Prelude stays active before splashdown"), State->IsChapterOneActOne());
+    TestTrue(TEXT("Restored splashdown marks Chapter 1 Act 1"),
+        State->Restore(true, ETSTSSFirstWakeBeat::FlotationConfirmed, 0x07));
+    TestTrue(TEXT("Chapter 1 boundary survives save restoration"), State->IsChapterOneActOne());
+    TestTrue(TEXT("Post-splashdown reserve inspection advances in Chapter 1"),
+        State->AdvanceTo(ETSTSSFirstWakeBeat::EmptyReserveInspected));
+    TestTrue(TEXT("Chapter 1 remains active during recovery"), State->IsChapterOneActOne());
+    State->Reset();
+    TestFalse(TEXT("New game returns to Prelude"), State->IsChapterOneActOne());
     State->Reset();
     TestTrue(TEXT("Start flyer"), State->AdvanceTo(ETSTSSFirstWakeBeat::FlyerDiscovered));
     TestTrue(TEXT("Hire Ionia"), State->AdvanceTo(ETSTSSFirstWakeBeat::IoniaHired));
