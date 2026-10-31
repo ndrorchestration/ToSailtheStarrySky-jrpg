@@ -126,7 +126,7 @@ class CaptureContractTests(unittest.TestCase):
         self.assertEqual(len(set(s["filename"] for s in p["shots"])), 4)
         self.assertEqual([s["story_stage"] for s in p["shots"]],
                          ["Prelude", "Prelude", "Prelude", "Chapter 1 Act 1"])
-        self.assertIn("Composition", p["shots"][3]["intent"].capitalize())
+        self.assertIn("composition only", p["shots"][3]["intent"])
         self.assertEqual(p["resolution"], [1920, 1080])
         self.assertFalse(p["native_render_verified"])
 
