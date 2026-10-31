@@ -51,6 +51,10 @@ jobs:
           python unreal/Tools/test_automation_registry.py
           python unreal/Tools/check_automation_registry.py
           python unreal/Tools/check_unreal_test_inventory.py
+      - name: Verify camera capture plan without claiming native screenshots
+        run: |
+          python unreal/Tools/capture_first_wake_review.py --inspect --run-id CIGate20261031
+          python -m unittest discover -s unreal/Tests -p "test_first_wake_capture_receipts.py" -v
       - name: Validate isolated First Wake review stage
         run: |
           python unreal/Tools/build_first_wake_benchmark.py --validate
