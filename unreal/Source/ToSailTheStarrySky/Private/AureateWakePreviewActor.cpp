@@ -78,37 +78,46 @@ void AAureateWakePreviewActor::RefreshWingMeshes()
 
 FTransform AAureateWakePreviewActor::WingPose(EAureateWakeForm Form, int32 WingIndex)
 {
+    // The mesh origin is the HINGE at local X=0; its long axis extends to +X.
+    // Rotations swing the SAME four wings away from their fixed hull mounts.
     const bool bForwardWing = WingIndex < 2;
     const float Side = (WingIndex % 2 == 0) ? -1.f : 1.f;
-    FVector Position;
-    FRotator Rotation;
-    FVector Scale(3.1f, 0.04f, 1.05f); // Placeholder panels; NOT approved membrane geometry.
+    FVector Position = FVector::ZeroVector;
+    FRotator Rotation = FRotator::ZeroRotator;
+    FVector Scale = FVector::OneVector;
 
     switch (Form)
     {
     case EAureateWakeForm::Skyborne:
-        Position = FVector(bForwardWing ? 150.f : -190.f, Side * 235.f, 35.f);
-        Rotation = FRotator(0.f, Side * (bForwardWing ? 26.f : -24.f), Side * 8.f);
-        Scale = FVector(2.9f, 2.3f, 0.05f);
+        Position = FVector(bForwardWing ? 155.f : -165.f, Side * 72.f, 45.f);
+        Rotation = FRotator(6.f, Side * (bForwardWing ? 84.f : 112.f), Side * 8.f);
+        Scale = FVector(3.25f, 1.05f, 1.f);
         break;
     case EAureateWakeForm::Seaborne:
-        Position = FVector(bForwardWing ? 145.f : -185.f, Side * 175.f, 95.f);
-        Rotation = FRotator(0.f, Side * 18.f, Side * 36.f);
-        Scale = FVector(2.7f, 1.35f, 0.05f);
+        Position = FVector(bForwardWing ? 155.f : -165.f, Side * 72.f, 40.f);
+        Rotation = FRotator(28.f, Side * (bForwardWing ? 70.f : 110.f), Side * 36.f);
+        Scale = FVector(2.25f, 0.85f, 1.f);
         break;
     case EAureateWakeForm::Submersible:
-        Position = FVector(bForwardWing ? 145.f : -180.f, Side * 105.f, 15.f);
-        Rotation = FRotator(0.f, Side * 12.f, Side * 75.f);
-        Scale = FVector(2.5f, 0.58f, 0.05f); // Remain visibly tucked, never disappear.
+        // Distinct front/back hinge orientations tuck membranes lengthwise on hull.
+        Position = FVector(bForwardWing ? 150.f : -155.f, Side * 73.f, 25.f);
+        Rotation = FRotator(0.f, Side * (bForwardWing ? 12.f : 168.f), Side * 78.f);
+        Scale = FVector(bForwardWing ? 1.65f : 1.55f, 0.42f, 1.f);
         break;
     case EAureateWakeForm::Orbiter:
-        // Forward remains +X. Four equal sails form +Z, -Z, -Y, +Y cross.
-        Position = WingIndex == 0 ? FVector(0, 0, 315) :
-                   WingIndex == 1 ? FVector(0, 0, -315) :
-                   WingIndex == 2 ? FVector(0, -315, 0) : FVector(0, 315, 0);
-        // Local X axis is the blade length: pitch for vertical blades, yaw for port/starboard blades.
-        Rotation = WingIndex < 2 ? FRotator(90.f, 0.f, 0.f) : FRotator(0.f, 90.f, 0.f);
-        Scale = FVector(2.5f, 1.7f, 0.055f); // Same scale for all four sails.
+        // Same physical root-tip mesh for all four EQUAL sails.
+        // Fixed hull-facing mounts, +X bow undisturbed.
+        Position = WingIndex == 0 ? FVector(0, 0, 50) :
+                   WingIndex == 1 ? FVector(0, 0, -50) :
+                   WingIndex == 2 ? FVector(0, -78, 0) : FVector(0, 78, 0);
+        Rotation = WingIndex == 0 ? FRotator(90.f, 0.f, 0.f) :
+                   WingIndex == 1 ? FRotator(-90.f, 0.f, 0.f) :
+                   WingIndex == 2 ? FRotator(0.f, -90.f, 0.f) :
+                                    FRotator(0.f, 90.f, 0.f);
+        Scale = FVector(3.6f, 1.15f, 1.f);
+        break;
+    default:
+        // Public caller validates the enum; fall back to a neutral pose.
         break;
     }
     return FTransform(Rotation, Position, Scale);
