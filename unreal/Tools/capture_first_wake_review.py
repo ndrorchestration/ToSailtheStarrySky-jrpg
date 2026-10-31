@@ -17,7 +17,7 @@ import struct
 import zlib
 
 from build_first_wake_benchmark import CAMERAS, MAP_PATH, SHIP_POSITION
-from bind_first_wake_review_ship_art import SHIP_LABEL, read_property
+from bind_first_wake_review_ship_art import SHIP_LABEL, WING_DIR, SUPPORT_DIR, read_property
 
 WIDTH = 1920
 HEIGHT = 1080
@@ -98,6 +98,15 @@ def preflight_in_editor(plan: dict) -> list:
         raise ScreenshotHold("Hidden Orbiter gate must remain disabled")
     if wing is None or root is None or not pose:
         raise ScreenshotHold("Corrected wing + root support must be bound before cinematic art review")
+    # A designer may have reassigned the mesh properties since the safe binder
+    # ran. Never capture gameplay/canon assets under review-only provenance.
+    for mesh, expected_root in ((wing, WING_DIR), (root, SUPPORT_DIR)):
+        try:
+            object_path = str(mesh.get_path_name())
+        except (AttributeError, ValueError, TypeError) as exc:
+            raise ScreenshotHold("Unreal could not resolve review mesh provenance") from exc
+        if not object_path.startswith(expected_root) or "." not in object_path[len(expected_root):]:
+            raise ScreenshotHold("Ship uses a non-review mesh; capture forbidden")
     return selected
 
 
