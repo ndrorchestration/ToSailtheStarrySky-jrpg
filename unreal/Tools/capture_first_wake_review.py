@@ -134,6 +134,7 @@ def verify_png(path: Path, width: int = WIDTH, height: int = HEIGHT) -> dict:
     offset = 8
     observed = None
     ended = False
+    seen_idat = False
     while offset < len(data):
         if len(data) - offset < 12:
             raise ScreenshotHold("Truncated PNG chunk: " + path.name)
@@ -155,7 +156,11 @@ def verify_png(path: Path, width: int = WIDTH, height: int = HEIGHT) -> dict:
             observed = struct.unpack_from(">II", payload, 0)
             if observed != (width, height):
                 raise ScreenshotHold("Unexpected PNG resolution: " + path.name)
+        if kind == b"IDAT":
+            seen_idat = True
         if kind == b"IEND":
+            if not seen_idat:
+                raise ScreenshotHold("PNG contains no pixel data: " + path.name)
             if length != 0 or offset != len(data):
                 raise ScreenshotHold("Invalid PNG ending/trailing data: " + path.name)
             ended = True
