@@ -1,0 +1,30 @@
+name: Unreal cast geometry (engine-free)
+
+on:
+  pull_request:
+    paths:
+      - 'unreal/ArtSource/Characters/**'
+      - '.github/workflows/unreal-cast-geometry.yml'
+  push:
+    paths:
+      - 'unreal/ArtSource/Characters/**'
+      - '.github/workflows/unreal-cast-geometry.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify-static-lookdev:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check glTF structure, indices, normals and surface orientation
+        run: python3 unreal/ArtSource/Characters/check_cast_geometry.py
+      - name: Regenerate source assets and confirm exact bytes
+        env:
+          TSTSS_CAST_OUTPUT: unreal/ArtSource/Characters/Candidates
+        run: |
+          python3 unreal/ArtSource/Characters/build_cast.py
+          git diff --exit-code -- unreal/ArtSource/Characters/Candidates
+      - name: Confirm this is not an Unreal render or rig test
+        run: echo 'Source geometry only; native UE import and visual approval remain open.'

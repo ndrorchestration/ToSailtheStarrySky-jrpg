@@ -4,7 +4,7 @@ from PIL import Image, ImageDraw, ImageFont
 import json, struct, pathlib, math
 ROOT=pathlib.Path(__file__).resolve().parent
 
-def review(path):
+def review(path,yaw=0):
  data=path.read_bytes();jslen=struct.unpack_from('<I',data,12)[0];doc=json.loads(data[20:20+jslen]);bin_off=20+jslen+8
  acc=doc['accessors'];views=doc['bufferViews']
  def get(i,fmt,n):
@@ -13,7 +13,9 @@ def review(path):
  tris=[]
  for mesh in doc['meshes']:
   for pr in mesh['primitives']:
-   pos=get(pr['attributes']['POSITION'],'f',3);ids=[x[0] for x in get(pr['indices'],'H',1)]
+   raw=get(pr['attributes']['POSITION'],'f',3);ids=[x[0] for x in get(pr['indices'],'H',1)]
+   theta=math.radians(yaw);co=math.cos(theta);si=math.sin(theta)
+   pos=[(co*x+si*z,y,-si*x+co*z) for x,y,z in raw]
    c=doc['materials'][pr['material']]['pbrMetallicRoughness']['baseColorFactor']
    for k in range(0,len(ids),3):
     p=[pos[ids[k+i]] for i in range(3)]
@@ -32,7 +34,7 @@ def review(path):
   pts=[(240+q[0]*scale,626-q[1]*scale) for q in p]
   draw.polygon(pts,fill=c)
  draw.rectangle((0,0,480,60),fill=(39,51,58))
- draw.text((20,16),path.stem.upper()+'  •  3D LOOKDEV',fill=(242,228,198))
+ draw.text((20,16),path.stem.upper()+'  •  '+str(yaw)+'° LOOKDEV',fill=(242,228,198))
  draw.text((15,656),'Offline mesh review • not an Unreal render',fill=(65,60,53))
  return im
 
@@ -42,5 +44,9 @@ if __name__=='__main__':
  group=Image.new('RGB',(480*5,680),(230,224,209))
  for i,im in enumerate(images):group.paste(im,(i*480,0))
  group.save(ROOT/'out/Cast_review.png')
+ turn=Image.new('RGB',(960,1360),(230,224,209))
+ for i,angle in enumerate((0,45,90,180)):
+  turn.paste(review(ROOT/'out/Ender.glb',angle),((i%2)*480,(i//2)*680))
+ turn.save(ROOT/'out/Ender_turntable.png')
  print('rendered',group.size)
 

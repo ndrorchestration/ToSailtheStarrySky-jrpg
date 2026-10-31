@@ -4,6 +4,8 @@ This package contains five **original, static glTF 2.0 meshes** generated from `
 
 Revision 2 packages each character as **one static mesh with 16–20 material sections**, retaining named component ranges in glTF mesh extras. This is an import simplification, not an art-quality improvement. It changes the source hashes; always use the adjacent current `Candidates/manifest.json` rather than older receipts.
 
+The geometry QA revision removes zero-area pole faces and corrects outward triangle winding on spheres and tubes. `check_cast_geometry.py` independently checks hashes, bounds, index ranges, finite unit normals, triangle area, part boundaries and outward orientation. An intentionally degenerate triangle was rejected by the check. This is a structural pass, not a visual acceptance pass.
+
 ## Ender first
 
 Ender.glb is the first review target: youthful slender build, green eyes and goggles, cream shirt, olive vest, satchel, full 1.84 m staff with midpoint wrap and brass ferrules. The approved cast sheet depicts dark green hair, while an older character dossier specifies dark copper/auburn. The candidate follows the newer approved image; confirm the final hair treatment against the original references before accepting a production model.
@@ -21,6 +23,8 @@ The five named files have relative heights Reson (1.93 m) > Aepex (1.85 m) > End
 5. Replace this rough source geometry with authored high-fidelity sculpt, topology, UVs, textures, hair, fitted outfit and shared humanoid skeleton; then skin, animate, LOD, profile and capture native Unreal frames. Integrate an accepted Ender skeletal mesh into `ATSTSSExplorerCharacter` only after gait, camera, collision and save tests pass. Obtain creator visual approval before a canon or release claim.
 
 To reproduce the candidate GLBs and their SHA-256 manifest: `python3 build_cast.py`. To produce the optional offline render: `python3 render_review.py` (Pillow required). The GLBs use only procedural geometry and flat PBR color factors; there are no third-party asset dependencies.
+
+Run `python3 check_cast_geometry.py` against `Candidates` in the repo. The generator defaults to a separate `out` directory to avoid overwriting checked-in candidates during a local review; set `TSTSS_CAST_OUTPUT=unreal/ArtSource/Characters/Candidates` from the repository root to reproduce those files, then inspect the diff. The automated check does this in a clean CI checkout.
 
 ### Reversible Editor intake
 

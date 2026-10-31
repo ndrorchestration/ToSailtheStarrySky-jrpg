@@ -4,10 +4,10 @@
 No third-party mesh/texture assets. These are articulated-looking static art studies,
 not skinned or game-ready characters. Coordinates: metres, Y up, +Z forward.
 """
-import json, math, struct, pathlib, hashlib
+import json, math, struct, pathlib, hashlib, os
 from dataclasses import dataclass
 
-OUT = pathlib.Path(__file__).resolve().parent / 'out'
+OUT = pathlib.Path(os.environ.get('TSTSS_CAST_OUTPUT', pathlib.Path(__file__).resolve().parent / 'out'))
 OUT.mkdir(exist_ok=True)
 
 PALETTES = {
@@ -43,15 +43,25 @@ class Builder:
   self.parts.append((name,verts,normals,faces,self.mat(color,metal,rough)))
  def ellipsoid(self,name,center,radii,color,segments=16,rings=10,metal=0,rough=.8):
   cx,cy,cz=center;rx,ry,rz=radii;vs=[];fs=[]
-  for j in range(rings+1):
+  # Unique poles prevent zero-area triangles and outward winding matters for
+  # engines that cull back faces, even when the lookdev material is two-sided.
+  vs.append((cx,cy+ry,cz))
+  for j in range(1,rings):
    phi=math.pi*j/rings
    for i in range(segments):
     th=2*math.pi*i/segments
     vs.append((cx+rx*math.sin(phi)*math.cos(th),cy+ry*math.cos(phi),cz+rz*math.sin(phi)*math.sin(th)))
-  for j in range(rings):
+  south=len(vs);vs.append((cx,cy-ry,cz))
+  for i in range(segments):
+   a=1+i;b=1+(i+1)%segments
+   fs.append((0,b,a))
+  for j in range(rings-2):
    for i in range(segments):
-    a=j*segments+i;b=j*segments+(i+1)%segments;c=b+segments;d=a+segments
-    fs.extend(((a,d,b),(b,d,c)))
+    a=1+j*segments+i;b=1+j*segments+(i+1)%segments;c=b+segments;d=a+segments
+    fs.extend(((a,b,d),(b,c,d)))
+  for i in range(segments):
+   a=1+(rings-2)*segments+i;b=1+(rings-2)*segments+(i+1)%segments
+   fs.append((a,b,south))
   self.mesh(name,vs,fs,color,metal,rough)
  def tube(self,name,points,radii,color,sides=10,metal=0,rough=.8):
   vs=[];fs=[]
@@ -69,7 +79,7 @@ class Builder:
   for k in range(len(points)-1):
    for i in range(sides):
     a=k*sides+i;b=k*sides+(i+1)%sides;c=b+sides;d=a+sides
-    fs.extend(((a,d,b),(b,d,c)))
+    fs.extend(((a,b,d),(b,c,d)))
   self.mesh(name,vs,fs,color,metal,rough)
  def tapered(self,name,a,b,ra,rb,color,metal=0,rough=.8):
   self.tube(name,[a,b],[ra,rb],color,12,metal,rough)
