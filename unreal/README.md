@@ -13,6 +13,17 @@ At the latest verified Windows review head on `neontic`, **97/97 Python source/a
 
 The October 30 creator-approved character design reference remains authoritative; a static approved illustration is not an automatically rigged/importable 3D game character. Corrected wing and support GLBs are **review-only**, not production-approved art.
 
+## First real Unreal screenshot review (queued, not rendered)
+
+The new [four-camera native capture contract](Docs/FIRST_WAKE_UE58_NATIVE_SCREENSHOT_GATE_2026-10-31.md) uses the actual [First Wake benchmark scene](Tools/build_first_wake_benchmark.py) and [guarded art binder](Tools/bind_first_wake_review_ship_art.py). It defines Prelude harbor/ship/boarding shots and a **Chapter I Splashdown composition** without forging physical flotation or story milestones. The [capture/PNG receipt tool](Tools/capture_first_wake_review.py) schedules UE5.8 Editor high-resolution screenshots only in that isolated review map and can separately verify four physically present 1920×1080 PNG outputs by byte hash and PNG CRC/size. It refuses unlocked Orbiter, unbound art, mismatched component inventories, or swapped production/non-review meshes.
+
+```powershell
+python unreal/Tools/capture_first_wake_review.py --inspect --run-id Review20261031
+python -m unittest discover -s unreal/Tests -p "test_first_wake_capture_receipts.py" -v
+```
+
+These commands **do not generate screenshots**. At the newest GitHub integrated source check, **107 offline tests** passed, including the capture contract. Unreal Editor screenshots, native C++ compilation, final sky/ocean shaders, real 3D character rigs, sea physics, cinematic approval and installer remain unverified. The source-only screenshot workflow does not authorize publication of unreleased candidate artwork.
+
 ## Migration constraints
 
 - **Art lock:** User explicitly approved the latest full-cast artwork on October 30, 2026. Treat its designs as the authoritative visual target; do not substitute pixel/legacy sprites. Source image files, individual face references and asset licensing/provenance must be attached or linked before producing game-ready meshes.
