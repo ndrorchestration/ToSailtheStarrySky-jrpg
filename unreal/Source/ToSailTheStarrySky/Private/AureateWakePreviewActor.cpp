@@ -57,6 +57,20 @@ AAureateWakePreviewActor::AAureateWakePreviewActor()
     SnapToForm(EAureateWakeForm::Skyborne);
 }
 
+void AAureateWakePreviewActor::OnConstruction(const FTransform& Transform)
+{
+    Super::OnConstruction(Transform);
+    // Safe to repeat in the Editor: does not create dynamic material objects.
+    RefreshWingMeshes();
+    if (WingMaterial)
+    {
+        for (UStaticMeshComponent* Wing : Wings)
+        {
+            if (Wing) Wing->SetMaterial(0, WingMaterial);
+        }
+    }
+}
+
 void AAureateWakePreviewActor::BeginPlay()
 {
     Super::BeginPlay();
