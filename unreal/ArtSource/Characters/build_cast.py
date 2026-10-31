@@ -133,7 +133,7 @@ def make(name):
    b.ellipsoid(side+' waistcoat front',(sgn*.125*w,1.13*s,.026),(.080*w,.234*s,.101),p['coat'],20,12)
    b.tapered(side+' waistcoat seam',(sgn*.055*w,1.35*s,.105),(sgn*.048*w,.93*s,.119),.004,.004,p['trim'])
   for y in (1.23,1.12,1.01):
-   b.ellipsoid('Waistcoat button '+str(y),(-.06*w,y*s,.127),(.009,.009,.005),p['trim'],10,6,.75,.35)
+   b.ellipsoid('Waistcoat button '+str(y),(-.06*w,y*s,.127),(.009,.009,.005),p['trim'],10,6,.8,.3)
  else:
   b.ellipsoid('Tailored outer layer',(0,1.13*s,-.024),(.205*w,.258*s,.105),p['coat'],20,12)
   b.ellipsoid('Front shirt opening',(0,1.165*s,.084),(.074*w,.215*s,.023),p['shirt'],16,10)
