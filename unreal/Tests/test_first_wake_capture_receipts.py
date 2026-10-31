@@ -24,13 +24,23 @@ class Camera:
         return self.label
 
 
+class MeshRef:
+    def __init__(self, path):
+        self.path = path
+
+    def get_path_name(self):
+        return self.path
+
+
 class Ship(Camera):
     def __init__(self, **properties):
         super().__init__(capture.SHIP_LABEL)
         self.properties = {
             "allow_orbiter_preview": False,
-            "authored_wing_mesh": object(),
-            "authored_root_support_mesh": object(),
+            "authored_wing_mesh": MeshRef(
+                "/Game/TSTSS/Review/ShipArt/WingCandidateV2/AureateWake_Wing_Lookdev.AureateWake_Wing_Lookdev"),
+            "authored_root_support_mesh": MeshRef(
+                "/Game/TSTSS/Review/ShipArt/RootSupportCandidateV1/AureateWake_RootSupport_Lookdev.AureateWake_RootSupport_Lookdev"),
             "use_root_pivoted_wing_pose": True,
         }
         self.properties.update(properties)
@@ -165,6 +175,15 @@ class CaptureContractTests(unittest.TestCase):
             unreal = mocked_unreal(ship=Ship(**{property_name: value}))
             with self.subTest(property=property_name), patch.dict(sys.modules, {"unreal": unreal}):
                 with self.assertRaises(capture.ScreenshotHold):
+                    capture.preflight_in_editor(capture.capture_plan("Review20261031"))
+            self.assertFalse(unreal.scheduled)
+
+    def test_capture_rejects_non_review_mesh_substitution(self):
+        for prop in ("authored_wing_mesh", "authored_root_support_mesh"):
+            ship = Ship(**{prop: MeshRef("/Game/TSTSS/Gameplay/Ship/Unapproved.Unapproved")})
+            unreal = mocked_unreal(ship=ship)
+            with self.subTest(property=prop), patch.dict(sys.modules, {"unreal": unreal}):
+                with self.assertRaisesRegex(capture.ScreenshotHold, "non-review mesh"):
                     capture.preflight_in_editor(capture.capture_plan("Review20261031"))
             self.assertFalse(unreal.scheduled)
 
