@@ -1,0 +1,82 @@
+name: TSTSS Unreal First Wake Integrated Source Gate
+
+on:
+  push:
+    branches:
+      - integration/unreal-first-wake-ship-art-reconcile-20261031
+    paths:
+      - "unreal/**"
+      - ".github/workflows/unreal-integrated-first-wake-source.yml"
+  pull_request:
+    paths:
+      - "unreal/**"
+      - ".github/workflows/unreal-integrated-first-wake-source.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  integrated-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Source syntax
+        run: |
+          python -m compileall -q unreal/Tools unreal/Tests
+      - name: All integrated offline regression suites
+        run: |
+          python -m unittest discover -s unreal/Tests -p "test_*.py" -v
+      - name: Ship identity and real water-observer authority
+        run: |
+          python unreal/Tests/check_aureate_preview_source.py
+          python unreal/Tests/check_aureate_water_observer_source.py
+      - name: Compile and execute actual production C++ waterline geometry (not Unreal)
+        run: |
+          c++ -std=c++17 -O2 -Wall -Wextra -Werror -pedantic \
+            -I unreal/Source/ToSailTheStarrySky/Public \
+            unreal/Tests/native_waterline_geometry_test.cpp \
+            -o "$RUNNER_TEMP/tstss-waterline-geometry-test"
+          "$RUNNER_TEMP/tstss-waterline-geometry-test"
+      - name: Isolated C++ request logic and authored-wing gates (not Unreal)
+        run: python unreal/Tests/check_aureate_request_logic.py
+      - name: Native automation declarations versus required verifier inventory
+        run: |
+          python unreal/Tools/test_automation_registry.py
+          python unreal/Tools/check_automation_registry.py
+          python unreal/Tools/check_unreal_test_inventory.py
+      - name: Verify camera capture plan without claiming native screenshots
+        run: |
+          python unreal/Tools/capture_first_wake_review.py --inspect --run-id CIGate20261031
+          python -m unittest discover -s unreal/Tests -p "test_first_wake_capture_receipts.py" -v
+      - name: Validate isolated First Wake review stage
+        run: |
+          python unreal/Tools/build_first_wake_benchmark.py --validate
+      - name: Reproduce both corrected meter-scale GLB models
+        run: |
+          python unreal/Tools/author_aureate_wing_glb.py --output-dir "$RUNNER_TEMP/tstss-wing-v2"
+          python unreal/Tools/author_aureate_root_support.py --output-dir "$RUNNER_TEMP/tstss-root-support-v1"
+          python unreal/Tools/import_aureate_wing_review.py --glb "$RUNNER_TEMP/tstss-wing-v2/AureateWake_Wing_Lookdev.glb" --manifest "$RUNNER_TEMP/tstss-wing-v2/AureateWake_Wing_Manifest.json" --check
+          python unreal/Tools/import_aureate_root_support_review.py --glb "$RUNNER_TEMP/tstss-root-support-v1/AureateWake_RootSupport_Lookdev.glb" --manifest "$RUNNER_TEMP/tstss-root-support-v1/AureateWake_RootSupport_Manifest.json" --check
+      - name: Screen normal-form wing transitions against corrected GLB
+        run: |
+          python unreal/Tools/audit_aureate_wing_clearance.py --glb "$RUNNER_TEMP/tstss-wing-v2/AureateWake_Wing_Lookdev.glb" --manifest "$RUNNER_TEMP/tstss-wing-v2/AureateWake_Wing_Manifest.json" --cpp unreal/Source/ToSailTheStarrySky/Private/AureateWakePreviewActor.cpp --header unreal/Source/ToSailTheStarrySky/Public/AureateWakePreviewActor.h --samples-per-primitive 900 --steps 20 > "$RUNNER_TEMP/TSTSS_Integrated_Wing_Clearance.json"
+          cat "$RUNNER_TEMP/TSTSS_Integrated_Wing_Clearance.json"
+      - name: Publish noncanonical integration-only GLB review output
+        uses: actions/upload-artifact@v4
+        with:
+          name: TSTSS-Unreal-Integrated-Ship-Art-REVIEW-ONLY
+          path: |
+            ${{ runner.temp }}/tstss-wing-v2/*
+            ${{ runner.temp }}/tstss-root-support-v1/*
+            ${{ runner.temp }}/TSTSS_Integrated_Wing_Clearance.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Verification boundary
+        run: echo "SOURCE GATE ONLY -- NO UE5.8 compiler, scene render, in-game animation, physics or art acceptance"

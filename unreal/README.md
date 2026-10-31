@@ -1,14 +1,28 @@
 # Unreal Engine 5.8 migration — experimental source track
 
-This is a **native UE C++ project scaffold**, not yet a compiled or playable port. UE 5.8 is the selected initial engine target. The existing Godot project and preserved browser code remain untouched.
+This is the **native UE 5.8.4 C++ migration/review track** with First Wake state and contact gates, an Aureate Wake four-wing C++ review actor, generated 3D wing/root-support model candidates, source QA and a guarded scene-art binding workflow. It has **not yet passed native UE compilation, in-editor level physics or cinematic visual acceptance**. The existing playable Godot build and historical browser materials remain preserved while the Unreal port is developed.
 
-## Windows setup
+## Windows native setup and verified status (October 31, 2026)
 
-1. Install Unreal Engine 5.8 and the compatible Visual Studio C++ game-development toolchain.
-2. Open `unreal/ToSailTheStarrySky.uproject` through the Unreal Editor or generate project files and compile the Editor target.
-3. Verify successful editor launch, then add authored maps, assets, runtime systems, automated functional tests and packaging rules in separate, reviewable changes.
+1. Install **Unreal Engine 5.8.4** through Epic Games Launcher; wait until the editor executable, `Build.bat` and `Engine/Build/Build.version` exist. An `UE_5.8` folder alone is **not** proof of a completed install.
+2. Install Microsoft's free Visual Studio C++ Build Tools with the exact `unreal/Tools/TSTSS-UE58.vsconfig` file. First run the non-installing `unreal/Tools/Prepare-UnrealBuildTools.ps1` to inspect its requirements. Any actual installation requires its **explicit** `-Install -AcceptPackageAgreements` switches and may require administrator approval. Do not start overlapping large installations without checking disk capacity.
+3. From an isolated **clean** checkout run `& .\\unreal\\Tools\\Check-UnrealHost.ps1 -RequireReady`. Only after the actual 5.8.4+, MSVC x64 and Windows SDK checks pass, run `& .\\unreal\\Tools\\Verify-Unreal.ps1 -EngineRoot 'C:\\Program Files\\Epic Games\\UE_5.8'` to compile and test the native Editor target.
+4. After a genuine UE build and native automation success, use the separate non-destructive wing/support GLB review importers and the guarded First Wake ship binder in **`/Game/TSTSS/Review/FirstWake_Benchmark_V1` only**. Native frames, actual splashdown/water physics, material quality and creator approval remain independent acceptance gates.
 
-No official character meshes/textures, maps, compiled binaries, or approved cinematic sequences are included in this scaffold. A static approved illustration is **not** by itself an importable rigged game character.
+At the latest verified Windows review head on `neontic`, **97/97 Python source/asset tests passed**. The host check still reports no completed UE editor/build binaries, MSVC x64 or Windows SDK. [Draft integration PR #642](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/642) and [exact first-build evidence / handoff](Docs/UE58_NATIVE_FIRST_BUILD_HANDOFF_2026-10-31.md) record the boundaries. Local source test success is **not** an Unreal game build or playable scene.
+
+The October 30 creator-approved character design reference remains authoritative; a static approved illustration is not an automatically rigged/importable 3D game character. Corrected wing and support GLBs are **review-only**, not production-approved art.
+
+## First real Unreal screenshot review (queued, not rendered)
+
+The new [four-camera native capture contract](Docs/FIRST_WAKE_UE58_NATIVE_SCREENSHOT_GATE_2026-10-31.md) uses the actual [First Wake benchmark scene](Tools/build_first_wake_benchmark.py) and [guarded art binder](Tools/bind_first_wake_review_ship_art.py). It defines Prelude harbor/ship/boarding shots and a **Chapter I Splashdown composition** without forging physical flotation or story milestones. The [capture/PNG receipt tool](Tools/capture_first_wake_review.py) schedules UE5.8 Editor high-resolution screenshots only in that isolated review map and can separately verify four physically present 1920×1080 PNG outputs by byte hash and PNG CRC/size. It refuses unlocked Orbiter, unbound art, mismatched component inventories, or swapped production/non-review meshes.
+
+```powershell
+python unreal/Tools/capture_first_wake_review.py --inspect --run-id Review20261031
+python -m unittest discover -s unreal/Tests -p "test_first_wake_capture_receipts.py" -v
+```
+
+These commands **do not generate screenshots**. At the newest GitHub integrated source check, **107 offline tests** passed, including the capture contract. Unreal Editor screenshots, native C++ compilation, final sky/ocean shaders, real 3D character rigs, sea physics, cinematic approval and installer remain unverified. The source-only screenshot workflow does not authorize publication of unreleased candidate artwork.
 
 ## Migration constraints
 
