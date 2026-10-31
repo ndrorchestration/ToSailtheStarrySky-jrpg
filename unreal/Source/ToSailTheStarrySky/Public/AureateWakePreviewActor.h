@@ -29,6 +29,7 @@ public:
     AAureateWakePreviewActor();
     virtual void Tick(float DeltaSeconds) override;
     virtual void BeginPlay() override;
+    virtual void OnConstruction(const FTransform& Transform) override;
 
     UFUNCTION(BlueprintCallable, Category="Aureate Wake|Preview")
     bool RequestForm(EAureateWakeForm RequestedForm);
