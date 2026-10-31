@@ -9,7 +9,7 @@ This draft is stacked atop the authored wing GLB [PR #625](https://github.com/nd
 - `bUseRootPivotedWingPose = false` by default, preserving all legacy 100-cm-centered Cube preview positions.
 - When `AuthoredWingMesh` is present **and** `bUseRootPivotedWingPose` is explicitly enabled, `WingPoseForMesh` selects a root-pivoted arrangement authored for the current **280-cm +X span** asset.
 - Front roots at approximately +155 X, aft at -180 X; port and starboard roots at +/-112 Y; four wing roots, not four overlapping 100-cm preview cubes.
-- Skyborne: wings project broadly outboard with distinct forward/rear sweep. Seaborne: wings fold above the waterline in review only. Submersible: wings tuck lengthwise and remain visible. Orbiter: four equal-scale sails directed +Z, -Z, -Y and +Y with forward hull/bridge unchanged.
+- Skyborne: wings project broadly outboard with distinct forward/rear sweep. Seaborne: wings fold above the waterline in review only. Submersible: wings tuck lengthwise and remain visible. An Orbiter pose exists for isolated review, but authored-wing transitions into or out of it are blocked.
 - `RefreshWingMeshes()` recomposes existing form after new artist mesh assignment when not transitioning; both `SnapToForm` and transition interpolation use the mesh-aware pose. A missing authored wing refuses new form changes while the opt-in flag is true.
 - The old `bAllowOrbiterPreview=false` default and `RequestForm` preview guard remain untouched. The hidden form is not a player unlock.
 
@@ -17,8 +17,8 @@ This draft is stacked atop the authored wing GLB [PR #625](https://github.com/nd
 
 1. Build the exact PR head with the UE 5.8 Windows C++ toolchain and correct all compiler/Unreal API errors.
 2. Import the generated one-wing GLB to a distinct review path. Verify it imports as a StaticMesh with three material slots, correct Unreal axis and unit handling. Set `AuthoredWingMesh` on an isolated preview actor and **manually** opt into `bUseRootPivotedWingPose`.
-3. Compare the legacy Cube preview with authored wing at the same actor transform, test all four Sky/Sea/Submersible/Orbiter modes in an isolated test level, respecting Orbiter opt-in; visually inspect **all four wing root joins**, bridge/deck clearances, wing intersections, foils, scale, imported alpha and silhouette.
-4. Repeat transformations in both directions and interrupt mid-transition; confirm no popping/interpenetration after refresh, and no story sea-contact or flotation event emitted by form requests.
+3. Compare the legacy Cube preview with the corrected authored wing at the same actor transform in an isolated test level. Test Skyborne, Seaborne and Submersible; inspect **all four wing roots**, bridge/deck clearances, wing intersections, foils, scale, imported alpha and silhouette. Keep authored-wing Orbiter movement on hold.
+4. Run all six directed transitions among Skyborne, Seaborne and Submersible, interrupt a transition, and refresh the mesh. Check for popping/interpenetration and verify no story sea-contact or flotation event. Confirm authored-wing requests into or out of Orbiter return false even with the separate preview opt-in. Do not animate that unsafe route.
 5. Capture actual UE 5.8 rendered screenshots (not generated geometry previews), with fixed cameras, engine SHA and frame-time traces.
 6. Get creator aesthetic approval and independent native physics QA before considering promotion into the playable First Wake.
 
@@ -58,3 +58,9 @@ Run source-only:
 ```powershell
 py -3.11 unreal/Tools/audit_aureate_wing_clearance.py --glb "C:\\TSTSS_Review\\AureateWake_Wing_Lookdev.glb" --manifest "C:\\TSTSS_Review\\AureateWake_Wing_Manifest.json" --cpp unreal/Source/ToSailTheStarrySky/Private/AureateWakePreviewActor.cpp --header unreal/Source/ToSailTheStarrySky/Public/AureateWakePreviewActor.h --samples-per-primitive 900 --steps 20
 ```
+
+## Bounded native review slice — pending Windows UE 5.8 access
+
+Use a disposable project copy at the exact reviewed PR commit. Generate the corrected GLB and manifest from that source, record their SHA-256 values, run `--check`, and import only to the empty `/Game/TSTSS/Review/ShipArt/WingCandidateV2` destination. Confirm StaticMesh dimensions in centimeters, root pivot, orientation, normals, three material sections and membrane transparency before manually assigning it to one isolated preview actor. Record UE version, import settings and asset path.
+
+Capture fixed-camera UE renders of each ordinary form and the six directed ordinary transitions, including the four roots and hydrofoils. Record any proxy intersection, interruption/refresh behavior and the explicit rejection of authored-wing Orbiter requests. Show the unresolved approximately 28 cm root-to-hull gap. Component collision is disabled in the preview actor; rendered motion and discrete offline geometry checks do not establish continuous swept collision safety. Keep this asset noncanonical and review-only; no First Wake integration, merge, release or creator art signoff follows from this slice.
