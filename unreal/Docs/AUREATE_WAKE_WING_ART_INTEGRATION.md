@@ -23,3 +23,24 @@ Build an actual Unreal material using viewing-angle Fresnel iridescence and diff
 6. Human visual acceptance is separate from passing source contracts; no merge into protected main without native proof.
 
 Current implementation is a **noncanonical render scaffold** and cannot be called a finished ship model.
+
+## Original procedural art asset — implementation checkpoint (October 31)
+
+Source additions on draft PR #610:
+- `unreal/Tools/generate_aureate_wing.py`: generate original OBJ, MTL, 1024px color and packed ORM maps with Pillow.
+- `unreal/Tests/check_aureate_wing_geometry.py`: check UV/triangle indices, material slots and bounds.
+- `unreal/Tools/import_aureate_wing.py`: guarded Unreal Editor OBJ/PNG import and procedural preview Material Graph with OrbiterSailBlend/Fresnel glow.
+- `unreal/Tests/check_aureate_preview_source.py`: updated static expectations for four hull-hinged wings, Orbiter rotations, and art integration.
+
+Reproduce asset outside Unreal (Python + Pillow required only for regeneration):
+```sh
+python -m pip install Pillow
+python unreal/Tools/generate_aureate_wing.py --output wing_asset --resolution 1024
+python unreal/Tests/check_aureate_wing_geometry.py wing_asset
+```
+
+Local generation and integrity checks completed: 6,584 OBJ vertices, 13,080 triangles, UV coordinates, 3 named materials, 2 PBR prototype textures. Local trimesh analysis found closed geometry with consistent winding. This is source/asset structural validation only.
+
+To import in Unreal Editor after it is installed: enable Python Editor Script Plugin; set environment variable `TSTSS_AUREATE_ASSET_DIR` in the Editor process to the generated asset folder; execute `unreal/Tools/import_aureate_wing.py` inside Editor Python. The script refuses to overwrite an existing populated `/Game/TSTSS/Ships/AureateWake/PrototypeWing` folder. Assign mesh to actor `AuthoredWingMesh` and material to `WingMaterial` in a test Blueprint. `OnConstruction()` displays selected art in the editor; `BeginPlay()` applies dynamic blend control.
+
+Unreal import, shader compilation, material quality, mesh smoothing, physical hinge clearances, cinematic lighting and four-form screenshots are NOT yet verified. The original model is root-hinged static geometry, NOT skeletal wing rigging or a final art-approved mesh. The edge-glow shader is an artistic Fresnel approximation, not actual spectral diffraction or photovoltaics. The hull and bridge remain BasicShapes. Keep Orbiter story-gated and do not merge/release on source results alone.
