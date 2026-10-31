@@ -125,8 +125,18 @@ def make(name):
  b.ellipsoid('Left ear',(-.118*w,1.50*s,.01),(.022,.044,.026),p['skin'])
  b.ellipsoid('Right ear',(.118*w,1.50*s,.01),(.022,.044,.026),p['skin'])
  b.ellipsoid('Torso shirt',(0,1.13*s,0),(.198*w,.264*s,.105),p['shirt'],20,12)
- b.ellipsoid('Tailored outer layer',(0,1.13*s,-.024),(.205*w,.258*s,.105),p['coat'],20,12)
- b.ellipsoid('Front shirt opening',(0,1.165*s,.084),(.074*w,.215*s,.023),p['shirt'],16,10)
+ if name=='Ender':
+  # Separate front waistcoat panels expose the cream shirt and keep the back
+  # close to the body. The former single oval read as a large back shell.
+  b.ellipsoid('Fitted waistcoat back',(0,1.125*s,-.074),(.174*w,.229*s,.060),p['coat'],20,12)
+  for side,sgn in [('L',-1),('R',1)]:
+   b.ellipsoid(side+' waistcoat front',(sgn*.125*w,1.13*s,.026),(.080*w,.234*s,.101),p['coat'],20,12)
+   b.tapered(side+' waistcoat seam',(sgn*.055*w,1.35*s,.105),(sgn*.048*w,.93*s,.119),.004,.004,p['trim'])
+  for y in (1.23,1.12,1.01):
+   b.ellipsoid('Waistcoat button '+str(y),(-.06*w,y*s,.127),(.009,.009,.005),p['trim'],10,6,.75,.35)
+ else:
+  b.ellipsoid('Tailored outer layer',(0,1.13*s,-.024),(.205*w,.258*s,.105),p['coat'],20,12)
+  b.ellipsoid('Front shirt opening',(0,1.165*s,.084),(.074*w,.215*s,.023),p['shirt'],16,10)
  b.tapered('Waist belt',(-.19*w,.91*s,.086),(.19*w,.91*s,.086),.021,.021,p['boots'])
  b.ellipsoid('Belt buckle',(0,.91*s,.11),(.031,.028,.013),p['trim'],12,8,.8,.3)
  b.ellipsoid('Pelvis',(0,.82*s,0),(.18*w,.13*s,.103),p['pants'])
@@ -136,7 +146,26 @@ def make(name):
   b.tapered(side+' upper sleeve',(x,1.29*s,0),(sgn*.233*w,1.085*s,0),.069*w,.058*w,p['shirt'])
   b.ellipsoid(side+' sleeve cuff',(sgn*.233*w,1.075*s,0),(.06*w,.024,.064),p['coat'])
   b.tapered(side+' forearm',(sgn*.233*w,1.07*s,0),(sgn*.255*w,.88*s,.035),.052*w,.037*w,p['skin'])
-  b.ellipsoid(side+' hand',(sgn*.255*w,.846*s,.037),(.039*w,.058,.031),p['skin'])
+  if name=='Ender' and side=='L':
+   # A fixed grip study: the staff sits at x=-.255*w, z=.042. Separate
+   # fingers curve around its forward side instead of swallowing it inside
+   # a single mitten ellipsoid. This is not skinned or an animation pose.
+   b.ellipsoid('L gloved palm',(-.215*w,.846*s,.031),(.029*w,.049,.027),p['boots'],16,10)
+   for finger,fy in enumerate((.879,.858,.837,.816)):
+    joints=[
+     (-.218*w,fy*s,.050),(-.248*w,(fy-.002)*s,.075),
+     (-.277*w,(fy-.009)*s,.063),(-.279*w,(fy-.015)*s,.045)
+    ]
+    for k in range(len(joints)-1):
+     b.tapered('L grip finger %s segment %s'%(finger,k),joints[k],joints[k+1],.006,.006,p['skin'])
+   thumb=[
+    (-.205*w,.805*s,.052),(-.230*w,.815*s,.078),
+    (-.258*w,.829*s,.066)
+   ]
+   for k in range(len(thumb)-1):
+    b.tapered('L grip thumb segment '+str(k),thumb[k],thumb[k+1],.009,.009,p['skin'])
+  else:
+   b.ellipsoid(side+' hand',(sgn*.255*w,.846*s,.037),(.039*w,.058,.031),p['skin'])
   b.tapered(side+' thigh',(sgn*.092*w,.78*s,0),(sgn*.111*w,.49*s,0),.091*w,.075*w,p['pants'])
   b.ellipsoid(side+' knee',(sgn*.111*w,.465*s,.011),(.078*w,.082,.078),p['pants'])
   b.tapered(side+' shin',(sgn*.112*w,.47*s,0),(sgn*.116*w,.14*s,0),.072*w,.056*w,p['boots'] if name in ('Ionia','Reson') else p['pants'])

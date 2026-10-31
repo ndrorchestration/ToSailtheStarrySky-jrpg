@@ -6,12 +6,12 @@
       "name": "Ender",
       "height_m": 1.74,
       "file": "Ender.glb",
-      "sha256": "04403d8c3622833f4db59ba01d15ccf6f35231fbd6613969cc42915061438167",
-      "bytes": 199316,
-      "mesh_parts": 58,
+      "sha256": "767bdcbed7966473eb7380d9c04a041111e9a6be010ce1adcbd0c4491b074a70",
+      "bytes": 229556,
+      "mesh_parts": 78,
       "mesh_count": 1,
-      "material_sections": 20,
-      "materials": 20
+      "material_sections": 21,
+      "materials": 21
     },
     {
       "name": "Ionia",
