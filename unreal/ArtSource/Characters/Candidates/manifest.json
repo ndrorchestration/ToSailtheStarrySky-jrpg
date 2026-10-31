@@ -1,0 +1,51 @@
+{
+  "status": "UNRIGGED_LOOKDEV_CANDIDATE",
+  "reference": "approved cast sheet Oct 30, 2026; repo character locks",
+  "characters": [
+    {
+      "name": "Ender",
+      "height_m": 1.74,
+      "file": "Ender.glb",
+      "sha256": "aff33362b90354a9cfd00bdeda6e591d9c9a91d87ddfc27bbc65ccb7a904efe1",
+      "bytes": 251984,
+      "mesh_parts": 58,
+      "materials": 20
+    },
+    {
+      "name": "Ionia",
+      "height_m": 1.68,
+      "file": "Ionia.glb",
+      "sha256": "43d39249f05d75ec57f0e81141e28283c8d0912a448bb88304053c334ecb9dca",
+      "bytes": 290884,
+      "mesh_parts": 72,
+      "materials": 16
+    },
+    {
+      "name": "Lyra",
+      "height_m": 1.65,
+      "file": "Lyra.glb",
+      "sha256": "4ce265d835ba4ed930bea214b69667b80b27ae45bbef64d0f7ac7c7335568948",
+      "bytes": 310644,
+      "mesh_parts": 75,
+      "materials": 16
+    },
+    {
+      "name": "Reson",
+      "height_m": 1.93,
+      "file": "Reson.glb",
+      "sha256": "9988fe60c3e47e7ff611ec738e3ed9a09cc40fad83dadbf7ec3463babd93db7f",
+      "bytes": 229352,
+      "mesh_parts": 52,
+      "materials": 16
+    },
+    {
+      "name": "Aepex",
+      "height_m": 1.85,
+      "file": "Aepex.glb",
+      "sha256": "c5673c958d2a357c9908c72302c621d56c0511f12fb7eacbf64b50b711bf5178",
+      "bytes": 241724,
+      "mesh_parts": 57,
+      "materials": 17
+    }
+  ]
+}
