@@ -8,7 +8,7 @@ The geometry QA revision removes zero-area pole faces and corrects outward trian
 
 ## Ender first
 
-Ender.glb is the first review target: youthful slender build, green eyes and goggles, cream shirt, olive vest, satchel, full 1.84 m staff with midpoint wrap and brass ferrules. The approved cast sheet depicts dark green hair, while an older character dossier specifies dark copper/auburn. The candidate follows the newer approved image; confirm the final hair treatment against the original references before accepting a production model.
+Ender.glb is the first review target: youthful slender build, green eyes and goggles, cream shirt, olive vest, satchel, full 1.84 m staff with midpoint wrap and brass ferrules. The October 30 cast sheet depicts dark green hair, while the repository's [creator-established character authority](../../../docs/CHARACTER_AND_ART_AUTHORITY.md) identifies a specific approved October 8 Ender image with dark copper/auburn hair. The candidate follows the later group image, but the specific earlier Ender proof and written lock cannot be silently overridden. Resolve this conflict with the creator before accepting a production model. See [Ender's visual review](ENDER_VISUAL_REVIEW.md) for the observed deficiencies and next acceptance checks.
 
 ## Cast relationships
 

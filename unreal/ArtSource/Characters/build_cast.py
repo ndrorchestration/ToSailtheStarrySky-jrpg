@@ -164,9 +164,12 @@ def make(name):
    b.ellipsoid('Goggle rim '+str(sgn),(sgn*.057,1.63*s,.104),(.041,.032,.015),p['trim'],16,8,.85,.24)
    b.ellipsoid('Goggle glass '+str(sgn),(sgn*.057,1.63*s,.116),(.030,.023,.006),p['accent'],16,8,.25,.18)
   b.tapered('Goggle bridge',(-.015,1.63*s,.12),(.015,1.63*s,.12),.007,.007,p['trim'],.8,.3)
-  b.tapered('Full staff',(-.35,0,.08),(-.35,1.84,.08),.019,.019,'#624730')
-  b.tapered('Center hand wrap',(-.35,.83,.08),(-.35,1.01,.08),.027,.027,'#c0a47b')
-  for y in (.01,1.83): b.ellipsoid('Brass staff ferrule '+str(y),(-.35,y,.08),(.026,.018,.026),p['trim'],12,8,.88,.28)
+  # Keep the shaft within the left palm in the neutral review pose. The earlier
+  # x=-.35 placement left a visible gap to the hand at about x=-.235.
+  staff_x=-.255*w; staff_z=.042
+  b.tapered('Full staff',(staff_x,0,staff_z),(staff_x,1.84,staff_z),.019,.019,'#624730')
+  b.tapered('Center hand wrap',(staff_x,.83,staff_z),(staff_x,1.01,staff_z),.027,.027,'#c0a47b')
+  for y in (.01,1.83): b.ellipsoid('Brass staff ferrule '+str(y),(staff_x,y,staff_z),(.026,.018,.026),p['trim'],12,8,.88,.28)
  elif name=='Ionia':
   for side in (-1,1):
    for k in range(9):
