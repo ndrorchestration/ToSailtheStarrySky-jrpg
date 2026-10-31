@@ -74,28 +74,37 @@ class Builder:
  def tapered(self,name,a,b,ra,rb,color,metal=0,rough=.8):
   self.tube(name,[a,b],[ra,rb],color,12,metal,rough)
  def save(self,path):
-  buffer=bytearray();views=[];access=[];meshes=[];nodes=[]
+  buffer=bytearray();views=[];access=[];primitives=[]
   def write(raw,target):
    while len(buffer)%4:buffer.append(0)
    off=len(buffer);buffer.extend(raw);v=len(views);views.append({'buffer':0,'byteOffset':off,'byteLength':len(raw),'target':target});return v
+  # One glTF mesh per character. Group by material so Unreal imports a single
+  # review mesh with a bounded number of sections rather than 50+ loose assets.
+  groups={}
+  part_map=[]
   for name,verts,norms,faces,mat in self.parts:
-   indices=[i for f in faces for i in f]
-   if max(indices,default=0)>65535:raise ValueError(name)
+   group=groups.setdefault(mat,{'verts':[],'norms':[],'indices':[]})
+   start=len(group['verts'])
+   group['verts'].extend(verts);group['norms'].extend(norms)
+   group['indices'].extend(start+i for face in faces for i in face)
+   part_map.append({'name':name,'material':mat,'firstVertex':start,'vertexCount':len(verts)})
+  for mat,group in sorted(groups.items()):
+   verts=group['verts'];norms=group['norms'];indices=group['indices']
+   if max(indices,default=0)>65535:raise ValueError('16-bit material section overflow')
    v=write(b''.join(struct.pack('<3f',*p) for p in verts),34962)
    pa=len(access);access.append({'bufferView':v,'componentType':5126,'count':len(verts),'type':'VEC3','min':[min(p[j] for p in verts) for j in range(3)],'max':[max(p[j] for p in verts) for j in range(3)]})
    v=write(b''.join(struct.pack('<3f',*p) for p in norms),34962)
    no=len(access);access.append({'bufferView':v,'componentType':5126,'count':len(norms),'type':'VEC3'})
    v=write(struct.pack('<%dH'%len(indices),*indices),34963)
    ix=len(access);access.append({'bufferView':v,'componentType':5123,'count':len(indices),'type':'SCALAR','min':[0],'max':[max(indices)]})
-   meshes.append({'name':name,'primitives':[{'attributes':{'POSITION':pa,'NORMAL':no},'indices':ix,'material':mat}]})
-   nodes.append({'name':name,'mesh':len(meshes)-1})
+   primitives.append({'attributes':{'POSITION':pa,'NORMAL':no},'indices':ix,'material':mat})
   while len(buffer)%4:buffer.append(0)
-  doc={'asset':{'version':'2.0','generator':'TSTSS original lookdev generator v1'},'scene':0,'scenes':[{'name':self.name+' lookdev','nodes':list(range(len(nodes)))}], 'nodes':nodes,'meshes':meshes,'materials':self.materials,'buffers':[{'byteLength':len(buffer)}],'bufferViews':views,'accessors':access}
+  doc={'asset':{'version':'2.0','generator':'TSTSS original lookdev generator v2'},'scene':0,'scenes':[{'name':self.name+' lookdev','nodes':[0]}], 'nodes':[{'name':self.name+'_lookdev','mesh':0}], 'meshes':[{'name':self.name+'_lookdev','primitives':primitives,'extras':{'partMap':part_map}}], 'materials':self.materials,'buffers':[{'byteLength':len(buffer)}],'bufferViews':views,'accessors':access}
   js=json.dumps(doc,separators=(',',':')).encode()
   js+=b' ' * ((-len(js))%4)
   data=b'glTF'+struct.pack('<II',2,12+8+len(js)+8+len(buffer))+struct.pack('<I4s',len(js),b'JSON')+js+struct.pack('<I4s',len(buffer),b'BIN\0')+buffer
   path.write_bytes(data)
-  return {'file':path.name,'sha256':hashlib.sha256(data).hexdigest(),'bytes':len(data),'mesh_parts':len(meshes),'materials':len(self.materials)}
+  return {'file':path.name,'sha256':hashlib.sha256(data).hexdigest(),'bytes':len(data),'mesh_parts':len(self.parts),'mesh_count':1,'material_sections':len(primitives),'materials':len(self.materials)}
 
 def make(name):
  p=PALETTES[name];b=Builder(name);h=p['height'];s=h/1.74;w=p['build'];
@@ -181,3 +190,4 @@ if __name__=='__main__':
   b=make(name);manifest['characters'].append({'name':name,'height_m':PALETTES[name]['height'],**b.save(OUT/(name+'.glb'))})
  (OUT/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
  print(json.dumps(manifest,indent=2))
+

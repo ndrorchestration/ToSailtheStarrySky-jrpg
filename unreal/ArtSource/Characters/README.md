@@ -2,6 +2,8 @@
 
 This package contains five **original, static glTF 2.0 meshes** generated from `build_cast.py`: Ender, Ionia, Lyra, Reson and Aepex. They are a reusable silhouette and layout study. They are **not** photorealistic or cinematic production assets, are not rigged or animated, and have not been imported, compiled, lit, or rendered in Unreal. The PNGs are offline model inspections, never engine captures. The October 30 approved cast sheet stays private and is not redistributed here.
 
+Revision 2 packages each character as **one static mesh with 16–20 material sections**, retaining named component ranges in glTF mesh extras. This is an import simplification, not an art-quality improvement. It changes the source hashes; always use the adjacent current `Candidates/manifest.json` rather than older receipts.
+
 ## Ender first
 
 Ender.glb is the first review target: youthful slender build, green eyes and goggles, cream shirt, olive vest, satchel, full 1.84 m staff with midpoint wrap and brass ferrules. The approved cast sheet depicts dark green hair, while an older character dossier specifies dark copper/auburn. The candidate follows the newer approved image; confirm the final hair treatment against the original references before accepting a production model.
@@ -20,8 +22,17 @@ The five named files have relative heights Reson (1.93 m) > Aepex (1.85 m) > End
 
 To reproduce the candidate GLBs and their SHA-256 manifest: `python3 build_cast.py`. To produce the optional offline render: `python3 render_review.py` (Pillow required). The GLBs use only procedural geometry and flat PBR color factors; there are no third-party asset dependencies.
 
+### Reversible Editor intake
+
+`editor_intake.py` checks all five source hashes and GLB structure before touching the Editor. `python3 editor_intake.py --preflight-only` runs outside Unreal. In UE 5.8, enable the built-in Python Script Plugin and Editor Scripting Utilities, compile the project, and run the script in Unreal's Python console, or use the official `UnrealEditor-Cmd.exe <uproject> -ExecutePythonScript=<absolute script path>` command. Default selection is **Ender only**. Set `TSTSS_CAST_IMPORT` to one of the other names or `all` for subsequent reviews, and set a fresh alphanumeric `TSTSS_CAST_SESSION` for a uniquely named receipt.
+
+The script imports only to `/Game/ArtLookdev/Characters/<Name>` and refuses any nonempty destination. It requires exactly one `StaticMesh` and a plausible 150–230 cm maximum bound, then writes `Saved/CharacterLookdev/<session>.json` with source hash, engine version, imported object paths and bounds. A native import PASS is **not** a visual pass or a rigged asset. If the importer fails midway, the receipt says FAILED and the candidate folder must be inspected manually before another attempt; the script never deletes assets. Neither the script nor an Unreal import has been run in an actual UE installation yet.
+
+Epic references: [Python Editor command line](https://dev.epicgames.com/documentation/en-us/unreal-engine/scripting-the-unreal-editor-using-python), [Interchange glTF import](https://dev.epicgames.com/documentation/unreal-engine/importing-assets-using-interchange-in-unreal-engine), [AssetImportTask](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Editor/UnrealEd/UAssetImportTask).
+
 ## Evidence status
 
 - `IMPLEMENTED`: five original valid glTF 2.0 static character lookdev meshes and deterministic source generator.
 - `OPEN`: Unreal import, Editor build, native render, skeleton/skin, animation, materials/texture quality, cinematic likeness, creator acceptance, integration into gameplay.
 - `CREATOR CANON`: five identities and approved illustration direction; no generated GLB has been accepted as canonical game art.
+
