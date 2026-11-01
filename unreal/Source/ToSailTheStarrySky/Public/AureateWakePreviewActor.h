@@ -69,6 +69,26 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Visuals")
     TObjectPtr<UStaticMesh> AuthoredRootSupportMesh;
 
+    /**
+     * Artist-approved visual REFERENCE is separate from native asset acceptance.
+     * OFF by default: these candidate mesh slots affect only an isolated review
+     * preview and never authorize replacing gameplay/canonical assets.
+     */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Visuals|Review")
+    bool bUseAuthoredBodyReview = false;
+
+    /** Optional creator-reviewed imported candidate, NOT automatically final art. */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Visuals|Review")
+    TObjectPtr<UStaticMesh> AuthoredHullReviewMesh;
+
+    /** Forward panoramic geodesic dome candidate, distinct from vessel body. */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Visuals|Review")
+    TObjectPtr<UStaticMesh> AuthoredBridgeDomeReviewMesh;
+
+    /** Explicit opt-in only. Returns false on missing/unsafe provenance; no partial replacement. */
+    UFUNCTION(BlueprintCallable, Category="Aureate Wake|Visuals|Review")
+    bool RefreshBodyReviewMeshes();
+
     /** Reconcile strut geometry without changing ship state, buoyancy or wing count. */
     UFUNCTION(BlueprintCallable, Category="Aureate Wake|Visuals")
     void RefreshRootSupports();
