@@ -6,6 +6,7 @@ on:
       - 'unreal/Tests/test_aureate_body_lookdev.py'
       - 'unreal/Tests/test_aureate_fidelity_v2.py'
       - 'unreal/Tests/test_aureate_fidelity_v2_intake.py'
+      - 'unreal/Tests/test_aureate_v2_full_binary_geometry.py'
       - '.github/workflows/unreal-aureate-body-lookdev.yml'
   workflow_dispatch:
 
@@ -36,5 +37,9 @@ jobs:
           python3 unreal/ArtSource/ShipReview/build_aureate_fidelity_v2.py --build --output-dir /tmp/tstss_approved_direction_v2
           python3 unreal/ArtSource/ShipReview/build_aureate_fidelity_v2.py --verify --output-dir /tmp/tstss_approved_direction_v2
           python3 unreal/ArtSource/ShipReview/import_aureate_fidelity_v2.py --check --folder /tmp/tstss_approved_direction_v2
+      - name: Complete actual GLB binary vertex/index and normal checks
+        run: |
+          python3 -m unittest discover -s unreal/Tests -p test_aureate_v2_full_binary_geometry.py -v
+          python3 unreal/ArtSource/ShipReview/audit_aureate_v2_glb_geometry.py --folder /tmp/tstss_approved_direction_v2
       - name: Explicit provenance limits
         run: echo "Only offline GLB checks; native UE import, orientation, art, collision, gameplay and Orbiter remain unverified."
