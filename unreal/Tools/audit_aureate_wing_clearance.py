@@ -21,6 +21,10 @@ FORMS = ("Skyborne", "Seaborne", "Submersible")
 CUBE_HULL = ((-400., -75., -32.5), (400., 75., 32.5))
 CUBE_BRIDGE = ((135., -55., 40.), (345., 55., 150.))
 MIN_CLEARANCE_CM = 10.0
+# 3,000 is insufficient for the procedural venation section (~14,770
+# positions). Continue reading *every* vertex; never subsample to fit.
+DEFAULT_MAX_VERTICES_PER_PRIMITIVE = 20_000
+MAX_VERTICES_PER_PRIMITIVE = 50_000
 STATUS = "SAMPLED_GEOMETRY_SCREEN_ONLY_NOT_ENGINE_OR_COLLISION_APPROVED"
 
 
@@ -28,9 +32,9 @@ class GeometryHold(ValueError):
     pass
 
 
-def read_vertices(glb: Path, per_primitive=3000):
+def read_vertices(glb: Path, per_primitive=DEFAULT_MAX_VERTICES_PER_PRIMITIVE):
     """GLB 2.0 float32 positions, meters/+Y up -> Unreal cm/+Z up."""
-    if per_primitive < 100 or per_primitive > 50000:
+    if per_primitive < 100 or per_primitive > MAX_VERTICES_PER_PRIMITIVE:
         raise GeometryHold("Use 100..50000 maximum vertices per primitive")
     # Coverage is all-or-hold. Subsampling can exclude the extreme vertex,
     # understate an AABB and falsely report clearance. This numeric budget is
@@ -294,7 +298,8 @@ def main():
     parser.add_argument('--cpp',type=Path,required=True)
     parser.add_argument('--header',type=Path,required=True)
     parser.add_argument('--max-vertices-per-primitive','--samples-per-primitive',
-                        dest='max_vertices_per_primitive',type=int,default=3000,
+                        dest='max_vertices_per_primitive',type=int,
+                        default=DEFAULT_MAX_VERTICES_PER_PRIMITIVE,
                         help='Fail closed if any primitive exceeds this count; never subsample')
     parser.add_argument('--steps',type=int,default=20)
     args=parser.parse_args()
