@@ -44,6 +44,21 @@ bool FTSTSSBattleSpellTechniqueTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("denial leaves output unused"), Result.Combat.AcceptedActions, 0);
     Knowledge.MasteryByActor.FindOrAdd(TEXT("Ender")).Add(TEXT("Fire"), 1);
 
+    FTSTSSBattleSkillRow Hybrid = Spark;
+    Hybrid.RequiredSecondarySchool = TEXT("Water");
+    Hybrid.RequiredSecondaryRank = 2;
+    TestFalse(TEXT("cross-mastery dependency is enforced"),
+        FTSTSSBattleSkillSystem::TryUseRow(Initial, Knowledge, Factions,
+            TEXT("crew"), TEXT("enemy"), TEXT("Ender"), TEXT("Foe"),
+            Hybrid.SkillId, Hybrid, Result, Cue));
+    Knowledge.MasteryByActor.FindOrAdd(TEXT("Ender")).Add(TEXT("Water"), 2);
+    TestTrue(TEXT("explicit secondary school admits gated review spell"),
+        FTSTSSBattleSkillSystem::TryUseRow(Initial, Knowledge, Factions,
+            TEXT("crew"), TEXT("enemy"), TEXT("Ender"), TEXT("Foe"),
+            Hybrid.SkillId, Hybrid, Result, Cue));
+    Result = FTSTSSBattleSkillState();
+    Cue = FTSTSSBattleSkillCue();
+
     FTSTSSBattleSkillRow Unadmitted = Spark;
     Unadmitted.Admission = ETSTSSBattleSkillAdmission::DesignOnly;
     TestFalse(TEXT("design-only seed cannot execute"),

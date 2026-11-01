@@ -46,6 +46,9 @@ struct TOSAILTHESTARRYSKY_API FTSTSSBattleSkillRow : public FTableRowBase
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Gameplay") bool bHealing = false;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Access") FName RequiredSchool = NAME_None;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Access") int32 RequiredMasteryRank = 0;
+    // One additional cross-school requirement; complex multi-school syntheses stay DesignOnly.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Access") FName RequiredSecondarySchool = NAME_None;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Access") int32 RequiredSecondaryRank = 0;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Access") FName RequiredWeaponClass = NAME_None;
     // Cue IDs are presentation requests only; this class does not spawn Niagara or animations.
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Presentation") FName VfxCueId = NAME_None;

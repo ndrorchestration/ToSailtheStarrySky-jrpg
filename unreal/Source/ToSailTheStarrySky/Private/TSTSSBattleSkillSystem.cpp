@@ -14,7 +14,9 @@ bool FTSTSSBattleSkillSystem::TryUseRow(
         Row.Admission != ETSTSSBattleSkillAdmission::ReviewExecutable ||
         Row.Power < 0 || Row.ResourceCost < 0 || Row.CooldownActorTurns < 0 ||
         Row.CooldownActorTurns > 100 || Row.RequiredMasteryRank < 0 ||
-        Row.RequiredMasteryRank > 5 || (Row.bHealing && Row.Target == ETSTSSBattleSkillTarget::Enemy))
+        Row.RequiredMasteryRank > 5 ||
+        Row.RequiredSecondaryRank < 0 || Row.RequiredSecondaryRank > 5 ||
+        (Row.bHealing && Row.Target == ETSTSSBattleSkillTarget::Enemy))
     {
         return false;
     }
@@ -45,6 +47,19 @@ bool FTSTSSBattleSkillSystem::TryUseRow(
         if (!Rank || *Rank < Row.RequiredMasteryRank || *Rank > 5) return false;
     }
     else if (Row.RequiredMasteryRank != 0)
+    {
+        return false;
+    }
+
+    if (!Row.RequiredSecondarySchool.IsNone())
+    {
+        if (Row.RequiredSecondarySchool == Row.RequiredSchool ||
+            Row.RequiredSecondaryRank < 1) return false;
+        const TMap<FName, int32>* Mastery = Knowledge.MasteryByActor.Find(ActorId);
+        const int32* Rank = Mastery ? Mastery->Find(Row.RequiredSecondarySchool) : nullptr;
+        if (!Rank || *Rank < Row.RequiredSecondaryRank || *Rank > 5) return false;
+    }
+    else if (Row.RequiredSecondaryRank != 0)
     {
         return false;
     }
