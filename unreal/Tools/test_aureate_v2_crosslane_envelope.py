@@ -6,7 +6,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
-from types import SimpleNamespace
+from unittest.mock import patch
 
 from audit_aureate_v2_crosslane_envelope import (
     APPROVED_REFERENCE_SHA, BRIDGE_NAME, HULL_NAME, STATUS_HOLD,
@@ -45,10 +45,22 @@ class CrossLaneV2AdmissionTests(unittest.TestCase):
         self.manifest.write_text(json.dumps(self.payload), encoding="utf-8")
 
     def check(self):
-        return require_exact_v2_artifacts(self.manifest, self.hull, self.bridge)
+        # Local tiny fixtures stand in for the immutable generated V2 bytes.
+        # Production inputs must use the frozen real GLB digests.
+        with patch('audit_aureate_v2_crosslane_envelope.EXPECTED_V2_GLB_HASHES', self.payload['sha256']):
+            return require_exact_v2_artifacts(self.manifest, self.hull, self.bridge)
 
     def test_exact_manifest_and_files_are_accepted(self):
         self.assertEqual(self.check(), self.payload["sha256"])
+
+    def test_rewritten_manifest_cannot_change_pinned_source_hashes(self):
+        # Even if content and its manifest are both rewritten consistently,
+        # they cannot inherit the original V2 candidate's reviewed source SHA.
+        self.hull.write_bytes(b"tampered")
+        self.payload["sha256"][HULL_NAME] = hashlib.sha256(self.hull.read_bytes()).hexdigest()
+        self.persist()
+        with self.assertRaisesRegex(V2ReviewHold, "differs from approved-review source hashes"):
+            require_exact_v2_artifacts(self.manifest, self.hull, self.bridge)
 
     def test_changed_glb_bytes_hold(self):
         self.hull.write_bytes(b"tampered")
