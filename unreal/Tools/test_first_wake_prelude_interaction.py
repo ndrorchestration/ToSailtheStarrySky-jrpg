@@ -28,7 +28,7 @@ class PreludeReviewLayoutTests(unittest.TestCase):
                      "orbiter_unlocked","production_map_modified",
                      "approved_gameplay"):
             self.assertIs(plan[flag],False)
-        self.assertEqual(plan["map"], "/Game/TSTSS/Review/FirstWake_PreludeInteraction_V1")
+        self.assertEqual(plan["map"], "/Game/TSTSS/Review/FirstWake_PreludeInteraction_V2")
         names=" ".join(s["label"] for s in plan["stops"]).lower()
         for prohibited in ("lyra","talen","reson","aepex","orbiter","splashdown"):
             self.assertNotIn(prohibited,names)
@@ -71,6 +71,7 @@ class PreludeReviewLayoutTests(unittest.TestCase):
         self.assertNotIn("advance_water_beat",source.lower())
         self.assertIn("Ocean_VISUAL_ONLY_NO_BUOYANCY",source)
         self.assertIn("set_collision_enabled",source)
+        self.assertIn('set_collision_profile_name("BlockAll" if collision else "NoCollision")',source)
         self.assertIn("save_map(world, REVIEW_MAP)",source)
 
     def test_no_overwrite_existing_map_or_savegame(self):
