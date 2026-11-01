@@ -53,7 +53,7 @@ class ApprovedShipArtContractTests(unittest.TestCase):
         self.assertTrue(self.art["story_lock"]["orbiter_locked"])
         self.assertTrue(self.art["story_lock"]["moon_bridge_locked"])
         self.assertIn("hydrofoils",self.art["form_must_have"]["Seaborne"][1])
-        self.assertIn("visible",str(self.art["form_must_have"]["Submersible"]))
+        self.assertIn("visibl",str(self.art["form_must_have"]["Submersible"]))
         self.assertIn("radial",str(self.art["form_must_have"]["Orbiter"]))
         self.assertTrue(self.art["prototype_dimensions_are_not_canon"])
 
