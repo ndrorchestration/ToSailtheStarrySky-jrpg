@@ -28,6 +28,19 @@ bool FTSTSSAureatePreviewFormTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Exactly two hydrofoils"), Ship->GetHydrofoilCount(), 2);
     TestEqual(TEXT("Exactly four removable preview mounts"), Ship->GetWingRootMountCount(), 4);
     TestEqual(TEXT("Exactly two preview hydrofoil struts"), Ship->GetHydrofoilStrutCount(), 2);
+    TestEqual(TEXT("Four opt-in curved hull/foredeck sections"),
+        Ship->GetHullSilhouetteSectionCount(), 4);
+    TestEqual(TEXT("Forty triangulated canopy frame elements"),
+        Ship->GetCanopyFramePieceCount(), 40);
+    TestFalse(TEXT("Curved hull review is disabled by default"),
+        Ship->bUseHullSilhouetteReview);
+    Ship->bUseHullSilhouetteReview = true;
+    Ship->RefreshHullSilhouetteReview();
+    TestEqual(TEXT("Hull review does not add extra wings"), Ship->GetWingCount(), 4);
+    TestFalse(TEXT("Hull review does not authorize Orbiter"),
+        Ship->RequestForm(EAureateWakeForm::Orbiter));
+    Ship->bUseHullSilhouetteReview = false;
+    Ship->RefreshHullSilhouetteReview();
     TestFalse(TEXT("Cannot finish a transition that has not started"),
         Ship->FinishOrdinaryPreviewTransitionForReview());
     TestEqual(TEXT("Defaults to Skyborne"), Ship->GetCurrentForm(), EAureateWakeForm::Skyborne);
