@@ -79,9 +79,10 @@ void ATSTSSWaterContactAdapter::Tick(float DeltaSeconds)
             }
         }
     }
-    FVector HullOrigin, HullExtent;
-    float HullSphereRadius = 0.f;
-    Hull->GetComponentBounds(HullOrigin, HullExtent, HullSphereRadius);
+    // UE 5.8 exposes current world-space component bounds through GetBounds().
+    const FBoxSphereBounds HullBounds = Hull->GetBounds();
+    const FVector HullOrigin = HullBounds.Origin;
+    const FVector HullExtent = HullBounds.BoxExtent;
     // Invalid authored configuration must never generate buoyancy or landing proof.
     if (!FMath::IsFinite(HullDraftCm) || HullDraftCm <= 1.f ||
         !FMath::IsFinite(DeltaSeconds) || DeltaSeconds <= 0.f)
