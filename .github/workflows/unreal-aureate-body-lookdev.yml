@@ -8,6 +8,8 @@ on:
       - 'unreal/Tests/test_aureate_fidelity_v2_intake.py'
       - 'unreal/Tests/test_aureate_v2_full_binary_geometry.py'
       - 'unreal/Tests/test_aureate_detail_v3.py'
+      - 'unreal/ArtSource/ShipReview/build_aureate_detail_v3_uvfix.py'
+      - 'unreal/Tests/test_aureate_detail_v3_uvfix.py'
       - '.github/workflows/unreal-aureate-body-lookdev.yml'
   workflow_dispatch:
 
@@ -47,5 +49,10 @@ jobs:
           python3 -m unittest discover -s unreal/Tests -p test_aureate_detail_v3.py -v
           python3 unreal/ArtSource/ShipReview/build_aureate_detail_v3.py --build --output-dir /tmp/tstss_aureate_detail_v3
           python3 unreal/ArtSource/ShipReview/build_aureate_detail_v3.py --verify --output-dir /tmp/tstss_aureate_detail_v3
+      - name: V3 tangent UV repair; original GLB hashes remain unchanged
+        run: |
+          python3 -m unittest discover -s unreal/Tests -p test_aureate_detail_v3_uvfix.py -v
+          python3 unreal/ArtSource/ShipReview/build_aureate_detail_v3_uvfix.py --build --output-dir /tmp/tstss_v3_uv_repair
+          python3 unreal/ArtSource/ShipReview/build_aureate_detail_v3_uvfix.py --verify --output-dir /tmp/tstss_v3_uv_repair
       - name: Explicit provenance limits
         run: echo "Only offline GLB checks; native UE import, orientation, art, collision, gameplay and Orbiter remain unverified."
