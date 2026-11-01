@@ -23,6 +23,18 @@ jobs:
         run: python3 unreal/Experiments/CanonPilot/derive_observations.py --self-test
       - name: PNG positive and adversarial container-integrity tests (synthetic, not native)
         run: python3 -m unittest discover -s unreal/Experiments/VisualQAPilot -p 'test_*.py' -v
+      - name: Pinned PR 643 candidate manifest — source-bound read-only check
+        shell: bash
+        run: |
+          set -euo pipefail
+          SHA=d629faae0838fb1116c629bb8cec480899dfc9d9
+          git fetch --no-tags --depth=1 origin "$SHA"
+          test "$(git rev-parse FETCH_HEAD)" = "$SHA"
+          git show "FETCH_HEAD:unreal/ArtSource/Characters/Candidates/manifest.json" > "$RUNNER_TEMP/pr643-candidate-manifest.json"
+          python3 unreal/Experiments/CanonPilot/check_pinned_cast_manifest.py --self-test
+          python3 unreal/Experiments/CanonPilot/check_pinned_cast_manifest.py "$RUNNER_TEMP/pr643-candidate-manifest.json" > "$RUNNER_TEMP/pr643-observation.json"
+          python3 unreal/Experiments/CanonPilot/check_canon.py "$RUNNER_TEMP/pr643-observation.json" > "$RUNNER_TEMP/pr643-canon-outcome.json"
+          python3 -c 'import json,sys; r=json.load(open(sys.argv[1]))["results"]; assert r["height_order"] == "MATCHES_PINNED_LOOKDEV_MANIFEST_NOT_NATIVE_OR_CANON"; assert set(v for k,v in r.items() if k != "height_order") == {"UNKNOWN"}' "$RUNNER_TEMP/pr643-canon-outcome.json"
       - name: Assert native evidence remains UNKNOWN by default
         run: |
           python3 unreal/Experiments/CanonPilot/check_canon.py unreal/Experiments/CanonPilot/unknown_observations.json > /tmp/canon-review-results.json
