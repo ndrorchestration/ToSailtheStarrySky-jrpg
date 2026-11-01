@@ -164,15 +164,22 @@ bool FTSTSSAureateSixRouteSupportReviewTest::RunTest(const FString& Parameters)
                 ReviewWorld->DestroyWorld(false);
                 return false;
             }
-            // Support visibility must match the hydrofoils immediately when
-            // RequestForm begins, not lag until the first actor Tick.
+            // Direct Skyborne <-> Submersible routes must never reveal foils.
+            // Only a Seaborne endpoint calls for a visible fold/deploy path.
+            const bool bFoilsExpected =
+                Start == EAureateWakeForm::Seaborne ||
+                Target == EAureateWakeForm::Seaborne;
             for (int32 I = 0; I < 2; ++I)
             {
+                UStaticMeshComponent* ImmediateFoil = Part(TEXT("Hydrofoil"), I);
                 UStaticMeshComponent* ImmediateStrut = Part(TEXT("ReviewHydrofoilStrut"), I);
-                if (TestNotNull(TEXT("Transition-start strut exists"), ImmediateStrut))
+                if (TestNotNull(TEXT("Transition-start foil exists"), ImmediateFoil)
+                    && TestNotNull(TEXT("Transition-start strut exists"), ImmediateStrut))
                 {
-                    TestTrue(TEXT("Strut visible on the same frame as foil deployment"),
-                        ImmediateStrut->IsVisible());
+                    TestEqual(TEXT("Foil starts visible only for a Seaborne route"),
+                        ImmediateFoil->IsVisible(), bFoilsExpected);
+                    TestEqual(TEXT("Strut follows foil on the same transition frame"),
+                        ImmediateStrut->IsVisible(), bFoilsExpected);
                 }
             }
             Ship->Tick(Ship->TransitionSeconds * 0.5f);
@@ -204,13 +211,18 @@ bool FTSTSSAureateSixRouteSupportReviewTest::RunTest(const FString& Parameters)
                 UStaticMeshComponent* Foil = Part(TEXT("Hydrofoil"), I);
                 if (!TestNotNull(TEXT("Moving strut found"), Strut)
                     || !TestNotNull(TEXT("Moving hydrofoil found"), Foil)) continue;
-                TestTrue(TEXT("Hydrofoil strut visible during deployed-foil motion"),
-                    Strut->IsVisible());
-                const FVector Tip = Strut->GetRelativeLocation()
-                    + Strut->GetRelativeRotation().RotateVector(
-                        FVector(Strut->GetRelativeScale3D().X * 50.f, 0.f, 0.f));
-                TestTrue(TEXT("Hydrofoil strut tip tracks foil pivot"),
-                    Tip.Equals(Foil->GetRelativeLocation(), 0.5f));
+                TestEqual(TEXT("Hydrofoil visibility at route midpoint"),
+                    Foil->IsVisible(), bFoilsExpected);
+                TestEqual(TEXT("Hydrofoil strut visibility at route midpoint"),
+                    Strut->IsVisible(), bFoilsExpected);
+                if (bFoilsExpected)
+                {
+                    const FVector Tip = Strut->GetRelativeLocation()
+                        + Strut->GetRelativeRotation().RotateVector(
+                            FVector(Strut->GetRelativeScale3D().X * 50.f, 0.f, 0.f));
+                    TestTrue(TEXT("Visible hydrofoil strut tip tracks foil pivot"),
+                        Tip.Equals(Foil->GetRelativeLocation(), 0.5f));
+                }
             }
 
             if (!TestTrue(TEXT("Ordinary route completes"), Ship->FinishOrdinaryPreviewTransitionForReview()))
@@ -225,10 +237,15 @@ bool FTSTSSAureateSixRouteSupportReviewTest::RunTest(const FString& Parameters)
             for (int32 I = 0; I < 2; ++I)
             {
                 UStaticMeshComponent* Strut = Part(TEXT("ReviewHydrofoilStrut"), I);
-                if (TestNotNull(TEXT("Terminal hydrofoil strut found"), Strut))
+                UStaticMeshComponent* Foil = Part(TEXT("Hydrofoil"), I);
+                if (TestNotNull(TEXT("Terminal strut found"), Strut)
+                    && TestNotNull(TEXT("Terminal foil found"), Foil))
                 {
-                    TestEqual(TEXT("Strut visible only in terminal Seaborne"),
-                        Strut->IsVisible(), Target == EAureateWakeForm::Seaborne);
+                    const bool bDeployed = Target == EAureateWakeForm::Seaborne;
+                    TestEqual(TEXT("Terminal hydrofoil visible only in Seaborne"),
+                        Foil->IsVisible(), bDeployed);
+                    TestEqual(TEXT("Terminal support strut visible only in Seaborne"),
+                        Strut->IsVisible(), bDeployed);
                 }
             }
             TestFalse(TEXT("Orbiter blocked at ordinary destination"),
