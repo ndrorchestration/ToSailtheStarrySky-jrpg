@@ -28,6 +28,10 @@ class NativePreflightSourceTests(unittest.TestCase):
         self.assertIn("$UnrealValid", HOST)
         self.assertIn("$CxxValid", HOST)
         self.assertIn("$SdkValid", HOST)
+        self.assertIn("$NetFxSdkValid", HOST)
+        self.assertIn("NETFXSDK", HOST)
+        self.assertIn("netfx_sdk_present", HOST)
+        self.assertIn("-and $SdkValid -and $NetFxSdkValid", HOST)
 
     def test_explicit_success_and_rejection_exit_codes(self):
         self.assertIn("if ($RequireReady -and -not $Ready) { exit 2 }", HOST)

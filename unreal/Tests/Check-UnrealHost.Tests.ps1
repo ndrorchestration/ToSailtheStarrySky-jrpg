@@ -8,9 +8,10 @@ $BatchFolder = Join-Path $BuildFolder 'BatchFiles'
 $BinFolder = Join-Path $EngineFolder 'Engine\Binaries\Win64'
 try {
     New-Item -ItemType Directory -Force -Path $BatchFolder,$BinFolder | Out-Null
+    # Omit the commandlet binary so fake engines remain unready even when the
+    # host later gains every genuine compiler/SDK prerequisite.
     foreach ($File in @((Join-Path $BatchFolder 'Build.bat'),
-                        (Join-Path $BinFolder 'UnrealEditor.exe'),
-                        (Join-Path $BinFolder 'UnrealEditor-Cmd.exe'))) {
+                        (Join-Path $BinFolder 'UnrealEditor.exe'))) {
         Set-Content -LiteralPath $File -Value 'FAKE VERSION TEST ONLY'
     }
     $VersionPath = Join-Path $BuildFolder 'Build.version'
@@ -29,6 +30,9 @@ try {
         $Result = (& $Gate -EngineRoot $EngineFolder) | Out-String | ConvertFrom-Json
         if ([bool]$Result.engine_version_manifest_valid -ne $Case.Valid) {
             throw ("Case {0} failed: {1}" -f $Case.Name,($Result | ConvertTo-Json -Compress))
+        }
+        if ($null -eq $Result.netfx_sdk_present) {
+            throw 'NetFx SDK readiness field missing'
         }
         if ($Result.ready_for_native_build_attempt) {
             throw "Fake engine was incorrectly classified as a real build-ready machine"

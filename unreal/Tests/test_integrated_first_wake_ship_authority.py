@@ -58,8 +58,11 @@ class ShipFoundationIntegrationAuthority(unittest.TestCase):
         self.assertIn("bEnableStoryWaterObservation = false;", self.observer_header)
         self.assertIn("if (!bEnableStoryWaterObservation)", self.observer)
         self.assertIn("HasMeasuredHullWaterlineIntersection(", self.observer)
-        self.assertIn("PhysicalHull->GetComponentBounds(", self.observer)
-        self.assertIn("WaterCollision->GetComponentBounds(", self.observer)
+        self.assertIn("PhysicalHull->GetBounds()", self.observer)
+        self.assertIn("WaterCollision->GetBounds()", self.observer)
+        self.assertIn("HullBounds.BoxExtent", self.observer)
+        self.assertIn("WaterBounds.BoxExtent", self.observer)
+        self.assertIn("Hull->GetBounds()", self.contact)
         self.assertLess(self.observer.index("HasMeasuredHullWaterlineIntersection("),
                         self.observer.index("LandingGate->Observe("))
         self.assertIn("const bool bContactAccepted =", self.observer)

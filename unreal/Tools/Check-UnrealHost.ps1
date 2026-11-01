@@ -48,13 +48,30 @@ $UnrealValid = (Test-Path -LiteralPath $Build -PathType Leaf) -and
 $ProjectValid = Test-Path -LiteralPath $Project -PathType Leaf
 $CxxValid = [bool]$VsRoot
 $SdkValid = Test-Path -LiteralPath $WindowsKit -PathType Container
-$Ready = $UnrealValid -and $EngineVersionValid -and $ProjectValid -and $CxxValid -and $SdkValid
+# UE 5.8 Editor's SwarmInterface requires the .NET Framework SDK 4.6+.
+# A .NET runtime or the modern dotnet SDK alone does not satisfy this dependency.
+$NetFxRoot = Join-Path $ProgramFilesX86 'Windows Kits\NETFXSDK'
+$NetFxSdkValid = $false
+if (Test-Path -LiteralPath $NetFxRoot -PathType Container) {
+    foreach ($Sdk in (Get-ChildItem -LiteralPath $NetFxRoot -Directory -ErrorAction SilentlyContinue)) {
+        $SdkVersion = $null
+        if ([version]::TryParse($Sdk.Name, [ref]$SdkVersion) -and
+            $SdkVersion -ge [version]'4.6' -and
+            (Test-Path -LiteralPath (Join-Path $Sdk.FullName 'Include\um') -PathType Container) -and
+            (Test-Path -LiteralPath (Join-Path $Sdk.FullName 'Lib\um\x64') -PathType Container)) {
+            $NetFxSdkValid = $true
+            break
+        }
+    }
+}
+$Ready = $UnrealValid -and $EngineVersionValid -and $ProjectValid -and $CxxValid -and $SdkValid -and $NetFxSdkValid
 $Missing = @()
 if (-not $UnrealValid) { $Missing += "Unreal 5.8 Engine Build.bat + Editor binaries" }
 if (-not $EngineVersionValid) { $Missing += "Unreal Build.version requires 5.8 patch >= $MinimumPatch" }
 if (-not $ProjectValid) { $Missing += "ToSailTheStarrySky.uproject" }
 if (-not $CxxValid) { $Missing += "Visual Studio C++ x64 build tools" }
 if (-not $SdkValid) { $Missing += "Windows SDK 10 headers" }
+if (-not $NetFxSdkValid) { $Missing += ".NET Framework SDK 4.6+ (NETFXSDK Include/um and Lib/um/x64)" }
 $Output = [ordered]@{
     authority = "NATIVE_HOST_PREREQUISITES_ONLY_NOT_A_BUILD_OR_RENDER"
     expected_engine = $ExpectedVersion
@@ -65,6 +82,7 @@ $Output = [ordered]@{
     engine_binaries_present = [bool]$UnrealValid
     vs_cpp_toolchain_present = $CxxValid
     windows_sdk_present = [bool]$SdkValid
+    netfx_sdk_present = [bool]$NetFxSdkValid
     project_exists = [bool]$ProjectValid
     ready_for_native_build_attempt = [bool]$Ready
     missing = $Missing

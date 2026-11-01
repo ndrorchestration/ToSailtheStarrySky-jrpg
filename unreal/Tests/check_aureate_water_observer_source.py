@@ -10,8 +10,10 @@ checks={
         'bEnableStoryWaterObservation = false;' in
         (ROOT/"Source/ToSailTheStarrySky/Public/AureateWakeWaterObserverComponent.h").read_text(),
     "finite measured waterline required": "HasMeasuredHullWaterlineIntersection(" in observer
-        and "PhysicalHull->GetComponentBounds(" in observer
-        and "WaterCollision->GetComponentBounds(" in observer,
+        and "PhysicalHull->GetBounds()" in observer
+        and "WaterCollision->GetBounds()" in observer
+        and "HullBounds.BoxExtent" in observer
+        and "WaterBounds.BoxExtent" in observer,
     "physical velocity sampled": "GetPhysicsLinearVelocity()" in observer and "GetComponentVelocity()" in observer and "IsSimulatingPhysics()" in observer,
     "nonfinite samples rejected": "FMath::IsFinite(VerticalSpeed)" in observer,
     "stale gate resets": observer.count("LandingGate->Reset()")>=3,
