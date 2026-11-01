@@ -24,11 +24,19 @@ class ShipReviewHold(ValueError):
 
 
 def validate_plan(wing_asset: str, support_asset: str) -> dict:
+    # UE 5.8 Interchange places glTF StaticMeshes in a deterministic nested
+    # folder, unlike older flat imports. Whitelist only these exact known
+    # paths; never allow arbitrary subfolders, traversal or production assets.
+    interchange_static_mesh = {
+        "wing": "AureateWake_Wing_Lookdev/StaticMeshes/AureateWake_Wing_Lookdev.AureateWake_Wing_Lookdev",
+        "root_support": "AureateWake_RootSupport_Lookdev/StaticMeshes/AureateWake_RootSupport_Lookdev.AureateWake_RootSupport_Lookdev",
+    }
     for name, path, root in (("wing", wing_asset, WING_DIR), ("root_support", support_asset, SUPPORT_DIR)):
         if not isinstance(path, str) or not path.startswith(root):
             raise ShipReviewHold(name + " must be in its isolated review candidate folder")
         suffix = path[len(root):]
-        if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z][A-Za-z0-9_]*)?", suffix):
+        is_flat_object = re.fullmatch(r"[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z][A-Za-z0-9_]*)?", suffix)
+        if not is_flat_object and suffix != interchange_static_mesh[name]:
             raise ShipReviewHold(name + " asset has an unsafe or invalid Unreal object name")
     if wing_asset == support_asset:
         raise ShipReviewHold("A wing and root support must be different assets")
@@ -49,6 +57,14 @@ def read_property(actor, names):
         except (AttributeError, ValueError, TypeError):
             continue
     raise ShipReviewHold("Compiled preview actor is missing editor property: " + "/".join(names))
+
+
+def is_skyborne_form(value) -> bool:
+    # UE 5.8 Python enums stringify as "<AureateWakeForm.SKYBORNE: 0>",
+    # whereas source-only mocks may return "AureateWakeForm.SKYBORNE".
+    # Prefer the real enum name to avoid admitting unrelated form values.
+    name = getattr(value, "name", None)
+    return name.upper() == "SKYBORNE" if isinstance(name, str) else str(value).lower().endswith("skyborne")
 
 
 def bind_in_editor(plan: dict) -> dict:
@@ -76,7 +92,7 @@ def bind_in_editor(plan: dict) -> dict:
         raise ShipReviewHold("Unreal Python could not reflect the compiled ship review API")
     if (ship.get_wing_count(),ship.get_root_support_count(),ship.get_hydrofoil_count()) != (4,4,2):
         raise ShipReviewHold("Ship component inventory changed")
-    if ship.is_transitioning() or not str(ship.get_current_form()).lower().endswith("skyborne"):
+    if ship.is_transitioning() or not is_skyborne_form(ship.get_current_form()):
         raise ShipReviewHold("Actor must be stationary and in Skyborne form")
     orbiter_flag, orbiter_value = read_property(ship, ("allow_orbiter_preview", "b_allow_orbiter_preview"))
     if orbiter_value:

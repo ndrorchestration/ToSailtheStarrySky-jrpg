@@ -11,13 +11,14 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 from pathlib import Path
 import re
 import struct
 import zlib
 
 from build_first_wake_benchmark import CAMERAS, MAP_PATH, SHIP_POSITION
-from bind_first_wake_review_ship_art import SHIP_LABEL, WING_DIR, SUPPORT_DIR, read_property
+from bind_first_wake_review_ship_art import SHIP_LABEL, WING_DIR, SUPPORT_DIR, read_property, is_skyborne_form
 
 WIDTH = 1920
 HEIGHT = 1080
@@ -59,13 +60,32 @@ def capture_plan(run_id: str) -> dict:
             "native_render_verified": False, "approved_art": False}
 
 
+def assert_camera_forward_alignment(eye, target, forward) -> float:
+    """Fail closed if a native review camera is not actually looking at its shot target."""
+    try:
+        d = tuple(float(b) - float(a) for a, b in zip(eye, target))
+        f = tuple(float(v) for v in forward)
+        if len(d) != 3 or len(f) != 3:
+            raise ValueError("Expected 3D vectors")
+        dn = math.sqrt(sum(x*x for x in d))
+        fn = math.sqrt(sum(x*x for x in f))
+        if not dn or not fn or not all(math.isfinite(x) for x in (*d, *f)):
+            raise ValueError("Degenerate camera")
+        dot = sum(x*y for x, y in zip(d, f)) / (dn*fn)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise ScreenshotHold("Invalid review camera direction") from exc
+    if not math.isfinite(dot) or dot < 0.995:
+        raise ScreenshotHold("Review camera not pointed at its shot target")
+    return dot
+
+
 def preflight_in_editor(plan: dict) -> list:
     try:
         import unreal
     except ImportError as exc:
         raise ScreenshotHold("Native screenshots require Unreal Editor Python") from exc
     required = ("UnrealEditorSubsystem", "EditorActorSubsystem", "CineCameraActor",
-                "AureateWakePreviewActor", "AutomationLibrary", "AutomationScheduler",
+                "AureateWakePreviewActor", "AutomationLibrary",
                 "get_editor_subsystem")
     if any(not hasattr(unreal, name) for name in required):
         raise ScreenshotHold("Unreal Editor capture API / compiled TSTSS module missing")
@@ -79,6 +99,15 @@ def preflight_in_editor(plan: dict) -> list:
         if len(matches) != 1 or not isinstance(matches[0], unreal.CineCameraActor):
             raise ScreenshotHold("Missing/duplicate authentic CineCameraActor " + shot["actor_label"])
         selected.append((shot, matches[0]))
+    # UE5.8 Python Rotator positional order is roll/pitch/yaw. The original
+    # test map had skyward-facing camera rotations despite a valid shot plan.
+    # Never issue an apparently successful screenshot of empty sky again.
+    for shot, camera in selected:
+        origin = camera.get_actor_location()
+        facing = unreal.MathLibrary.get_forward_vector(camera.get_actor_rotation())
+        assert_camera_forward_alignment(
+            (origin.x, origin.y, origin.z), shot["camera_target_cm"],
+            (facing.x, facing.y, facing.z))
     ships = [a for a in actors if a.get_actor_label(False) == SHIP_LABEL]
     if len(ships) != 1 or not isinstance(ships[0], unreal.AureateWakePreviewActor):
         raise ScreenshotHold("Expected exactly one compiled Aureate Wake review actor")
@@ -86,7 +115,7 @@ def preflight_in_editor(plan: dict) -> list:
     try:
         if (ship.get_wing_count(), ship.get_root_support_count(), ship.get_hydrofoil_count()) != (4, 4, 2):
             raise ScreenshotHold("Ship component inventory changed; stop capture")
-        if ship.is_transitioning() or not str(ship.get_current_form()).lower().endswith("skyborne"):
+        if ship.is_transitioning() or not is_skyborne_form(ship.get_current_form()):
             raise ScreenshotHold("Ship must be stationary in its preflight Skyborne form")
         _, orbiter = read_property(ship, ("allow_orbiter_preview", "b_allow_orbiter_preview"))
         _, wing = read_property(ship, ("authored_wing_mesh",))
@@ -113,6 +142,8 @@ def preflight_in_editor(plan: dict) -> list:
 def schedule_editor_capture(plan: dict) -> dict:
     selected = preflight_in_editor(plan)
     import unreal
+    if not hasattr(unreal, "AutomationScheduler"):
+        raise ScreenshotHold("Latent AutomationScheduler is not exposed; do not claim screenshots")
     # UE5.8: automation screenshots require future editor ticks to finish.
     # Register a latent command instead of claiming screenshot output on request.
     @unreal.AutomationScheduler.add_latent_command

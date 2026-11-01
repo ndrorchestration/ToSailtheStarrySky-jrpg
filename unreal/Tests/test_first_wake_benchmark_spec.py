@@ -42,6 +42,17 @@ class BenchmarkPlanTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             benchmark.look_at_rotation((0, 0, 0), (0, 0, 0))
 
+    def test_native_unreal_rotator_constructor_order_matches_camera_plan(self):
+        # Actual UE 5.8 Python reflection uses (roll, pitch, yaw), not P/Y/R.
+        source = SCRIPT.read_text(encoding="utf-8")
+        self.assertIn("unreal.Rotator(angles[2], angles[0], angles[1])", source)
+        self.assertNotIn("unreal.Rotator(*angles)", source)
+        cam = next(c for c in benchmark.CAMERAS if c.name == "02_Wake_ThreeQuarter")
+        pitch, yaw, roll = benchmark.look_at_rotation(cam.location, cam.target)
+        self.assertLess(pitch, 0)  # eye above ship, aim down
+        self.assertGreater(yaw, 0)  # ship is to the camera's +Y
+        self.assertEqual(roll, 0)
+
     def test_fail_closed_map_and_placement_boundaries(self):
         source = SCRIPT.read_text(encoding="utf-8")
         self.assertIn("does_asset_exist(MAP_PATH)", source)

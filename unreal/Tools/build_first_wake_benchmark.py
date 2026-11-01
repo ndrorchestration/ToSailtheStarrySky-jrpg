@@ -121,7 +121,11 @@ def build_in_unreal():
         return unreal.Vector(*xyz)
 
     def spawn(cls, name, xyz, angles=(0, 0, 0)):
-        actor = actors.spawn_actor_from_class(cls, vec(xyz), unreal.Rotator(*angles))
+        # Python unreal.Rotator's positional constructor is (roll, pitch, yaw),
+        # while look_at_rotation returns (pitch, yaw, roll).
+        # Using *angles previously pointed all four authored review cameras skyward.
+        actor = actors.spawn_actor_from_class(
+            cls, vec(xyz), unreal.Rotator(angles[2], angles[0], angles[1]))
         if not actor:
             raise RuntimeError("Unable to spawn: " + name)
         actor.set_actor_label(LABEL_PREFIX + name)

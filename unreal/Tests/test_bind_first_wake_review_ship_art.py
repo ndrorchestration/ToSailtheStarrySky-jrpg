@@ -77,6 +77,42 @@ class ReviewShipBindContracts(unittest.TestCase):
         with self.assertRaises(binding.ShipReviewHold):
             binding.validate_plan(WING,WING)
 
+    def test_native_ue58_interchange_nested_paths_are_exact_only(self):
+        wing = binding.WING_DIR + (
+            "AureateWake_Wing_Lookdev/StaticMeshes/"
+            "AureateWake_Wing_Lookdev.AureateWake_Wing_Lookdev")
+        root = binding.SUPPORT_DIR + (
+            "AureateWake_RootSupport_Lookdev/StaticMeshes/"
+            "AureateWake_RootSupport_Lookdev.AureateWake_RootSupport_Lookdev")
+        plan = binding.validate_plan(wing, root)
+        self.assertEqual(plan["wing_asset"], wing)
+        self.assertEqual(plan["root_support_asset"], root)
+        for altered in (
+            wing.replace("/StaticMeshes/", "/Materials/"),
+            wing.replace("AureateWake_Wing_Lookdev.AureateWake_Wing_Lookdev",
+                         "OtherMesh.OtherMesh"),
+            wing.replace("WingCandidateV2", "WingCandidateV3"),
+            binding.WING_DIR + "Other/StaticMeshes/AureateWake_Wing_Lookdev",
+            binding.WING_DIR + "AureateWake_Wing_Lookdev/../StaticMeshes/Bad.Bad",
+        ):
+            with self.subTest(altered=altered), self.assertRaises(binding.ShipReviewHold):
+                binding.validate_plan(altered, root)
+
+    def test_native_ue58_enum_name_acceptance_is_exact(self):
+        class UnrealEnum:
+            name = "SKYBORNE"
+            def __str__(self):
+                return "<AureateWakeForm.SKYBORNE: 0>"
+        self.assertTrue(binding.is_skyborne_form(UnrealEnum()))
+        self.assertTrue(binding.is_skyborne_form("AureateWakeForm.SKYBORNE"))
+        for name in ("SEABORNE", "SUBMERSIBLE", "ORBITER"):
+            class Other:
+                pass
+            obj = Other()
+            obj.name = name
+            self.assertFalse(binding.is_skyborne_form(obj))
+        self.assertFalse(binding.is_skyborne_form("<AureateWakeForm.ORBITER: 3>"))
+
     def test_non_unreal_host_cannot_bind(self):
         with patch.dict(sys.modules,{"unreal":None}):
             with self.assertRaisesRegex(binding.ShipReviewHold,"Unreal Editor Python"):
