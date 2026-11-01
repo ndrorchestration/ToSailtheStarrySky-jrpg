@@ -21,7 +21,14 @@ def read_log(path):
     raw = Path(path).read_bytes()
     if not raw or len(raw) > MAX_LOG:
         raise ValueError("empty or oversized Unreal log")
-    return raw.decode("utf-8", errors="replace"), hashlib.sha256(raw).hexdigest()
+    try:
+        if raw.startswith((b"\xff\xfe", b"\xfe\xff")):
+            decoded = raw.decode("utf-16")
+        else:
+            decoded = raw.decode("utf-8-sig")
+    except UnicodeError as exc:
+        raise ValueError("unsupported or corrupt log encoding") from exc
+    return decoded, hashlib.sha256(raw).hexdigest()
 
 def analyze(build_log, render_log, receipt, expected_source=PINNED_PR656,
             external_operator_stop=False):
@@ -100,7 +107,17 @@ def self_test():
     altered = dict(receipt, screenshot_path="C:/untrusted-filename.png")
     assert "screenshot_path_or_digest_without_log_event" in analyze(
         build, render, altered)["receipt_contradictions"]
-    print("PASS: 6 synthetic native-log/receipt reconciliation controls; no actual render")
+    import tempfile
+    with tempfile.TemporaryDirectory() as temp:
+        utf16_path = Path(temp) / "native-utf16.log"
+        utf8_path = Path(temp) / "native-utf8.log"
+        utf16_path.write_bytes(("\ufeff" + build).encode("utf-16-le"))
+        utf8_path.write_bytes(("\\ufeff" + render).encode("utf-8"))
+        decoded_build, _ = read_log(utf16_path)
+        decoded_render, _ = read_log(utf8_path)
+        assert analyze(decoded_build, decoded_render, receipt)["native_build"].startswith(
+            "LOG_REPORTS_SUCCESS")
+    print("PASS: 6 synthetic native-log/receipt controls plus UTF-16LE/UTF-8 BOM tests; no actual render")
 
 def main():
     p = argparse.ArgumentParser()
