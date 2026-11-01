@@ -36,7 +36,7 @@ def face_head(builder):
         if y < 1.43:
             r=max(0.,min(1.,(y-1.36)/.07))
             x*=.70+.27*r
-            z+=.018*(1-r)
+            z+=.004*(1-r)
         elif y < 1.50:
             r=(y-1.43)/.07
             x*=.97+.04*math.sin(r*math.pi)
@@ -149,10 +149,11 @@ def add_goggles(builder):
                          "#bb8951",sides=8,metal=.75,rough=.28)
     # Soft band contour around the visible temples.
     for sign in (-1,1):
-        curved(builder,"Sculpt goggle side band "+str(sign),
-               [(sign*.092,1.633,.091),(sign*.113,1.637,.06),
-                (sign*.12,1.632,.018),(sign*.105,1.629,-.055)],
-               .006,"#49372c")
+        points=[(sign*.092,1.633,.091),(sign*.110,1.634,.045),
+                (sign*.105,1.629,-.055)]
+        for k in range(len(points)-1):
+            builder.tapered("Sculpt goggle side band %s section %d"%(sign,k),
+                            points[k],points[k+1],.006,.006,"#49372c")
 
 def add_garment(builder):
     trim="#a98c66"
@@ -170,6 +171,40 @@ def add_garment(builder):
         curved(builder,"Garment cuff hand stitch "+str(j),
                [(x,1.075,.062),(x+.009,1.079,.064)],.0025,"#b7a78a",sides=7)
 
+def split_bad_smooth_normal_faces(builder):
+    """Local per-triangle normal fix for steep sculpt transitions, no face flips.
+
+    Maintains continuous smooth normals except for a tiny number of triangles
+    whose normal is opposite its own oriented surface. Explicitly bounded.
+    """
+    repaired={}
+    new_parts=[]
+    for name,vs,ns,faces,mat in builder.parts:
+        vs=list(vs);ns=list(ns);faces=list(faces)
+        replacements=0
+        for fi,(a,b,c) in enumerate(faces):
+            u=tuple(vs[b][i]-vs[a][i] for i in range(3))
+            v=tuple(vs[c][i]-vs[a][i] for i in range(3))
+            n=(u[1]*v[2]-u[2]*v[1],
+               u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0])
+            length=math.sqrt(sum(x*x for x in n))
+            if length<=2e-10:
+                raise ValueError(name+": degenerate triangle")
+            if sum(n[i]*ns[a][i] for i in range(3)) < -1e-6:
+                start=len(vs)
+                vs.extend((vs[a],vs[b],vs[c]))
+                normal=tuple(x/length for x in n)
+                ns.extend((normal,normal,normal))
+                faces[fi]=(start,start+1,start+2)
+                replacements+=1
+        if replacements:
+            if replacements>max(12,len(faces)//30):
+                raise ValueError(name+": excessive non-smooth corrections")
+            repaired[name]=replacements
+        new_parts.append((name,vs,ns,faces,mat))
+    builder.parts=new_parts
+    return repaired
+
 def build(output):
     builder=make("Ender")
     for old in ("Head sculpt","Hair crown","Nose","Mouth",
@@ -182,6 +217,7 @@ def build(output):
     add_garment(builder)
     if len({p[0] for p in builder.parts})!=len(builder.parts):
         raise ValueError("Nonunique named parts")
+    local_normal_fixes=split_bad_smooth_normal_faces(builder)
     output.mkdir(parents=True,exist_ok=True)
     file=output/("Ender_"+VERSION+".glb")
     if file.exists() or (output/"receipt.json").exists():
@@ -195,6 +231,7 @@ def build(output):
       "hair_palette":"temporary existing green palette; exact canon hair color unresolved",
       "approved_original_art_replaced":False,
       "source":result,
+      "local_normal_fixes":local_normal_fixes,
       "height_order_canon":"Reson > Aepex > Ender > Ionia > Lyra",
       "limits":["not a creator-approved likeness","no skeletal mesh or animation",
                 "no retargeting","no gameplay admission"]
