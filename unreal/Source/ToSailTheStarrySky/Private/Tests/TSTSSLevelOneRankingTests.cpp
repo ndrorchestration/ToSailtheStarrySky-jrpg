@@ -36,6 +36,43 @@ bool FTSTSSLevelOneRankReviewTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Approved Level 1 relative rankings"), 
         FTSTSSLevelOneRankContract::Validate(Baseline));
 
+    // Input-array ordering must not grant priority or change the five-id contract.
+    TArray<FTSTSSLevelOneRankCandidate> Reordered = Baseline;
+    Reordered.Swap(0, 4);
+    Reordered.Swap(1, 3);
+    TestTrue(TEXT("Character array order is irrelevant"),
+        FTSTSSLevelOneRankContract::Validate(Reordered));
+
+    // The creator has NOT specified an order among Ionia, Reson, Aepex.
+    // Changing their internal HP/MP/MAG ranking must remain legal.
+    TArray<FTSTSSLevelOneRankCandidate> UnrankedThree = Baseline;
+    UnrankedThree[1].MaxHealth = 150;
+    UnrankedThree[3].MaxHealth = 107;
+    UnrankedThree[4].MaxHealth = 120;
+    UnrankedThree[1].MaxMagicPoints = 49;
+    UnrankedThree[3].MaxMagicPoints = 35;
+    UnrankedThree[4].MaxMagicPoints = 20;
+    UnrankedThree[1].MagicPower = 17;
+    UnrankedThree[3].MagicPower = 1;
+    UnrankedThree[4].MagicPower = 12;
+    TestTrue(TEXT("No internal ranking imposed on Ionia/Reson/Aepex"),
+        FTSTSSLevelOneRankContract::Validate(UnrankedThree));
+
+    // Strict rankings can be satisfied at the lower integer boundary, and
+    // equality among the unconstrained three is permitted.
+    TArray<FTSTSSLevelOneRankCandidate> Boundary = Baseline;
+    Boundary[2].MaxHealth = 1; Boundary[0].MaxHealth = 2;
+    Boundary[1].MaxHealth = 3; Boundary[3].MaxHealth = 3;
+    Boundary[4].MaxHealth = 3;
+    Boundary[0].MaxMagicPoints = 2; Boundary[2].MaxMagicPoints = 1;
+    Boundary[1].MaxMagicPoints = 0; Boundary[3].MaxMagicPoints = 0;
+    Boundary[4].MaxMagicPoints = 0;
+    Boundary[0].MagicPower = 2; Boundary[2].MagicPower = 1;
+    Boundary[1].MagicPower = 0; Boundary[3].MagicPower = 0;
+    Boundary[4].MagicPower = 0;
+    TestTrue(TEXT("Strict two-rank boundary accepts tied lower-three zero MAG/MP"),
+        FTSTSSLevelOneRankContract::Validate(Boundary));
+
     TArray<FTSTSSLevelOneRankCandidate> Variant = Baseline;
     Variant[0].MagicPower = Variant[2].MagicPower;
     TestFalse(TEXT("Ender/Lyra tied MAG rejected"),
@@ -89,6 +126,21 @@ bool FTSTSSLevelOneRankReviewTest::RunTest(const FString& Parameters)
     Variant = Baseline;
     Variant[4].MaxHealth = 0;
     TestFalse(TEXT("Zero HP rejected"),
+        FTSTSSLevelOneRankContract::Validate(Variant));
+
+    Variant = Baseline;
+    Variant[0].MaxMagicPoints = 1000000;
+    TestFalse(TEXT("Out-of-range MP rejected"),
+        FTSTSSLevelOneRankContract::Validate(Variant));
+
+    Variant = Baseline;
+    Variant[4].MagicPower = -1;
+    TestFalse(TEXT("Negative MAG rejected"),
+        FTSTSSLevelOneRankContract::Validate(Variant));
+
+    Variant = Baseline;
+    Variant[0].Level = 0;
+    TestFalse(TEXT("Invalid Level 0 rejected"),
         FTSTSSLevelOneRankContract::Validate(Variant));
 
     // Source inputs remain intact across all validation calls.
