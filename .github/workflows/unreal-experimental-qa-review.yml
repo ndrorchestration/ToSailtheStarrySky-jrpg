@@ -37,6 +37,8 @@ jobs:
           python3 -c 'import json,sys; r=json.load(open(sys.argv[1]))["results"]; assert r["height_order"] == "MATCHES_PINNED_LOOKDEV_MANIFEST_NOT_NATIVE_OR_CANON"; assert set(v for k,v in r.items() if k != "height_order") == {"UNKNOWN"}' "$RUNNER_TEMP/pr643-canon-outcome.json"
       - name: Windows capture preflight synthetic safeguards (read-only)
         run: python3 unreal/Experiments/VisualQAPilot/preflight_windows.py --self-test
+      - name: Render RAM headroom gate (synthetic, no Unreal launch)
+        run: python3 unreal/Experiments/VisualQAPilot/memory_gate.py --self-test
       - name: Assert native evidence remains UNKNOWN by default
         run: |
           python3 unreal/Experiments/CanonPilot/check_canon.py unreal/Experiments/CanonPilot/unknown_observations.json > /tmp/canon-review-results.json
