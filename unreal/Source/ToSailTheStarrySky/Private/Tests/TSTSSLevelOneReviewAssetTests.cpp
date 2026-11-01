@@ -44,6 +44,15 @@ bool FTSTSSLevelOneReviewAssetTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Valid illustrative data may be reviewed locally"),
         Asset->IsConsistentForReview());
 
+    // UDataAsset Editor entries are designer ordered; identity, not row position,
+    // must determine the ranks. Preserve the original order for other checks.
+    Asset->Entries.Swap(0, 4);
+    Asset->Entries.Swap(1, 3);
+    TestTrue(TEXT("Editor entry order does not alter valid rankings"),
+        Asset->IsConsistentForReview());
+    Asset->Entries.Swap(1, 3);
+    Asset->Entries.Swap(0, 4);
+
     Asset->Entries[4].MaxHealth = 100;
     TestFalse(TEXT("HP order inversion denied even with local opt-in"),
         Asset->IsConsistentForReview());
@@ -66,6 +75,16 @@ bool FTSTSSLevelOneReviewAssetTest::RunTest(const FString& Parameters)
 
     TestTrue(TEXT("Local review recovers after fixing the candidate"),
         Asset->IsConsistentForReview());
+
+    // Equal low-tier stats are allowed: creator has not specified ordering
+    // among Ionia, Reson and Aepex.
+    Asset->Entries[1].ProposedMAG = Asset->Entries[3].ProposedMAG;
+    Asset->Entries[4].ProposedMAG = Asset->Entries[3].ProposedMAG;
+    TestTrue(TEXT("Tied values among unconstrained lower-three are accepted"),
+        Asset->IsConsistentForReview());
+
+    Asset->Entries[1].ProposedMAG = 8;
+    Asset->Entries[4].ProposedMAG = 11;
     Asset->bEnableLocalReview = false;
     TestFalse(TEXT("Disabling preview revokes review readiness"),
         Asset->IsConsistentForReview());
