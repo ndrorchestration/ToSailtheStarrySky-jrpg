@@ -415,7 +415,7 @@ void AAureateWakePreviewActor::UpdateHullSilhouetteVisibility()
     // An already-applied, validated body takes precedence over the editable
     // primitive toggle until its explicit rollback completes. Failed/conflicting
     // requests must never show both hull studies at once.
-    const bool bShowPrimitiveStudy = bUseHullSilhouetteReview && !bBodyReviewApplied;
+    const bool bShowPrimitiveStudy = ShouldShowPrimitiveHullStudy(bUseHullSilhouetteReview, bBodyReviewApplied);
     if (Hull) Hull->SetVisibility(!bShowPrimitiveStudy);
     if (ForwardBridge) ForwardBridge->SetVisibility(!bShowPrimitiveStudy);
     for (UStaticMeshComponent* Section : HullSilhouetteSections)
@@ -454,7 +454,7 @@ void AAureateWakePreviewActor::UpdateWingRootMounts()
         // inboard endpoint to the current proxy hull top; no load calculations.
         // Curved hull has a narrower, elliptical local profile than the cube.
         // This is only a visual approximation; continuous clearance remains open.
-        const float HalfWidth = (bUseHullSilhouetteReview && !bBodyReviewApplied) ? 56.f : 72.f;
+        const float HalfWidth = ShouldShowPrimitiveHullStudy(bUseHullSilhouetteReview, bBodyReviewApplied) ? 56.f : 72.f;
         const FVector HullAnchor(WingPivot.X, Side * HalfWidth,
             FMath::Clamp(WingPivot.Z, -28.f, 28.f));
         const FVector Span = WingPivot - HullAnchor;
