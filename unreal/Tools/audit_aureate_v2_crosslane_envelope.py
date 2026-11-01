@@ -24,6 +24,10 @@ EXPECTED_WING_SOURCE_HEAD = "b43303e0afe2150d5a1956023194d9ee5abb4b2e"
 EXPECTED_WING_GLB_SHA = "04d7f9461b4cb4475ea98d5e3f7699b68f272f5646362ad7aef0d222ad92ec73"
 HULL_NAME = "AureateWake_WhiteGoldHull_V2_REVIEW.glb"
 BRIDGE_NAME = "AureateWake_BlueGlassBridge_V2_REVIEW.glb"
+EXPECTED_V2_GLB_HASHES = {
+    HULL_NAME: "efed53b0b1847646d675bb2efe30dbb9af1aaeafb3cbf2e2ef314bb697cb2388",
+    BRIDGE_NAME: "b9a5e43ad6759f4f06e1d3634c80c74616307d267de5f3330b04382cf9e822d1",
+}
 BRIDGE_TRANSLATION_CM = (240., 0., 95.)
 
 
@@ -46,6 +50,8 @@ def require_exact_v2_artifacts(manifest_path: Path, hull: Path, bridge: Path) ->
     hashes = manifest.get("sha256")
     if not isinstance(hashes, dict) or set(hashes) != {HULL_NAME, BRIDGE_NAME}:
         raise V2ReviewHold("V2 manifest names or SHA entries changed: HOLD")
+    if hashes != EXPECTED_V2_GLB_HASHES:
+        raise V2ReviewHold("V2 manifest differs from approved-review source hashes: HOLD")
     for path, name in ((hull, HULL_NAME), (bridge, BRIDGE_NAME)):
         if path.name != name:
             raise V2ReviewHold("Unexpected V2 candidate filename")
