@@ -37,6 +37,77 @@ AAureateWakePreviewActor::AAureateWakePreviewActor()
     ForwardBridge->SetRelativeLocation(FVector(240, 0, 95));
     ForwardBridge->SetRelativeScale3D(FVector(2.1, 1.1, 1.1));
 
+    // Opt-in profile study. Sphere sections overlap to give a continuous,
+    // readable bow/midship/stern silhouette without replacing approved art.
+    // All primitives have collision disabled and default to invisible.
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> Sphere(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
+    UStaticMesh* CurvedShape = Sphere.Succeeded() ? Sphere.Object : Shape;
+    const auto AddHullSection = [this](const TCHAR* Name, UStaticMesh* Mesh,
+        const FVector& Location, const FVector& Scale)
+    {
+        UStaticMeshComponent* Section = CreateDefaultSubobject<UStaticMeshComponent>(FName(Name));
+        Section->SetupAttachment(VesselRoot);
+        SetupPreviewMesh(Section, Mesh);
+        Section->SetRelativeLocation(Location);
+        Section->SetRelativeScale3D(Scale);
+        Section->SetVisibility(false);
+        HullSilhouetteSections.Add(Section);
+    };
+    AddHullSection(TEXT("ReviewCurvedMidHull"), CurvedShape,
+        FVector(0.f, 0.f, 0.f), FVector(6.2f, 1.35f, .7f));
+    AddHullSection(TEXT("ReviewTaperedBow"), CurvedShape,
+        FVector(255.f, 0.f, 5.f), FVector(2.3f, .98f, .5f));
+    AddHullSection(TEXT("ReviewTaperedStern"), CurvedShape,
+        FVector(-255.f, 0.f, 0.f), FVector(2.3f, 1.02f, .6f));
+    // Open foredeck is exposed above the nose, rather than a closed box bridge.
+    AddHullSection(TEXT("ReviewOpenForedeck"), Shape,
+        FVector(317.f, 0.f, 46.f), FVector(1.55f, 1.02f, .075f));
+
+    // Canopy frame is a triangulated visual sketch, NOT a pressure dome.
+    // The optional spherical glazing envelope is hidden if no translucent
+    // artist material is supplied; opaque engine defaults do not look like glass.
+    CanopyShell = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ReviewCanopyGlassEnvelope"));
+    CanopyShell->SetupAttachment(VesselRoot);
+    SetupPreviewMesh(CanopyShell, CurvedShape);
+    CanopyShell->SetCastShadow(false);
+    CanopyShell->SetRelativeLocation(FVector(140.f, 0.f, 86.f));
+    CanopyShell->SetRelativeScale3D(FVector(1.95f, 1.05f, 1.15f));
+    CanopyShell->SetVisibility(false);
+
+    const auto AddCanopyRib = [this, Shape](const FVector& A, const FVector& B)
+    {
+        const FName Name(*FString::Printf(TEXT("ReviewCanopyRib_%02d"), CanopyFramePieces.Num() + 1));
+        UStaticMeshComponent* Rib = CreateDefaultSubobject<UStaticMeshComponent>(Name);
+        Rib->SetupAttachment(VesselRoot);
+        SetupPreviewMesh(Rib, Shape);
+        const FVector Span = B - A;
+        Rib->SetRelativeLocation((A + B) * .5f);
+        Rib->SetRelativeRotation(Span.ToOrientationQuat());
+        Rib->SetRelativeScale3D(FVector(Span.Size() / 100.f, .035f, .035f));
+        Rib->SetVisibility(false);
+        CanopyFramePieces.Add(Rib);
+    };
+    const int32 RingSegments = 8;
+    const FVector Apex(140.f, 0.f, 163.f);
+    for (int32 Index = 0; Index < RingSegments; ++Index)
+    {
+        const float AngleA = 2.f * PI * Index / RingSegments;
+        const float AngleB = 2.f * PI * (Index + 1) / RingSegments;
+        const FVector LowA(140.f + 95.f * FMath::Cos(AngleA),
+            54.f * FMath::Sin(AngleA), 80.f);
+        const FVector LowB(140.f + 95.f * FMath::Cos(AngleB),
+            54.f * FMath::Sin(AngleB), 80.f);
+        const FVector HighA(140.f + 68.f * FMath::Cos(AngleA),
+            39.f * FMath::Sin(AngleA), 127.f);
+        const FVector HighB(140.f + 68.f * FMath::Cos(AngleB),
+            39.f * FMath::Sin(AngleB), 127.f);
+        AddCanopyRib(LowA, LowB);
+        AddCanopyRib(HighA, HighB);
+        AddCanopyRib(LowA, HighA);
+        AddCanopyRib(LowA, HighB);
+        AddCanopyRib(HighA, Apex);
+    }
+
     // Exactly four persistent, independently articulated, dragonfly-derived wings.
     for (int32 Index = 0; Index < 4; ++Index)
     {
@@ -77,6 +148,7 @@ AAureateWakePreviewActor::AAureateWakePreviewActor()
         HydrofoilStruts.Add(Strut);
     }
     SnapToForm(EAureateWakeForm::Skyborne);
+    UpdateHullSilhouetteVisibility();
 }
 
 void AAureateWakePreviewActor::BeginPlay()
@@ -84,6 +156,19 @@ void AAureateWakePreviewActor::BeginPlay()
     Super::BeginPlay();
     RefreshWingMeshes();
     RefreshWingMaterials();
+    UpdateHullSilhouetteVisibility();
+}
+
+void AAureateWakePreviewActor::OnConstruction(const FTransform& Transform)
+{
+    Super::OnConstruction(Transform);
+    RefreshHullSilhouetteReview();
+}
+
+void AAureateWakePreviewActor::RefreshHullSilhouetteReview()
+{
+    UpdateHullSilhouetteVisibility();
+    UpdateWingRootMounts();
 }
 
 void AAureateWakePreviewActor::RefreshWingMeshes()
@@ -249,6 +334,27 @@ void AAureateWakePreviewActor::RefreshWingMaterials()
     }
 }
 
+void AAureateWakePreviewActor::UpdateHullSilhouetteVisibility()
+{
+    // Visual-only toggle: original actor shape is preserved until opted in.
+    if (Hull) Hull->SetVisibility(!bUseHullSilhouetteReview);
+    if (ForwardBridge) ForwardBridge->SetVisibility(!bUseHullSilhouetteReview);
+    for (UStaticMeshComponent* Section : HullSilhouetteSections)
+    {
+        if (Section) Section->SetVisibility(bUseHullSilhouetteReview);
+    }
+    for (UStaticMeshComponent* Rib : CanopyFramePieces)
+    {
+        if (Rib) Rib->SetVisibility(bUseHullSilhouetteReview);
+    }
+    if (CanopyShell)
+    {
+        const bool bShowGlass = bUseHullSilhouetteReview && OptionalCanopyGlassMaterial != nullptr;
+        CanopyShell->SetVisibility(bShowGlass);
+        if (bShowGlass) CanopyShell->SetMaterial(0, OptionalCanopyGlassMaterial);
+    }
+}
+
 void AAureateWakePreviewActor::UpdateWingRootMounts()
 {
     const bool bReviewMountsVisible = bUseRootPivotedWingPose && AuthoredWingMesh &&
@@ -263,7 +369,10 @@ void AAureateWakePreviewActor::UpdateWingRootMounts()
         const float Side = Index % 2 == 0 ? -1.f : 1.f;
         // Provisional 150cm-wide hull uses +/-75cm half-width. Clamp the
         // inboard endpoint to the current proxy hull top; no load calculations.
-        const FVector HullAnchor(WingPivot.X, Side * 72.f,
+        // Curved hull has a narrower, elliptical local profile than the cube.
+        // This is only a visual approximation; continuous clearance remains open.
+        const float HalfWidth = bUseHullSilhouetteReview ? 56.f : 72.f;
+        const FVector HullAnchor(WingPivot.X, Side * HalfWidth,
             FMath::Clamp(WingPivot.Z, -28.f, 28.f));
         const FVector Span = WingPivot - HullAnchor;
         const float Length = Span.Size();
@@ -365,10 +474,15 @@ bool AAureateWakePreviewActor::RequestForm(EAureateWakeForm RequestedForm)
 
 bool AAureateWakePreviewActor::FinishOrdinaryPreviewTransitionForReview()
 {
+#if WITH_EDITOR
     if (!bTransitioning || CurrentForm == EAureateWakeForm::Orbiter ||
         TargetForm == EAureateWakeForm::Orbiter) return false;
     Tick(FMath::Max(.1f, TransitionSeconds) + .2f);
     return !bTransitioning;
+#else
+    // Never expose review-time progression shortcuts in packaged games.
+    return false;
+#endif
 }
 
 void AAureateWakePreviewActor::Tick(float DeltaSeconds)

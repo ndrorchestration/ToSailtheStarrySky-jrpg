@@ -5,6 +5,7 @@ on:
     paths:
       - 'unreal/Source/**'
       - 'unreal/Tools/**'
+      - 'unreal/Tests/**'
       - '.github/workflows/unreal-source-preflight.yml'
   workflow_dispatch:
 
@@ -22,3 +23,5 @@ jobs:
         run: python3 unreal/Tools/test_automation_registry.py
       - name: Compare expected and registered Unreal tests
         run: python3 unreal/Tools/check_automation_registry.py
+      - name: Validate noncanonical hull and canopy source contracts (not native Unreal)
+        run: python3 -m unittest discover -s unreal/Tests -p 'test_aureate_hull_canopy_source.py' -v
