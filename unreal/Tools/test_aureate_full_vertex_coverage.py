@@ -10,7 +10,9 @@ from audit_aureate_wing_clearance import GeometryHold, read_vertices
 
 
 def make_glb(path: Path, counts=(100, 2, 2), *, shorten_view=False,
-             zero_count=False, invalid_stride=False, nonfinite=False):
+             invalid_stride=False, nonfinite=False, node_override=None,
+             scene_override=None, accessor_override=None,
+             morph_targets=False):
     accessors = []
     views = []
     primitives = []
@@ -32,13 +34,24 @@ def make_glb(path: Path, counts=(100, 2, 2), *, shorten_view=False,
         accessors.append({"bufferView": index, "componentType": 5126,
                           "count": count, "type": "VEC3"})
         primitives.append({"attributes": {"POSITION": index}})
+    if accessor_override:
+        accessors[0].update(accessor_override)
+    if morph_targets:
+        primitives[0]["targets"] = [{"POSITION": 0}]
     document = {
         "asset": {"version": "2.0"},
         "extras": {"sourceToGltfScale": 0.01},
+        "scene": 0,
+        "scenes": [{"nodes": [0]}],
+        "nodes": [{"mesh": 0, "name": "AureateWake_ArtReviewWing"}],
         "meshes": [{"primitives": primitives}],
         "bufferViews": views,
         "accessors": accessors,
     }
+    if node_override:
+        document["nodes"][0].update(node_override)
+    if scene_override:
+        document.update(scene_override)
     json_bytes = json.dumps(document, separators=(",", ":")).encode("utf-8")
     json_bytes += b" " * ((-len(json_bytes)) % 4)
     bin_bytes = bytes(binary) + b"\x00" * ((-len(binary)) % 4)
@@ -93,6 +106,53 @@ class CompleteVertexClearanceIntake(unittest.TestCase):
         make_glb(self.path)
         with self.assertRaisesRegex(GeometryHold, "maximum vertices"):
             read_vertices(self.path, per_primitive=99999)
+
+    def test_rejects_translated_rotated_scaled_nodes(self):
+        variants = [
+            {"translation": [0.0, 100.0, 0.0]},
+            {"rotation": [0.0, 0.70710678, 0.0, 0.70710678]},
+            {"scale": [1.0, 2.0, 1.0]},
+            {"matrix": [1.0] * 16},
+        ]
+        for node in variants:
+            with self.subTest(node=node):
+                make_glb(self.path, node_override=node)
+                with self.assertRaisesRegex(GeometryHold, "Scene-graph transform"):
+                    read_vertices(self.path, per_primitive=100)
+
+    def test_rejects_nested_scene_skinning_and_extensions(self):
+        variants = [
+            {"node_override": {"children": [1]}},
+            {"node_override": {"skin": 0}},
+            {"scene_override": {"scenes": [{"nodes": [0, 0]}]}},
+            {"scene_override": {"nodes": [{"mesh": 0}, {"mesh": 0}]}},
+            {"scene_override": {"skins": [{"joints": [0]}]}},
+            {"scene_override": {"extensionsUsed": ["KHR_some_extension"]}},
+            {"scene_override": {"animations": [{"channels": [], "samplers": []}]}},
+        ]
+        for variant in variants:
+            with self.subTest(variant=variant):
+                make_glb(self.path, **variant)
+                with self.assertRaisesRegex(GeometryHold, "Scene-graph transform"):
+                    read_vertices(self.path, per_primitive=100)
+
+    def test_rejects_sparse_and_morphed_position_data(self):
+        for override in ({"sparse": {"count": 1}},
+                         {"normalized": True},
+                         {"extensions": {"KHR_unknown": {}}}):
+            with self.subTest(accessor=override):
+                make_glb(self.path, accessor_override=override)
+                with self.assertRaisesRegex(GeometryHold, "position accessor format"):
+                    read_vertices(self.path, per_primitive=100)
+        make_glb(self.path, morph_targets=True)
+        with self.assertRaisesRegex(GeometryHold, "Morph targets"):
+            read_vertices(self.path, per_primitive=100)
+
+    def test_rejects_multiple_meshes(self):
+        make_glb(self.path, scene_override={"nodes": [{"mesh": 0}],
+                    "meshes": [{"primitives": [{}, {}, {}]}, {"primitives": []}]})
+        with self.assertRaisesRegex(GeometryHold, "exactly one local-space"):
+            read_vertices(self.path, per_primitive=100)
 
 
 if __name__ == "__main__":
