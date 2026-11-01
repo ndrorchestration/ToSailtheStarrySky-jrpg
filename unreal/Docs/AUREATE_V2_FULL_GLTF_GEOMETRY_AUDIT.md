@@ -18,6 +18,8 @@ python -m unittest discover -s unreal/Tests -p test_aureate_v2_full_binary_geome
 
 ## Acceptance scope
 
+The V2 review importer now requires this independent complete geometry audit as part of `inspect()`; direct calls to `import_in_editor()` revalidate the source bytes and geometry and require the matching completed preflight receipt **before any native Editor asset write**. A forged/stale receipt fails closed. This is a mandatory precondition, not an optional QA command.
+
 The audit checks GLB JSON/BIN chunk sizes, buffer-view/accessor containment and alignment, all POSITION/NORMAL/TEXCOORD_0 samples, actual XYZ minima/maxima against advertised claims, finite coordinates, triangle index ranges, repeated indices, degenerate faces, normalized normals and agreement with winding, and review-scale dimensions in glTF Y-up metres. It forbids unexpected node transformations, changed provenance and unsupported material/primitive configuration. Exact deterministic manifest and SHA proof is required first.
 
 Regression tests inject corruption into actual binary values, accessor metadata, NaN positions/normals/UVs, out-of-range/repeated/flipped indices, reversed normals, added node scale and broken length. **Every triangle and every position buffer is checked**, not a spatial subsample.
