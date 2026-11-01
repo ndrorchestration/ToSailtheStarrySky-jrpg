@@ -34,3 +34,19 @@ Gate high-fidelity work against the actually accessible creator-approved October
 **Proposed acceptance sequence:** Ender full-body/front/profile render with correct orientation and light; compare to approved closeups; model head/hair/goggles/staff beyond primitive ellipsoids; finish Ionia curls and face and Lyra red-hair face; then Reson and Aepex; then native animation/rig and gameplay tests. Every visual comparison must include exact source and engine SHA, cameras, and an actual legible render. Artistic approval remains creator-controlled.
 
 The existing weekly Starry Sky read-only audit now incorporates these six review disciplines. A separate daily recurring job could not be created because five active automations already occupy the five available slots. The weekly audit is not autonomous ongoing 3D production.
+
+## Native Unreal capture fix — subsequently verified (same date)
+
+**Previous camera/root-cause hold resolved for this isolated review slice.** The original review script constructed camera rotations as positional calls like `unreal.Rotator(0, yaw, 0)`, which bound the intended yaw to the wrong angle. The fix uses explicit `unreal.Rotator(pitch=0.0, yaw=float(yaw), roll=0.0)` for the camera and named angles for lights. Native face-axis geometry confirms Ender's pupil plane is at **+Y ≈ +10.8 cm** ahead of his shirt center near Y≈0; portrait cameras now use the observed +Y facing axis. Non-Ender actors move far away only during isolated Ender captures; their original staging coordinates are restored and temporarily rotated to face the lineup camera. None of these temporary test transforms are saved.
+
+**Verified real UE 5.8.4 D3D11 automation:** `Editor.Python.CastAllSandbox.test_cast_render_review_v10` completed **Success**, five screenshot tasks completed, and five native 1280×720 PNGs passed the independent PNG/decompression/CRC/dimension/nonidentical SHA image gate with exit code **0**. They are distinct, legible, and visibly upright:
+
+- [Native Ender front — corrected camera, no raster transform](ReviewCaptures/2026-11-01/NATIVE_CORRECT_ORIENTATION_Ender_front.png)
+- [Native Ender profile](ReviewCaptures/2026-11-01/NATIVE_CORRECT_ORIENTATION_Ender_profile.png)
+- [Native Ender rear](ReviewCaptures/2026-11-01/NATIVE_CORRECT_ORIENTATION_Ender_back.png)
+- [Native Ender three-quarter](ReviewCaptures/2026-11-01/NATIVE_CORRECT_ORIENTATION_Ender_three_quarter.png)
+- [Native five-character front lineup](ReviewCaptures/2026-11-01/NATIVE_CORRECT_ORIENTATION_Five_cast_lineup.png)
+
+The saved original review map still hashes to **`6614a8a8c378f8eada5a8ff2788afae9ca49832e507b27ed942a8076a478b49a`**, confirming the test did not modify it. The standalone test `test_camera_rotator_contract.py` prevents regression to positional angle constructors and is executed in source CI.
+
+**Art approval stays HOLD.** These images demonstrate orientation, lighting legibility, camera framing and nonblank native output; they do not establish likeness to the creator-approved artwork, rigging, animation, high-fidelity materials or game-scene integration. The older upside-down raw images and labeled 180° display derivatives remain as provenance only; these new five PNGs are direct native Unreal captures and supersede the derivatives for technical review. Full character sculpt/rig/motion work proceeds only under issue #649 and the established canon gate.
