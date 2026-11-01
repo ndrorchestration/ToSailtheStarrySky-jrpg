@@ -12,7 +12,7 @@ Ender.glb is the first review target: youthful slender build, green eyes and gog
 
 ## Cast relationships
 
-The five named files have relative heights Reson (1.93 m) > Aepex (1.85 m) > Ender (1.74 m) > Ionia (1.68 m) > Lyra (1.65 m). These numerical heights are lookdev choices, **not canon**. Ionia's blonde curls extend past the shoulders; Lyra keeps red hair. Reson has the broadest frame; Aepex is second tallest with an undercut and visible arm markings. Accessories are schematic and carry no final costume or role approval. The sheet's printed role text is inconsistent with the project's character authority and was not used as canon.
+**Creator-approved canonical relative height order (November 1, 2026): Reson > Aepex > Ender > Ionia > Lyra.** Candidate source values (Reson 1.93 m, Aepex 1.85 m, Ender 1.74 m, Ionia 1.68 m, Lyra 1.65 m) respect that order, but these exact numerical heights are lookdev choices, **not canon**. Ender's vertical mesh bound includes his full-length staff and must not be misread as his body height. Ionia's blonde curls extend past the shoulders; Lyra keeps red hair. Reson has the broadest frame; Aepex is second tallest with an undercut and visible arm markings. Accessories are schematic and carry no final costume or role approval. The sheet's printed role text is inconsistent with the project's character authority and was not used as canon.
 
 ## Unreal 5.8 import and visual gate
 
@@ -40,3 +40,7 @@ Epic references: [Python Editor command line](https://dev.epicgames.com/document
 - `OPEN`: Unreal import, Editor build, native render, skeleton/skin, animation, materials/texture quality, cinematic likeness, creator acceptance, integration into gameplay.
 - `CREATOR CANON`: five identities and approved illustration direction; no generated GLB has been accepted as canonical game art.
 
+
+## November 1, 2026 native UE evidence
+
+Native UE **5.8.4** source import on authorized Windows host `neontic` succeeded for Ender and then all five static candidates in **isolated, disposable content-only projects**; native `.uasset` files were checked on disk. A guarded `stage_cast_lineup.py` also saved the `/Game/ArtLookdev/ReviewMaps/TSTSS_CastLineup_Review` `.umap` with all five and a 180 cm marker. The source/receipt cross-check and canonical relative-height assertions are regression-tested. See [native cast lineup review](NATIVE_CAST_LINEUP_REVIEW_2026-11-01.md). All commands used `-nullrhi`, so this confirms native static intake/map creation **only**, not renders, visual likeness, rigging, or gameplay. Historical text above that claims no Unreal import reflects the prior PR #643 source head, not this later verification.
