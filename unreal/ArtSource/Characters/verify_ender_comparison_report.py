@@ -39,7 +39,7 @@ def verify(report_folder, task_receipt):
     for task in tasks:
         if not isinstance(task.get("ticks"), int) or task["ticks"] < 0:
             raise ValueError("Unverified screenshot completion ticks")
-        requested = str(task.get("requested", "")).replace("\\\\", "/")
+        requested = str(task.get("requested", "")).replace("\\", "/")
         if not requested.endswith("/" + task["name"] + ".png"):
             raise ValueError("Missing requested screenshot filename provenance")
     result = {}
