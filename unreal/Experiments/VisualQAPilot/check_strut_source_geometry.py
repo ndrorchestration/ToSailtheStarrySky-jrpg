@@ -32,6 +32,15 @@ def must_have(text, patterns):
             raise ValueError("missing/modified source invariant: " + label)
 
 def audit_semantics(text):
+    constructor = body(text, "AAureateWakePreviewActor::AAureateWakePreviewActor()",
+                       "void AAureateWakePreviewActor::BeginPlay()")
+    must_have(constructor, {
+        "100cm-cube-proxy": r"/Engine/BasicShapes/Cube\.Cube",
+        "hull-proxy-scale": r"Hull->SetRelativeScale3D\(FVector\(8\.0,\s*1\.5,\s*0\.65\)\)",
+        "two-strut-constructor-loop": r"Index\s*<\s*2;\s*\+\+Index\).*?ReviewHydrofoilStrut_",
+        "strut-setup": r"SetupPreviewMesh\(Strut, Shape\)",
+        "strut-array-add": r"HydrofoilStruts\.Add\(Strut\)",
+    })
     foil = body(text, "FTransform AAureateWakePreviewActor::FoilPose(",
                 "FTransform AAureateWakePreviewActor::Interpolate(")
     strut = body(text, "void AAureateWakePreviewActor::UpdateHydrofoilStruts()",
@@ -96,7 +105,8 @@ def audit_semantics(text):
         "source_path": SOURCE_PATH,
         "evidence_class": "PINNED_SOURCE_LITERAL_AND_PROXY_ENDPOINT_ARITHMETIC_ONLY",
         "seaborne": results,
-        "hydrofoil_strut_count_from_constructor": "NEEDS_NATIVE_CHECK",
+        "hydrofoil_strut_count_declared_in_source": 2,
+        "hydrofoil_strut_count_in_live_actor": "NOT_OBSERVED",
         "observed_ue_mesh_bounds": "NOT_OBSERVED",
         "continuous_motion_collision": "NOT_VERIFIED",
         "struts_visible_in_native_d3d12": "NOT_VERIFIED",
@@ -126,7 +136,16 @@ def check_pinned_file(raw):
 def self_test():
     # Isolate the source grammar and math using a tiny synthetic C++ excerpt,
     # not a real native mesh or source-verification substitute.
-    sample = """FTransform AAureateWakePreviewActor::FoilPose(
+    sample = """AAureateWakePreviewActor::AAureateWakePreviewActor()
+"/Engine/BasicShapes/Cube.Cube"
+Hull->SetRelativeScale3D(FVector(8.0, 1.5, 0.65));
+for (int32 Index = 0; Index < 2; ++Index) {
+const FName Name(*FString::Printf(TEXT("ReviewHydrofoilStrut_%d"), Index + 1));
+SetupPreviewMesh(Strut, Shape);
+HydrofoilStruts.Add(Strut);
+}
+void AAureateWakePreviewActor::BeginPlay()
+FTransform AAureateWakePreviewActor::FoilPose(
 FoilIndex == 0 ? -1.f : 1.f;
 bDeployed = Form == EAureateWakeForm::Seaborne;
 FVector(0, Side * 80.f, bDeployed ? -140.f : -45.f);
@@ -161,6 +180,8 @@ UpdateHydrofoilStruts();
     assert abs(result["seaborne"][0]["strut_span_cm"] - 111.803399) < 1e-5
     variants = [
         sample.replace("Side * 60.f", "Side * 90.f"),
+        sample.replace("FVector(8.0, 1.5, 0.65)", "FVector(8.0, 1.2, 0.65)"),
+        sample.replace("Index < 2", "Index < 1"),
         sample.replace("Length / 100.f", "Length / 80.f"),
         sample.replace("Span.ToOrientationQuat()", "Span.ToOrientationRotator()"),
         sample.replace("Hydrofoils[Index]->IsVisible()", "Hydrofoils[Index]->WasRecentlyRendered()"),
@@ -185,7 +206,7 @@ UpdateHydrofoilStruts();
     assert git_blob_sha(crlf_fixture.replace(b"\r\n", b"\n")) == git_blob_sha(b"one\ntwo\n")
     mixed = crlf_fixture + b"stray\rno"
     assert b"\r" in mixed.replace(b"\r\n", b"")
-    print("PASS: synthetic two-sided math, 8 source mutations, pin rejection, CRLF normalization controls")
+    print("PASS: synthetic two-sided math, 10 source mutations, pin rejection, CRLF normalization controls")
 
 def main():
     p = argparse.ArgumentParser()
