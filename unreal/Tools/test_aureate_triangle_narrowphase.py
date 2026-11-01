@@ -54,6 +54,18 @@ class TriangleNarrowphaseTests(unittest.TestCase):
         self.assertTrue(result["below_threshold"])
         self.assertEqual(result["triangle_pairs_narrow_phase_checked"],1)
 
+    def test_hypothesized_joint_pair_exclusion_keeps_primary_hold(self):
+        body=[(0.,0.,0.),(4.,0.,0.),(0.,4.,0.)]
+        wing=[(1.,1.,3.),(2.,1.,3.),(1.,2.,3.)]
+        all_triangles=nearest_surface(wing,[(0,1,2)],body,[(0,1,2)])
+        other_triangles=nearest_surface(
+            wing,[(0,1,2)],body,[(0,1,2)],
+            exclude_pair=lambda wi,bi: wi==0 and bi==0)
+        self.assertTrue(all_triangles["below_threshold"])
+        self.assertFalse(other_triangles["below_threshold"])
+        self.assertIsNone(other_triangles["min_surface_cm_within_threshold"])
+        self.assertEqual(other_triangles["excluded_candidate_triangle_pairs"],1)
+
     def test_far_is_screen_only_not_exact_global_distance(self):
         body=[(0.,0.,0.),(4.,0.,0.),(0.,4.,0.)]
         wing=[(101.,1.,3.),(102.,1.,3.),(101.,2.,3.)]
