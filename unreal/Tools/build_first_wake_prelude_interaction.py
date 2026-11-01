@@ -190,7 +190,7 @@ def build_in_unreal() -> dict:
         actor = spawn(actor_class, stop.label, (stop.x, stop.y, 90))
         set_mesh(actor, cube, (.75, .75, 1.6), True)
         if stop.inspection:
-            actor.set_editor_property("b_is_inspection_station", True)
+            actor.set_editor_property("is_inspection_station", True)
             actor.set_editor_property(
                 "inspection_station",
                 reflected_enum_member(unreal.TSTSSInspectionStation, stop.inspection))
