@@ -10,6 +10,12 @@ This additive review draft stacks directly on [PR #670](https://github.com/ndror
 
 The reader now validates the buffer-view offset, accessor offset, byte length, and stride independently. Offsets must be nonnegative, four-byte aligned integer values (not booleans); stride must be at least 12 bytes and four-byte aligned. Every VEC3 float32 position must be fully contained within its *own* declared view, which must itself fit within the embedded BIN chunk. Boolean accessor vertex counts are rejected instead of being treated as integers.
 
+## Logical-buffer admission extension
+
+A GLB's embedded BIN chunk may include up to three trailing alignment bytes that are **not** part of the logical `buffers[0].byteLength` data region. The guard now requires exactly one embedded logical buffer, rejects external URI/unknown buffer extensions, verifies the declared length is a nonnegative integer and agrees with BIN chunk size within the allowed padding, and forbids all position buffer views from reaching into declared padding or undeclared logical bytes. This also rejects invalid BIN and JSON chunk alignment/ranges before decoding positions.
+
+The synthetic fixture now declares its own logical buffer size, and two additional test methods cover positions reading valid physical but **out-of-range logical** bytes and malformed logical buffer declarations. This is a strict review-asset intake policy, not full glTF extension interoperability.
+
 ## Regression cases
 
 Existing generator-generated real wing/126-pose fixtures remain unchanged. New negative tests reject:
