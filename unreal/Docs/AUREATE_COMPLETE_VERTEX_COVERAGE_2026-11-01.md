@@ -14,6 +14,12 @@ This review branch makes the input policy **all positions or hold**. Each GLB pr
 - `unreal/Tools/test_aureate_full_vertex_coverage.py`: seven engine-free synthetic GLB cases for complete enumeration including an extremal vertex; partial-over-budget refusal; empty accessor refusal; truncated declared position-view refusal; short stride refusal; nonfinite coordinates; unreasonable requested budget.
 - `.github/workflows/unreal-source-preflight.yml`: executes these cases without Unreal, in addition to source registration and ship review-state checks.
 
+## C++ ↔ offline pose parity contract
+
+Added `unreal/Tools/test_aureate_pose_source_parity.py` and wired it into source-preflight CI. The offline GLB clearance entrypoint now imports its fail-closed `assert_pose_parity` check. It freezes the entire normalized (comments/whitespace ignored) C++ `RootPivotedWingPose` method. Any substantive pose change rejects old offline clearance evidence until independent C++/Python geometry reconciliation is explicitly reviewed. The checker also compares Python's four wing poses across Skyborne, Seaborne and Submersible (12 endpoints) and injects five deliberate negative mutations (root offset, Seaborne Z, Skyborne rotation, Submersible scale and Orbiter root) to exercise refusal.
+
+This is an intentionally conservative <b>source synchronization gate</b>. It is not a mathematical proof that the independent Python transform, FRotator conventions, imported mesh axes, or runtime physics perfectly match Unreal; these must still be checked natively. Updating the pinned snapshot merely because a build fails is forbidden; review the actual change and revise the Python pose model and tests first.
+
 ## Provenance and evidence limits
 
 - Exact parent is draft PR #660 at `5bbbfa8301396b58ca04538e66c4a43734eaadc3`, itself stacked on the native-tested foundation and ordinary-form review PRs.
