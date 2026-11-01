@@ -201,7 +201,6 @@ def run_source_bound(args, np):
                             "sample_index":index,
                             **outcome,
                         }
-    report["status"]="HOLD_ROOT_SUPPORT_PROXIMITY"
     report["total_venation_under_10cm_wing_samples"]=sum(
         x["venation_under_10cm_wing_samples"] for x in report["routes"])
     report["total_hinge_under_10cm_wing_samples"]=sum(
@@ -210,6 +209,12 @@ def run_source_bound(args, np):
         r["pose_samples"] == args.steps+1 for r in report["routes"])
     if not report["all_route_samples_completed"]:
         raise V2ReviewHold("Incomplete sampling: cannot issue route receipt")
+    report["root_support_screen_status"] = (
+        "NEAR_SUPPORT_SURFACE_HOLD"
+        if (report["total_venation_under_10cm_wing_samples"] or
+            report["total_hinge_under_10cm_wing_samples"])
+        else "NO_NEAR_SUPPORT_FOUND_NOT_FULL_CLEARANCE")
+    report["status"]="HOLD_V2_ASSEMBLY_NOT_CONTINUOUSLY_VERIFIED"
     return report
 
 
@@ -229,8 +234,7 @@ def main():
             KeyError,IndexError,OSError,TypeError) as exc:
         p.exit(3,"ROOT_SUPPORT_INPUT_HOLD: "+str(exc)+"\n")
     print(json.dumps(report,indent=2,sort_keys=True))
-    return 2 if (report["total_venation_under_10cm_wing_samples"] or
-                 report["total_hinge_under_10cm_wing_samples"]) else 0
+    return 2  # This *targeted* QA cannot authorize full V2 hull clearance.
 
 
 if __name__=="__main__":
