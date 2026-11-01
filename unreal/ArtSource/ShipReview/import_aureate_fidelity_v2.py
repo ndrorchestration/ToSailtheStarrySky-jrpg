@@ -80,6 +80,16 @@ def import_in_editor(folder:Path, preflight:dict) -> dict:
         if not hasattr(unreal,name):
             raise FidelityImportHold("Missing native editor API: "+name)
 
+    # Direct callers cannot bypass CLI preflight. Revalidate exact source
+    # bytes, actual mesh geometry, and provenance immediately before Editor
+    # asset writes, then match the caller's previously issued receipt.
+    fresh=inspect(folder)
+    if (preflight.get("stage")!="REGENERATED_SOURCE_ONLY_NOT_NATIVE"
+        or preflight.get("sha256")!=fresh["sha256"]
+        or preflight.get("approved_image_sha256")!=fresh["approved_image_sha256"]
+        or preflight.get("actual_binary_geometry")!=fresh["actual_binary_geometry"]):
+        raise FidelityImportHold("Stale or incomplete V2 source-geometry intake receipt")
+
     lib=unreal.EditorAssetLibrary
     # Read every destination before touching any; import is isolated, but not
     # transactionally rollbackable across multiple Interchange import tasks.
