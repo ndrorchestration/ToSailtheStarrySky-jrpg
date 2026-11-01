@@ -1,0 +1,132 @@
+#!/usr/bin/env python3
+"""Conservative, source-bound cross-branch V2 hull / 4-wing clearance admission.
+
+The V2 body lives in a DIFFERENT unmerged draft. This tool cannot approve
+body meshes, Blender/Unreal rendering or collision. AABB overlap is a HOLD
+for precise surface/structural review, not proof of a mesh intersection.
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+from pathlib import Path
+from unittest.mock import patch
+
+import audit_aureate_wing_clearance as wing_audit
+from import_aureate_wing_review import preflight as verify_wing_manifest
+
+STATUS_HOLD = "HOLD_V2_BROAD_PHASE_NEEDS_NARROW_PHASE"
+STATUS_SCREEN = "BROAD_PHASE_SCREEN_ONLY_NOT_CONTINUOUS_CLEARANCE"
+APPROVED_REFERENCE_SHA = "03e3d500d8998a1377502f5ea28da79cf3eaf3854ece833d7ac25b4e0b268e13"
+EXPECTED_V2_SOURCE_HEAD = "cc58d518ca397158df27be366e4dc506a84497c9"
+HULL_NAME = "AureateWake_WhiteGoldHull_V2_REVIEW.glb"
+BRIDGE_NAME = "AureateWake_BlueGlassBridge_V2_REVIEW.glb"
+BRIDGE_TRANSLATION_CM = (240., 0., 95.)
+
+
+class V2ReviewHold(ValueError):
+    pass
+
+
+def require_exact_v2_artifacts(manifest_path: Path, hull: Path, bridge: Path) -> dict:
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if not isinstance(manifest, dict):
+        raise V2ReviewHold("Invalid V2 manifest object")
+    if (manifest.get("status") != "NONCANONICAL_REVIEW_NOT_ART_ACCEPTED" or
+        manifest.get("original_creator_approved_reference_sha256") != APPROVED_REFERENCE_SHA or
+        manifest.get("source_to_gltf_scale") != 0.01 or
+        manifest.get("axis_remap") != "UE_X_FORWARD_Z_UP_TO_GLTF_Y_UP" or
+        manifest.get("orbiter_authorized") is not False or
+        manifest.get("gameplay_modified") is not False or
+        manifest.get("creator_3d_art_approval") != "NOT_GRANTED"):
+        raise V2ReviewHold("V2 manifest provenance/authority changed: HOLD")
+    hashes = manifest.get("sha256")
+    if not isinstance(hashes, dict) or set(hashes) != {HULL_NAME, BRIDGE_NAME}:
+        raise V2ReviewHold("V2 manifest names or SHA entries changed: HOLD")
+    for path, name in ((hull, HULL_NAME), (bridge, BRIDGE_NAME)):
+        if path.name != name:
+            raise V2ReviewHold("Unexpected V2 candidate filename")
+        actual = hashlib.sha256(path.read_bytes()).hexdigest()
+        if actual != hashes[name]:
+            raise V2ReviewHold("V2 candidate SHA mismatch: " + name)
+    return hashes
+
+
+def extents(points, translation=(0., 0., 0.)):
+    if not points:
+        raise V2ReviewHold("Cannot screen an empty 3D asset")
+    return tuple(tuple(
+        (min if k == 0 else max)(p[i] for p in points) + translation[i]
+        for i in range(3)) for k in range(2))
+
+
+def evaluate(vertices, hull_box, bridge_box, *, steps=20):
+    if steps < 20:
+        raise V2ReviewHold("Require at least 20 intervals per directed form transition")
+    with patch.object(wing_audit, "CUBE_HULL", hull_box), \
+         patch.object(wing_audit, "CUBE_BRIDGE", bridge_box):
+        try:
+            result = wing_audit.audit(vertices, steps=steps)
+        except wing_audit.GeometryHold as exc:
+            return {"status": STATUS_HOLD, "first_broad_phase_hold": str(exc)}
+    return {"status": STATUS_SCREEN, "sampled_aabb_screen": result}
+
+
+def run(args):
+    if args.v2_source_head != EXPECTED_V2_SOURCE_HEAD:
+        raise V2ReviewHold("Unknown V2 source revision: update only after independent review")
+    verify_wing_manifest(args.wing_glb, args.wing_manifest)
+    wing_audit.assert_source_contract(
+        args.cpp.read_text(encoding="utf-8"),
+        args.header.read_text(encoding="utf-8"))
+    hashes = require_exact_v2_artifacts(args.v2_manifest, args.hull_glb, args.bridge_glb)
+    source_cpp = args.cpp.read_text(encoding="utf-8")
+    if "ForwardBridge->SetRelativeLocation(FVector(240.f, 0.f, 95.f));" not in source_cpp:
+        raise V2ReviewHold("Bridge actor placement changed; cannot reuse prior coordinates")
+    wing, wc = wing_audit.read_vertices(args.wing_glb)
+    hull, hc = wing_audit.read_vertices(args.hull_glb)
+    bridge, bc = wing_audit.read_vertices(args.bridge_glb)
+    hb = extents(hull)
+    bb = extents(bridge, BRIDGE_TRANSLATION_CM)
+    result = evaluate(wing, hb, bb, steps=args.steps)
+    return {
+        "authority": "CROSS_LANE_CONSERVATIVE_AABB_REVIEW_ONLY",
+        "wing_actor_source_head": args.wing_source_head,
+        "v2_body_source_head": args.v2_source_head,
+        "v2_artifact_sha256": hashes,
+        "wing_sha256": hashlib.sha256(args.wing_glb.read_bytes()).hexdigest(),
+        "primitive_position_counts": {"wing": wc, "hull": hc, "bridge": bc},
+        "v2_hull_world_aabb_cm": hb, "v2_bridge_world_aabb_cm": bb,
+        "v2_bridge_actor_translation_cm": BRIDGE_TRANSLATION_CM,
+        "steps_per_directed_transition": args.steps,
+        **result,
+        "limits": [
+            "Full-mesh AABB broad phase can flag intentional joints and false intersections",
+            "AABB screen is not triangle-level narrow phase or continuous swept collision",
+            "No native UE4/UE5 imported actor placement, physics, or visual approval is established",
+            "Authoritative four-form creator artwork unchanged and Orbiter remains locked"
+        ],
+    }
+
+
+def main(argv=None):
+    p = argparse.ArgumentParser(description=__doc__)
+    for name in ("wing_glb", "wing_manifest", "hull_glb", "bridge_glb",
+                 "v2_manifest", "cpp", "header"):
+        p.add_argument("--" + name.replace("_", "-"), required=True, type=Path)
+    p.add_argument("--wing-source-head", required=True)
+    p.add_argument("--v2-source-head", required=True)
+    p.add_argument("--steps", type=int, default=20)
+    a = p.parse_args(argv)
+    try:
+        outcome = run(a)
+    except (V2ReviewHold, wing_audit.GeometryHold, OSError, ValueError, KeyError,
+            IndexError) as exc:
+        p.exit(3, "CROSS_LANE_INPUT_HOLD: " + str(exc) + "\n")
+    print(json.dumps(outcome, indent=2, sort_keys=True))
+    return 2 if outcome["status"] == STATUS_HOLD else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
