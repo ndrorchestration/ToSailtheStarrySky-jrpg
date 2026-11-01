@@ -171,7 +171,7 @@ def run(args):
         **result,
         "limits": [
             "Full-mesh AABB broad phase can flag intentional joints and false intersections",
-            "AABB screen is not triangle-level narrow phase or continuous swept collision",
+            "Baseline AABB gate is conservative; the optional triangle screen covers only Skyborne t0, not swept collision",
             "No native UE4/UE5 imported actor placement, physics, or visual approval is established",
             "Authoritative four-form creator artwork unchanged and Orbiter remains locked"
         ],
