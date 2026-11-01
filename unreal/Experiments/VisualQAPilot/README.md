@@ -43,3 +43,18 @@ py -3 unreal/Experiments/VisualQAPilot/preflight_windows.py --checkout 'C:\path\
 The receipt is created only if the destination does not exist. It has independent booleans and explicit UNKNOWN/NOT_VERIFIED fields. A preflight success means only **the local static prerequisites are present**, not that the scene, renderer, strut silhouette or production art works. The automated CI runs a **synthetic fixture** for the read-only guards, not this actual Windows environment.
 
 Following a clean preflight, the human/operator must separately run the single bounded real Unreal D3D12 capture and complete `check_capture.py` and visual review. Do not present this preflight, the existing **pre-strut** screenshots, or prior CI runs as the final native screenshot.
+
+## 2026-11-01 — Real Windows evidence: native build PASS, D3D12 screenshot blocked by memory
+
+An actual isolated Windows UE **5.8.4 native Editor build** at exact draft [PR #656](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/656) head `77ee249f8a0d734eab165dcafcd16870f12f07a7` succeeded (exit 0, six toolchain actions) after normal close of an unrelated generic Editor window released the Live Coding lock. The successful native build log was retained in the private isolated worktree's `unreal/Saved/PostStrutNativeReview_20261101/`, SHA-256 `3c19c3f1ec1de2aaadfbe3c017be9fbfb8fd492f5489a7be375ec89f5b22b79b`. No tracked source changes.
+
+A subsequent **single real D3D12** 1280×720 Seaborne offscreen capture attempt initialized the D3D12 RHI but produced **no PNG**; free physical RAM reached approximately 40 MB. Only the newly launched isolated capture process was stopped, and RAM recovered to about 5 GB. Native D3D12 log SHA-256 `5e7f2647a09b6456d8cfe2f65c6f4e67d034cf1b19cda4f7e0c2803e7a791626`. No new visual strut proof exists. Current gates: `BUILD=PASS`, `D3D12_INITIALIZATION=OBSERVED`, `POST_STRUT_SCREENSHOT=NOT_VERIFIED`.
+
+To reduce recurrence, `memory_gate.py` now performs an **optional live read-only Windows physical-RAM preflight** using WinAPI `GlobalMemoryStatusEx`. An experimental minimum of **6 GiB free** fails closed if not satisfied. This is a **conservative unvalidated resource heuristic, not an Unreal requirement or stability guarantee**: more free RAM may still be insufficient, and GPU VRAM/commit pressure are different constraints. It never terminates or enumerates unrelated applications.
+
+```powershell
+py -3 unreal/Experiments/VisualQAPilot/memory_gate.py --self-test
+py -3 unreal/Experiments/VisualQAPilot/memory_gate.py --minimum-free-gib 6
+```
+
+**New operating rule:** Run the live memory check immediately **before** launching the single native capture, after a clean source/engine preflight. If it blocks, leave other users' processes alone, record LOW_MEMORY / NOT_VERIFIED and do not start Unreal. If it passes, the operator still needs to monitor headroom continuously and stop only its own bounded review process if pressure becomes critical. Capture pass requires actual renderer log, new image, digest, visual inspection of BOTH struts and explicit reviewer decision. Do not infer art/engineering acceptance from passing the gate.
