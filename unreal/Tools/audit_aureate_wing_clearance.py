@@ -15,6 +15,7 @@ from pathlib import Path
 import struct
 
 from import_aureate_wing_review import preflight, WingReviewHold
+from test_aureate_pose_source_parity import assert_pose_parity
 
 FORMS = ("Skyborne", "Seaborne", "Submersible")
 CUBE_HULL = ((-400., -75., -32.5), (400., 75., 32.5))
@@ -187,6 +188,12 @@ def clearance_against_boxes(bounds):
 
 
 def assert_source_contract(cpp_text, header_text):
+    # Freeze the entire normalized C++ wing-pose method, not just a few
+    # constants. Prevent a changed rotation/pivot from inheriting old AABB QA.
+    try:
+        assert_pose_parity(cpp_text)
+    except ValueError as exc:
+        raise GeometryHold(str(exc)) from exc
     for marker in ('const float RootY = Side * 112.f;',
                    'const float RootX = bForward ? 155.f : -180.f;',
                    'Scale = FVector(.94f, .82f, 1.f);',
