@@ -129,7 +129,7 @@ def squared_box_distance(a,b):
 
 
 def nearest_surface(wing_positions,wing_indices,body_positions,body_indices,
-                    threshold_cm=10.):
+                    threshold_cm=10., exclude_pair=None):
     """Fully indexed, conservative triangle AABB broad phase + exact narrow phase.
 
     Only pairs whose bounding boxes could be within threshold are tested.
@@ -146,6 +146,7 @@ def nearest_surface(wing_positions,wing_indices,body_positions,body_indices,
     candidates=0
     closest=(float("inf"),None,None)
     near_triangles=0
+    excluded_pairs=0
     for wi,idx in enumerate(wing_indices):
         tri=tuple(wing_positions[i] for i in idx)
         a=bounds(tri)
@@ -155,12 +156,16 @@ def nearest_surface(wing_positions,wing_indices,body_positions,body_indices,
         for bi,box in enumerate(body_aabb):
             if squared_box_distance(a,box)>threshold_sq:
                 continue
+            if exclude_pair is not None and exclude_pair(wi,bi):
+                excluded_pairs+=1
+                continue
             candidates+=1
             d2=triangle_triangle_sq(tri,body_tri[bi])
             if d2<closest[0]:
                 closest=(d2,wi,bi)
     min_cm=None if closest[1] is None else math.sqrt(closest[0])
     return {"near_wing_triangles":near_triangles,
+            "excluded_candidate_triangle_pairs":excluded_pairs,
             "triangle_pairs_narrow_phase_checked":candidates,
             "min_surface_cm_within_threshold":min_cm,
             "wing_triangle_index":closest[1],
