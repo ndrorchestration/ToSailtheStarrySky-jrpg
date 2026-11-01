@@ -1,6 +1,6 @@
 # Aureate Wake — Wing tangent-space UV repair, 2026-11-01
 
-**UE 5.8.4 source review only until native import verified.** This draft stack begins at [PR #692](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/692) head `75da1c9da22f3081977237c5ea54cbe26bb53a6a`, retaining the native 13/13 ship test and three D3D12 screenshot receipts **only for the earlier tested asset version**. No merge, story, physics, approved art, or Orbiter gate change is authorized here.
+**UE 5.8.4 native import warning fix VERIFIED; wing remains NONCANONICAL and visually UNAPPROVED.** This draft stack begins at [PR #692](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/692) head `75da1c9da22f3081977237c5ea54cbe26bb53a6a`, retaining the native 13/13 ship test and three D3D12 screenshot receipts **only for the earlier tested asset version**. No merge, story, physics, approved art, or Orbiter gate change is authorized here.
 
 ## Reproduced geometry defect
 
@@ -33,7 +33,8 @@ Isolated checkout `C:\Users\Admin\work\TSTSS-UE58-WingUVNative-20261101` at `645
 - A native UE 5.8.4 Editor/UHT/Win64 Development build **passed with exit 0** for source head `645ea53f7d09e18b246e2b360add8d8a92958010`. The next `31afcc22` commit changed **documentation only**; no source code changed.
 - The new GLB was imported with real Unreal 5.8.4 Interchange at exact review head `31afcc229950c9a02a5b2a56fc85290dc05489f8` into the previously empty `/Game/TSTSS/Review/ShipArt/WingUVRepairCandidateV3` folder. Native import commandlet exit **0**; exactly **one StaticMesh with three material slots** saved. Imported half-extents (cm) **(148.182846, 46.902561, 9.099999)** match the prior candidate. Revised GLB SHA-256: `099a8133f31faea0b36a64701313a56cfb948066e73ca052b5d61ea214e48490`.
 - **Native warning comparison:** original import log `ue584-wing-for-bodypair-import.log` contained **one** `nearly zero bi-normals` warning; new log `ue584-wing-uv-v3-native-import.log` contained **zero** and reported **0 errors, 0 warnings**. Both local receipts are retained under `C:\Users\Admin\work\TSTSS-UE58-BodyPairEvidence-20261101`.
-- This establishes the specific *native import tangent-space warning fix* but **not** reviewed material fidelity, four-wing rendering, swept clearance or final-art approval. Native TSTSS automation at the new head is a separate gate.
+- At exact source head `31afcc229950c9a02a5b2a56fc85290dc05489f8`, a real Unreal Editor `Automation RunTests TSTSS` run completed with **13/13 passed, 0 failed, 0 not-run, exit 0**, with native JSON in `NativeWingUVAutomationReport/index.json` in the local evidence folder. Later edits to this report are documentation-only; they do not alter the tested asset/C++ source.
+- This establishes the specific *native import tangent-space warning fix* and native test compatibility, **not** reviewed material fidelity, four-wing rendering, swept clearance or final-art approval.
 
 ## Native acceptance procedure
 
