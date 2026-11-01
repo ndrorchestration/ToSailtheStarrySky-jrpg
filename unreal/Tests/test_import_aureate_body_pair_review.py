@@ -66,6 +66,22 @@ class BodyPairIntake(unittest.TestCase):
         with self.assertRaisesRegex(intake.BodyPairHold,"provenance"):
             intake.preflight(self.folder)
 
+    def test_modified_valid_glb_with_new_manifest_hash_is_still_rejected(self):
+        # An attacker can recompute a manifest hash; only exact generator bytes
+        # are eligible for this versioned, noncanonical review candidate pair.
+        p=self.folder/body.HULL
+        blob=p.read_bytes()
+        old=b"M_WhitePearl_Hull_REVIEW"
+        new=b"M_BlackPearl_Hull_REVIEW"
+        self.assertEqual(len(old),len(new))
+        self.assertIn(old,blob)
+        changed=blob.replace(old,new)
+        p.write_bytes(changed)
+        self.manifest["sha256"][body.HULL]=hashlib.sha256(changed).hexdigest()
+        self.save_receipt()
+        with self.assertRaisesRegex(intake.BodyPairHold,"Unrecognized body GLB"):
+            intake.preflight(self.folder)
+
     def test_wrong_manifest_destinations_rejected(self):
         self.manifest["destinations"][body.HULL]="/Game/Production"
         self.save_receipt()
