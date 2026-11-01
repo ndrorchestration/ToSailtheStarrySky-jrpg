@@ -36,7 +36,10 @@ $ReportDirectory = Join-Path $Evidence 'AutomationReport'
 if (Test-Path $ReportDirectory) { Remove-Item $ReportDirectory -Recurse -Force }
 New-Item -Path $ReportDirectory -ItemType Directory -Force | Out-Null
 $ExportArgument = '-ReportExportPath=' + $ReportDirectory
-& $EditorCmd $Project -unattended -nop4 -nullrhi '-ExecCmds=Automation RunTests TSTSS; Quit' $ExportArgument -log 2>&1 |
+# Unreal may persist Editor Input and plugin configuration to tracked Default*.ini
+# even during a headless automation run. -nowrite is the documented config
+# write-disable flag; keep the clean-worktree check below fail-closed.
+& $EditorCmd $Project -unattended -nop4 -nullrhi -nowrite '-ExecCmds=Automation RunTests TSTSS; Quit' $ExportArgument -log 2>&1 |
     Tee-Object (Join-Path $Evidence 'automation.log')
 if ($LASTEXITCODE -ne 0) { throw "Unreal automation command failed ($LASTEXITCODE)" }
 $ReportPath = Join-Path $Evidence 'AutomationReport/index.json'

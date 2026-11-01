@@ -15,7 +15,7 @@ from author_aureate_wing_glb import build as build_authored_review_wing
 def make_glb(path: Path, counts=(100, 2, 2), *, shorten_view=False,
              invalid_stride=False, nonfinite=False, node_override=None,
              scene_override=None, accessor_override=None,
-             view_override=None, morph_targets=False):
+             view_override=None, buffer_override=None, morph_targets=False):
     accessors = []
     views = []
     primitives = []
@@ -58,7 +58,10 @@ def make_glb(path: Path, counts=(100, 2, 2), *, shorten_view=False,
         "meshes": [{"primitives": primitives}],
         "bufferViews": views,
         "accessors": accessors,
+        "buffers": [{"byteLength": len(binary)}],
     }
+    if buffer_override:
+        document["buffers"][0].update(buffer_override)
     if node_override:
         document["nodes"][0].update(node_override)
     if scene_override:
@@ -187,6 +190,76 @@ class CompleteVertexClearanceIntake(unittest.TestCase):
                     read_vertices(self.path, per_primitive=100)
         make_glb(self.path, morph_targets=True)
         with self.assertRaisesRegex(GeometryHold, "Morph targets"):
+            read_vertices(self.path, per_primitive=100)
+
+    def test_rejects_accessor_before_declared_view_start(self):
+        # The first decoded vertex exists in BIN, but a negative accessor
+        # offset would make it lie BEFORE the declared view's own first byte.
+        # The old combined-offset/end check incorrectly admitted this.
+        make_glb(self.path,
+                 view_override={"byteOffset": 12, "byteLength": 1212},
+                 accessor_override={"byteOffset": -12})
+        with self.assertRaisesRegex(GeometryHold, "Invalid GLB position view"):
+            read_vertices(self.path, per_primitive=100)
+
+    def test_rejects_negative_view_offset_cancelled_by_accessor(self):
+        make_glb(self.path,
+                 view_override={"byteOffset": -12, "byteLength": 1212},
+                 accessor_override={"byteOffset": 12})
+        with self.assertRaisesRegex(GeometryHold, "Invalid GLB position view"):
+            read_vertices(self.path, per_primitive=100)
+
+    def test_rejects_view_extending_beyond_embedded_bin(self):
+        # Even a small accessor must not inherit a malformed declared view.
+        make_glb(self.path, view_override={"byteLength": 100000})
+        with self.assertRaisesRegex(GeometryHold, "view exceeds declared logical buffer"):
+            read_vertices(self.path, per_primitive=100)
+
+    def test_rejects_noninteger_and_unaligned_glb_offsets(self):
+        variants = [
+            {"view_override": {"byteOffset": True}},
+            {"view_override": {"byteOffset": 2}},
+            {"view_override": {"byteLength": True}},
+            {"view_override": {"byteStride": 13}},
+            {"accessor_override": {"byteOffset": True}},
+            {"accessor_override": {"byteOffset": "12"}},
+            {"accessor_override": {"byteOffset": 2}},
+        ]
+        for variant in variants:
+            with self.subTest(variant=variant):
+                make_glb(self.path, **variant)
+                with self.assertRaisesRegex(GeometryHold, "Invalid GLB position view"):
+                    read_vertices(self.path, per_primitive=100)
+
+    def test_rejects_positions_inside_bin_but_outside_logical_buffer(self):
+        # A view can appear physically valid in padded BIN bytes while
+        # extending beyond glTF buffers[0].byteLength. Importers may reject
+        # those bytes: the offline screen must fail closed too.
+        make_glb(self.path, buffer_override={"byteLength": 1247})
+        with self.assertRaisesRegex(GeometryHold, "view exceeds declared logical buffer"):
+            read_vertices(self.path, per_primitive=100)
+
+    def test_rejects_malformed_logical_buffer_declarations(self):
+        for override in ({"byteLength": True},
+                         {"byteLength": -1},
+                         {"byteLength": 100},
+                         {"byteLength": 1250},
+                         {"uri": "external.bin"},
+                         {"extensions": {"KHR_unknown": {}}}):
+            with self.subTest(buffer=override):
+                make_glb(self.path, buffer_override=override)
+                with self.assertRaisesRegex(GeometryHold, "Invalid GLB declared logical buffer"):
+                    read_vertices(self.path, per_primitive=100)
+        for replacement in ({"buffers": []},
+                            {"buffers": [{"byteLength": 1248}, {"byteLength": 0}]}):
+            with self.subTest(scene=replacement):
+                make_glb(self.path, scene_override=replacement)
+                with self.assertRaisesRegex(GeometryHold, "Invalid GLB declared logical buffer"):
+                    read_vertices(self.path, per_primitive=100)
+
+    def test_rejects_boolean_accessor_vertex_count(self):
+        make_glb(self.path, accessor_override={"count": True})
+        with self.assertRaisesRegex(GeometryHold, "Empty or invalid position accessor"):
             read_vertices(self.path, per_primitive=100)
 
     def test_rejects_position_view_bound_to_nonembedded_buffer(self):
