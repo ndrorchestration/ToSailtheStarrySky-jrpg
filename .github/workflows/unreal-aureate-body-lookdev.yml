@@ -4,6 +4,8 @@ on:
     paths:
       - 'unreal/ArtSource/ShipReview/**'
       - 'unreal/Tests/test_aureate_body_lookdev.py'
+      - 'unreal/Tests/test_aureate_fidelity_v2.py'
+      - 'unreal/Tests/test_aureate_fidelity_v2_intake.py'
       - '.github/workflows/unreal-aureate-body-lookdev.yml'
   workflow_dispatch:
 
@@ -25,5 +27,14 @@ jobs:
           python3 unreal/ArtSource/ShipReview/build_aureate_body_review.py --build --output-dir /tmp/tstss_body_review
           python3 unreal/ArtSource/ShipReview/build_aureate_body_review.py --verify --output-dir /tmp/tstss_body_review
           python3 unreal/ArtSource/ShipReview/import_aureate_body_review.py --check --folder /tmp/tstss_body_review
+      - name: V2 approved-palette source-only regression tests and V1 byte identity
+        run: python3 -m unittest discover -s unreal/Tests -p test_aureate_fidelity_v2.py -v
+      - name: V2 native importer safety source tests (no engine)
+        run: python3 -m unittest discover -s unreal/Tests -p test_aureate_fidelity_v2_intake.py -v
+      - name: Generate and verify white-gold and blue-glass V2 review assets
+        run: |
+          python3 unreal/ArtSource/ShipReview/build_aureate_fidelity_v2.py --build --output-dir /tmp/tstss_approved_direction_v2
+          python3 unreal/ArtSource/ShipReview/build_aureate_fidelity_v2.py --verify --output-dir /tmp/tstss_approved_direction_v2
+          python3 unreal/ArtSource/ShipReview/import_aureate_fidelity_v2.py --check --folder /tmp/tstss_approved_direction_v2
       - name: Explicit provenance limits
         run: echo "Only offline GLB checks; native UE import, orientation, art, collision, gameplay and Orbiter remain unverified."
