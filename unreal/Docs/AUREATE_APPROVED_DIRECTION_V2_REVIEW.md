@@ -21,6 +21,8 @@ Actual Unreal 5.8.4 ship screenshots from [draft PR #655](https://github.com/ndr
 python unreal/ArtSource/ShipReview/build_aureate_fidelity_v2.py --build --output-dir unreal/Saved/AureateApprovedDirectionV2
 python unreal/ArtSource/ShipReview/build_aureate_fidelity_v2.py --verify --output-dir unreal/Saved/AureateApprovedDirectionV2
 python -m unittest discover -s unreal/Tests -p 'test_aureate_fidelity_v2.py' -v
+python -m unittest discover -s unreal/Tests -p 'test_aureate_fidelity_v2_intake.py' -v
+python unreal/ArtSource/ShipReview/import_aureate_fidelity_v2.py --check --folder unreal/Saved/AureateApprovedDirectionV2
 ```
 
 Dedicated GitHub CI runs **both V1 and V2** tests and writes review output to a temporary folder. It does not install software or ship binary assets.
@@ -29,8 +31,9 @@ Dedicated GitHub CI runs **both V1 and V2** tests and writes review output to a 
 
 1. Confirm exact checked-out source commit, no live editor/other worktree conflict, and no existing occupied candidate folders.
 2. Run the deterministic V2 generator and independently verify SHA-256, unit conversion `UE centimetres/X forward/Z up -> glTF metres/Y up`, component bounds, normals, and orientation.
-3. Import the two V2 assets **only into isolated review folders**, never the game-ready actor or approved art library; confirm Interchange materials and glass actually render.
-4. Compare matched top/front/side/three-quarter images with the original approved reference for the recognizably **ivory pointed bow, gold details, forward geodesic blue-clear dome and four veined wings**. Check seam/scale with the old wing-root support meshes. Do not inherit screenshots from older versions.
-5. Separately verify Skyborne, Seaborne hydrofoils, Submersible partially visible folded wings, animation clearance and crew-scale before proposing model acceptance. **Orbiter/Moon Bridge stay story-locked.**
+3. **Only within an authorized Unreal Editor Python session**, optionally run `import_aureate_fidelity_v2.py --import-review --folder <existing-verified-folder>`. Its distinct V2 review folders must be empty; existing folders are never overwritten. Native StaticMesh bounds (Unreal centimetres, X forward/Z up) are screened and wrong-axis/wrong-scale imports are rejected. A partial import failure requires a manual review of the isolated candidate folder, never automatic deletion.
+4. Import the two V2 assets **only into isolated review folders**, never the game-ready actor or approved art library; confirm Interchange materials and glass actually render.
+5. Compare matched top/front/side/three-quarter images with the original approved reference for the recognizably **ivory pointed bow, gold details, forward geodesic blue-clear dome and four veined wings**. Check seam/scale with the old wing-root support meshes. Do not inherit screenshots from older versions.
+6. Separately verify Skyborne, Seaborne hydrofoils, Submersible partially visible folded wings, animation clearance and crew-scale before proposing model acceptance. **Orbiter/Moon Bridge stay story-locked.**
 
 **Unverified / explicit hold:** Native UE import, material/glass appearance, new screenshots, final art fidelity, pressure protection, physical hydrofoils, real gameplay, continuous swept collision, creator model approval. No main merge, production promotion or release is authorized.
