@@ -412,20 +412,23 @@ void AAureateWakePreviewActor::RefreshWingMaterials()
 
 void AAureateWakePreviewActor::UpdateHullSilhouetteVisibility()
 {
-    // Visual-only toggle: original actor shape is preserved until opted in.
-    if (Hull) Hull->SetVisibility(!bUseHullSilhouetteReview);
-    if (ForwardBridge) ForwardBridge->SetVisibility(!bUseHullSilhouetteReview);
+    // An already-applied, validated body takes precedence over the editable
+    // primitive toggle until its explicit rollback completes. Failed/conflicting
+    // requests must never show both hull studies at once.
+    const bool bShowPrimitiveStudy = bUseHullSilhouetteReview && !bBodyReviewApplied;
+    if (Hull) Hull->SetVisibility(!bShowPrimitiveStudy);
+    if (ForwardBridge) ForwardBridge->SetVisibility(!bShowPrimitiveStudy);
     for (UStaticMeshComponent* Section : HullSilhouetteSections)
     {
-        if (Section) Section->SetVisibility(bUseHullSilhouetteReview);
+        if (Section) Section->SetVisibility(bShowPrimitiveStudy);
     }
     for (UStaticMeshComponent* Rib : CanopyFramePieces)
     {
-        if (Rib) Rib->SetVisibility(bUseHullSilhouetteReview);
+        if (Rib) Rib->SetVisibility(bShowPrimitiveStudy);
     }
     if (CanopyShell)
     {
-        const bool bShowGlass = bUseHullSilhouetteReview && OptionalCanopyGlassMaterial != nullptr;
+        const bool bShowGlass = bShowPrimitiveStudy && OptionalCanopyGlassMaterial != nullptr;
         CanopyShell->SetVisibility(bShowGlass);
         if (bShowGlass) CanopyShell->SetMaterial(0, OptionalCanopyGlassMaterial);
     }
@@ -451,7 +454,7 @@ void AAureateWakePreviewActor::UpdateWingRootMounts()
         // inboard endpoint to the current proxy hull top; no load calculations.
         // Curved hull has a narrower, elliptical local profile than the cube.
         // This is only a visual approximation; continuous clearance remains open.
-        const float HalfWidth = bUseHullSilhouetteReview ? 56.f : 72.f;
+        const float HalfWidth = (bUseHullSilhouetteReview && !bBodyReviewApplied) ? 56.f : 72.f;
         const FVector HullAnchor(WingPivot.X, Side * HalfWidth,
             FMath::Clamp(WingPivot.Z, -28.f, 28.f));
         const FVector Span = WingPivot - HullAnchor;
