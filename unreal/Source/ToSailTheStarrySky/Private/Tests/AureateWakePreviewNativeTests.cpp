@@ -1,6 +1,7 @@
 #include "AureateWakePreviewActor.h"
 #include "Engine/World.h"
 #include "Engine/StaticMesh.h"
+#include "Components/StaticMeshComponent.h"
 #include "Misc/AutomationTest.h"
 #include "UObject/UObjectGlobals.h"
 
@@ -69,4 +70,175 @@ bool FTSTSSAureatePreviewFormTest::RunTest(const FString& Parameters)
     ReviewWorld->DestroyWorld(false);
     return true;
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTSTSSAureateSixRouteSupportReviewTest,
+    "TSTSS.Ship.ReviewSupportSixDirectedRoutes",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FTSTSSAureateSixRouteSupportReviewTest::RunTest(const FString& Parameters)
+{
+    // Pure transient review. Exercise actual components in all six ordinary
+    // directed routes, without importing art or touching gameplay/story state.
+    UWorld* ReviewWorld = UWorld::CreateWorld(EWorldType::Game, false,
+        FName(TEXT("TSTSSAureateSixRouteTransientWorld")));
+    if (!TestNotNull(TEXT("Six-route transient world created"), ReviewWorld)) return false;
+
+    AAureateWakePreviewActor* Ship = ReviewWorld->SpawnActor<AAureateWakePreviewActor>();
+    if (!TestNotNull(TEXT("Six-route preview actor spawned"), Ship))
+    {
+        ReviewWorld->DestroyWorld(false);
+        return false;
+    }
+
+    TArray<UStaticMeshComponent*> Components;
+    Ship->GetComponents<UStaticMeshComponent>(Components);
+    TMap<FName, UStaticMeshComponent*> ByName;
+    for (UStaticMeshComponent* Component : Components)
+    {
+        if (Component) ByName.Add(Component->GetFName(), Component);
+    }
+    const auto Part = [&ByName](const TCHAR* Prefix, int32 Index) -> UStaticMeshComponent*
+    {
+        return ByName.FindRef(FName(*FString::Printf(TEXT("%s_%d"), Prefix, Index + 1)));
+    };
+
+    // All review supports should begin hidden when authored wings are not opted in.
+    for (int32 I = 0; I < 4; ++I)
+    {
+        UStaticMeshComponent* Bracket = Part(TEXT("ReviewWingRootBracket"), I);
+        if (TestNotNull(TEXT("Four root brackets exist"), Bracket))
+        {
+            TestFalse(TEXT("Legacy preview root bracket hidden"), Bracket->IsVisible());
+            TestEqual(TEXT("Review root bracket has no collision"), Bracket->GetCollisionEnabled(),
+                ECollisionEnabled::NoCollision);
+        }
+    }
+    for (int32 I = 0; I < 2; ++I)
+    {
+        UStaticMeshComponent* Strut = Part(TEXT("ReviewHydrofoilStrut"), I);
+        if (TestNotNull(TEXT("Two hydrofoil struts exist"), Strut))
+        {
+            TestFalse(TEXT("Legacy preview strut hidden"), Strut->IsVisible());
+            TestEqual(TEXT("Review hydrofoil strut has no collision"), Strut->GetCollisionEnabled(),
+                ECollisionEnabled::NoCollision);
+        }
+    }
+
+    UStaticMesh* NoncanonicalMesh = LoadObject<UStaticMesh>(nullptr,
+        TEXT("/Engine/BasicShapes/Cube.Cube"));
+    if (!TestNotNull(TEXT("Engine review placeholder available"), NoncanonicalMesh))
+    {
+        ReviewWorld->DestroyWorld(false);
+        return false;
+    }
+    Ship->AuthoredWingMesh = NoncanonicalMesh;
+    Ship->bUseRootPivotedWingPose = true;
+    Ship->bAllowOrbiterPreview = true; // Must never defeat the authored-wing Orbiter hold.
+    Ship->RefreshWingMeshes();
+
+    const EAureateWakeForm OrdinaryForms[] = {
+        EAureateWakeForm::Skyborne,
+        EAureateWakeForm::Seaborne,
+        EAureateWakeForm::Submersible
+    };
+    int32 RoutesCompleted = 0;
+    for (const EAureateWakeForm Start : OrdinaryForms)
+    {
+        for (const EAureateWakeForm Target : OrdinaryForms)
+        {
+            if (Start == Target) continue;
+            if (Ship->GetCurrentForm() != Start)
+            {
+                if (!TestTrue(TEXT("Route origin transition authorized"), Ship->RequestForm(Start))
+                    || !TestTrue(TEXT("Route origin reached"), Ship->FinishOrdinaryPreviewTransitionForReview()))
+                {
+                    ReviewWorld->DestroyWorld(false);
+                    return false;
+                }
+            }
+
+            TestFalse(TEXT("Orbiter blocked at ordinary-form origin"),
+                Ship->RequestForm(EAureateWakeForm::Orbiter));
+            if (!TestTrue(TEXT("Ordinary route starts"), Ship->RequestForm(Target)))
+            {
+                ReviewWorld->DestroyWorld(false);
+                return false;
+            }
+            // Support visibility must match the hydrofoils immediately when
+            // RequestForm begins, not lag until the first actor Tick.
+            for (int32 I = 0; I < 2; ++I)
+            {
+                UStaticMeshComponent* ImmediateStrut = Part(TEXT("ReviewHydrofoilStrut"), I);
+                if (TestNotNull(TEXT("Transition-start strut exists"), ImmediateStrut))
+                {
+                    TestTrue(TEXT("Strut visible on the same frame as foil deployment"),
+                        ImmediateStrut->IsVisible());
+                }
+            }
+            Ship->Tick(Ship->TransitionSeconds * 0.5f);
+            TestTrue(TEXT("Halfway transition remains active"), Ship->IsTransitioning());
+            TestEqual(TEXT("Current form unchanged halfway"), Ship->GetCurrentForm(), Start);
+            TestFalse(TEXT("Orbiter blocked while ordinary route runs"),
+                Ship->RequestForm(EAureateWakeForm::Orbiter));
+
+            // Support positions are recomputed from live component transforms.
+            // The positive local X end of each temporary Cube support reaches
+            // its designated wing/foil root (within floating-point tolerance).
+            for (int32 I = 0; I < 4; ++I)
+            {
+                UStaticMeshComponent* Bracket = Part(TEXT("ReviewWingRootBracket"), I);
+                UStaticMeshComponent* Wing = Part(TEXT("DragonflyWing"), I);
+                if (!TestNotNull(TEXT("Moving bracket found"), Bracket)
+                    || !TestNotNull(TEXT("Moving wing found"), Wing)) continue;
+                TestTrue(TEXT("Root bracket visible during authored ordinary motion"),
+                    Bracket->IsVisible());
+                const FVector Tip = Bracket->GetRelativeLocation()
+                    + Bracket->GetRelativeRotation().RotateVector(
+                        FVector(Bracket->GetRelativeScale3D().X * 50.f, 0.f, 0.f));
+                TestTrue(TEXT("Root bracket tip tracks wing pivot"),
+                    Tip.Equals(Wing->GetRelativeLocation(), 0.5f));
+            }
+            for (int32 I = 0; I < 2; ++I)
+            {
+                UStaticMeshComponent* Strut = Part(TEXT("ReviewHydrofoilStrut"), I);
+                UStaticMeshComponent* Foil = Part(TEXT("Hydrofoil"), I);
+                if (!TestNotNull(TEXT("Moving strut found"), Strut)
+                    || !TestNotNull(TEXT("Moving hydrofoil found"), Foil)) continue;
+                TestTrue(TEXT("Hydrofoil strut visible during deployed-foil motion"),
+                    Strut->IsVisible());
+                const FVector Tip = Strut->GetRelativeLocation()
+                    + Strut->GetRelativeRotation().RotateVector(
+                        FVector(Strut->GetRelativeScale3D().X * 50.f, 0.f, 0.f));
+                TestTrue(TEXT("Hydrofoil strut tip tracks foil pivot"),
+                    Tip.Equals(Foil->GetRelativeLocation(), 0.5f));
+            }
+
+            if (!TestTrue(TEXT("Ordinary route completes"), Ship->FinishOrdinaryPreviewTransitionForReview()))
+            {
+                ReviewWorld->DestroyWorld(false);
+                return false;
+            }
+            TestEqual(TEXT("Ordinary destination reached"), Ship->GetCurrentForm(), Target);
+            TestFalse(TEXT("Ordinary route ends idle"), Ship->IsTransitioning());
+            TestEqual(TEXT("Four wings retained"), Ship->GetWingCount(), 4);
+            TestEqual(TEXT("Two foils retained"), Ship->GetHydrofoilCount(), 2);
+            for (int32 I = 0; I < 2; ++I)
+            {
+                UStaticMeshComponent* Strut = Part(TEXT("ReviewHydrofoilStrut"), I);
+                if (TestNotNull(TEXT("Terminal hydrofoil strut found"), Strut))
+                {
+                    TestEqual(TEXT("Strut visible only in terminal Seaborne"),
+                        Strut->IsVisible(), Target == EAureateWakeForm::Seaborne);
+                }
+            }
+            TestFalse(TEXT("Orbiter blocked at ordinary destination"),
+                Ship->RequestForm(EAureateWakeForm::Orbiter));
+            ++RoutesCompleted;
+        }
+    }
+    TestEqual(TEXT("All six directed ordinary routes reviewed"), RoutesCompleted, 6);
+    ReviewWorld->DestroyWorld(false);
+    return true;
+}
+
 #endif
