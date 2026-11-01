@@ -25,3 +25,13 @@
 3. Import DataTables using each separate row type; verify Blueprint shapes and absence of automatic spell learning.
 4. Independently test underfunded/wrong target, weapon swapping, status/knockout, initiative ties, 1-/2-/3-member recruitment boundaries, reserve save continuity and terminal victory/defeat.
 5. Real renderer VFX/montage and cinematic captures are outside this source-only slice. Do not merge or release until independently accepted.
+
+## 2026-11-01 — Regression consolidation from other active agent branches
+
+Added existing read-only-authored QA test source from independent draft [#671](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/671) at \`3dc716ddcce000373a79d504cf476c135b5916fa\`, and [#672](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/672) at \`b4dad1a01a696b910421f88b6ac308ffd19b7c40\`. These are copied tests (not merged PRs), and retain original noncanonical fixtures.
+
+- \`TSTSS.CombatIntegration.DataContractCannotAutoAuthorize\`: verifies that level-derived proposed actions do not gain shipping approval or the separate learned/mastery/admission gate, and that failure preserves existing state.
+- \`TSTSS.CombatIntegration.ProgressiveRecruitmentPartySize\`: verifies solo Ender → duo Ender/Ionia → trio Ender/Ionia/Lyra without phantom recruits or a fourth active member.
+- Strengthened \`TSTSS.CombatData.NonExecutableSkillReconciliation\`: calls the actual guarded spell executor with a converted \`DesignOnly\` row, including an artificially learned and mastered review actor, and confirms action rejection plus unchanged outputs.
+
+All three remain **native automation test source**, not a claim of native execution. \`Verify-Unreal.ps1\` requires their named results alongside the rest of the test inventory.

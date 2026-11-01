@@ -49,6 +49,46 @@ bool FTSTSSCrossAgentSkillBridgeTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("technique not executable"), T->Admission == ETSTSSBattleSkillAdmission::DesignOnly);
     TestTrue(TEXT("target transferred"), T->Target == ETSTSSBattleSkillTarget::Self);
 
+    // A design-only conversion must be denied by the REAL executor even if
+    // a test actor has learned the skill and a fabricated mastery rank.
+    // This checks the admission boundary behavior, not just a data flag.
+    FTSTSSCombatant Ender;
+    Ender.CharacterId = TEXT("Ender");
+    Ender.Health = Ender.MaxHealth = 20;
+    Ender.Resource = Ender.MaxResource = 10;
+    Ender.Attack = 2;
+    FTSTSSCombatant Foe = Ender;
+    Foe.CharacterId = TEXT("ReviewFoe");
+    FTSTSSBattleSkillState Battle;
+    if (!TestTrue(TEXT("review encounter initialized"),
+        FTSTSSCombatTurns::TryBegin(
+            {Ender, Foe}, {FName(TEXT("Ender")), FName(TEXT("ReviewFoe"))},
+            Battle.Combat))) return false;
+    FTSTSSBattleSkillKnowledge Knowledge;
+    Knowledge.LearnedByActor.FindOrAdd(FName(TEXT("Ender"))).Add(Spell.ActionId);
+    Knowledge.MasteryByActor.FindOrAdd(FName(TEXT("Ender"))).Add(TEXT("Lumen"), 5);
+    FTSTSSBattleSkillRow BypassedSchool = *S;
+    BypassedSchool.RequiredSchool = TEXT("Lumen");
+    BypassedSchool.RequiredMasteryRank = 1;
+    TMap<FName, FName> Factions;
+    Factions.Add(TEXT("Ender"), TEXT("Crew"));
+    Factions.Add(TEXT("ReviewFoe"), TEXT("Opponents"));
+    FTSTSSBattleSkillState Rejected;
+    Rejected.Combat.AcceptedActions = 41;
+    FTSTSSBattleSkillCue RejectedCue;
+    RejectedCue.SkillId = TEXT("UntouchedCue");
+    TestFalse(TEXT("review admission is denied by actual executor"),
+        FTSTSSBattleSkillSystem::TryUseRow(
+            Battle, Knowledge, Factions, TEXT("Crew"), TEXT("Opponents"),
+            TEXT("Ender"), TEXT("ReviewFoe"), Spell.ActionId,
+            BypassedSchool, Rejected, RejectedCue));
+    TestEqual(TEXT("executor denial leaves output state intact"),
+              Rejected.Combat.AcceptedActions, 41);
+    TestEqual(TEXT("executor denial leaves output cue intact"),
+              RejectedCue.SkillId, FName(TEXT("UntouchedCue")));
+    TestEqual(TEXT("executor denial leaves encounter untouched"),
+              Battle.Combat.Roster[1].Health, 20);
+
     const int32 OldSize = Out.Num();
     FTSTSSActionDefRow GenericAttack = Spell;
     GenericAttack.ActionId = TEXT("GenericAttack");
