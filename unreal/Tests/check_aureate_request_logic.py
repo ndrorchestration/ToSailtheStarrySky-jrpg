@@ -21,6 +21,7 @@ if args.source_only:
     for marker in ("bTransitioning || RequestedForm == CurrentForm",
                    "Wings.Num() != 4 || Hydrofoils.Num() != 2",
                    "bUseRootPivotedWingPose && !AuthoredWingMesh",
+                   "bUseAuthoredBodyReview && (RequestedForm",
                    "RequestedForm == EAureateWakeForm::Orbiter || CurrentForm == EAureateWakeForm::Orbiter",
                    "Hydrofoils[Index]->SetVisibility("):
         if marker not in method:
@@ -55,6 +56,7 @@ struct AAureateWakePreviewActor {
     Array<Component*> Wings, Hydrofoils;
     bool bTransitioning=false, bAllowOrbiterPreview=true;
     bool bUseRootPivotedWingPose=false, AuthoredWingMesh=false;
+    bool bUseAuthoredBodyReview=false;
     EAureateWakeForm CurrentForm=EAureateWakeForm::Skyborne, TargetForm=CurrentForm;
     float StartSailBlend=0, OrbiterSailBlend=0, TargetSailBlend=0, TransitionElapsed=0;
     Array<int> StartWingTransforms,TargetWingTransforms,StartFoilTransforms,TargetFoilTransforms;
@@ -66,19 +68,23 @@ struct AAureateWakePreviewActor {
 main = r'''
 int main(){
     int failures=0, cases=0;
-    for(int mode=0;mode<4;++mode) for(int from=0;from<4;++from) for(int to=0;to<4;++to){
+    for(int mode=0;mode<5;++mode) for(int from=0;from<4;++from) for(int to=0;to<4;++to){
         if(from==to) continue;
         Component components[6];
         AAureateWakePreviewActor actor;
         for(int i=0;i<4;++i) actor.Wings.Add(&components[i]);
         for(int i=4;i<6;++i){components[i].visible=from==1;actor.Hydrofoils.Add(&components[i]);}
         actor.bUseRootPivotedWingPose=(mode==1 || mode==2);
+        actor.bUseAuthoredBodyReview=(mode==4);
         actor.AuthoredWingMesh=(mode==1);
         actor.bAllowOrbiterPreview=(mode!=3);
         actor.CurrentForm=static_cast<EAureateWakeForm>(from);
         bool accepted=actor.RequestForm(static_cast<EAureateWakeForm>(to));
-        // Modes: cube unlocked, authored present, authored missing, cube locked.
-        bool wantAccepted = mode==0 || (mode==1 && from!=3 && to!=3) || (mode==3 && to!=3);
+        // Modes: cube unlocked, authored present, authored missing, cube locked,
+        // approved-reference BODY review enabled (no Orbiter transition).
+        bool wantAccepted = mode==0 ||
+            ((mode==1 || mode==4) && from!=3 && to!=3) ||
+            (mode==3 && to!=3);
         bool expected=wantAccepted ? (from==1 || to==1) : from==1;
         bool ok=accepted==wantAccepted && actor.bTransitioning==wantAccepted &&
             components[4].visible==expected && components[5].visible==expected &&
