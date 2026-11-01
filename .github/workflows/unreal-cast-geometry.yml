@@ -22,6 +22,8 @@ jobs:
         run: python3 unreal/ArtSource/Characters/check_cast_geometry.py
       - name: Verify cast source pose, facing direction and adversarial flips
         run: python3 unreal/ArtSource/Characters/check_cast_orientation.py
+      - name: Cast importer preflight and sideways-axis negative controls
+        run: python3 unreal/ArtSource/Characters/editor_intake.py --preflight-only
       - name: Regenerate source assets and confirm exact bytes
         env:
           TSTSS_CAST_OUTPUT: unreal/ArtSource/Characters/Candidates
