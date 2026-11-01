@@ -24,3 +24,5 @@ jobs:
         run: python3 unreal/Tools/check_automation_registry.py
       - name: Verify Aureate Wake Seaborne-only foil visibility (engine-free)
         run: python3 unreal/Tools/check_aureate_foil_visibility_contract.py
+      - name: Reject partial mesh intake in offline clearance audit
+        run: python3 unreal/Tools/test_aureate_full_vertex_coverage.py
