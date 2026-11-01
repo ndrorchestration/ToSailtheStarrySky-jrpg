@@ -55,6 +55,7 @@ $RequiredTests = @(
     'TSTSS.Combat.RejectsInvalidActionsWithoutMutation',
     'TSTSS.Combat.TurnOrderAndAtomicity',
     'TSTSS.Combat.AbilityAuthorization',
+    'TSTSS.Combat.MagicAndWeaponTechniques',
     'TSTSS.Combat.EncounterCompletion',
     'TSTSS.FirstWake.RequiresOrderedMilestones',
     'TSTSS.FirstWake.WaterLandingRequiresMeasuredStability',
