@@ -75,3 +75,27 @@ py -3 unreal/Experiments/VisualQAPilot/reconcile_native_attempt.py --build-log <
 ```
 
 **Important:** The checker is engine-free and a local evidence consistency aid, not source-independent attestation or an Unreal renderer. Both an earlier receipt contradiction and the missing capture must remain visible in future review. Real screenshots are prohibited by the current RAM guard; never auto-close other applications or reduce the threshold to evade it. Canon, Orbiter, release and merge gates remain unchanged.
+
+## 2026-11-01 — Exact-head two-strut geometry source audit (NOT renderer proof)
+
+At live review, `neontic` was online and [PR #656](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/656)'s isolated tracked checkout remained clean at exact head `77ee249f8a0d734eab165dcafcd16870f12f07a7`. No Unreal Editor or build was active. The local Windows free-memory guard reported only **3.837 GiB free** against its *experimental* 6 GiB floor and returned `BLOCK_LOW_PHYSICAL_MEMORY`; accordingly no new D3D12 capture was started, and no unrelated process was closed.
+
+Added `check_strut_source_geometry.py` to this **draft review-only PR #677**. It reads the **exact** PR #656 C++ actor pinned by Git blob `27733525db404b0458db53bd1f5af1b0edad7f2c`, audits provisional hull BasicShapes dimensions, two strut declarations, FoilPose, strut position/orientation/scale, visibility/update logic and authored-wing Orbiter hold. The checker accepts **only** byte-exact Git content or Windows `core.autocrlf=true` CRLF-to-LF normalization; it rejects unpinned text and malformed CR. The first local run failed because of CRLF bytes; the corrected version was rerun with **10 source mutation negative tests plus source pin/CRLF controls** (self-tests PASS), and the actual PR #656 checkout produced a source-bound pass with 0 tracked changes.
+
+Calculated from the C++ *literal review-proxy assumptions*, not imported Unreal meshes:
+
+| Side | Hull anchor (cm) | Hydrofoil center (cm) | Strut center (cm) | Calculated span |
+| --- | --- | --- | --- | --- |
+| Port (-Y) | (0, -60, -30) | (0, -80, -140) | (0, -70, -85) | 111.803399 cm |
+| Starboard (+Y) | (0, 60, -30) | (0, 80, -140) | (0, 70, -85) | 111.803399 cm |
+
+Both anchor coordinates fall inside the **provisional** 100 cm engine cube with hull proxy scale `(8.0, 1.5, 0.65)`. For the cube's local-X struts, `Length/100`, midpoint and `Span.ToOrientationQuat()` are *source-level* endpoint alignment, not tested native component transforms. Declared strut count = 2, **actual instantiated live-actor component count NOT_OBSERVED**. Imported geometry bounds, z-fighting/occlusion, root attachment under transition, hydrofoil contact, physical loads, continuous collision and cinematic fidelity all remain **NOT_VERIFIED**.
+
+Reproduction (after fetching the exact source SHA separately from this pilot branch):
+
+```sh
+python3 unreal/Experiments/VisualQAPilot/check_strut_source_geometry.py --self-test
+python3 unreal/Experiments/VisualQAPilot/check_strut_source_geometry.py /path/to/exact-pr656-AureateWakePreviewActor.cpp
+```
+
+This source-only check is independent of actual GPU rendering and cannot substitute for the missing **post-strut 1280×720 native D3D12 Seaborne screenshot**, reviewer visual assessment and acceptance. Orbiter stays FAIL_CLOSED; art remains unapproved, and all PRs remain draft/unmerged.
