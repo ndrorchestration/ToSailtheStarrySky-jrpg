@@ -85,6 +85,10 @@ def preflight(folder: Path) -> dict:
         manifest.get("destinations")!=body.DESTINATIONS or
         set(manifest.get("parts",[]))!={body.HULL,body.BRIDGE}):
         raise BodyPairHold("Manifest does not describe the approved review-only intake contract")
+    # A manifest hash proves internal consistency, not that bytes came from
+    # this deterministic versioned generator. Bind BOTH files to exact local
+    # generator output before allowing even a review-only editor import.
+    expected_sha=body.make_pair()[1]["sha256"]
     receipts={}
     for name in (body.HULL,body.BRIDGE):
         path=(folder/name).resolve(strict=True)
@@ -94,6 +98,8 @@ def preflight(folder: Path) -> dict:
         digest=hashlib.sha256(blob).hexdigest()
         if manifest.get("sha256",{}).get(name)!=digest:
             raise BodyPairHold("Source hash differs from generated receipt: "+name)
+        if digest != expected_sha[name]:
+            raise BodyPairHold("Unrecognized body GLB bytes, even with rehashed manifest: "+name)
         inspect_glb(blob,name)
         receipts[name]={"sha256":digest,"bytes":len(blob),
                         "destination":body.DESTINATIONS[name]}
