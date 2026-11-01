@@ -46,6 +46,8 @@ def read_vertices(glb: Path, per_primitive=DEFAULT_MAX_VERTICES_PER_PRIMITIVE):
     jlen, jtype = struct.unpack_from("<I4s", blob, 12)
     if version != 2 or total != len(blob) or jtype != b"JSON":
         raise GeometryHold("Malformed GLB header")
+    if jlen < 4 or jlen % 4 or 20 + jlen + 8 > len(blob):
+        raise GeometryHold("Malformed GLB JSON chunk range")
     doc = json.loads(blob[20:20 + jlen])
     if not isinstance(doc, dict):
         raise GeometryHold("Malformed GLB scene JSON")
@@ -67,8 +69,20 @@ def read_vertices(glb: Path, per_primitive=DEFAULT_MAX_VERTICES_PER_PRIMITIVE):
         raise GeometryHold("Retired/oversized GLB, require cm-to-meter correction")
     bin_pos = 20 + jlen + 8
     blen, btype = struct.unpack_from("<I4s", blob, bin_pos - 8)
-    if btype != b"BIN\0" or bin_pos + blen != len(blob):
+    if btype != b"BIN\0" or blen % 4 or bin_pos + blen != len(blob):
         raise GeometryHold("Missing GLB binary chunk")
+    # A physical BIN chunk may include up to three trailing padding bytes.
+    # glTF accessors must never reach into that padding (or undeclared bytes).
+    buffers = doc.get("buffers")
+    if (not isinstance(buffers, list) or len(buffers) != 1 or
+        not isinstance(buffers[0], dict) or
+        type(buffers[0].get("byteLength")) is not int or
+        buffers[0]["byteLength"] < 0 or
+        buffers[0]["byteLength"] > blen or
+        blen - buffers[0]["byteLength"] > 3 or
+        "uri" in buffers[0] or "extensions" in buffers[0]):
+        raise GeometryHold("Invalid GLB declared logical buffer length")
+    logical_buffer_end = bin_pos + buffers[0]["byteLength"]
     meshes = doc.get("meshes")
     if not isinstance(meshes, list) or len(meshes) != 1:
         raise GeometryHold("Expected exactly one local-space review wing mesh")
@@ -122,8 +136,8 @@ def read_vertices(glb: Path, per_primitive=DEFAULT_MAX_VERTICES_PER_PRIMITIVE):
             raise GeometryHold("Invalid GLB position view/stride")
         view_start = bin_pos + view_offset
         view_end = view_start + view_length
-        if view_end > bin_pos + blen:
-            raise GeometryHold("GLB position view exceeds embedded BIN chunk")
+        if view_end > logical_buffer_end:
+            raise GeometryHold("GLB position view exceeds declared logical buffer")
         for i in range(count):
             start = view_start + accessor_offset + i * stride
             if start < view_start or start + 12 > view_end:
