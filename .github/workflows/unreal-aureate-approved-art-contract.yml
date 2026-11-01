@@ -5,6 +5,7 @@ on:
       - 'unreal/ArtSource/ShipReview/aureate_wake_approved_art_contract.json'
       - 'unreal/ArtSource/ShipReview/verify_aureate_reference.py'
       - 'unreal/Tests/test_aureate_approved_art_contract.py'
+      - 'unreal/Tests/check_aureate_body_binding_logic.py'
       - 'unreal/Source/ToSailTheStarrySky/**/AureateWakePreviewActor.*'
       - 'unreal/Docs/AUREATE_WAKE_APPROVED_ART_REFERENCE_2026-11-01.md'
       - '.github/workflows/unreal-aureate-approved-art-contract.yml'
@@ -23,6 +24,8 @@ jobs:
           persist-credentials: false
       - name: Validate reference and fail-closed C++ preview boundaries (source only)
         run: python3 -m unittest discover -s unreal/Tests -p test_aureate_approved_art_contract.py -v
+      - name: Compile and execute exact hull/bridge binding guards (18 cases, no Unreal runtime)
+        run: python3 unreal/Tests/check_aureate_body_binding_logic.py
       - name: Existing four-form source invariants
         run: python3 unreal/Tests/check_aureate_preview_source.py
       - name: Native acceptance is not implied
