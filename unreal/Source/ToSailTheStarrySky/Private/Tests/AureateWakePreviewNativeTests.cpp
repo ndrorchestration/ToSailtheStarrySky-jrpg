@@ -27,6 +27,8 @@ bool FTSTSSAureatePreviewFormTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Exactly four persistent wings"), Ship->GetWingCount(), 4);
     TestEqual(TEXT("Exactly two hydrofoils"), Ship->GetHydrofoilCount(), 2);
     TestEqual(TEXT("Exactly four removable preview mounts"), Ship->GetWingRootMountCount(), 4);
+    TestNull(TEXT("Authored root support must remain opt-in"),
+        Ship->AuthoredRootSupportMesh.Get());
     TestEqual(TEXT("Exactly two preview hydrofoil struts"), Ship->GetHydrofoilStrutCount(), 2);
     TestEqual(TEXT("Four opt-in curved hull/foredeck sections"),
         Ship->GetHullSilhouetteSectionCount(), 4);
@@ -70,6 +72,12 @@ bool FTSTSSAureatePreviewFormTest::RunTest(const FString& Parameters)
         Ship->AuthoredWingMesh = TemporaryWing;
         Ship->bUseRootPivotedWingPose = true;
         Ship->RefreshWingMeshes();
+        Ship->AuthoredRootSupportMesh = TemporaryWing; // review-only stand-in, not the GLB.
+        Ship->RefreshRootSupportReview();
+        TestEqual(TEXT("Assigning authored support adds no wing components"),
+            Ship->GetWingCount(), 4);
+        TestEqual(TEXT("Assigning authored support reuses four existing mounts"),
+            Ship->GetWingRootMountCount(), 4);
         Ship->bAllowOrbiterPreview = true; // Review toggle must NOT override motion safety hold.
         TestFalse(TEXT("Authored-wing Orbiter hold survives preview opt-in"),
             Ship->RequestForm(EAureateWakeForm::Orbiter));

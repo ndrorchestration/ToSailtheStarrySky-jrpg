@@ -163,11 +163,18 @@ void AAureateWakePreviewActor::OnConstruction(const FTransform& Transform)
 {
     Super::OnConstruction(Transform);
     RefreshHullSilhouetteReview();
+    RefreshRootSupportReview();
 }
 
 void AAureateWakePreviewActor::RefreshHullSilhouetteReview()
 {
     UpdateHullSilhouetteVisibility();
+    UpdateWingRootMounts();
+}
+
+void AAureateWakePreviewActor::RefreshRootSupportReview()
+{
+    // Reuse existing WingRootMounts; do NOT add a second four-support rig.
     UpdateWingRootMounts();
 }
 
@@ -363,6 +370,10 @@ void AAureateWakePreviewActor::UpdateWingRootMounts()
     {
         UStaticMeshComponent* Bracket = WingRootMounts[Index];
         if (!Bracket) continue;
+        const bool bUseAuthoredSupport = bReviewMountsVisible && AuthoredRootSupportMesh != nullptr;
+        UStaticMesh* DesiredMesh = bUseAuthoredSupport
+            ? AuthoredRootSupportMesh.Get() : OriginalCubeWingMesh.Get();
+        if (Bracket->GetStaticMesh() != DesiredMesh) Bracket->SetStaticMesh(DesiredMesh);
         Bracket->SetVisibility(bReviewMountsVisible);
         if (!bReviewMountsVisible || !Wings.IsValidIndex(Index) || !Wings[Index]) continue;
         const FVector WingPivot = Wings[Index]->GetRelativeLocation();
@@ -381,9 +392,14 @@ void AAureateWakePreviewActor::UpdateWingRootMounts()
             Bracket->SetVisibility(false);
             continue;
         }
-        Bracket->SetRelativeLocation((WingPivot + HullAnchor) * .5f);
+        // PR #631 GLB has its origin at the inner/root end and spans local
+        // +X from 0 to 100cm. The old BasicShapes cube is center-origin.
+        Bracket->SetRelativeLocation(bUseAuthoredSupport
+            ? HullAnchor : (WingPivot + HullAnchor) * .5f);
         Bracket->SetRelativeRotation(Span.ToOrientationQuat());
-        Bracket->SetRelativeScale3D(FVector(Length / 100.f, .09f, .09f));
+        Bracket->SetRelativeScale3D(bUseAuthoredSupport
+            ? FVector(Length / 100.f, 1.f, 1.f)
+            : FVector(Length / 100.f, .09f, .09f));
     }
 }
 
