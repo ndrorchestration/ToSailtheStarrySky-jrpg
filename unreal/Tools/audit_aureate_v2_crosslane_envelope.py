@@ -88,7 +88,9 @@ def run(args):
         args.header.read_text(encoding="utf-8"))
     hashes = require_exact_v2_artifacts(args.v2_manifest, args.hull_glb, args.bridge_glb)
     source_cpp = args.cpp.read_text(encoding="utf-8")
-    if "ForwardBridge->SetRelativeLocation(FVector(240.f, 0.f, 95.f));" not in source_cpp:
+    if not any(marker in source_cpp for marker in (
+            "ForwardBridge->SetRelativeLocation(FVector(240, 0, 95));",
+            "ForwardBridge->SetRelativeLocation(FVector(240.f, 0.f, 95.f));")):
         raise V2ReviewHold("Bridge actor placement changed; cannot reuse prior coordinates")
     wing, wc = wing_audit.read_vertices(args.wing_glb)
     hull, hc = wing_audit.read_vertices(args.hull_glb)
