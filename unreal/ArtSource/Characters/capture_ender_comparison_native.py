@@ -9,6 +9,7 @@ Install a tiny wrapper in the sandbox Content/Python/test_ender_compare_native.p
     runpy.run_path(r"<checkout>/unreal/ArtSource/Characters/capture_ender_comparison_native.py")
 Run Editor.Python.CastAllSandbox.test_ender_compare_native with D3D11 SM5.
 """
+import hashlib
 import json
 from pathlib import Path
 import sys
@@ -23,6 +24,10 @@ from ender_comparison_contract import (  # noqa: E402
 PROJECT = check_project(unreal.Paths.project_dir())
 PLAN = review_plan()
 ASSETS = load_intake_receipts(PROJECT)
+MAP_ON_DISK = PROJECT / "Content" / (MAP.removeprefix("/Game/") + ".umap")
+if not MAP_ON_DISK.is_file():
+    raise RuntimeError("Required native review map file missing")
+MAP_SHA_BEFORE = hashlib.sha256(MAP_ON_DISK.read_bytes()).hexdigest()
 LEVEL = unreal.EditorLoadingAndSavingUtils.load_map(MAP)
 if LEVEL is None:
     raise RuntimeError("Required disposable V2 review level missing")
@@ -117,12 +122,17 @@ def capture_pair():
             yield
         tasks.append({"name": name, "requested": requested, "ticks": ticks})
         print("TSTSS_ENDER_COMPARISON_TASK_DONE", name, ticks)
+    map_sha_after = hashlib.sha256(MAP_ON_DISK.read_bytes()).hexdigest()
+    if map_sha_after != MAP_SHA_BEFORE:
+        raise RuntimeError("Review map was modified during comparison capture")
     receipt = {
         **PLAN,
         "status": "UNREAL_SCREENSHOT_TASKS_COMPLETE_NATIVE_PNG_QA_PENDING",
         "engine": unreal.SystemLibrary.get_engine_version(),
         "source_sha256": {name: EXPECTED[name]["sha256"] for name in EXPECTED},
         "asset_paths": ASSETS,
+        "saved_review_map_sha256_before": MAP_SHA_BEFORE,
+        "saved_review_map_sha256_after": map_sha_after,
         "capture_tasks": tasks,
         "reference_likeness_approved": False,
         "source_files_modified": False,
