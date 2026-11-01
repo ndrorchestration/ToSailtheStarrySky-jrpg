@@ -13,7 +13,7 @@ from build_first_wake_prelude_interaction import (
 )
 
 project = assert_disposable_project(unreal.Paths.project_dir())
-map_asset = project / "Content/TSTSS/Review/FirstWake_PreludeInteraction_V1.umap"
+map_asset = project / "Content/TSTSS/Review/FirstWake_PreludeInteraction_V2.umap"
 if not map_asset.is_file():
     raise RuntimeError("Expected actual native .umap missing")
 prior = hashlib.sha256(map_asset.read_bytes()).hexdigest()
@@ -51,8 +51,13 @@ ocean = by_label.get(AUTHORING_PREFIX+"Ocean_VISUAL_ONLY_NO_BUOYANCY")
 if ocean is None:
     raise RuntimeError("Visual-only ocean marker missing")
 sea_collision = ocean.get_component_by_class(unreal.StaticMeshComponent)
-if sea_collision is None or sea_collision.get_editor_property("body_instance").get_editor_property("collision_enabled") != unreal.CollisionEnabled.NO_COLLISION:
+if sea_collision is None or sea_collision.get_collision_enabled() != unreal.CollisionEnabled.NO_COLLISION:
     raise RuntimeError("Visual-only ocean has physical collision")
+if str(sea_collision.get_collision_profile_name()).lower() != "nocollision":
+    raise RuntimeError("Decorative ocean collision profile is not persistent NoCollision")
+floor_collision = by_label[AUTHORING_PREFIX+"Harbor_TraversalFloor"].get_component_by_class(unreal.StaticMeshComponent)
+if floor_collision is None or floor_collision.get_collision_enabled() != unreal.CollisionEnabled.QUERY_AND_PHYSICS:
+    raise RuntimeError("Traversal floor does not block the player")
 if any(name.startswith(AUTHORING_PREFIX+"SeaContact") or
        name.startswith(AUTHORING_PREFIX+"FlotationConfirmed") for name in by_label):
     raise RuntimeError("Fake sea landing actor forbidden")
@@ -86,7 +91,7 @@ if len([a for a in actors if isinstance(a,unreal.TSTSSMilestoneActor)]) != len(S
 after = hashlib.sha256(map_asset.read_bytes()).hexdigest()
 if after != prior:
     raise RuntimeError("Review map was modified by verification")
-out_dir = project/"Saved"/"PreludeInteractionV1"
+out_dir = project/"Saved"/"PreludeInteractionV2"
 out_dir.mkdir(parents=True, exist_ok=True)
 out_file = out_dir/"native_actor_verification.json"
 if out_file.exists():
