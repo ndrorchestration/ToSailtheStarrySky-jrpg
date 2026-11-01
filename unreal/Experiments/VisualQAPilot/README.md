@@ -58,3 +58,20 @@ py -3 unreal/Experiments/VisualQAPilot/memory_gate.py --minimum-free-gib 6
 ```
 
 **New operating rule:** Run the live memory check immediately **before** launching the single native capture, after a clean source/engine preflight. If it blocks, leave other users' processes alone, record LOW_MEMORY / NOT_VERIFIED and do not start Unreal. If it passes, the operator still needs to monitor headroom continuously and stop only its own bounded review process if pressure becomes critical. Capture pass requires actual renderer log, new image, digest, visual inspection of BOTH struts and explicit reviewer decision. Do not infer art/engineering acceptance from passing the gate.
+
+## 2026-11-01 — Exact-source native log reconciliation and no-new-capture decision
+
+At the next live Windows check the original PR #656 detached checkout was still exact `77ee249f8a0d734eab165dcafcd16870f12f07a7`, clean, with **no UnrealEditor process**. Live `memory_gate.py` returned `BLOCK_LOW_PHYSICAL_MEMORY` at **2.004 GiB free** against the experimental 6 GiB floor (exit 1); **no second native render was launched**. Concurrent build-related processes remained active and were not interrupted.
+
+The first capture-attempt receipt recorded `isolated_child_force_stopped=false` even though the earlier operator explicitly stopped only the capture PID when memory reached roughly 40 MB. This is a **provenance inconsistency**, not evidence the process escaped cleanup. We have **not altered the original receipt**. New `reconcile_native_attempt.py` cross-checks exact source SHA, native build text, D3D12 renderer text and attempt metadata, with optional `--external-operator-stop` to record this independent observed intervention. It treats a textual native build success as a **LOG_REPORTS_SUCCESS** assertion only, and never concludes that a post-strut screenshot or art is approved from a log line. Its input-decoder handles both PowerShell UTF-16LE and Unreal UTF-8 logs with BOMs, preserving original raw SHA-256 byte hashes.
+
+The exact Git source blob `6909e22f9058da82f068146d2c1cac6bdf73f568` was executed in a separate untracked Saved-file copy on the Windows workstation. Synthetic self-tests (6 semantic and both BOM encodings) passed. The real log comparison reported native build success, D3D12 initialization observed, screenshot event absent, and **the mismatched operator-stop field**. It returned **exit 1 as intended** to refuse a completion claim and wrote a *new* sibling private receipt `native-reconciliation-v2-20261101.json`. Native build log SHA-256 `3c19c3f1ec1de2aaadfbe3c017be9fbfb8fd492f5489a7be375ec89f5b22b79b`; renderer log SHA-256 `5e7f2647a09b6456d8cfe2f65c6f4e67d034cf1b19cda4f7e0c2803e7a791626`.
+
+To reproduce using private local logs, leaving prior evidence untouched:
+
+```powershell
+py -3 unreal/Experiments/VisualQAPilot/reconcile_native_attempt.py --self-test
+py -3 unreal/Experiments/VisualQAPilot/reconcile_native_attempt.py --build-log <existing-success-build-log> --render-log <existing-d3d12-render-log> --attempt-receipt <existing-capture-attempt-json> --external-operator-stop
+```
+
+**Important:** The checker is engine-free and a local evidence consistency aid, not source-independent attestation or an Unreal renderer. Both an earlier receipt contradiction and the missing capture must remain visible in future review. Real screenshots are prohibited by the current RAM guard; never auto-close other applications or reduce the threshold to evade it. Canon, Orbiter, release and merge gates remain unchanged.
