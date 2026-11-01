@@ -78,7 +78,13 @@ def mesh_membrane():
         for i in range(SEGMENTS + 1):
             t = i/SEGMENTS
             for edge in (-1, 1):
-                vertex(s, surface_point(t, edge, side=side, lift=-0.0), (t, (edge+1)*.5))
+                # The shell has distinct front/back materials sharing one
+                # closed manifold. If both sides share UVs, every edge-wall
+                # triangle has zero UV area and Unreal's tangent construction
+                # emits near-zero bi-normal warnings. Offset the back layer
+                # in BOTH U and V, including the two sealed tip caps.
+                uv=(t, (edge+1)*.5) if side==1 else (t+.015, (edge+1)*.5+1.)
+                vertex(s, surface_point(t, edge, side=side, lift=-0.0), uv)
     for i in range(SEGMENTS):
         a, b, c, d = 2*i, 2*i+1, 2*i+2, 2*i+3
         s["faces"].extend(((a, c, d), (a, d, b), (a+n, b+n, d+n), (a+n, d+n, c+n)))
@@ -165,7 +171,10 @@ def add_vein_path(s, points, thickness=1.0, sides=7):
             k=(j+1)%sides
             s["faces"].extend(((a+j,b+j,b+k),(a+j,b+k,a+k)))
     # Close endpoint rims rather than leaving thousands of open tubes.
-    initial=vertex(s,pts[0]); final=vertex(s,pts[-1])
+    # Flat UV cap rings are constant-U, so distinct center U coordinates
+    # avoid a collapsed UV Jacobian for every tube end-cap triangle.
+    initial=vertex(s,pts[0],(-.075,.5))
+    final=vertex(s,pts[-1],(1.075,.5))
     end=offset+(len(pts)-1)*sides
     for j in range(sides):
         k=(j+1)%sides
@@ -218,7 +227,10 @@ def mesh_hinge():
             k=(j+1)%ring_count
             a,b,c,d=offset+j,offset+k,offset+ring_count+j,offset+ring_count+k
             s["faces"].extend(((a,b,d),(a,d,c)))
-        cap_a=vertex(s,(x0,0.,0.)); cap_b=vertex(s,(x1,0.,0.))
+        # This hinge cylinder's sidewall UVs use V=0 and V=1 on the rims.
+        # Put cap centers off those lines for nondegenerate cap tangents.
+        cap_a=vertex(s,(x0,0.,0.),(.5,-.125))
+        cap_b=vertex(s,(x1,0.,0.),(.5,1.125))
         for j in range(ring_count):
             k=(j+1)%ring_count
             s["faces"].extend(((cap_a,offset+k,offset+j),
