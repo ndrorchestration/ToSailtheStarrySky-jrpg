@@ -16,7 +16,7 @@ EXPECTED = ("Ender", "Ionia", "Lyra", "Reson", "Aepex")
 MAP = "/Game/ArtLookdev/ReviewMaps/TSTSS_CastLineup_Review"
 PROJECT = Path(unreal.Paths.project_dir()).resolve()
 EVIDENCE = PROJECT / "Saved" / "CharacterLookdev"
-OUT = EVIDENCE / "RendererReview_20261101_v5"
+OUT = EVIDENCE / "RendererReview_20261101_v10"
 if "CastAllSandbox" not in PROJECT.name:
     raise RuntimeError("Refuse renderer test outside disposable CastAllSandbox")
 if not (EVIDENCE / "cast_lineup_reload.json").is_file():
@@ -50,23 +50,29 @@ for name in EXPECTED:
 if "CALIBRATION_180CM_NONCANON" not in by_label:
     raise RuntimeError("Calibration actor absent")
 
+# For isolated Ender portraits, move all other review actors far outside the camera frustum.
+# This is unsaved, disposable, and only the test map is affected.
+for index,name in enumerate(EXPECTED):
+    if name == "Ender": continue
+    a=by_label["LOOKDEV_STATIC_" + name]
+    a.set_actor_location(unreal.Vector(0, 10000 + 250*index, 0), False, False)
 # Scene lighting and cameras are temporary editor actors; the source map
 # remains on disk unchanged and no save_current_level is invoked.
 sun = unreal.EditorLevelLibrary.spawn_actor_from_class(
     unreal.DirectionalLight, unreal.Vector(0, 0, 450),
-    unreal.Rotator(-35, 35, 0), transient=True)
+    unreal.Rotator(pitch=-35.0, yaw=35.0, roll=0.0), transient=True)
 if sun is None:
     raise RuntimeError("Temporary directional light could not spawn")
 sun.get_component_by_class(unreal.DirectionalLightComponent).set_editor_property('intensity', 0.5)
 for pos in ((450, -450, 300), (-450, -450, 300), (50, 50, 300), (50, -950, 300)):
     light = unreal.EditorLevelLibrary.spawn_actor_from_class(
-        unreal.PointLight, unreal.Vector(*pos), unreal.Rotator(0, 0, 0), transient=True)
+        unreal.PointLight, unreal.Vector(*pos), unreal.Rotator(pitch=0.0, yaw=0.0, roll=0.0), transient=True)
     if light is not None:
         light.get_component_by_class(unreal.PointLightComponent).set_editor_property("intensity", 1500.0)
 
 def cam(label, pos, yaw, fov):
     c = unreal.EditorLevelLibrary.spawn_actor_from_class(
-        unreal.CameraActor, unreal.Vector(*pos), unreal.Rotator(0, yaw, 0), transient=True)
+        unreal.CameraActor, unreal.Vector(*pos), unreal.Rotator(pitch=0.0, yaw=float(yaw), roll=0.0), transient=True)
     if c is None:
         raise RuntimeError("Cannot spawn camera " + label)
     c.set_actor_label("REVIEW_CAMERA_" + label)
@@ -84,12 +90,13 @@ def cam(label, pos, yaw, fov):
     return c
 
 cameras = [
-    ("Ender_front", cam("Ender_front", (420, -460, 102), 180, 44), (1280, 720)),
-    ("Ender_profile", cam("Ender_profile", (0, -180, 102), -90, 44), (1280, 720)),
-    ("Ender_back", cam("Ender_back", (-420, -460, 102), 0, 44), (1280, 720)),
+    ("Ender_front", cam("Ender_front", (0, -40, 102), -90, 44), (1280, 720)),
+    ("Ender_profile", cam("Ender_profile", (420, -460, 102), 180, 44), (1280, 720)),
+    ("Ender_back", cam("Ender_back", (0, -880, 102), 90, 44), (1280, 720)),
     ("Ender_three_quarter", cam("Ender_three_quarter", (280, -180, 105), -135, 44), (1280, 720)),
     ("Five_cast_lineup", cam("Five_cast_lineup", (900, 0, 113), 180, 63), (1280, 720)),
 ]
+
 print("TSTSS_RENDER_CAPTURE_QUEUED", PROJECT, len(cameras))
 results = []
 @unreal.AutomationScheduler.add_latent_command
@@ -97,6 +104,13 @@ def take_captures():
     # Engine tick scheduler is required; immediate screenshot calls can
     # appear to succeed without writing a rendered PNG.
     for label, camera, (width, height) in cameras:
+        if label == "Five_cast_lineup":
+            # Restore original lineup locations; yaw to face the camera along +X.
+            # Editor test is disposable; no asset or map save follows.
+            for index, name in enumerate(EXPECTED):
+                actor=by_label["LOOKDEV_STATIC_" + name]
+                actor.set_actor_location(unreal.Vector(0,(index-2)*230,0),False,False)
+                actor.set_actor_rotation(unreal.Rotator(pitch=0.0,yaw=-90.0,roll=0.0),False)
         target = str(OUT / (label + ".png"))
         task = unreal.AutomationLibrary.take_high_res_screenshot(
             width, height, target, camera=camera, delay=0.5, force_game_view=True)
@@ -114,9 +128,13 @@ def take_captures():
               "engine": unreal.SystemLibrary.get_engine_version(),
               "map": MAP, "renderer_requested": True, "noncanonical": True,
               "reference_accepted": False, "captured": results}
-    (EVIDENCE / "render_task_receipt_v5.json").write_text(
+    (EVIDENCE / "render_task_receipt_v10.json").write_text(
         json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print("TSTSS_RENDER_TASKS_RECORDED")
+
+
+
+
 
 
 
