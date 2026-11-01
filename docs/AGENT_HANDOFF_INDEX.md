@@ -1,8 +1,10 @@
 # Agent handoff — documentation routing
 
+> **2026-11-01 creator engine decision:** Unreal Engine 5.8.4 is the primary development target; see [Unreal-first collaborator handoff](UNREAL_PRIMARY_AGENT_HANDOFF_2026-11-01.md) and the review-only AGENTS.md amendment in the same draft PR. Historical Godot native QA does not certify or block unrelated Unreal review work. Current Unreal source is on draft stacked PRs, not necessarily on `main`.
+
 > **Latest QA routing (2026-10-28):** Consult [native integration audit](CHAPTER_1_NATIVE_INTEGRATION_AUDIT_2026-10-28.md) before claiming the Chapter 1 story is integrated. At pinned `4d2ec5fb`, five Godot scripts and nine Windows renderer frames passed, but the inspected legacy review scene still starts Lyra-first and displays Ionia-first as opt-in; UI/art acceptance is pending. Validate normal F5 canonical entry separately.
 
-> **Current P0 schedule:** [Chapter 1 beta roadmap](CHAPTER_1_BETA_ROADMAP.md) — prioritize consolidation of native First Wake, berth, narrative, save and Windows packaging before broader visual or planetary expansion. Dates are targets, not admission evidence.
+> **Historical P0 schedule (subject to Unreal rebaseline):** [Chapter 1 beta roadmap](CHAPTER_1_BETA_ROADMAP.md) — prioritize consolidation of native First Wake, berth, narrative, save and Windows packaging before broader visual or planetary expansion. Dates are targets, not admission evidence.
 
 **Status:** Public-safe cross-agent reference; created 2026-10-25 from current creator direction, GitHub contracts, and selected Notion records. This is a **navigation and reconciliation layer**, not an approval to integrate, publish or expose restricted story material.
 
@@ -10,11 +12,11 @@
 
 | Agent work | Read before implementation |
 |---|---|
-| Any game change | [../AGENTS.md](../AGENTS.md), [Godot coordination](GODOT_MIGRATION_COORDINATION.md), [../SPEC.md](../SPEC.md) (legacy baseline) |
+| Any game change | [../AGENTS.md](../AGENTS.md), [Unreal-first collaborator handoff](UNREAL_PRIMARY_AGENT_HANDOFF_2026-11-01.md); for historical references: [Godot coordination](GODOT_MIGRATION_COORDINATION.md), [../SPEC.md](../SPEC.md) |
 | Story, character dialog, reveals | [Canon and reveal](CANON_AND_REVEAL_POLICY.md), [Notion source index](NOTION_SOURCE_INDEX.md), [../SPEC.md](../SPEC.md) |
 | Character models, sprites, portraits, animations | [Character and art authority](CHARACTER_AND_ART_AUTHORITY.md), [CHARACTER_ART_DIRECTION.md](CHARACTER_ART_DIRECTION.md), [VISUAL_BIBLE.md](VISUAL_BIBLE.md) |
 | Ships, world map, terrain, sky, aurora, flight | [World / ship](WORLD_SHIP_VISUAL_DIRECTION.md), [VISUAL_BENCHMARK_SCENE.md](VISUAL_BENCHMARK_SCENE.md), [VISUAL_BIBLE.md](VISUAL_BIBLE.md) |
-| Magic, battle, skills, class progression | [MAGIC_SYSTEM.md](MAGIC_SYSTEM.md), [../SPEC.md](../SPEC.md); port semantics before rewriting balance |
+| Magic, battle, skills, class progression | [Unreal-first handoff](UNREAL_PRIMARY_AGENT_HANDOFF_2026-11-01.md), active Unreal [#662](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/662), [#665](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/665), [#666](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/666); [MAGIC_SYSTEM.md](MAGIC_SYSTEM.md) and [../SPEC.md](../SPEC.md) as carefully bounded historical reference |
 | Cinematics | [CINEMATIC_CLIP_CONTRACT.md](CINEMATIC_CLIP_CONTRACT.md) and benchmark scene |
 | Builds / validation / release | [DEVELOPMENT.md](DEVELOPMENT.md), [PREVIEW_0_1_ACCEPTANCE.md](PREVIEW_0_1_ACCEPTANCE.md), [Godot coordination](GODOT_MIGRATION_COORDINATION.md) |
 
@@ -24,7 +26,7 @@
 
 - Identify exact branch/commit and whether the task changes *story canon*, *visual direction*, *runtime behavior*, *tests*, or *documentation only*.
 - For new content, state the content authority and conflict check (especially character likeness, family relationships, the Dragonfly, map geography and late-game routes).
-- Implement GDScript/Godot for new runtime work. Existing JS behavior can serve as a bounded test oracle, not a new gameplay destination.
+- Implement Unreal Engine 5.8.4 C++/Blueprint/data-driven gameplay for newly authorized runtime work. Godot and JS behavior may serve as bounded historical test oracles, not new implementation destinations. For historical Godot maintenance, retain its own separate native verification.
 - Keep chapter-one native work, planetary Godot PR #364, and JS planetary prototypes #349/#363 distinct until deliberate integration.
 - Provide proof as **observed facts**, never substitute source static checks for rendered graphics or native Windows acceptance.
 - Do not merge drafts or publish binaries based solely on this document.
