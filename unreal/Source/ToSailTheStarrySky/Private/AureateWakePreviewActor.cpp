@@ -112,13 +112,19 @@ bool AAureateWakePreviewActor::RefreshBodyReviewMeshes()
 
     UStaticMesh* NewHull = AuthoredHullReviewMesh.Get();
     UStaticMesh* NewBridge = AuthoredBridgeDomeReviewMesh.Get();
-    // Do not permit arbitrary game assets or even other review directories:
-    // import location is NOT proof of art approval, but constrains scope.
+    // Do not permit arbitrary game assets or mixed V1/V2 review models.
+    // V2 import uses different isolated candidate folders from V1.
+    // This review-only path is NOT creator approval or gameplay authority.
     if (!NewHull || !NewBridge ||
-        !NewHull->GetPathName().StartsWith(
-            TEXT("/Game/TSTSS/Review/ShipArt/HullCandidateV1/")) ||
-        !NewBridge->GetPathName().StartsWith(
-            TEXT("/Game/TSTSS/Review/ShipArt/BridgeDomeCandidateV1/")))
+        (bPreferFidelityV2BodyReview
+            ? (!NewHull->GetPathName().StartsWith(
+                   TEXT("/Game/TSTSS/Review/ShipArt/IvoryHullCandidateV2/")) ||
+               !NewBridge->GetPathName().StartsWith(
+                   TEXT("/Game/TSTSS/Review/ShipArt/BlueGlassBridgeCandidateV2/")))
+            : (!NewHull->GetPathName().StartsWith(
+                   TEXT("/Game/TSTSS/Review/ShipArt/HullCandidateV1/")) ||
+               !NewBridge->GetPathName().StartsWith(
+                   TEXT("/Game/TSTSS/Review/ShipArt/BridgeDomeCandidateV1/")))))
     {
         return false; // Fail closed without modifying either mesh.
     }
