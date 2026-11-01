@@ -52,6 +52,8 @@ jobs:
           python3 unreal/Experiments/VisualQAPilot/check_strut_source_geometry.py --self-test
           python3 unreal/Experiments/VisualQAPilot/check_strut_source_geometry.py "$RUNNER_TEMP/pr656-aureate-actor.cpp" > "$RUNNER_TEMP/pr656-strut-geometry.json"
           python3 -c 'import json,sys; x=json.load(open(sys.argv[1])); assert x["source_blob_sha1"] == "27733525db404b0458db53bd1f5af1b0edad7f2c"; assert x["hydrofoil_strut_count_declared_in_source"] == 2; assert len(x["seaborne"]) == 2; assert x["struts_visible_in_native_d3d12"] == "NOT_VERIFIED"; assert x["hydrofoil_strut_count_in_live_actor"] == "NOT_OBSERVED"' "$RUNNER_TEMP/pr656-strut-geometry.json"
+      - name: Native build RAM and commit-headroom gate (synthetic only)
+        run: python3 unreal/Experiments/VisualQAPilot/build_resources.py --self-test
       - name: Assert native evidence remains UNKNOWN by default
         run: |
           python3 unreal/Experiments/CanonPilot/check_canon.py unreal/Experiments/CanonPilot/unknown_observations.json > /tmp/canon-review-results.json
