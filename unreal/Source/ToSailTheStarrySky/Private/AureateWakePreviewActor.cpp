@@ -157,6 +157,7 @@ void AAureateWakePreviewActor::BeginPlay()
     RefreshWingMeshes();
     RefreshWingMaterials();
     UpdateHullSilhouetteVisibility();
+    RefreshBodyReviewMeshes();
 }
 
 void AAureateWakePreviewActor::OnConstruction(const FTransform& Transform)
@@ -164,12 +165,80 @@ void AAureateWakePreviewActor::OnConstruction(const FTransform& Transform)
     Super::OnConstruction(Transform);
     RefreshHullSilhouetteReview();
     RefreshRootSupportReview();
+    RefreshBodyReviewMeshes();
 }
 
 void AAureateWakePreviewActor::RefreshHullSilhouetteReview()
 {
     UpdateHullSilhouetteVisibility();
     UpdateWingRootMounts();
+}
+
+bool AAureateWakePreviewActor::RefreshBodyReviewMeshes()
+{
+    // This API is intended only for explicit editor review: never authorize
+    // installing unapproved visual candidates in packaged runtime.
+#if !WITH_EDITOR
+    return false;
+#else
+    if (!Hull || !ForwardBridge || bTransitioning ||
+        CurrentForm == EAureateWakeForm::Orbiter ||
+        Wings.Num() != 4 || Hydrofoils.Num() != 2 ||
+        WingRootMounts.Num() != 4 || HydrofoilStruts.Num() != 2)
+    {
+        return false;
+    }
+
+    if (!bUseAuthoredBodyReview)
+    {
+        // Restore both exact BasicShapes fallback poses atomically from our
+        // own constant geometry contract, never from potentially edited scene
+        // positions. The primitive silhouette mode may independently be on.
+        UStaticMesh* DefaultCube = OriginalCubeWingMesh.Get();
+        if (!DefaultCube) return false;
+        Hull->SetStaticMesh(DefaultCube);
+        Hull->SetRelativeLocation(FVector::ZeroVector);
+        Hull->SetRelativeRotation(FRotator::ZeroRotator);
+        Hull->SetRelativeScale3D(FVector(8.f, 1.5f, .65f));
+        ForwardBridge->SetStaticMesh(DefaultCube);
+        ForwardBridge->SetRelativeLocation(FVector(240.f, 0.f, 95.f));
+        ForwardBridge->SetRelativeRotation(FRotator::ZeroRotator);
+        ForwardBridge->SetRelativeScale3D(FVector(2.1f, 1.1f, 1.1f));
+        bBodyReviewApplied = false;
+        UpdateHullSilhouetteVisibility();
+        UpdateWingRootMounts();
+        return true;
+    }
+
+    // Two mutually exclusive, noncanonical lookdev modes. A conflicting mode
+    // or bad/partial provenance is rejected before either mesh changes.
+    if (bUseHullSilhouetteReview) return false;
+    UStaticMesh* NewHull = AuthoredHullReviewMesh.Get();
+    UStaticMesh* NewBridge = AuthoredBridgeDomeReviewMesh.Get();
+    if (!NewHull || !NewBridge ||
+        !NewHull->GetPathName().StartsWith(
+            TEXT("/Game/TSTSS/Review/ShipArt/HullCandidateV1/")) ||
+        !NewBridge->GetPathName().StartsWith(
+            TEXT("/Game/TSTSS/Review/ShipArt/BridgeDomeCandidateV1/")))
+    {
+        return false;
+    }
+
+    // Both meshes are validated before the first mutation. This is only a
+    // visual swap, no collision, buoyancy, story/save or clearance authority.
+    Hull->SetStaticMesh(NewHull);
+    Hull->SetRelativeLocation(FVector::ZeroVector);
+    Hull->SetRelativeRotation(FRotator::ZeroRotator);
+    Hull->SetRelativeScale3D(FVector::OneVector);
+    ForwardBridge->SetStaticMesh(NewBridge);
+    ForwardBridge->SetRelativeLocation(FVector(240.f, 0.f, 95.f));
+    ForwardBridge->SetRelativeRotation(FRotator::ZeroRotator);
+    ForwardBridge->SetRelativeScale3D(FVector::OneVector);
+    bBodyReviewApplied = true;
+    UpdateHullSilhouetteVisibility();
+    UpdateWingRootMounts();
+    return true;
+#endif
 }
 
 void AAureateWakePreviewActor::RefreshRootSupportReview()
@@ -458,6 +527,10 @@ bool AAureateWakePreviewActor::RequestForm(EAureateWakeForm RequestedForm)
         // Root-pivoted authored GLB crosses provisional hull/bridge during
         // direct Orbiter interpolation. Do not attempt until a safe route exists.
         (bUseRootPivotedWingPose && (RequestedForm == EAureateWakeForm::Orbiter || CurrentForm == EAureateWakeForm::Orbiter)) ||
+        // Neither the primitive curved study nor an authored body candidate
+        // has passed Orbiter motion/pressure/creator acceptance.
+        ((bUseHullSilhouetteReview || bUseAuthoredBodyReview || bBodyReviewApplied) &&
+            (RequestedForm == EAureateWakeForm::Orbiter || CurrentForm == EAureateWakeForm::Orbiter)) ||
         bTransitioning || RequestedForm == CurrentForm ||
         (RequestedForm == EAureateWakeForm::Orbiter && !bAllowOrbiterPreview))
     {
@@ -482,9 +555,18 @@ bool AAureateWakePreviewActor::RequestForm(EAureateWakeForm RequestedForm)
     {
         StartFoilTransforms.Add(Hydrofoils[Index]->GetRelativeTransform());
         TargetFoilTransforms.Add(FoilPose(RequestedForm, Index));
-        Hydrofoils[Index]->SetVisibility(true);
+        // Hydrofoils are visible only when a permitted route actually
+        // enters or departs Seaborne, not on direct Skyborne/Submersible hops.
+        Hydrofoils[Index]->SetVisibility(
+            CurrentForm == EAureateWakeForm::Seaborne ||
+            RequestedForm == EAureateWakeForm::Seaborne);
     }
     bTransitioning = true;
+    // Review supports must match foil visibility on the same request frame.
+    // Otherwise a Seaborne foil can appear before its hull-to-foil strut.
+    // This changes only visual proxy state; no collision or gameplay rights.
+    UpdateWingRootMounts();
+    UpdateHydrofoilStruts();
     return true;
 }
 

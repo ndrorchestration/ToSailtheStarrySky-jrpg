@@ -1,6 +1,7 @@
 #include "AureateWakePreviewActor.h"
 #include "Engine/World.h"
 #include "Engine/StaticMesh.h"
+#include "Components/StaticMeshComponent.h"
 #include "Misc/AutomationTest.h"
 #include "UObject/UObjectGlobals.h"
 
@@ -36,6 +37,14 @@ bool FTSTSSAureatePreviewFormTest::RunTest(const FString& Parameters)
         Ship->GetCanopyFramePieceCount(), 40);
     TestFalse(TEXT("Curved hull review is disabled by default"),
         Ship->bUseHullSilhouetteReview);
+    TestFalse(TEXT("Approved-reference body candidate defaults off"),
+        Ship->bUseAuthoredBodyReview);
+    TestFalse(TEXT("Approved-reference body is not applied"),
+        Ship->IsAuthoredBodyReviewApplied());
+    TestNull(TEXT("No hull review mesh selected"), Ship->AuthoredHullReviewMesh.Get());
+    TestNull(TEXT("No bridge review mesh selected"), Ship->AuthoredBridgeDomeReviewMesh.Get());
+    TestTrue(TEXT("Default body refresh restores stock proxies"),
+        Ship->RefreshBodyReviewMeshes());
     Ship->bUseHullSilhouetteReview = true;
     Ship->RefreshHullSilhouetteReview();
     TestEqual(TEXT("Hull review does not add extra wings"), Ship->GetWingCount(), 4);
@@ -52,6 +61,29 @@ bool FTSTSSAureatePreviewFormTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("Orbiter request is rejected"), Ship->RequestForm(EAureateWakeForm::Orbiter));
 
     TestTrue(TEXT("Skyborne to Seaborne starts"), Ship->RequestForm(EAureateWakeForm::Seaborne));
+    // These two supports must be visible on the REQUEST frame, before Tick.
+    // The earlier stacked implementation exposed hydrofoils one frame before
+    // their companion struts, so count-only checks did not catch this.
+    TArray<UStaticMeshComponent*> ImmediateSupportComponents;
+    Ship->GetComponents<UStaticMeshComponent>(ImmediateSupportComponents);
+    for (int32 Side = 1; Side <= 2; ++Side)
+    {
+        UStaticMeshComponent* Foil = nullptr;
+        UStaticMeshComponent* Strut = nullptr;
+        const FName FoilName(*FString::Printf(TEXT("Hydrofoil_%d"), Side));
+        const FName StrutName(*FString::Printf(TEXT("ReviewHydrofoilStrut_%d"), Side));
+        for (UStaticMeshComponent* Component : ImmediateSupportComponents)
+        {
+            if (Component->GetFName() == FoilName) Foil = Component;
+            if (Component->GetFName() == StrutName) Strut = Component;
+        }
+        if (TestNotNull(TEXT("Immediate Seaborne foil found"), Foil) &&
+            TestNotNull(TEXT("Immediate Seaborne strut found"), Strut))
+        {
+            TestTrue(TEXT("Seaborne foil visible at transition start"), Foil->IsVisible());
+            TestTrue(TEXT("Companion strut visible at same transition start"), Strut->IsVisible());
+        }
+    }
     TestFalse(TEXT("Cannot interrupt a transition"), Ship->RequestForm(EAureateWakeForm::Submersible));
     TestTrue(TEXT("Editor-only ordinary review completion is permitted"),
         Ship->FinishOrdinaryPreviewTransitionForReview());
@@ -69,6 +101,52 @@ bool FTSTSSAureatePreviewFormTest::RunTest(const FString& Parameters)
     UStaticMesh* TemporaryWing = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cube.Cube"));
     if (TestNotNull(TEXT("Engine test mesh available"), TemporaryWing))
     {
+        // Verify review-only body validation without importing or accepting art.
+        // The stock engine Cube is intentionally outside both allowed folders.
+        TArray<UStaticMeshComponent*> MeshComponents;
+        Ship->GetComponents<UStaticMeshComponent>(MeshComponents);
+        UStaticMeshComponent* HullComponent = nullptr;
+        UStaticMeshComponent* BridgeComponent = nullptr;
+        for (UStaticMeshComponent* Component : MeshComponents)
+        {
+            if (Component->GetFName() == FName(TEXT("Hull"))) HullComponent = Component;
+            if (Component->GetFName() == FName(TEXT("ForwardBridge"))) BridgeComponent = Component;
+        }
+        if (TestNotNull(TEXT("Preview hull exists"), HullComponent) &&
+            TestNotNull(TEXT("Preview bridge exists"), BridgeComponent))
+        {
+            UStaticMesh* OriginalHull = HullComponent->GetStaticMesh();
+            UStaticMesh* OriginalBridge = BridgeComponent->GetStaticMesh();
+            Ship->bUseAuthoredBodyReview = true;
+            Ship->AuthoredHullReviewMesh = TemporaryWing;
+            TestFalse(TEXT("Missing bridge fails body intake atomically"),
+                Ship->RefreshBodyReviewMeshes());
+            TestFalse(TEXT("Missing bridge cannot apply body"),
+                Ship->IsAuthoredBodyReviewApplied());
+            Ship->AuthoredBridgeDomeReviewMesh = TemporaryWing;
+            TestFalse(TEXT("Non-allowlisted engine cubes rejected"),
+                Ship->RefreshBodyReviewMeshes());
+            TestEqual(TEXT("Rejected body leaves hull mesh untouched"),
+                HullComponent->GetStaticMesh(), OriginalHull);
+            TestEqual(TEXT("Rejected body leaves bridge mesh untouched"),
+                BridgeComponent->GetStaticMesh(), OriginalBridge);
+            Ship->bUseHullSilhouetteReview = true;
+            TestFalse(TEXT("Conflicting review modes refused"),
+                Ship->RefreshBodyReviewMeshes());
+            Ship->bUseHullSilhouetteReview = false;
+            Ship->bAllowOrbiterPreview = true;
+            TestFalse(TEXT("Body intent refuses Orbiter even with preview toggle"),
+                Ship->RequestForm(EAureateWakeForm::Orbiter));
+            Ship->bUseAuthoredBodyReview = false;
+            TestTrue(TEXT("Disabling review restores original mesh poses"),
+                Ship->RefreshBodyReviewMeshes());
+            TestFalse(TEXT("Disabling review clears applied state"),
+                Ship->IsAuthoredBodyReviewApplied());
+            TestEqual(TEXT("Restored hull source mesh"), HullComponent->GetStaticMesh(), OriginalHull);
+            TestEqual(TEXT("Restored bridge source mesh"), BridgeComponent->GetStaticMesh(), OriginalBridge);
+            Ship->bAllowOrbiterPreview = false;
+        }
+
         Ship->AuthoredWingMesh = TemporaryWing;
         Ship->bUseRootPivotedWingPose = true;
         Ship->RefreshWingMeshes();

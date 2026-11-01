@@ -29,3 +29,7 @@ jobs:
         run: python3 -m unittest discover -s unreal/Tests -p 'test_author_aureate_root_support.py' -v
       - name: Test fail-closed authored wing-root import
         run: python3 -m unittest discover -s unreal/Tests -p 'test_import_aureate_root_support.py' -v
+      - name: Run body integration source tests
+        run: python3 -m unittest discover -s unreal/Tests -p 'test_aureate_body_integration.py' -v
+      - name: Compile and exercise extracted C++ ship form-request safety logic (not UE engine)
+        run: python3 unreal/Tests/check_aureate_body_request_cpp.py
