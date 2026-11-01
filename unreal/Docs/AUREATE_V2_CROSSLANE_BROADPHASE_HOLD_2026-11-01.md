@@ -34,6 +34,27 @@ The actual cross-lane broad phase returned **exit 2 / HOLD**:
 
 `unreal/Tools/test_aureate_v2_crosslane_envelope.py` covers required provenance, immutable source hashes (including a fully rewritten asset + manifest), bounds/translation, simulated clear and HOLD, and minimum sampling. GitHub engine-free preflight runs these tests. No native C++ source/gameplay or approved art is changed by this PR.
 
+## Triangle-level narrow phase at Skyborne t0 — later verification
+
+**Additional review code:** `unreal/Tools/aureate_indexed_triangles.py` reads and validates complete indexed triangle faces from the three pinned GLBs; `unreal/Tools/aureate_triangle_narrowphase.py` computes exact finite segment-to-segment, point-to-triangle and segment-through-triangle distances, after a conservative per-triangle AABB candidate filter. It uses standard-library Python only; it does not modify meshes, downsample vertices or grant physics authority. `--narrow-phase-skyborne` on the cross-lane CLI adds a narrow-phase report **only at Skyborne → Seaborne t=0**. The earlier broad-phase HOLD and exit 2 stay in force.
+
+**Real mesh endpoint surface minima (cm):**
+
+| Wing root (index) | All hull triangle pairs | Excluding ONLY hypothesized wing-hinge to brass support-tube pairs | Interpretation |
+| --- | ---: | ---: | --- |
+| Forward negative-Y (0) | 3.8029 | 10.0025 | Other pairs just beyond 10 cm |
+| Forward positive-Y (1) | 3.8029 | 10.0515 | Other pairs beyond 10 cm |
+| Aft negative-Y (2) | 3.5752 | **9.9646** | Other pair STILL within 10 cm |
+| Aft positive-Y (3) | 3.5752 | **9.9745** | Other pair STILL within 10 cm |
+
+The most proximal triangle pairs are the **wing hinge section** (wing triangle indices 29,280–29,423) and one of the **first four hull brass root-support tubes** (hull triangle indices 240–367; 32 per tube). These ranges are derived from the frozen deterministic source topology and are **hypothesized intended joint contacts**, not an authorized contact exemption. The second column omits only pairs where *both* triangle membership conditions match. The original, unfiltered all-triangle test remains authoritative. In the second pass the aft wing's other venation triangles (for example wing triangle 14,933) are still within 10 cm of a brass support detail (hull triangle 324 or 356), so an exemption for hinge/support tube pairs would **not** fully clear the ship.
+
+The bridge generated GLB's full triangle AABBs are more than 10 cm away at this one endpoint; there were no candidate bridge pairs within threshold in that pass. This does **not** establish clearance along other ordinary-form poses or during movement.
+
+The source fixture suite covers explicit triangle piercing, coplanar overlap, separated triangles, degeneracy, segment closest points, intended-pair diagnostic exclusion, and seeded brute-force cross-checks of AABB pruning. The Windows checkout passed **14/14 triangle tests and 9/9 cross-lane admission tests** at source head `d4b50716bddadf8a8e626b81e07375601dac5438`. The earlier actual full-input endpoint receipt was captured at source head `e5ef577df804fe2fc4ca5c503b2eaf70f0f4be9c`; the later edits are naming, limits wording, regression hardening and documentation, not geometry changes. Re-run exact final head to bind a fresh receipt.
+
+**Important limits:** The exact triangle proximity test identifies geometric surface separation at one time sample only. It is not continuous swept collision, no native engine collision query or optical model approval, and the four brass support tubes have not been formally accepted as safe or pressure-bearing attachments. Do not mark the V2 assembly PASS or reduce the review threshold.
+
 ## Unresolved approval gates
 
 1. Implement or independently run **triangle-level or appropriate convex narrow-phase clearance**, treating the intended wing joint/attachment separately from accidental body penetration; preserve 20+ temporal intervals and separately investigate *continuous* swept collision.
