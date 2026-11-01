@@ -57,6 +57,7 @@ $RequiredTests = @(
     'TSTSS.Combat.AbilityAuthorization',
     'TSTSS.Combat.EncounterCompletion',
     'TSTSS.Design.LevelOneStatRanks',
+    'TSTSS.Design.LevelOneReviewAsset',
     'TSTSS.FirstWake.RequiresOrderedMilestones',
     'TSTSS.FirstWake.WaterLandingRequiresMeasuredStability',
     'TSTSS.FirstWake.WaterLandingRestore',
