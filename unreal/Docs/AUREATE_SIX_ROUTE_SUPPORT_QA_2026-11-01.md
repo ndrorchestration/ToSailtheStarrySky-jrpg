@@ -11,14 +11,14 @@
 
 ## What this slice adds
 
-The preview actor now refreshes its provisional wing-root and hydrofoil support transforms **in the same `RequestForm` call** that reveals hydrofoils, avoiding a one-frame discrepancy before the first `Tick`. The six-route test checks immediate start visibility and midpoint support-to-pivot tracking. This remains review-only proxy presentation, not physical validation.
+The preview actor refreshes provisional wing-root and hydrofoil support transforms **in the same `RequestForm` call**. A newly identified state bug was corrected: hydrofoils and struts now remain hidden during direct Skyborne ↔ Submersible travel, appear during Seaborne entry/exit, and hide after leaving Seaborne. The six-route test checks the appropriate visibility at transition start, midpoint, and completion, plus support-to-pivot tracking for visible members. This remains review-only proxy presentation, not physical validation.
 
 An additional Unreal Editor native automation test, `TSTSS.Ship.ReviewSupportSixDirectedRoutes`, in the existing `AureateWakePreviewNativeTests.cpp`. It uses a transient world, native actor components, and an explicitly noncanonical Engine Cube in place of the review wing GLB.
 
 1. Inspects all four provisional root brackets and two hydrofoil struts. Checks hidden default and disabled collision.
 2. Opts into root-pivoted review wing poses and separately enables the preview toggle, then confirms Orbiter **continues to be rejected**.
 3. Executes all **six directed ordinary routes** between Skyborne, Seaborne and Submersible, including midpoint and completion.
-4. During each midpoint, checks support visibility and that the positive-X tip of each temporary scaled Cube reaches the live wing/foil pivot within 0.5 cm; also checks interruption/Orbiter refusals.
+4. During each midpoint, checks support visibility and that the positive-X tip of each visible temporary scaled Cube reaches the live wing/foil pivot within 0.5 cm; direct Skyborne ↔ Submersible routes must keep foils and struts hidden; also checks interruption/Orbiter refusals.
 5. At each destination, checks state, completion, retained 4+2 component identity and Seaborne-only visibility of hydrofoil struts.
 6. Registers both the existing `TSTSS.Ship.PreviewFormsAndOrbiterHold` and new test as named **required** native cases in `unreal/Tools/Verify-Unreal.ps1`.
 
