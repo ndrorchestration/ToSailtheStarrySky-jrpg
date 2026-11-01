@@ -1,0 +1,25 @@
+{
+  "status": "NONCANONICAL_UNRIGGED_TAILORING_HAIR_V2_STUDY",
+  "name": "Ender",
+  "version": "ender_fidelity_v2",
+  "source": {
+    "file": "Ender_ender_fidelity_v2.glb",
+    "sha256": "e36f2f1daedbeefa53c54b92732e6b3498e4ea176c6f74f9f101e935a6b42bf8",
+    "bytes": 359480,
+    "mesh_parts": 172,
+    "mesh_count": 1,
+    "material_sections": 34,
+    "materials": 42
+  },
+  "normal_fix_counts": {
+    "Sculpt face with jaw": 4
+  },
+  "height_order_canon": "Reson > Aepex > Ender > Ionia > Lyra",
+  "hair_color_state": "temporary V1 green; canonical Ender hair-color conflict NOT RESOLVED",
+  "inherits": "V1 original Ender procedural study",
+  "original_approved_art_replaced": false,
+  "baseline_glb_changed": false,
+  "source_baseline_untouched": true,
+  "art_approval": false,
+  "gameplay_ready": false
+}
