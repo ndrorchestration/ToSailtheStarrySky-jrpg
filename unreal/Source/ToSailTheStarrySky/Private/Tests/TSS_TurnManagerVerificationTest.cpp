@@ -65,8 +65,8 @@ bool FTSSTurnManagerInitiativeTest::RunTest(const FString& Parameters)
         Manager->InitializeEncounter(Five, {TEXT("Talen")}, Foes));
     TestFalse(TEXT("duplicate active player rejected"),
         Manager->InitializeEncounter(Five, {TEXT("Ender"), TEXT("Ender")}, Foes));
-    TestEqual(TEXT("failed init leaves phase alone"), Manager->GetCurrentPhase(),
-              ETSS_CombatPhase::NotStarted);
+    TestTrue(TEXT("failed init leaves phase alone"),
+             Manager->GetCurrentPhase() == ETSS_CombatPhase::NotStarted);
 
     TArray<FTSS_CombatParticipant> Duplicate = Five;
     Duplicate[4].ParticipantId = TEXT("Ender");
@@ -83,8 +83,8 @@ bool FTSSTurnManagerInitiativeTest::RunTest(const FString& Parameters)
         Manager->InitializeEncounter(Five, Chosen, Foes))) return false;
     TestEqual(TEXT("first initiative: Lyra"), Manager->GetActiveParticipantId(),
               FName(TEXT("Lyra")));
-    TestEqual(TEXT("only three combatants and one enemy"),
-              Manager->GetCombatantSnapshot().Num(), 4);
+    if (!TestEqual(TEXT("only three combatants and one enemy"),
+        Manager->GetCombatantSnapshot().Num(), 4)) return false;
     TestEqual(TEXT("two reserve members preserved"),
               Manager->GetReservePartyIds().Num(), 2);
     TestTrue(TEXT("Aepex on bench"),
@@ -114,7 +114,7 @@ bool FTSSTurnManagerInitiativeTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Ender follows Lyra"), Manager->GetActiveParticipantId(),
               FName(TEXT("Ender")));
     TestEqual(TEXT("accepted skill decreased enemy health"),
-              Manager->GetCombatantSnapshot()[3].Health, 16);
+              Manager->GetCombatantSnapshot()[2].Health, 16);
     Unconfigured.SourceParticipantId = TEXT("Ender");
     if (!TestTrue(TEXT("Ender acts second"),
         Manager->SubmitCommand(Unconfigured))) return false;
@@ -128,6 +128,16 @@ bool FTSSTurnManagerInitiativeTest::RunTest(const FString& Parameters)
         Manager->SubmitCommand(Claw))) return false;
     TestEqual(TEXT("Ionia follows foe"), Manager->GetActiveParticipantId(),
               FName(TEXT("Ionia")));
+    UTSS_CombatTurnManager* Tie = NewObject<UTSS_CombatTurnManager>();
+    TArray<FTSS_CombatParticipant> Equal{
+        MakeUnit(TEXT("Lyra"), true, 15),
+        MakeUnit(TEXT("Ender"), true, 15)
+    };
+    Foes[0] = MakeUnit(TEXT("EqualFoe"), false, 15);
+    if (!TestTrue(TEXT("tie fixture begins"),
+        Tie->InitializeEncounter(Equal, {TEXT("Lyra"), TEXT("Ender")}, Foes))) return false;
+    TestEqual(TEXT("stable participant ID breaks equal-initiative tie"),
+              Tie->GetActiveParticipantId(), FName(TEXT("Ender")));
     return true;
 }
 
@@ -152,8 +162,8 @@ bool FTSSTurnManagerVictoryDefeatTest::RunTest(const FString& Parameters)
         Victory->SubmitCommand(Strike))) return false;
     TestEqual(TEXT("zero HP after lethal attack"),
               Victory->GetCombatantSnapshot()[1].Health, 0);
-    TestEqual(TEXT("terminal victory state"), Victory->GetCurrentPhase(),
-              ETSS_CombatPhase::Victory);
+    TestTrue(TEXT("terminal victory state"),
+             Victory->GetCurrentPhase() == ETSS_CombatPhase::Victory);
     TestTrue(TEXT("no actor available after terminal encounter"),
              Victory->GetActiveParticipantId().IsNone());
     TestFalse(TEXT("no second command after victory"), Victory->SubmitCommand(Strike));
@@ -172,8 +182,8 @@ bool FTSSTurnManagerVictoryDefeatTest::RunTest(const FString& Parameters)
     EnemyStrike.SkillId = TEXT("ReviewClaw");
     if (!TestTrue(TEXT("enemy lethal action resolves"),
         Defeat->SubmitCommand(EnemyStrike))) return false;
-    TestEqual(TEXT("loss recognized"), Defeat->GetCurrentPhase(),
-              ETSS_CombatPhase::Defeat);
+    TestTrue(TEXT("loss recognized"),
+             Defeat->GetCurrentPhase() == ETSS_CombatPhase::Defeat);
     TestFalse(TEXT("dead party cannot submit action"),
               Defeat->SubmitCommand(Strike));
     return true;
