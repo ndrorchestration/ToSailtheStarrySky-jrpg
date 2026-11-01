@@ -12,11 +12,14 @@ def receipt():
     return {
         "status": "UNREAL_SCREENSHOT_TASKS_COMPLETE_NATIVE_PNG_QA_PENDING",
         "map": MAP,
+        "engine": "5.8.4-58902052+++UE5+Release-5.8",
+        "saved_review_map_sha256_before": "a" * 64,
+        "saved_review_map_sha256_after": "a" * 64,
         "source_sha256": {key: info["sha256"] for key, info in EXPECTED.items()},
         "reference_likeness_approved": False,
         "source_files_modified": False,
         "saved_unreal_map_modified": False,
-        "capture_tasks": [{"name": row[0]} for row in CAMERAS],
+        "capture_tasks": [{"name": row[0], "requested": "C:/review/" + row[0] + ".png", "ticks": 9} for row in CAMERAS],
     }
 
 
@@ -30,7 +33,8 @@ class NativeComparisonReceiptTests(unittest.TestCase):
     def call(self, content, png_hashes=("sha-a", "sha-b")):
         self.path.write_text(json.dumps(content), encoding="utf-8")
         with patch.object(subject, "resolve_capture", side_effect=lambda folder, name: self.root / (name + ".png")), \
-             patch.object(subject, "inspect_png", side_effect=[{"sha256": x} for x in png_hashes]):
+             patch.object(subject, "inspect_png", side_effect=[{"sha256": x} for x in png_hashes]), \
+             patch.object(subject, "check_pair_coverage", return_value={"regions": {"left": 0.12, "right": 0.11}}):
             return subject.verify(self.root, self.path)
 
     def test_complete_real_distinct_pngs_required(self):
@@ -50,6 +54,11 @@ class NativeComparisonReceiptTests(unittest.TestCase):
             ("source_files_modified", True), ("saved_unreal_map_modified", True),
             ("capture_tasks", [{"name": "comparison_front"}]),
             ("source_sha256", {"EnderV1": "0" * 64}),
+            ("engine", "5.7.0"),
+            ("saved_review_map_sha256_before", "a" * 63),
+            ("saved_review_map_sha256_after", "b" * 64),
+            ("capture_tasks", [
+                {"name": row[0], "requested": "C:/wrong.png", "ticks": 9} for row in CAMERAS]),
         ]
         for field, bad in fields:
             item = receipt()
