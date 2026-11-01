@@ -92,7 +92,7 @@ class RootSupportArt(unittest.TestCase):
         self.assertIn("FVector(Length / 100.f, 1.f, 1.f)",CPP)
         self.assertIn("Bracket->SetRelativeRotation(Span.ToOrientationQuat());",CPP)
         self.assertIn("bUseAuthoredSupport\n            ? HullAnchor",CPP)
-        self.assertIn("const float HalfWidth = bUseHullSilhouetteReview ? 56.f : 72.f;",CPP)
+        self.assertIn("const float HalfWidth = ShouldShowPrimitiveHullStudy(bUseHullSilhouetteReview, bBodyReviewApplied) ? 56.f : 72.f;",CPP)
         for frm in clearance.FORMS:
             for wing in range(4):
                 pos=clearance.pose(frm,wing)[0]
