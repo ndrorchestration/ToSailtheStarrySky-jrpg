@@ -56,6 +56,14 @@ public:
     UFUNCTION(BlueprintCallable, Category="Aureate Wake|Visuals")
     void RefreshHullSilhouetteReview();
 
+    /** Resolution rule for mutually exclusive review representations.
+     * Applied authored geometry takes precedence over a later request to show
+     * an incompatible primitive study until explicit body rollback completes. */
+    static bool ShouldShowPrimitiveHullStudy(bool bStudyRequested, bool bAuthoredBodyApplied)
+    {
+        return bStudyRequested && !bAuthoredBodyApplied;
+    }
+
     UFUNCTION(BlueprintPure, Category="Aureate Wake|Visuals")
     int32 GetHullSilhouetteSectionCount() const { return HullSilhouetteSections.Num(); }
 
