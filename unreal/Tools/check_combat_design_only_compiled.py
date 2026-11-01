@@ -7,8 +7,10 @@ The upstream FTSTSSCombatData::ValidateActions API is deliberately a stub
 here; its real source has separate native regression cases.
 """
 from pathlib import Path
+import os
 import shutil
 import subprocess
+import sys
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -181,16 +183,51 @@ def main():
     prefix,rest=source.split(HEADER,1)
     if prefix.strip() or not 1200<len(rest)<8000 or "#include" in rest:
         raise SystemExit("HOLD: unexpected adapter source shape")
-    compiler=next((p for name in ("g++","clang++","c++")
-                   if (p:=shutil.which(name))),None)
+    # Windows build agents commonly have MSVC through Visual Studio Build
+    # Tools without GCC/Clang on PATH. Discover the actual vcvars64 environment
+    # rather than declaring a compiler missing or installing anything.
+    env = None
+    compiler = next((p for name in ("g++","clang++","c++")
+                     if (p:=shutil.which(name))),None)
+    msvc = False
+    if not compiler and sys.platform == "win32":
+        where = Path(os.environ.get("ProgramFiles(x86)",
+                     r"C:\\Program Files (x86)")) / "Microsoft Visual Studio" / "Installer" / "vswhere.exe"
+        if where.is_file():
+            result = subprocess.run(
+                [str(where), "-latest", "-products", "*", "-requires",
+                 "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
+                 "-property", "installationPath"],
+                capture_output=True, text=True, check=True)
+            install = Path(result.stdout.strip()) if result.stdout.strip() else None
+            vcvars = install / "VC" / "Auxiliary" / "Build" / "vcvars64.bat" if install else None
+            if vcvars and vcvars.is_file():
+                # Python 3.14 Windows list2cmdline re-quotes the batch
+                # pathname incorrectly with cmd /c. The validated trusted
+                # vcvars64 path comes only from installed VS Build Tools.
+                export = subprocess.run(
+                    f'call "{vcvars}" >nul && set', shell=True,
+                    capture_output=True, text=True, check=True)
+                env = dict(os.environ)
+                for entry in export.stdout.splitlines():
+                    if "=" in entry and not entry.startswith("="):
+                        key, value = entry.split("=", 1)
+                        env[key] = value
+                compiler = shutil.which("cl.exe", path=env.get("PATH"))
+                msvc = bool(compiler)
     if not compiler:
-        raise SystemExit("HOLD: C++ compiler missing; fail closed")
+        raise SystemExit("HOLD: no configured GCC/Clang or MSVC compiler; fail closed")
     with tempfile.TemporaryDirectory() as td:
         src=Path(td)/"combat_bridge.cpp"
-        exe=Path(td)/"combat_bridge"
+        exe=Path(td)/("combat_bridge.exe" if msvc else "combat_bridge")
         src.write_text(STUB+rest+TESTS,encoding="utf-8")
-        subprocess.run([compiler,"-std=c++17","-O2","-Wall","-Wextra",
-                        "-Werror","-pedantic",str(src),"-o",str(exe)],check=True)
+        if msvc:
+            subprocess.run([compiler, "/nologo", "/std:c++17", "/O2",
+                            "/EHsc", "/W4", "/WX", str(src),
+                            "/Fe:" + str(exe)], cwd=td, env=env, check=True)
+        else:
+            subprocess.run([compiler,"-std=c++17","-O2","-Wall","-Wextra",
+                            "-Werror","-pedantic",str(src),"-o",str(exe)],check=True)
         subprocess.run([str(exe)],check=True)
 
 
