@@ -562,6 +562,11 @@ bool AAureateWakePreviewActor::RequestForm(EAureateWakeForm RequestedForm)
             RequestedForm == EAureateWakeForm::Seaborne);
     }
     bTransitioning = true;
+    // Review supports must match foil visibility on the same request frame.
+    // Otherwise a Seaborne foil can appear before its hull-to-foil strut.
+    // This changes only visual proxy state; no collision or gameplay rights.
+    UpdateWingRootMounts();
+    UpdateHydrofoilStruts();
     return true;
 }
 
