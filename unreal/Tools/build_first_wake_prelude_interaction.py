@@ -13,7 +13,7 @@ import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-REVIEW_MAP = "/Game/TSTSS/Review/FirstWake_PreludeInteraction_V1"
+REVIEW_MAP = "/Game/TSTSS/Review/FirstWake_PreludeInteraction_V2"
 REVIEW_ONLY_PROJECT_PARENT = "TSTSS_FirstWakePreludeSandbox_20261101"
 AUTHORING_PREFIX = "TSTSS_PRELUDE_REVIEW_"
 MILESTONE_CLASS = "/Script/ToSailTheStarrySky.TSTSSMilestoneActor"
@@ -153,8 +153,17 @@ def build_in_unreal() -> dict:
         component.set_collision_enabled(
             unreal.CollisionEnabled.QUERY_AND_PHYSICS if collision
             else unreal.CollisionEnabled.NO_COLLISION)
-        if collision:
-            component.set_collision_profile_name("BlockAll")
+        # The component collision_enabled call alone does not persist for
+        # BasicShapes Plane in a saved .umap; V1 reloaded as BlockAll.
+        # Persist the named profile, then confirm the runtime mode.
+        component.set_collision_profile_name("BlockAll" if collision else "NoCollision")
+        component.set_collision_enabled(
+            unreal.CollisionEnabled.QUERY_AND_PHYSICS if collision
+            else unreal.CollisionEnabled.NO_COLLISION)
+        if component.get_collision_enabled() != (
+                unreal.CollisionEnabled.QUERY_AND_PHYSICS if collision
+                else unreal.CollisionEnabled.NO_COLLISION):
+            raise RuntimeError("Unreal collision assignment was not applied")
 
     ground = spawn(unreal.StaticMeshActor, "Harbor_TraversalFloor",
                    FLOOR_LOCATION)
@@ -220,9 +229,9 @@ def build_in_unreal() -> dict:
 
     if not unreal.EditorLoadingAndSavingUtils.save_map(world, REVIEW_MAP):
         raise RuntimeError("Unreal could not save the new isolated Prelude review level")
-    receipt_dir = project / "Saved" / "PreludeInteractionV1"
+    receipt_dir = project / "Saved" / "PreludeInteractionV2"
     receipt_dir.mkdir(parents=True, exist_ok=True)
-    saved = project / "Content" / "TSTSS" / "Review" / "FirstWake_PreludeInteraction_V1.umap"
+    saved = project / "Content" / "TSTSS" / "Review" / "FirstWake_PreludeInteraction_V2.umap"
     if not saved.is_file():
         raise RuntimeError("Expected native .umap was not saved")
     plan["status"] = "NATIVE_REVIEW_MAP_SAVED_NOT_PLAYTESTED"
