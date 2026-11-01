@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from audit_aureate_wing_clearance import (
-    DEFAULT_MAX_VERTICES_PER_PRIMITIVE, GeometryHold, read_vertices
+    DEFAULT_MAX_VERTICES_PER_PRIMITIVE, GeometryHold, audit, read_vertices
 )
 from author_aureate_wing_glb import build as build_authored_review_wing
 
@@ -126,6 +126,22 @@ class CompleteVertexClearanceIntake(unittest.TestCase):
             counts, [section["vertices"] for section in manifest["topology"]])
         self.assertLessEqual(max(counts), DEFAULT_MAX_VERTICES_PER_PRIMITIVE)
         self.assertEqual(DEFAULT_MAX_VERTICES_PER_PRIMITIVE, 20_000)
+
+    def test_real_generator_six_directed_ordinary_routes_sampled(self):
+        # Run the actual model through a discrete-time AABB screen, not merely
+        # the GLB parser. Collision/under-clearance must FAIL this review test.
+        # Minimum ten intervals covers 66 time samples across six routes.
+        glb, _, _ = build_authored_review_wing()
+        self.path.write_bytes(glb)
+        decoded, counts = read_vertices(self.path)
+        self.assertEqual(counts, [292, 14770, 78])
+        result = audit(decoded, steps=10)
+        self.assertEqual(result["checked_directed_transitions"], 6)
+        self.assertEqual(result["time_samples_per_transition"], 11)
+        self.assertEqual(result["checked_poses"], 66)
+        self.assertEqual(result["mesh_sample_points"], 15140)
+        self.assertGreaterEqual(result["minimum_proxy_aabb_clearance_cm"], 10)
+        self.assertGreaterEqual(result["minimum_interwing_aabb_clearance_cm"], 10)
 
     def test_rejects_unbounded_budget(self):
         make_glb(self.path)
