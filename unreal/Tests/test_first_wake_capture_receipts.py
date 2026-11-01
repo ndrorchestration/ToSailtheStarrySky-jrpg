@@ -17,11 +17,19 @@ import capture_first_wake_review as capture
 
 
 class Camera:
-    def __init__(self, label):
+    def __init__(self, label, override_forward=None):
         self.label = label
+        self.override_forward = override_forward
 
     def get_actor_label(self, create_if_none=False):
         return self.label
+
+    def get_actor_location(self):
+        src = next(c for c in capture.CAMERAS if self.label.endswith(c.name))
+        return types.SimpleNamespace(x=src.location[0], y=src.location[1], z=src.location[2])
+
+    def get_actor_rotation(self):
+        return self
 
 
 class MeshRef:
@@ -109,10 +117,22 @@ def mocked_unreal(*, map_path=capture.MAP_PATH, ship=None, cameras=None):
     def get_editor_subsystem(cls):
         return EditorSubsystem() if cls is EditorType else ActorSubsystem()
 
+    class MathLibrary:
+        @staticmethod
+        def get_forward_vector(camera):
+            if camera.override_forward is not None:
+                x, y, z = camera.override_forward
+            else:
+                src = next(c for c in capture.CAMERAS if camera.label.endswith(c.name))
+                x, y, z = (b-a for a,b in zip(src.location, src.target))
+            scale = (x*x + y*y + z*z)**0.5
+            return types.SimpleNamespace(x=x/scale,y=y/scale,z=z/scale)
+
     return types.SimpleNamespace(
         UnrealEditorSubsystem=EditorType, EditorActorSubsystem=ActorType,
         CineCameraActor=Camera, AureateWakePreviewActor=Ship,
         AutomationLibrary=Library, AutomationScheduler=Scheduler,
+        MathLibrary=MathLibrary,
         get_editor_subsystem=get_editor_subsystem, log=lambda _: None,
         scheduled=scheduled, requests=capture_requests,
     )
@@ -154,6 +174,24 @@ class CaptureContractTests(unittest.TestCase):
         unreal = mocked_unreal(map_path="/Game/TSTSS/Chapter01")
         with patch.dict(sys.modules, {"unreal": unreal}):
             with self.assertRaisesRegex(capture.ScreenshotHold, "exact isolated"):
+                capture.preflight_in_editor(capture.capture_plan("Review20261031"))
+        self.assertFalse(unreal.scheduled)
+
+    def test_camera_alignment_rejects_skyward_or_invalid_forward(self):
+        good = capture.assert_camera_forward_alignment(
+            (90, -2300, 680), (1300, -500, 180), (1210, 1800, -500))
+        self.assertGreater(good, 0.999)
+        for forward in ((0, 0, 1), (0, 0, 0), (float("nan"), 0, 1)):
+            with self.subTest(forward=forward), self.assertRaises(capture.ScreenshotHold):
+                capture.assert_camera_forward_alignment(
+                    (90, -2300, 680), (1300, -500, 180), forward)
+
+    def test_editor_preflight_rejects_misaimed_real_camera(self):
+        cameras = [Camera("TSTSS_REVIEW_Camera_" + c.name) for c in capture.CAMERAS]
+        cameras[1] = Camera(cameras[1].label, override_forward=(0, 0, 1))
+        unreal = mocked_unreal(cameras=cameras)
+        with patch.dict(sys.modules, {"unreal": unreal}):
+            with self.assertRaisesRegex(capture.ScreenshotHold, "not pointed"):
                 capture.preflight_in_editor(capture.capture_plan("Review20261031"))
         self.assertFalse(unreal.scheduled)
 
