@@ -17,6 +17,7 @@ Status: **NATIVE STATIC IMPORT PASS / NATIVE REVIEW-MAP SAVE PASS / VISUAL ACCEP
 2. **Five-character pass:** `Saved/CharacterLookdev/five_cast_20261101_a.json`; `IMPORT_PASS_REVIEW_PENDING`, exactly Ender, Ionia, Lyra, Reson, Aepex; all five `StaticMesh` asset files verified. Native bounds in centimetres (X, Y, Z): Ender 56.316/31.600/185.800 (staff-inclusive), Ionia 54.412/31.100/166.552, Lyra 52.416/32.200/163.578, Reson 69.384/31.100/191.336, Aepex 58.404/31.100/185.184.
 3. **Lineup stage:** `stage_cast_lineup.py` on the five-character disposable project: `Saved/CharacterLookdev/cast_lineup_stage.json` reports `STAGED_STATIC_REVIEW_ONLY` and contains five named static actors, an engine-cube 180 cm calibration marker, and map `/Game/ArtLookdev/ReviewMaps/TSTSS_CastLineup_Review`. The actual `.umap` was verified on disk; UE command process exit code **0**. The tool validates receipt/source hashes, native asset paths and immutable map/receipt destinations before stage.
 4. **Engine-free regression:** `python -m unittest discover -s unreal/ArtSource/Characters -p test_stage_cast_lineup.py -v` — **9 PASS** on Windows, including rejected source mutations and canonical height-order violations.
+5. **Independent fresh-Editor reopen:** Ran read-only `verify_cast_lineup_reload.py` against the saved disposable UE content project in a new Unreal Editor 5.8.4 process; exit code **0**, `Saved/CharacterLookdev/cast_lineup_reload.json` reports `FRESH_EDITOR_MAP_READ_PASS`. Verified all five `LOOKDEV_STATIC_...` actors reopen with their real `/Game/ArtLookdev/Characters/...` `StaticMesh` references and exactly one `CALIBRATION_180CM_NONCANON` actor. No save/change operations or renderer capture. This rules out a stage receipt without a persisted/reloadable map.
 
 ## Canonical relative height authority — creator correction 2026-11-01
 
@@ -28,7 +29,7 @@ Status: **NATIVE STATIC IMPORT PASS / NATIVE REVIEW-MAP SAVE PASS / VISUAL ACCEP
 2. Create an **empty** UE 5.8.4 content-only project with the built-in Python Script Plugin enabled.
 3. Set `TSTSS_CAST_IMPORT=all` and a new `TSTSS_CAST_SESSION` label. Run `editor_intake.py` from Unreal Editor Python scripting. Confirm exact five imported assets and saved receipt.
 4. Set `TSTSS_CAST_INPUT_SESSION` to that label; execute `stage_cast_lineup.py` from the Editor. Never run on a live/production map or a project containing the reserved review map path.
-5. Open the created review map in a **renderer-enabled** Editor session; compare front, profile, back and three-quarter likeness/costuming/materials against the actual approved illustrations. Screenshots must show the exact source SHA and UE version. Apply artistic review separately.
+5. Run `verify_cast_lineup_reload.py` in a fresh **read-only, NullRHI** Editor process and inspect its JSON receipt; then open the created review map in a **renderer-enabled** Editor session; compare front, profile, back and three-quarter likeness/costuming/materials against the actual approved illustrations. Screenshots must show the exact source SHA and UE version. Apply artistic review separately.
 
 ## Remaining HOLD
 
