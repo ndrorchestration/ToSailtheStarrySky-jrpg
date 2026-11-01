@@ -90,6 +90,15 @@ def read_vertices(glb: Path, per_primitive=3000):
                 f"Partial vertex coverage forbidden: {count} positions exceed "
                 f"per-primitive maximum {per_primitive}; raise budget or HOLD")
         sizes.append(count)
+        declared_min = acc.get("min")
+        declared_max = acc.get("max")
+        if (not isinstance(declared_min, list) or len(declared_min) != 3 or
+            not isinstance(declared_max, list) or len(declared_max) != 3 or
+            any(not isinstance(value, (int, float)) or not math.isfinite(value)
+                for value in (*declared_min, *declared_max))):
+            raise GeometryHold("Missing/nonfinite declared POSITION min/max: review HOLD")
+        actual_min = [float("inf")] * 3
+        actual_max = [-float("inf")] * 3
         base_offset = view.get("byteOffset", 0) + acc.get("byteOffset", 0)
         stride = view.get("byteStride", 12)
         view_length = view.get("byteLength")
@@ -105,8 +114,17 @@ def read_vertices(glb: Path, per_primitive=3000):
             x, y, z = struct.unpack_from("<fff", blob, start)
             if not all(math.isfinite(v) for v in (x,y,z)):
                 raise GeometryHold("Nonfinite GLB geometry")
+            for axis, value in enumerate((x, y, z)):
+                actual_min[axis] = min(actual_min[axis], value)
+                actual_max[axis] = max(actual_max[axis], value)
             # glTF xyz was built as Unreal (x,z,-y); invert and convert m -> cm.
             vertices.append((x * 100., -z * 100., y * 100.))
+        # Stale accessor extrema can conceal mismatched span/scale assumptions
+        # between preflight metadata and the geometry the Unreal importer sees.
+        if any(abs(actual_min[axis] - declared_min[axis]) > 1e-4 or
+               abs(actual_max[axis] - declared_max[axis]) > 1e-4
+               for axis in range(3)):
+            raise GeometryHold("Declared POSITION min/max disagrees with GLB geometry")
     return vertices, sizes
 
 
