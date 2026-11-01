@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Auditable offline four-wing geometric *screen*, not Unreal/physics certification.
 
-Samples the actual corrected one-wing GLB geometry under the review actor's
-hard-coded root-pivot poses and eased quaternion transitions. It conservatively
-rejects AABB overlaps between different wings and the temporary hull/bridge
-bounds. A discrete sampled screen cannot prove continuous collision freedom.
+Reads every position in the corrected one-wing GLB, requiring one untransformed
+review node, under hard-coded root-pivot poses and eased quaternion transitions.
+It rejects AABB overlaps with other wings and temporary hull/bridge bounds at
+sampled times. A discrete screen cannot prove continuous collision freedom.
 """
 from __future__ import annotations
 import argparse
@@ -43,21 +43,44 @@ def read_vertices(glb: Path, per_primitive=3000):
     if version != 2 or total != len(blob) or jtype != b"JSON":
         raise GeometryHold("Malformed GLB header")
     doc = json.loads(blob[20:20 + jlen])
+    if not isinstance(doc, dict):
+        raise GeometryHold("Malformed GLB scene JSON")
+    # This tool screens raw mesh-local positions. A glTF scene graph can
+    # translate, rotate, scale, duplicate or skin that geometry; accepting any
+    # such transform here would yield misleading Unreal/world clearance.
+    # Only the deterministic untransformed one-wing review export is allowed.
+    nodes = doc.get("nodes")
+    if (doc.get("scene") != 0 or doc.get("scenes") != [{"nodes": [0]}] or
+        not isinstance(nodes, list) or len(nodes) != 1 or
+        not isinstance(nodes[0], dict) or nodes[0].get("mesh") != 0 or
+        any(key in nodes[0] for key in (
+            "matrix", "translation", "rotation", "scale", "children",
+            "skin", "weights", "extensions")) or
+        doc.get("skins") or doc.get("animations") or
+        doc.get("extensionsUsed") or doc.get("extensionsRequired")):
+        raise GeometryHold("Scene-graph transform/skin/extension unsupported: review HOLD")
     if doc.get("extras", {}).get("sourceToGltfScale") != 0.01:
         raise GeometryHold("Retired/oversized GLB, require cm-to-meter correction")
     bin_pos = 20 + jlen + 8
     blen, btype = struct.unpack_from("<I4s", blob, bin_pos - 8)
     if btype != b"BIN\0" or bin_pos + blen != len(blob):
         raise GeometryHold("Missing GLB binary chunk")
-    primitives = doc["meshes"][0]["primitives"]
+    meshes = doc.get("meshes")
+    if not isinstance(meshes, list) or len(meshes) != 1:
+        raise GeometryHold("Expected exactly one local-space review wing mesh")
+    primitives = meshes[0]["primitives"]
     if len(primitives) != 3:
         raise GeometryHold("Requires membrane, venation and root primitives")
+    if any("targets" in part or "extensions" in part for part in primitives):
+        raise GeometryHold("Morph targets or mesh extensions unsupported: review HOLD")
     vertices = []
     sizes = []
     for piece in primitives:
         acc = doc["accessors"][piece["attributes"]["POSITION"]]
-        if acc["type"] != "VEC3" or acc["componentType"] != 5126:
-            raise GeometryHold("Unexpected position accessor format")
+        if (acc["type"] != "VEC3" or acc["componentType"] != 5126 or
+            "sparse" in acc or acc.get("normalized", False) or
+            "extensions" in acc):
+            raise GeometryHold("Unexpected or transformed position accessor format")
         view = doc["bufferViews"][acc["bufferView"]]
         count = acc["count"]
         if not isinstance(count, int) or count <= 0:
@@ -232,6 +255,7 @@ def audit(vertices, steps=20):
     return {"authority":STATUS,"checked_directed_transitions":6,"time_samples_per_transition":steps+1,
             "wing_instances":4,"checked_poses":frames,"mesh_sample_points":len(vertices),
             "vertex_coverage":"COMPLETE_POSITION_ACCESSORS_WITHIN_BUDGET",
+            "scene_graph":"SINGLE_UNTRANSFORMED_UNSKINNED_REVIEW_WING",
             "minimum_proxy_aabb_clearance_cm":round(worst_static,2),
             "minimum_interwing_aabb_clearance_cm":round(worst_pair,2),
             "unresolved_visual_gates":["approximate 28 cm wing-root to hull-side gap has no authored support spar",
