@@ -176,7 +176,9 @@ bool FTSTSSSaveValidationTest::RunTest(const FString& Parameters)
         Save->PartyRoster.Add(Member);
     }
     TestTrue(TEXT("Five valid identities accepted"), Save->IsStructurallyValid());
-    Save->PartyRoster.Add(Save->PartyRoster[0]);
+    // Copy before Add: UE 5.8 rejects inserting an element sourced from the same TArray.
+    const FTSTSSCombatant DuplicateMember = Save->PartyRoster[0];
+    Save->PartyRoster.Add(DuplicateMember);
     TestFalse(TEXT("Oversized roster rejected"), Save->IsStructurallyValid());
     return true;
 }
