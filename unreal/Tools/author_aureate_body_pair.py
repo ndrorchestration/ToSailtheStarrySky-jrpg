@@ -255,7 +255,7 @@ def make_pair():
         "source_units":"centimeters","gltf_linear_units":"meters",
         "source_to_gltf_scale":.01,"parts":list(pair),
         "approved_reference_sha256":"03e3d500d8998a1377502f5ea28da79cf3eaf3854ece833d7ac25b4e0b268e13",
-        "destinations":DESTINATIONS,
+        "destinations":dict(DESTINATIONS),
         "materials_per_part":3,
         "sha256":{name:hashlib.sha256(data).hexdigest() for name,data in pair.items()},
         "limits":["No native UE import/render","No creator art acceptance",
