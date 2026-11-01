@@ -57,6 +57,31 @@ class NativeV2ImportSafetyTests(unittest.TestCase):
         self.assertFalse(intake.bounds_ok(Mesh(1880,1100,1250),intake.EXTENT_BANDS_CM[1]))
         self.assertFalse(intake.bounds_ok(object(),intake.EXTENT_BANDS_CM[0]))
 
+    def test_preflight_requires_complete_actual_binary_audit(self):
+        from audit_aureate_v2_glb_geometry import GeometryHold
+        with tempfile.TemporaryDirectory() as tmp:
+            folder=Path(tmp)
+            generator.write_or_verify(folder,True)
+            with patch("audit_aureate_v2_glb_geometry.audit_binary",
+                       side_effect=GeometryHold("Forensic test rejection")):
+                with self.assertRaisesRegex(intake.FidelityImportHold,"binary geometry audit"):
+                    intake.inspect(folder)
+
+    def test_direct_import_requires_fresh_complete_source_receipt(self):
+        class Unreal:
+            EditorAssetLibrary=type("EditorAssetLibrary",(),{})
+            AssetImportTask=type("AssetImportTask",(),{})
+            AssetToolsHelpers=type("AssetToolsHelpers",(),{})
+            StaticMesh=type("StaticMesh",(),{})
+            load_asset=staticmethod(lambda x:None)
+        with tempfile.TemporaryDirectory() as tmp:
+            folder=Path(tmp)
+            generator.write_or_verify(folder,True)
+            with patch.dict(sys.modules,{"unreal":Unreal}):
+                with self.assertRaisesRegex(intake.FidelityImportHold,"Stale or incomplete"):
+                    intake.import_in_editor(folder,{"stage":"REGENERATED_SOURCE_ONLY_NOT_NATIVE"})
+                # No folder interactions or import tasks can occur for forged receipts.
+
     def test_preexisting_review_folder_refuses_import_before_ue_mutation(self):
         calls=[]
         class AssetLibrary:
@@ -74,9 +99,13 @@ class NativeV2ImportSafetyTests(unittest.TestCase):
             AssetToolsHelpers=type("AssetToolsHelpers",(),{})
             StaticMesh=type("StaticMesh",(),{})
             load_asset=staticmethod(lambda x:None)
-        with patch.dict(sys.modules,{"unreal":Unreal}):
-            with self.assertRaisesRegex(intake.FidelityImportHold,"already populated"):
-                intake.import_in_editor(Path("."),{})
+        with tempfile.TemporaryDirectory() as tmp:
+            folder=Path(tmp)
+            generator.write_or_verify(folder,True)
+            preflight=intake.inspect(folder)
+            with patch.dict(sys.modules,{"unreal":Unreal}):
+                with self.assertRaisesRegex(intake.FidelityImportHold,"already populated"):
+                    intake.import_in_editor(folder,preflight)
         self.assertEqual(len(calls),2)
 
 
