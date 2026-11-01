@@ -19,10 +19,12 @@ def make_glb(path: Path, counts=(100, 2, 2), *, shorten_view=False,
     binary = bytearray()
     for index, count in enumerate(counts):
         start = len(binary)
+        exported = []
         for number in range(count):
             value = float(number) / 100.
             if nonfinite and index == 0 and number == count - 1:
                 value = math.nan
+            exported.append((value, float(index), 0.0))
             binary.extend(struct.pack("<fff", value, float(index), 0.0))
         length = count * 12
         if shorten_view and index == 0:
@@ -31,8 +33,12 @@ def make_glb(path: Path, counts=(100, 2, 2), *, shorten_view=False,
         if invalid_stride and index == 0:
             view["byteStride"] = 8
         views.append(view)
+        finite = [p for p in exported if all(math.isfinite(v) for v in p)]
+        extrema_min = [min(p[a] for p in finite) for a in range(3)] if finite else [0.] * 3
+        extrema_max = [max(p[a] for p in finite) for a in range(3)] if finite else [0.] * 3
         accessors.append({"bufferView": index, "componentType": 5126,
-                          "count": count, "type": "VEC3"})
+                          "count": count, "type": "VEC3",
+                          "min": extrema_min, "max": extrema_max})
         primitives.append({"attributes": {"POSITION": index}})
     if accessor_override:
         accessors[0].update(accessor_override)
@@ -153,6 +159,17 @@ class CompleteVertexClearanceIntake(unittest.TestCase):
                     "meshes": [{"primitives": [{}, {}, {}]}, {"primitives": []}]})
         with self.assertRaisesRegex(GeometryHold, "exactly one local-space"):
             read_vertices(self.path, per_primitive=100)
+
+    def test_rejects_missing_or_false_position_extrema(self):
+        for bad in ({"min": None},
+                    {"max": [0.0, 0.0, 0.0]},
+                    {"min": [0.0, 0.0]},
+                    {"max": [float("nan"), 1.0, 1.0]}):
+            with self.subTest(accessor_override=bad):
+                make_glb(self.path, accessor_override=bad)
+                with self.assertRaisesRegex(
+                        GeometryHold, "declared POSITION min/max|POSITION min/max disagrees"):
+                    read_vertices(self.path, per_primitive=100)
 
 
 if __name__ == "__main__":
