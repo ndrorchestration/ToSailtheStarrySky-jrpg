@@ -112,6 +112,19 @@ def run(args):
         wing_faces=read_triangles(args.wing_glb)
         hull_faces=read_triangles(args.hull_glb)
         bridge_faces=read_triangles(args.bridge_glb)
+        if len(wing_faces)!=29424 or len(hull_faces)!=1950:
+            raise V2ReviewHold("Frozen GLB triangle topology has changed")
+        # Source-generated fourth/third mesh sections give 144 hinge triangles
+        # after the first 29,280 wing faces. The original V2 hull() starts its
+        # gold-trim primitive after 240 shell triangles; its FIRST FOUR tubes
+        # (32 triangles each) are the four root-to-fairing details.
+        # These are only *candidate intended joints*, not authorized contacts.
+        hinge_first=29280
+        support_first,support_end=240,368
+        candidate_joint_pair=lambda wi,bi: (
+            wi>=hinge_first and support_first<=bi<support_end)
+        translated_bridge=[tuple(p[i]+BRIDGE_TRANSLATION_CM[i]
+                                 for i in range(3)) for p in bridge]
         per_root=[]
         for wing_index in range(4):
             transform=wing_audit.blend(
@@ -123,15 +136,23 @@ def run(args):
                 rotated=wing_audit.qrot(quat,tuple(p[i]*scale[i] for i in range(3)))
                 transformed.append(tuple(rotated[i]+xyz[i] for i in range(3)))
             hull_result=nearest_surface(transformed,wing_faces,hull,hull_faces)
+            # This is a separate diagnostic with only the candidate
+            # hinge-to-support-tube pairs omitted. The primary all-triangle
+            # result above remains authoritative and HOLD if under threshold.
+            other_surface=nearest_surface(
+                transformed,wing_faces,hull,hull_faces,
+                exclude_pair=candidate_joint_pair)
             bridge_result=nearest_surface(transformed,wing_faces,
-                                          [tuple(p[i]+BRIDGE_TRANSLATION_CM[i]
-                                                 for i in range(3)) for p in bridge],
-                                          bridge_faces)
+                                          translated_bridge,bridge_faces)
             per_root.append({"wing_index":wing_index,
                              "hull_surface":hull_result,
+                             "hull_other_than_hinge_to_support_tube":other_surface,
                              "bridge_surface":bridge_result})
         result["skyborne_t0_triangle_narrow_phase"]={
             "authority":"ONE_ENDPOINT_TRIANGLE_SURFACE_SCREEN_NOT_CCD",
+            "candidate_contact_pair_ranges":{"wing_hinge_triangles":[29280,29424],
+                                             "hull_first_four_brass_support_tubes":[240,368],
+                                             "meaning":"hypothesis only; no approval or collision exemption"},
             "wing_results":per_root,
             "disposition":("HOLD_ROOT_SURFACES_WITHIN_10_CM"
                            if any(v["hull_surface"]["below_threshold"] or
