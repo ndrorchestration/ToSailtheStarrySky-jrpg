@@ -360,6 +360,11 @@ bool AAureateWakePreviewActor::RequestForm(EAureateWakeForm RequestedForm)
         Hydrofoils[Index]->SetVisibility(true);
     }
     bTransitioning = true;
+    // The transition exposes both hydrofoils immediately. Synchronize the
+    // removable supports in the same call to avoid a one-frame visual pop
+    // before the first Tick. These remain collision-free review proxies.
+    UpdateWingRootMounts();
+    UpdateHydrofoilStruts();
     return true;
 }
 
