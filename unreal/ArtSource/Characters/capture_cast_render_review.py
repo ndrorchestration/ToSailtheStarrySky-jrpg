@@ -16,7 +16,7 @@ EXPECTED = ("Ender", "Ionia", "Lyra", "Reson", "Aepex")
 MAP = "/Game/ArtLookdev/ReviewMaps/TSTSS_CastLineup_Review"
 PROJECT = Path(unreal.Paths.project_dir()).resolve()
 EVIDENCE = PROJECT / "Saved" / "CharacterLookdev"
-OUT = EVIDENCE / "RendererReview_20261101_v4"
+OUT = EVIDENCE / "RendererReview_20261101_v5"
 if "CastAllSandbox" not in PROJECT.name:
     raise RuntimeError("Refuse renderer test outside disposable CastAllSandbox")
 if not (EVIDENCE / "cast_lineup_reload.json").is_file():
@@ -37,10 +37,16 @@ for name in EXPECTED:
     mesh = comp.get_editor_property("static_mesh") if comp else None
     if mesh is None or not mesh.get_path_name().startswith("/Game/ArtLookdev/Characters/" + name + "/"):
         raise RuntimeError("Unexpected mesh for " + name)
-# Provisional import-axis correction: rotate actors only in this unsaved Editor session.
+# Native importer has already converted source geometry into upright Z-up centimetres.
+# Never apply an experimental actor roll to a visually reviewed character.
 for name in EXPECTED:
     actor = by_label["LOOKDEV_STATIC_" + name]
-    actor.set_actor_rotation(unreal.Rotator(0, 0, 180), False)
+    bounds = actor.get_component_by_class(unreal.StaticMeshComponent).get_editor_property("static_mesh").get_bounding_box()
+    if bounds.min.z < -5 or bounds.max.z < 150:
+        raise RuntimeError(name + ": unexpected imported vertical bounds")
+    rot = actor.get_actor_rotation()
+    if any(abs(v) > 0.01 for v in (rot.pitch, rot.yaw, rot.roll)):
+        raise RuntimeError(name + ": unexpected review actor rotation")
 if "CALIBRATION_180CM_NONCANON" not in by_label:
     raise RuntimeError("Calibration actor absent")
 
@@ -78,11 +84,11 @@ def cam(label, pos, yaw, fov):
     return c
 
 cameras = [
-    ("Ender_front", cam("Ender_front", (520, -460, 102), 180, 44), (1280, 720)),
-    ("Ender_profile", cam("Ender_profile", (0, 110, 102), -90, 44), (1280, 720)),
-    ("Ender_back", cam("Ender_back", (-520, -460, 102), 0, 44), (1280, 720)),
-    ("Ender_three_quarter", cam("Ender_three_quarter", (490, 30, 105), -135, 44), (1280, 720)),
-    ("Five_cast_lineup", cam("Five_cast_lineup", (1150, 0, 113), 180, 63), (1280, 720)),
+    ("Ender_front", cam("Ender_front", (420, -460, 102), 180, 44), (1280, 720)),
+    ("Ender_profile", cam("Ender_profile", (0, -180, 102), -90, 44), (1280, 720)),
+    ("Ender_back", cam("Ender_back", (-420, -460, 102), 0, 44), (1280, 720)),
+    ("Ender_three_quarter", cam("Ender_three_quarter", (280, -180, 105), -135, 44), (1280, 720)),
+    ("Five_cast_lineup", cam("Five_cast_lineup", (900, 0, 113), 180, 63), (1280, 720)),
 ]
 print("TSTSS_RENDER_CAPTURE_QUEUED", PROJECT, len(cameras))
 results = []
@@ -108,9 +114,10 @@ def take_captures():
               "engine": unreal.SystemLibrary.get_engine_version(),
               "map": MAP, "renderer_requested": True, "noncanonical": True,
               "reference_accepted": False, "captured": results}
-    (EVIDENCE / "render_task_receipt_v4.json").write_text(
+    (EVIDENCE / "render_task_receipt_v5.json").write_text(
         json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print("TSTSS_RENDER_TASKS_RECORDED")
+
 
 
 
