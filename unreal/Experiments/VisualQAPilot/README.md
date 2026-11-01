@@ -18,3 +18,13 @@ python unreal/Experiments/VisualQAPilot/check_capture.py path/to/actual-capture-
 The template is deliberately incomplete and FAILS. The checker verifies PNG header, pixel dimensions, SHA-256, and required metadata, and rejects known old screenshot bytes. **It cannot authenticate D3D12 origin, validate video pipeline, independently confirm source/build SHA, visually inspect supports or certify art.** A checker PASS is therefore only PNG file integrity, with native/visual provenance pending separate operator review.
 
 Never merge PR #656, replace canonical art, override Orbiter request refusal, change story or publicize postgame content as part of this pilot. Later continuous clearance, supporting physics and finished hull/bridge are distinct slices.
+
+## 2026-11-01 — Container-integrity test extension
+
+`check_capture.py` additionally validates bounded PNG structure, chunk lengths, CRC-32 checksums, mandatory IDAT and final IEND, beyond exact dimensions and full-file SHA-256. `test_capture_receipt.py` exercises a fully encoded **Python-generated synthetic PNG** and four rejection cases. The synthetic PNG is **never** a native Unreal screenshot. Passing tests show the receipt checker accepts a structurally valid file and rejects known malformed/obsolete examples; they do not validate pixel contents, Unreal renderer provenance, ship geometry, hydrofoil placement or cinematic fidelity.
+
+```sh
+python -m unittest discover -s unreal/Experiments/VisualQAPilot -p 'test_*.py' -v
+```
+
+**Remaining true native step:** After the authorized Windows workstation comes online, execute ONE isolated #656 exact-head D3D12 Seaborne review capture, retain build/map/camera and renderer logs, verify both hydrofoil struts visually, and attach a reviewer decision. Current status remains **POST_STRUT_NATIVE_RENDER=NOT_VERIFIED**. Do not use #677's main-based pilot branch as the actual #656 compiled ship source; it only supplies independent verification utilities.
