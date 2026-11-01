@@ -23,6 +23,24 @@ The previously integrated actor already exposes four noncanonical `WingRootMount
 - The complete native C++ preview automation adds checks that the support property defaults to null, an optional review placeholder does not increase wing/mount counts, and authored-wing Orbiter movement remains refused.
 - GitHub workflow includes the hull/canopy source contract test plus root-support GLB generator/import tests; CI evidence is required for this exact branch. A hosted PASS is **not** an Unreal native compile.
 
+## Native verification handoff
+
+`unreal/Tools/Verify-AureateNativeReview.ps1` is a **new, not-yet-executed** deterministic Windows harness. It rejects existing worktree/evidence paths, checks an immutable 40-character commit, creates a **detached isolated worktree**, invokes the installed Unreal 5.8 Editor build with one compile worker, executes `Automation RunTests TSTSS`, and requires a valid JSON report with at least 13 successes, zero failures/not-runs and an explicit successful ship gate. It deliberately does **not** import art, render scenes, merge, release, or automatically remove any checkout.
+
+Run it only with a verified Git checkout and a **new** empty destination after the workstation reconnects:
+
+```powershell
+$repo = 'C:\Users\Admin\work\TSTSS-UE58-ShipReconcile-20261101'
+git -C $repo fetch --no-tags origin review/ue58-authored-root-support-adapter-20261101
+$head = (git -C $repo rev-parse origin/review/ue58-authored-root-support-adapter-20261101).Trim()
+& "$repo\unreal\Tools\Verify-AureateNativeReview.ps1" -RepositoryRoot $repo `
+    -ExpectedHead $head `
+    -WorktreePath 'C:\Users\Admin\work\TSTSS-UE58-AuthoredSupportNativeReview-20261101' `
+    -EngineRoot 'C:\Program Files\Epic Games\UE_5.8'
+```
+
+The script path in that example assumes it has been fetched into the local checkout; if it has not, use the checked-out copy in the detached source branch instead. Never run the script over an existing review directory. The command is a **procedure, not evidence of execution**.
+
 ## Acceptance gates
 
 1. Hosted source tests for generator (10 cases), importer (8 cases), optional hull contracts and Unreal automation registry.
