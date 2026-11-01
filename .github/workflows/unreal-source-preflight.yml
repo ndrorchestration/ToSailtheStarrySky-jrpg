@@ -26,3 +26,5 @@ jobs:
         run: python3 -m unittest discover -s unreal/Tools -p 'test_ue58_composed_compatibility.py' -v
       - name: Guard fail-closed native workstation preflight (source only)
         run: python3 -m unittest discover -s unreal/Tools -p 'test_native_preflight_hold.py' -v
+      - name: Compile and exercise guarded DesignOnly C++ adapter (host API doubles, not native Unreal)
+        run: python3 unreal/Tools/check_combat_design_only_compiled.py
