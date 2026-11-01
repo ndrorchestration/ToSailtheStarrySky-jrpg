@@ -25,6 +25,18 @@ Creator superseded the previous Godot-forward plan: develop **To Sail the Starry
 
 At the inspected Unreal foundation, `FTSTSSCombatant` has `Health/MaxHealth` and `Resource/MaxResource`, plus Attack/Defense. **It has no canonical MAG or named MP field.** The test's `MagicPower` and `MaxMagicPoints` are independent **review inputs**; do not silently map MP to generic `Resource` or MAG to `Attack`, and do not change `UTSTSSSaveGame::CurrentVersion`. Separate [starting-party asset draft #640](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/640) contains an opt-in Ender DataAsset; reconciliation should use that policy after exact-branch review and numeric authorization.
 
+## Added boundary and presentation regression coverage
+
+The dedicated Unreal C++ tests now also check:
+
+- **Roster array order independence:** swapping five-party entry rows cannot change acceptance; comparisons bind to canonical character IDs.
+- **Unconstrained third tier:** Ionia, Reson, Aepex may vary or tie amongst themselves for HP/MP/MAG without being assigned a ranking the creator never approved.
+- **Strict boundary behavior:** zero MP/MAG among the lower three is a valid shape when the two higher ranks are strictly greater, while zero HP remains invalid.
+- **Fail-closed inputs:** negative or out-of-range inputs, Level 0 or Level 2 entries, duplicate/unknown/missing IDs, strict-rank ties and inversions are rejected.
+- **Blueprint-facing review DataAsset:** entries can be reordered without changing the verdict; the opt-in gate can be disabled again. Even an accepted shape remains numeric-design review only.
+
+These are additional **authored automation assertions, not yet proven by Unreal Editor execution**.
+
 ## Required native test (not run by authoring)
 
 Run in an isolated exact-head Windows UE 5.8.4 worktree, with approved Build Tools. Run **both** stat review tests (the native verification script's `TSTSS` suite requires both):
