@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Auditable offline four-wing geometric *screen*, not Unreal/physics certification.
 
-Samples the actual corrected one-wing GLB geometry under the review actor's
-hard-coded root-pivot poses and eased quaternion transitions. It conservatively
-rejects AABB overlaps between different wings and the temporary hull/bridge
-bounds. A discrete sampled screen cannot prove continuous collision freedom.
+Reads every position in the corrected one-wing GLB, requiring one untransformed
+review node, under hard-coded root-pivot poses and eased quaternion transitions.
+It rejects AABB overlaps with other wings and temporary hull/bridge bounds at
+sampled times. A discrete screen cannot prove continuous collision freedom.
 """
 from __future__ import annotations
 import argparse
@@ -15,11 +15,16 @@ from pathlib import Path
 import struct
 
 from import_aureate_wing_review import preflight, WingReviewHold
+from test_aureate_pose_source_parity import assert_pose_parity
 
 FORMS = ("Skyborne", "Seaborne", "Submersible")
 CUBE_HULL = ((-400., -75., -32.5), (400., 75., 32.5))
 CUBE_BRIDGE = ((135., -55., 40.), (345., 55., 150.))
 MIN_CLEARANCE_CM = 10.0
+# 3,000 is insufficient for the procedural venation section (~14,770
+# positions). Continue reading *every* vertex; never subsample to fit.
+DEFAULT_MAX_VERTICES_PER_PRIMITIVE = 20_000
+MAX_VERTICES_PER_PRIMITIVE = 50_000
 STATUS = "SAMPLED_GEOMETRY_SCREEN_ONLY_NOT_ENGINE_OR_COLLISION_APPROVED"
 
 
@@ -27,10 +32,13 @@ class GeometryHold(ValueError):
     pass
 
 
-def read_vertices(glb: Path, per_primitive=3000):
+def read_vertices(glb: Path, per_primitive=DEFAULT_MAX_VERTICES_PER_PRIMITIVE):
     """GLB 2.0 float32 positions, meters/+Y up -> Unreal cm/+Z up."""
-    if per_primitive < 100 or per_primitive > 50000:
-        raise GeometryHold("Use 100..50000 sample points per primitive")
+    if per_primitive < 100 or per_primitive > MAX_VERTICES_PER_PRIMITIVE:
+        raise GeometryHold("Use 100..50000 maximum vertices per primitive")
+    # Coverage is all-or-hold. Subsampling can exclude the extreme vertex,
+    # understate an AABB and falsely report clearance. This numeric budget is
+    # an upper safety limit, never permission to screen a partial mesh.
     blob = glb.read_bytes()
     if len(blob) < 28 or blob[:4] != b"glTF":
         raise GeometryHold("Not a GLB")
@@ -39,35 +47,93 @@ def read_vertices(glb: Path, per_primitive=3000):
     if version != 2 or total != len(blob) or jtype != b"JSON":
         raise GeometryHold("Malformed GLB header")
     doc = json.loads(blob[20:20 + jlen])
+    if not isinstance(doc, dict):
+        raise GeometryHold("Malformed GLB scene JSON")
+    # This tool screens raw mesh-local positions. A glTF scene graph can
+    # translate, rotate, scale, duplicate or skin that geometry; accepting any
+    # such transform here would yield misleading Unreal/world clearance.
+    # Only the deterministic untransformed one-wing review export is allowed.
+    nodes = doc.get("nodes")
+    if (doc.get("scene") != 0 or doc.get("scenes") != [{"nodes": [0]}] or
+        not isinstance(nodes, list) or len(nodes) != 1 or
+        not isinstance(nodes[0], dict) or nodes[0].get("mesh") != 0 or
+        any(key in nodes[0] for key in (
+            "matrix", "translation", "rotation", "scale", "children",
+            "skin", "weights", "extensions")) or
+        doc.get("skins") or doc.get("animations") or
+        doc.get("extensionsUsed") or doc.get("extensionsRequired")):
+        raise GeometryHold("Scene-graph transform/skin/extension unsupported: review HOLD")
     if doc.get("extras", {}).get("sourceToGltfScale") != 0.01:
         raise GeometryHold("Retired/oversized GLB, require cm-to-meter correction")
     bin_pos = 20 + jlen + 8
     blen, btype = struct.unpack_from("<I4s", blob, bin_pos - 8)
     if btype != b"BIN\0" or bin_pos + blen != len(blob):
         raise GeometryHold("Missing GLB binary chunk")
-    primitives = doc["meshes"][0]["primitives"]
+    meshes = doc.get("meshes")
+    if not isinstance(meshes, list) or len(meshes) != 1:
+        raise GeometryHold("Expected exactly one local-space review wing mesh")
+    primitives = meshes[0]["primitives"]
     if len(primitives) != 3:
         raise GeometryHold("Requires membrane, venation and root primitives")
+    if any("targets" in part or "extensions" in part for part in primitives):
+        raise GeometryHold("Morph targets or mesh extensions unsupported: review HOLD")
     vertices = []
     sizes = []
     for piece in primitives:
         acc = doc["accessors"][piece["attributes"]["POSITION"]]
-        if acc["type"] != "VEC3" or acc["componentType"] != 5126:
-            raise GeometryHold("Unexpected position accessor format")
+        if (acc["type"] != "VEC3" or acc["componentType"] != 5126 or
+            "sparse" in acc or acc.get("normalized", False) or
+            "extensions" in acc):
+            raise GeometryHold("Unexpected or transformed position accessor format")
         view = doc["bufferViews"][acc["bufferView"]]
+        # The offline reader addresses the single embedded BIN chunk only.
+        # A GLB view referencing another buffer must not silently read BIN[0]
+        # and report clearance for geometry different from an Unreal import.
+        if view.get("buffer") != 0:
+            raise GeometryHold("Position view references unsupported buffer")
         count = acc["count"]
+        if not isinstance(count, int) or count <= 0:
+            raise GeometryHold("Empty or invalid position accessor")
+        if count > per_primitive:
+            raise GeometryHold(
+                f"Partial vertex coverage forbidden: {count} positions exceed "
+                f"per-primitive maximum {per_primitive}; raise budget or HOLD")
         sizes.append(count)
-        stride = max(1, math.ceil(count / per_primitive))
-        indices = sorted({0, count - 1, *range(0, count, stride)})
-        for i in indices:
-            start = bin_pos + view.get("byteOffset", 0) + acc.get("byteOffset", 0) + i * view.get("byteStride", 12)
-            if start + 12 > bin_pos + blen:
+        declared_min = acc.get("min")
+        declared_max = acc.get("max")
+        if (not isinstance(declared_min, list) or len(declared_min) != 3 or
+            not isinstance(declared_max, list) or len(declared_max) != 3 or
+            any(not isinstance(value, (int, float)) or not math.isfinite(value)
+                for value in (*declared_min, *declared_max))):
+            raise GeometryHold("Missing/nonfinite declared POSITION min/max: review HOLD")
+        actual_min = [float("inf")] * 3
+        actual_max = [-float("inf")] * 3
+        base_offset = view.get("byteOffset", 0) + acc.get("byteOffset", 0)
+        stride = view.get("byteStride", 12)
+        view_length = view.get("byteLength")
+        if (not isinstance(base_offset, int) or base_offset < 0 or
+            not isinstance(stride, int) or stride < 12 or
+            not isinstance(view_length, int) or view_length < 12):
+            raise GeometryHold("Invalid GLB position view/stride")
+        view_end = bin_pos + view.get("byteOffset", 0) + view_length
+        for i in range(count):
+            start = bin_pos + base_offset + i * stride
+            if start < bin_pos or start + 12 > min(bin_pos + blen, view_end):
                 raise GeometryHold("GLB vertex access out of bounds")
             x, y, z = struct.unpack_from("<fff", blob, start)
             if not all(math.isfinite(v) for v in (x,y,z)):
                 raise GeometryHold("Nonfinite GLB geometry")
+            for axis, value in enumerate((x, y, z)):
+                actual_min[axis] = min(actual_min[axis], value)
+                actual_max[axis] = max(actual_max[axis], value)
             # glTF xyz was built as Unreal (x,z,-y); invert and convert m -> cm.
             vertices.append((x * 100., -z * 100., y * 100.))
+        # Stale accessor extrema can conceal mismatched span/scale assumptions
+        # between preflight metadata and the geometry the Unreal importer sees.
+        if any(abs(actual_min[axis] - declared_min[axis]) > 1e-4 or
+               abs(actual_max[axis] - declared_max[axis]) > 1e-4
+               for axis in range(3)):
+            raise GeometryHold("Declared POSITION min/max disagrees with GLB geometry")
     return vertices, sizes
 
 
@@ -172,6 +238,12 @@ def clearance_against_boxes(bounds):
 
 
 def assert_source_contract(cpp_text, header_text):
+    # Freeze the entire normalized C++ wing-pose method, not just a few
+    # constants. Prevent a changed rotation/pivot from inheriting old AABB QA.
+    try:
+        assert_pose_parity(cpp_text)
+    except ValueError as exc:
+        raise GeometryHold(str(exc)) from exc
     for marker in ('const float RootY = Side * 112.f;',
                    'const float RootX = bForward ? 155.f : -180.f;',
                    'Scale = FVector(.94f, .82f, 1.f);',
@@ -209,6 +281,8 @@ def audit(vertices, steps=20):
             frames+=1
     return {"authority":STATUS,"checked_directed_transitions":6,"time_samples_per_transition":steps+1,
             "wing_instances":4,"checked_poses":frames,"mesh_sample_points":len(vertices),
+            "vertex_coverage":"COMPLETE_POSITION_ACCESSORS_WITHIN_BUDGET",
+            "scene_graph":"SINGLE_UNTRANSFORMED_UNSKINNED_REVIEW_WING",
             "minimum_proxy_aabb_clearance_cm":round(worst_static,2),
             "minimum_interwing_aabb_clearance_cm":round(worst_pair,2),
             "unresolved_visual_gates":["approximate 28 cm wing-root to hull-side gap has no authored support spar",
@@ -223,13 +297,16 @@ def main():
     parser.add_argument('--manifest',type=Path,required=True)
     parser.add_argument('--cpp',type=Path,required=True)
     parser.add_argument('--header',type=Path,required=True)
-    parser.add_argument('--samples-per-primitive',type=int,default=3000)
+    parser.add_argument('--max-vertices-per-primitive','--samples-per-primitive',
+                        dest='max_vertices_per_primitive',type=int,
+                        default=DEFAULT_MAX_VERTICES_PER_PRIMITIVE,
+                        help='Fail closed if any primitive exceeds this count; never subsample')
     parser.add_argument('--steps',type=int,default=20)
     args=parser.parse_args()
     try:
         preflight(args.glb, args.manifest)
         assert_source_contract(args.cpp.read_text(encoding='utf-8'),args.header.read_text(encoding='utf-8'))
-        vertices,sizes=read_vertices(args.glb,args.samples_per_primitive)
+        vertices,sizes=read_vertices(args.glb,args.max_vertices_per_primitive)
         result=audit(vertices,args.steps)
         result['source_primitive_vertex_counts']=sizes
         print(json.dumps(result,indent=2))
