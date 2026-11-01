@@ -189,6 +189,50 @@ class CompleteVertexClearanceIntake(unittest.TestCase):
         with self.assertRaisesRegex(GeometryHold, "Morph targets"):
             read_vertices(self.path, per_primitive=100)
 
+    def test_rejects_accessor_before_declared_view_start(self):
+        # The first decoded vertex exists in BIN, but a negative accessor
+        # offset would make it lie BEFORE the declared view's own first byte.
+        # The old combined-offset/end check incorrectly admitted this.
+        make_glb(self.path,
+                 view_override={"byteOffset": 12, "byteLength": 1212},
+                 accessor_override={"byteOffset": -12})
+        with self.assertRaisesRegex(GeometryHold, "Invalid GLB position view"):
+            read_vertices(self.path, per_primitive=100)
+
+    def test_rejects_negative_view_offset_cancelled_by_accessor(self):
+        make_glb(self.path,
+                 view_override={"byteOffset": -12, "byteLength": 1212},
+                 accessor_override={"byteOffset": 12})
+        with self.assertRaisesRegex(GeometryHold, "Invalid GLB position view"):
+            read_vertices(self.path, per_primitive=100)
+
+    def test_rejects_view_extending_beyond_embedded_bin(self):
+        # Even a small accessor must not inherit a malformed declared view.
+        make_glb(self.path, view_override={"byteLength": 100000})
+        with self.assertRaisesRegex(GeometryHold, "view exceeds embedded BIN"):
+            read_vertices(self.path, per_primitive=100)
+
+    def test_rejects_noninteger_and_unaligned_glb_offsets(self):
+        variants = [
+            {"view_override": {"byteOffset": True}},
+            {"view_override": {"byteOffset": 2}},
+            {"view_override": {"byteLength": True}},
+            {"view_override": {"byteStride": 13}},
+            {"accessor_override": {"byteOffset": True}},
+            {"accessor_override": {"byteOffset": "12"}},
+            {"accessor_override": {"byteOffset": 2}},
+        ]
+        for variant in variants:
+            with self.subTest(variant=variant):
+                make_glb(self.path, **variant)
+                with self.assertRaisesRegex(GeometryHold, "Invalid GLB position view"):
+                    read_vertices(self.path, per_primitive=100)
+
+    def test_rejects_boolean_accessor_vertex_count(self):
+        make_glb(self.path, accessor_override={"count": True})
+        with self.assertRaisesRegex(GeometryHold, "Empty or invalid position accessor"):
+            read_vertices(self.path, per_primitive=100)
+
     def test_rejects_position_view_bound_to_nonembedded_buffer(self):
         # If the view says buffer 1, reading raw bytes from embedded buffer 0
         # could falsely clear wing geometry that Unreal resolves differently.
