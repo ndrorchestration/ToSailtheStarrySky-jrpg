@@ -164,6 +164,17 @@ bool FTSTSSAureateSixRouteSupportReviewTest::RunTest(const FString& Parameters)
                 ReviewWorld->DestroyWorld(false);
                 return false;
             }
+            // Support visibility must match the hydrofoils immediately when
+            // RequestForm begins, not lag until the first actor Tick.
+            for (int32 I = 0; I < 2; ++I)
+            {
+                UStaticMeshComponent* ImmediateStrut = Part(TEXT("ReviewHydrofoilStrut"), I);
+                if (TestNotNull(TEXT("Transition-start strut exists"), ImmediateStrut))
+                {
+                    TestTrue(TEXT("Strut visible on the same frame as foil deployment"),
+                        ImmediateStrut->IsVisible());
+                }
+            }
             Ship->Tick(Ship->TransitionSeconds * 0.5f);
             TestTrue(TEXT("Halfway transition remains active"), Ship->IsTransitioning());
             TestEqual(TEXT("Current form unchanged halfway"), Ship->GetCurrentForm(), Start);
