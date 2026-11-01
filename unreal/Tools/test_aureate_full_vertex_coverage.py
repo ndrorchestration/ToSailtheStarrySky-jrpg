@@ -12,7 +12,7 @@ from audit_aureate_wing_clearance import GeometryHold, read_vertices
 def make_glb(path: Path, counts=(100, 2, 2), *, shorten_view=False,
              invalid_stride=False, nonfinite=False, node_override=None,
              scene_override=None, accessor_override=None,
-             morph_targets=False):
+             view_override=None, morph_targets=False):
     accessors = []
     views = []
     primitives = []
@@ -42,6 +42,8 @@ def make_glb(path: Path, counts=(100, 2, 2), *, shorten_view=False,
         primitives.append({"attributes": {"POSITION": index}})
     if accessor_override:
         accessors[0].update(accessor_override)
+    if view_override:
+        views[0].update(view_override)
     if morph_targets:
         primitives[0]["targets"] = [{"POSITION": 0}]
     document = {
@@ -152,6 +154,13 @@ class CompleteVertexClearanceIntake(unittest.TestCase):
                     read_vertices(self.path, per_primitive=100)
         make_glb(self.path, morph_targets=True)
         with self.assertRaisesRegex(GeometryHold, "Morph targets"):
+            read_vertices(self.path, per_primitive=100)
+
+    def test_rejects_position_view_bound_to_nonembedded_buffer(self):
+        # If the view says buffer 1, reading raw bytes from embedded buffer 0
+        # could falsely clear wing geometry that Unreal resolves differently.
+        make_glb(self.path, view_override={"buffer": 1})
+        with self.assertRaisesRegex(GeometryHold, "unsupported buffer"):
             read_vertices(self.path, per_primitive=100)
 
     def test_rejects_multiple_meshes(self):
