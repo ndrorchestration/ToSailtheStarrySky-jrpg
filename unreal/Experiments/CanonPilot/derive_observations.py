@@ -105,7 +105,7 @@ def self_test():
                          ("height_cm", {"Lyra": True})):
         test = json.loads(json.dumps(base))
         test["measurements"][field].update(value)
-        assert (field == "starting_hp_bottom_two" or "height_order" not in derive(test)["observations"])
+        assert ("starting_hp_bottom_two" if field == "starting_hp" else "height_order") not in derive(test)["observations"]
     invalid = json.loads(json.dumps(base))
     invalid["measurements"]["ship"]["orbiter_request_permitted"] = "false"
     try:
