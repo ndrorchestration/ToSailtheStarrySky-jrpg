@@ -36,7 +36,11 @@ $ReportDirectory = Join-Path $Evidence 'AutomationReport'
 if (Test-Path $ReportDirectory) { Remove-Item $ReportDirectory -Recurse -Force }
 New-Item -Path $ReportDirectory -ItemType Directory -Force | Out-Null
 $ExportArgument = '-ReportExportPath=' + $ReportDirectory
-& $EditorCmd $Project -unattended -nop4 -nullrhi '-ExecCmds=Automation RunTests TSTSS; Quit' $ExportArgument -log 2>&1 |
+# Headless UE 5.8 can auto-upgrade DefaultInput.ini and write plugin runtime
+# settings (including environment-specific tokens) into DefaultEngine.ini.
+# Use Epic-documented no-write flags; NEVER silently allow/revert dirty files.
+# The exact-HEAD and clean-worktree checks below remain mandatory.
+& $EditorCmd $Project -unattended -nop4 -nullrhi -NOINI -NOAUTOINIUPDATE '-ExecCmds=Automation RunTests TSTSS; Quit' $ExportArgument -log 2>&1 |
     Tee-Object (Join-Path $Evidence 'automation.log')
 if ($LASTEXITCODE -ne 0) { throw "Unreal automation command failed ($LASTEXITCODE)" }
 $ReportPath = Join-Path $Evidence 'AutomationReport/index.json'
