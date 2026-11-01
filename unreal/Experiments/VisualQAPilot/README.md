@@ -28,3 +28,18 @@ python -m unittest discover -s unreal/Experiments/VisualQAPilot -p 'test_*.py' -
 ```
 
 **Remaining true native step:** After the authorized Windows workstation comes online, execute ONE isolated #656 exact-head D3D12 Seaborne review capture, retain build/map/camera and renderer logs, verify both hydrofoil struts visually, and attach a reviewer decision. Current status remains **POST_STRUT_NATIVE_RENDER=NOT_VERIFIED**. Do not use #677's main-based pilot branch as the actual #656 compiled ship source; it only supplies independent verification utilities.
+
+## 2026-11-01 — Read-only Windows preflight for the missing render
+
+The new `preflight_windows.py` does not start or install Unreal. It checks that an explicitly selected local checkout is at the **exact pinned PR #656 head**, that tracked files are clean, the `.uproject` exists, the supplied local `.umap` exists, and the supplied Unreal root contains a Build.version reporting 5.8.4 plus both Editor executables. It deliberately does not read private keys, inspect personal files, terminate processes, build or modify the workspace. It does not establish that a GPU or D3D12 is functional.
+
+On the authorized workstation, with the known isolated #656 checkout and actual review map paths (do **not** point this at your normal playable project):
+
+```powershell
+py -3 unreal/Experiments/VisualQAPilot/preflight_windows.py --self-test
+py -3 unreal/Experiments/VisualQAPilot/preflight_windows.py --checkout 'C:\path\to\isolated-PR656-checkout' --engine-root 'C:\path\to\UE_5.8' --review-map-file 'C:\path\to\AureateWakeSeaborne_ReviewV2.umap' --report 'C:\path\to\new-private-preflight-receipt.json'
+```
+
+The receipt is created only if the destination does not exist. It has independent booleans and explicit UNKNOWN/NOT_VERIFIED fields. A preflight success means only **the local static prerequisites are present**, not that the scene, renderer, strut silhouette or production art works. The automated CI runs a **synthetic fixture** for the read-only guards, not this actual Windows environment.
+
+Following a clean preflight, the human/operator must separately run the single bounded real Unreal D3D12 capture and complete `check_capture.py` and visual review. Do not present this preflight, the existing **pre-strut** screenshots, or prior CI runs as the final native screenshot.
