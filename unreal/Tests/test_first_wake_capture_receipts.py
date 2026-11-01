@@ -204,6 +204,14 @@ class CaptureContractTests(unittest.TestCase):
             self.assertFalse(req[3]["capture_hdr"])
             self.assertTrue(req[3]["force_game_view"])
 
+    def test_scheduling_receipt_preserves_complete_run_id(self):
+        for run_id in ("Review20261031", "Review_20261101_A", "Review-A_01_"):
+            with self.subTest(run_id=run_id):
+                unreal = mocked_unreal()
+                with patch.dict(sys.modules, {"unreal": unreal}):
+                    result = capture.schedule_editor_capture(capture.capture_plan(run_id))
+                self.assertEqual(result["run_id"], run_id)
+
     def test_receipts_require_all_actual_pngs_and_valid_dimensions(self):
         plan = capture.capture_plan("Review20261031")
         with tempfile.TemporaryDirectory() as d:
@@ -244,3 +252,4 @@ class CaptureContractTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
