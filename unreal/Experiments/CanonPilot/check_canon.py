@@ -5,7 +5,7 @@ import json
 import re
 from pathlib import Path
 
-KINDS = {"synthetic", "native_receipt", "not_observed"}
+KINDS = {"synthetic", "native_receipt", "not_observed", "candidate_manifest"}
 
 def evaluate(contract, receipt):
     if contract.get("schema_version") != 1 or receipt.get("schema_version") != 1:
@@ -19,6 +19,12 @@ def evaluate(contract, receipt):
         raise ValueError("unknown observation keys refused")
     if kind == "not_observed" and observed:
         raise ValueError("not_observed cannot contain observations")
+    if kind in ("native_receipt", "candidate_manifest"):
+        if kind == "candidate_manifest":
+            if not re.fullmatch("[0-9a-f]{40}", receipt.get("manifest_blob_sha", "")):
+                raise ValueError("candidate_manifest requires git manifest_blob_sha")
+            if not receipt.get("evidence_location"):
+                raise ValueError("candidate_manifest requires evidence_location")
     if kind == "native_receipt":
         if not re.fullmatch("[0-9a-f]{40}", receipt.get("source_sha", "")):
             raise ValueError("native_receipt requires source_sha")
@@ -32,6 +38,8 @@ def evaluate(contract, receipt):
             results[name] = "FAIL_MISMATCH"
         elif kind == "synthetic":
             results[name] = "PASS_SYNTHETIC_ONLY"
+        elif kind == "candidate_manifest":
+            results[name] = "MATCHES_PINNED_LOOKDEV_MANIFEST_NOT_NATIVE_OR_CANON"
         elif kind == "native_receipt":
             results[name] = "MATCHES_REPORTED_NATIVE_RECEIPT_NOT_INDEPENDENTLY_VERIFIED"
         else:
@@ -63,7 +71,11 @@ def self_test(contract):
             pass
         else:
             raise AssertionError("unknown field accepted")
-    print("PASS: synthetic-positive, five negative controls, missing-evidence, unknown-field")
+    candidate = {**good, "source_kind": "candidate_manifest",
+                 "manifest_blob_sha": "a"*40, "evidence_location": "git-show pinned fixture"}
+    assert set(evaluate(contract, candidate).values()) == {
+        "MATCHES_PINNED_LOOKDEV_MANIFEST_NOT_NATIVE_OR_CANON"}
+    print("PASS: synthetic-positive, five negative controls, missing-evidence, unknown-field, candidate-source separation")
 
 def main():
     p = argparse.ArgumentParser()
