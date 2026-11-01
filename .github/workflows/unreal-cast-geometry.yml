@@ -30,6 +30,10 @@ jobs:
         run: python3 -m unittest discover -s unreal/ArtSource/Characters -p test_ender_fidelity_v1.py -v
       - name: Validate V2 connected cloth/hair topology and immutable source candidate (engine-free)
         run: python3 -m unittest discover -s unreal/ArtSource/Characters -p test_ender_fidelity_v2.py -v
+      - name: Validate native Ender V1 versus V2 comparison contract and guardrails (engine-free)
+        run: |
+          python3 -m unittest discover -s unreal/ArtSource/Characters -p 'test_ender_comparison_*.py' -v
+          python3 -m py_compile unreal/ArtSource/Characters/capture_ender_comparison_native.py
       - name: Regenerate source assets and confirm exact bytes
         env:
           TSTSS_CAST_OUTPUT: unreal/ArtSource/Characters/Candidates
