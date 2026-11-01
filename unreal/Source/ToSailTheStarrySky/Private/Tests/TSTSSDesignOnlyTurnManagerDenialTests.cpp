@@ -104,8 +104,55 @@ bool FTSTSSDesignOnlyTurnManagerDenialTest::RunTest(const FString& Parameters)
         TestEqual(TEXT("resource preserved"), After[Index].Resource,
                   Before[Index].Resource);
     }
-    // No video, animation cue, spell grant, player-facing UI or SaveGame
-    // behavior is implied by this source test declaration.
+    // Positive control: change ONLY admission to ReviewExecutable in a
+    // separate synthetic test-only DataTable and a fresh encounter. If this
+    // cannot execute, the preceding denial might have been caused by a
+    // broken actor turn, target, knowledge, or DataTable configuration rather
+    // than the intended admission gate. No runtime/production row is modified.
+    FTSTSSBattleSkillRow SyntheticExecutable = ArmedReview;
+    SyntheticExecutable.Admission = ETSTSSBattleSkillAdmission::ReviewExecutable;
+    UDataTable* ExplicitReviewTable = NewObject<UDataTable>();
+    ExplicitReviewTable->RowStruct = FTSTSSBattleSkillRow::StaticStruct();
+    ExplicitReviewTable->AddRow(SyntheticExecutable.SkillId, SyntheticExecutable);
+
+    UTSS_CombatTurnManager* PositiveManager =
+        NewObject<UTSS_CombatTurnManager>();
+    PositiveManager->SkillTable = ExplicitReviewTable;
+    if (!TestTrue(TEXT("synthetic opt-in encounter initializes"),
+        PositiveManager->InitializeEncounter({Ender},
+            {FName(TEXT("Ender"))}, {Opponent}))) return false;
+    if (!TestEqual(TEXT("positive control actor is Ender"),
+        PositiveManager->GetActiveParticipantId(),
+        FName(TEXT("Ender")))) return false;
+    if (!TestTrue(TEXT("only explicitly admitted synthetic skill executes"),
+        PositiveManager->SubmitCommand(Command))) return false;
+
+    const TArray<FTSTSSCombatant> Accepted =
+        PositiveManager->GetCombatantSnapshot();
+    if (!TestEqual(TEXT("positive control roster size"), Accepted.Num(), 2))
+        return false;
+    const FTSTSSCombatant* AcceptedEnder =
+        Accepted.FindByPredicate([](const FTSTSSCombatant& Unit) {
+            return Unit.CharacterId == FName(TEXT("Ender"));
+        });
+    const FTSTSSCombatant* AcceptedFoe =
+        Accepted.FindByPredicate([](const FTSTSSCombatant& Unit) {
+            return Unit.CharacterId == FName(TEXT("NoncanonOpponent"));
+        });
+    if (!TestNotNull(TEXT("positive control Ender exists"), AcceptedEnder) ||
+        !TestNotNull(TEXT("positive control opponent exists"), AcceptedFoe))
+        return false;
+    TestEqual(TEXT("explicit opt-in consumes synthetic resource cost"),
+              AcceptedEnder->Resource, 8);
+    TestEqual(TEXT("explicit opt-in deals synthetic attack plus skill damage"),
+              AcceptedFoe->Health, 16);
+    TestTrue(TEXT("positive control advanced to opponent's turn"),
+             PositiveManager->GetActiveParticipantId() ==
+                 FName(TEXT("NoncanonOpponent")));
+
+    // All of this is WITH_DEV_AUTOMATION_TESTS-only. A successful artificial
+    // admission proves a functioning comparison path, NOT creator permission
+    // to grant the character a real spell or ship production game content.
     return true;
 }
 #endif
