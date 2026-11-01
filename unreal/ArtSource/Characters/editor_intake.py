@@ -16,6 +16,26 @@ SOURCES = Path(os.environ.get("TSTSS_CAST_SOURCE", ROOT / "Candidates"))
 DEST_ROOT = "/Game/ArtLookdev/Characters"
 
 
+def validate_imported_extent(xyz_cm):
+    """Detect accidental sideways imports; bounds alone cannot detect inversion."""
+    if len(xyz_cm) != 3 or not all(0 < value < 1000 for value in xyz_cm):
+        raise ValueError("Invalid Unreal imported axis extents: " + repr(xyz_cm))
+    x, y, z = xyz_cm
+    if not 150 <= z <= 230 or z <= 1.5 * max(x, y):
+        raise ValueError("Expected a vertical Unreal Z-up character: " + repr(xyz_cm))
+
+
+def test_imported_extent_gate():
+    validate_imported_extent((56.316, 31.6, 185.8))
+    for bad in ((185.8, 31.6, 56.316), (56.316, 185.8, 31.6),
+                (56.316, 31.6, 120.0), (0.0, 31.6, 185.8)):
+        try:
+            validate_imported_extent(bad)
+        except ValueError:
+            continue
+        raise AssertionError("Rejected axis/scale control was accepted: " + repr(bad))
+
+
 def validate_sources(source_dir=SOURCES):
     manifest = json.loads((source_dir / "manifest.json").read_text(encoding="utf-8"))
     records = manifest["characters"]
@@ -64,9 +84,9 @@ def import_one(unreal, name, record, source_dir):
     bounds = meshes[0].get_bounding_box()
     low, high = bounds.min, bounds.max
     xyz = [abs(getattr(high, axis) - getattr(low, axis)) for axis in ("x", "y", "z")]
-    height_cm = max(xyz)
-    if not 150 <= height_cm <= 230:
-        raise RuntimeError(name + ": suspicious imported extent: " + str(xyz))
+    # Z must be the dominant vertical Unreal axis. max(X,Y,Z) was too
+    # permissive: sideways characters could otherwise pass as 180 cm tall.
+    validate_imported_extent(xyz)
     return {"name": name, "sha256": record["sha256"],
             "mesh": meshes[0].get_path_name(), "bounds_cm": xyz,
             "all_imported_objects": [obj.get_path_name() for obj in objects]}
@@ -75,6 +95,8 @@ def import_one(unreal, name, record, source_dir):
 def main():
     records = validate_sources(SOURCES)
     if "--preflight-only" in sys.argv:
+        test_imported_extent_gate()
+        print("TSTSS_IMPORT_AXIS_NEGATIVE_CONTROLS_REJECTED 4")
         print("TSTSS_CAST_PREFLIGHT_PASS " + ",".join(NAMES))
         return
     import unreal  # Available only inside the UE Editor with Python Script Plugin.
@@ -106,3 +128,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+[executed on device: neontic (bcce7514-436c-4530-8f45-3b446e98a4b3)]
