@@ -107,6 +107,27 @@ class ApprovedReferenceBodyReview(unittest.TestCase):
         self.assertLess(tail.index("UpdateHydrofoilStruts();"), tail.index("return true;"))
         self.assertIn("Companion strut visible at same transition start", NATIVE)
 
+    def test_ue58_tobjectptr_mesh_identity_compatibility(self):
+        # Native MSVC C2445/C2665 at the parent head: a TObjectPtr and a
+        # raw UStaticMesh* cannot be implicitly mixed in the ternary or
+        # TestEqual template deduction. Keep explicit pointer extraction.
+        self.assertIn(
+            "UStaticMesh* CurvedShape = Sphere.Succeeded() ? Sphere.Object.Get() : Shape;",
+            CPP,
+        )
+        for token in (
+            "HullComponent->GetStaticMesh().Get() == OriginalHull",
+            "BridgeComponent->GetStaticMesh().Get() == OriginalBridge",
+        ):
+            self.assertIn(token, NATIVE)
+        for bad in (
+            "TestEqual(TEXT(\"Rejected body leaves hull mesh untouched\")",
+            "TestEqual(TEXT(\"Rejected body leaves bridge mesh untouched\")",
+            "TestEqual(TEXT(\"Restored hull source mesh\")",
+            "TestEqual(TEXT(\"Restored bridge source mesh\")",
+        ):
+            self.assertNotIn(bad, NATIVE)
+
     def test_native_rejections_are_registered(self):
         self.assertIn("Missing bridge fails body intake atomically", NATIVE)
         self.assertIn("Rejected body leaves hull mesh untouched", NATIVE)
