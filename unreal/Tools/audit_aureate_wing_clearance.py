@@ -82,6 +82,11 @@ def read_vertices(glb: Path, per_primitive=3000):
             "extensions" in acc):
             raise GeometryHold("Unexpected or transformed position accessor format")
         view = doc["bufferViews"][acc["bufferView"]]
+        # The offline reader addresses the single embedded BIN chunk only.
+        # A GLB view referencing another buffer must not silently read BIN[0]
+        # and report clearance for geometry different from an Unreal import.
+        if view.get("buffer") != 0:
+            raise GeometryHold("Position view references unsupported buffer")
         count = acc["count"]
         if not isinstance(count, int) or count <= 0:
             raise GeometryHold("Empty or invalid position accessor")
