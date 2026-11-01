@@ -6,7 +6,10 @@ import struct
 import tempfile
 import unittest
 from pathlib import Path
-from audit_aureate_wing_clearance import GeometryHold, read_vertices
+from audit_aureate_wing_clearance import (
+    DEFAULT_MAX_VERTICES_PER_PRIMITIVE, GeometryHold, read_vertices
+)
+from author_aureate_wing_glb import build as build_authored_review_wing
 
 
 def make_glb(path: Path, counts=(100, 2, 2), *, shorten_view=False,
@@ -109,6 +112,20 @@ class CompleteVertexClearanceIntake(unittest.TestCase):
         make_glb(self.path, nonfinite=True)
         with self.assertRaisesRegex(GeometryHold, "Nonfinite GLB geometry"):
             read_vertices(self.path, per_primitive=100)
+
+    def test_real_generator_glb_full_coverage_fits_safe_default(self):
+        # Exercise the *actual* source generator rather than relying only on
+        # tiny synthetic GLBs. The venation primitive has 14,770 positions:
+        # the old 3,000 cap would refuse this artist-authored review source.
+        glb, _, manifest = build_authored_review_wing()
+        self.path.write_bytes(glb)
+        decoded, counts = read_vertices(self.path)
+        self.assertEqual(counts, [292, 14770, 78])
+        self.assertEqual(len(decoded), sum(counts))
+        self.assertEqual(
+            counts, [section["vertices"] for section in manifest["topology"]])
+        self.assertLessEqual(max(counts), DEFAULT_MAX_VERTICES_PER_PRIMITIVE)
+        self.assertEqual(DEFAULT_MAX_VERTICES_PER_PRIMITIVE, 20_000)
 
     def test_rejects_unbounded_budget(self):
         make_glb(self.path)
