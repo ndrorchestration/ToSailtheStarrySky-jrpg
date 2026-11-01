@@ -27,6 +27,12 @@ Existing generator-generated real wing/126-pose fixtures remain unchanged. New n
 
 The suite runs via `python unreal/Tools/test_aureate_full_vertex_coverage.py` and the existing Unreal source preflight. No engine or editor is needed. This is a **fail-closed admission policy for the known deterministic review asset**, not an exhaustive generic glTF verifier. Source CI is necessary but not sufficient for UE import, physical collision, or cinematic art fidelity.
 
+## Native Unreal 5.8.4 and configuration-write evidence gate
+
+On the clean isolated Windows checkout at source SHA `71e8d9b1e701c440b8632b15def0774a57000279`, UnrealBuildTool successfully compiled and linked the project. Its Editor AutomationReport contained **14 succeeded, 0 failed, 0 notRun**, including the two ship tests. However, the wrapper correctly refused to bind an overall verification PASS, because the Editor mutated tracked `DefaultEngine.ini` and `DefaultInput.ini` during startup. It added a generated Android File Server configuration (including a sensitive runtime token) and serialized default input settings. **Do not publish or commit the generated token/configuration diff.**
+
+The smallest source-side fix adds Epic's documented `-nowrite` Editor flag to `unreal/Tools/Verify-Unreal.ps1`, preserving the existing clean-checkout requirement, exact SHA binding, full native test inventory and no-skips requirement. See [Unreal Engine 5.8 command-line arguments reference](https://dev.epicgames.com/documentation/unreal-engine/unreal-engine-command-line-arguments-reference). Re-run the full native verifier at the *new* exact head after restoring only the two generated tracked files in the owned isolated QA clone. Do not promote the first result to a completed verifier PASS until the new run confirms the checkout remains pristine.
+
 ## Remaining gates
 
 Native UE 5.8.4 testing remains blocked while another editor has Live Coding active, and other separate agent jobs may be running. Do not shut down another editor, merge either draft, or promote placeholders/art. New branch SHA must get its own engine-free CI evidence, and a later isolated Windows verification may be performed after active Unreal work completes. Orbiter remains fail-closed.
