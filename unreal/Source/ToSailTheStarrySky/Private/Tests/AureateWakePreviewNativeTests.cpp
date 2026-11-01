@@ -92,8 +92,8 @@ bool FTSTSSAureatePreviewFormTest::RunTest(const FString& Parameters)
         if (TestNotNull(TEXT("Preview hull exists"), HullComponent) &&
             TestNotNull(TEXT("Preview bridge exists"), BridgeComponent))
         {
-            const UStaticMesh* OriginalHull = HullComponent->GetStaticMesh();
-            const UStaticMesh* OriginalBridge = BridgeComponent->GetStaticMesh();
+            UStaticMesh* OriginalHull = HullComponent->GetStaticMesh();
+            UStaticMesh* OriginalBridge = BridgeComponent->GetStaticMesh();
             Ship->bUseAuthoredBodyReview = true;
             Ship->AuthoredHullReviewMesh = TemporaryWing;
             TestFalse(TEXT("Missing bridge fails body intake atomically"),
