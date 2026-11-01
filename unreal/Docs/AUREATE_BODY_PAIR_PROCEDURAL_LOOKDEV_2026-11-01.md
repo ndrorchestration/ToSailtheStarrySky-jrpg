@@ -27,6 +27,21 @@ The generator **refuses to overwrite a populated output folder**. Its helper alr
 
 The files above are generated *only* when running the script. The public GitHub PR contains **source and tests**, not falsely labeled actual UE import assets. After source validation, stage candidate GLBs in the two matching local Unreal review directories under `/Game/TSTSS/Review/ShipArt/HullCandidateV1/` and `/Game/TSTSS/Review/ShipArt/BridgeDomeCandidateV1/` using a separately verified import. Do not overwrite an occupied directory or automatically bind to a live game scene.
 
+## Guarded two-mesh import preflight
+
+`unreal/Tools/import_aureate_body_pair_review.py` is an opt-in companion for the **two files together**. It validates the generator's exact expected bytes, hashes, 0.01 centimeter-to-meter metadata, three sections per mesh, asset names, geometry bounds and separate allowlisted destinations. If either folder is already populated, it rejects the entire intake **before creating either import task**. A genuinely partial native Editor import is explicitly marked a HOLD requiring manual inspection; Unreal's two individual import tasks are not a transaction.
+
+After generating the files, run this offline source-bound check:
+
+```powershell
+python unreal/Tools/import_aureate_body_pair_review.py --source-dir .review/aureate-body-20261101 --check
+python -m unittest discover -s unreal/Tests -p test_import_aureate_body_pair_review.py -v
+```
+
+Only when a native isolated Unreal 5.8.4 Editor Python environment is available, use the explicit `--import-review` switch after visually inspecting the Interchange options. The importer **does not** bind either imported StaticMesh to the ship actor or touch production levels.
+
+**Source CI receipt:** six deterministic generator tests and nine guarded-importer tests PASS, including refusal of changed/rehashed asset bytes, corrupted scale, missing dome, redirected destinations and occupied folders. These 15 tests are engine-free and are not evidence of successful native import, materials or model quality.
+
 ## Required native acceptance
 
 1. Run the generator and check SHA-256 receipts; inspect manifoldness, normals and imported vertex counts.
