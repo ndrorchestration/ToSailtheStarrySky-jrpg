@@ -29,6 +29,7 @@ public:
     AAureateWakePreviewActor();
     virtual void Tick(float DeltaSeconds) override;
     virtual void BeginPlay() override;
+    virtual void OnConstruction(const FTransform& Transform) override;
 
     UFUNCTION(BlueprintCallable, Category="Aureate Wake|Preview")
     bool RequestForm(EAureateWakeForm RequestedForm);
@@ -42,6 +43,24 @@ public:
     /** Editor-review convenience only: finishes an already permitted ordinary-form transition. */
     UFUNCTION(BlueprintCallable, Category="Aureate Wake|Preview")
     bool FinishOrdinaryPreviewTransitionForReview();
+
+    /** Opt-in, noncanonical curved hull/deck and triangulated bridge frame study.
+     * Disabled by default so the previously verified BasicShapes silhouette stays intact. */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Visuals")
+    bool bUseHullSilhouetteReview = false;
+
+    /** Optional artist-created translucent material; a plain opaque sphere is never labeled glass. */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Visuals")
+    TObjectPtr<UMaterialInterface> OptionalCanopyGlassMaterial;
+
+    UFUNCTION(BlueprintCallable, Category="Aureate Wake|Visuals")
+    void RefreshHullSilhouetteReview();
+
+    UFUNCTION(BlueprintPure, Category="Aureate Wake|Visuals")
+    int32 GetHullSilhouetteSectionCount() const { return HullSilhouetteSections.Num(); }
+
+    UFUNCTION(BlueprintPure, Category="Aureate Wake|Visuals")
+    int32 GetCanopyFramePieceCount() const { return CanopyFramePieces.Num(); }
 
     /** Deliberately false by default. Orbiter is a story-gated mode, not unlocked by UI. */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Preview")
@@ -95,6 +114,18 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Preview")
     TObjectPtr<UStaticMeshComponent> ForwardBridge;
 
+    /** Optional noncollision review-only curved bow, midship, stern and open foredeck. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Visuals")
+    TArray<TObjectPtr<UStaticMeshComponent>> HullSilhouetteSections;
+
+    /** Hidden unless explicitly provided a canopy material and silhouette review is enabled. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Visuals")
+    TObjectPtr<UStaticMeshComponent> CanopyShell;
+
+    /** Triangulated bridge cage: intentionally stand-in geometry, not certified glazing. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Visuals")
+    TArray<TObjectPtr<UStaticMeshComponent>> CanopyFramePieces;
+
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Preview")
     TArray<TObjectPtr<UStaticMeshComponent>> Wings;
 
@@ -137,4 +168,5 @@ private:
     void SnapToForm(EAureateWakeForm Form);
     void UpdateWingRootMounts();
     void UpdateHydrofoilStruts();
+    void UpdateHullSilhouetteVisibility();
 };
