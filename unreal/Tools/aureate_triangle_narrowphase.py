@@ -167,7 +167,7 @@ def nearest_surface(wing_positions,wing_indices,body_positions,body_indices,
     return {"near_wing_triangles":near_triangles,
             "excluded_candidate_triangle_pairs":excluded_pairs,
             "triangle_pairs_narrow_phase_checked":candidates,
-            "min_surface_cm_within_threshold":min_cm,
+            "min_surface_cm_among_aabb_candidates":min_cm,
             "wing_triangle_index":closest[1],
             "body_triangle_index":closest[2],
             "below_threshold":min_cm is not None and min_cm<threshold_cm}
