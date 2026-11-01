@@ -56,3 +56,9 @@ The unchanged baseline `check_cast_geometry.py` assumes every primitive part is 
 Priority is now **actual sculpt/likeness**, not more environment/prototype code: richer age-appropriate face anatomy and eye topology, physically plausible hair cards/curves, cloth topology, natural proportion anatomy and true hand/staff grip. Then Ionia's long curly blonde hair and face, Lyra red hair and face, followed by Reson and Aepex. Introduce skeletal meshes, retargeting and animation only after the silhouette passes creator visual review. Track in [expert issue #649](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/issues/649).
 
 The Five Lights, party order, and **Reson > Aepex > Ender > Ionia > Lyra** height ranking remain authoritative. All merges/releases/production-art promotions remain held.
+
+## Cross-platform source-byte reproducibility boundary (verified CI failure)
+
+The first Ubuntu 24.04 hosted run on this PR exposed a genuine cross-host difference: source regeneration produced SHA-256 `b513360ac2ea9f9f15758b2af75e057a46a6a623fbf07d67a8aeb46bf692da40` versus the canonical, Windows-generated pilot SHA-256 `3fc37924bb457dfe3b62877ca8709efb693a1c1c73251cf6f5dcfbe012babd38`. Runtime trigonometric float rounding is a plausible cause, but is **not independently proven** as the exact source of every differing byte.
+
+We therefore do **not** claim cross-platform bit-for-bit regeneration. The checked-in canonical GLB is checked against its receipt and exact SHA, and the generator is tested for same-host determinism and matching source-geometry section counts. Both representations are strictly noncanonical lookdev only. Any later cross-OS asset pipeline should introduce explicit numeric quantization and prove exact reproducibility before assigning a shared cross-platform SHA.

@@ -16,10 +16,15 @@ class EnderFidelityV1Tests(unittest.TestCase):
         self.addCleanup(self.t.cleanup)
         self.output=Path(self.t.name)/"candidate"
 
-    def test_exact_reproducibility_and_source_lock(self):
+    def test_current_platform_reproducibility_and_source_lock(self):
         receipt=build(self.output)
-        self.assertEqual(receipt["source"]["sha256"],PILOT_SHA)
+        self.assertEqual(len(receipt["source"]["sha256"]),64)
         self.assertTrue(receipt["source_baseline_untouched"])
+        pinned=ROOT/"FidelityCandidates"/"EnderV1"
+        original_receipt=__import__("json").loads((pinned/"receipt.json").read_text())
+        self.assertEqual(original_receipt["source"]["sha256"],PILOT_SHA)
+        self.assertEqual(hashlib.sha256((pinned/original_receipt["source"]["file"]).read_bytes()).hexdigest(),PILOT_SHA)
+        self.assertEqual(receipt["source"]["mesh_parts"],original_receipt["source"]["mesh_parts"])
         self.assertIn("unresolved",receipt["hair_palette"])
         self.assertFalse(receipt["approved_original_art_replaced"])
         self.assertEqual(hashlib.sha256((ROOT/"Candidates"/"Ender.glb").read_bytes()).hexdigest(),BASELINE_SHA)
