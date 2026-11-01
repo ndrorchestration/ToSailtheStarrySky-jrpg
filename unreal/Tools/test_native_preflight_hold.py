@@ -19,6 +19,17 @@ class NativePreflightHoldSourceTests(unittest.TestCase):
         self.assertLess(build, receipt)
         self.assertLess(build, invoke)
 
+    def test_native_editor_automation_cannot_rewrite_tracked_config(self):
+        source = SCRIPT.read_text(encoding="utf-8")
+        launch = next(line for line in source.splitlines()
+                      if line.lstrip().startswith("& $EditorCmd $Project"))
+        self.assertIn(" -NOINI ", launch)
+        self.assertIn(" -nowrite ", launch)
+        self.assertIn("-nullrhi", launch)
+        self.assertIn("Automation RunTests TSTSS; Quit", launch)
+        self.assertIn("Working tree changed during verification; refusing to bind PASS", source)
+        self.assertIn("git -C (Join-Path $PSScriptRoot '../..') status --porcelain", source)
+
     def test_guards_explicitly_fail_closed_and_preserve_unrelated_processes(self):
         source = SCRIPT.read_text(encoding="utf-8")
         self.assertIn("if ($ActiveEditors.Count -ne 0)", source)

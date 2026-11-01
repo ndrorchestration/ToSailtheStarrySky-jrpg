@@ -57,7 +57,9 @@ $ReportDirectory = Join-Path $Evidence 'AutomationReport'
 if (Test-Path $ReportDirectory) { Remove-Item $ReportDirectory -Recurse -Force }
 New-Item -Path $ReportDirectory -ItemType Directory -Force | Out-Null
 $ExportArgument = '-ReportExportPath=' + $ReportDirectory
-& $EditorCmd $Project -unattended -nop4 -nullrhi '-ExecCmds=Automation RunTests TSTSS; Quit' $ExportArgument -log 2>&1 |
+# -NOINI and -nowrite are UE 5.8's documented config write suppression flags.
+# Reject any remaining source mutation via the unchanged final clean-tree gate.
+& $EditorCmd $Project -unattended -nop4 -nullrhi -NOINI -nowrite '-ExecCmds=Automation RunTests TSTSS; Quit' $ExportArgument -log 2>&1 |
     Tee-Object (Join-Path $Evidence 'automation.log')
 if ($LASTEXITCODE -ne 0) { throw "Unreal automation command failed ($LASTEXITCODE)" }
 $ReportPath = Join-Path $Evidence 'AutomationReport/index.json'
