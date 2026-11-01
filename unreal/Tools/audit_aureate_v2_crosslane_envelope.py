@@ -20,6 +20,8 @@ STATUS_HOLD = "HOLD_V2_BROAD_PHASE_NEEDS_NARROW_PHASE"
 STATUS_SCREEN = "BROAD_PHASE_SCREEN_ONLY_NOT_CONTINUOUS_CLEARANCE"
 APPROVED_REFERENCE_SHA = "03e3d500d8998a1377502f5ea28da79cf3eaf3854ece833d7ac25b4e0b268e13"
 EXPECTED_V2_SOURCE_HEAD = "cc58d518ca397158df27be366e4dc506a84497c9"
+EXPECTED_WING_SOURCE_HEAD = "b43303e0afe2150d5a1956023194d9ee5abb4b2e"
+EXPECTED_WING_GLB_SHA = "04d7f9461b4cb4475ea98d5e3f7699b68f272f5646362ad7aef0d222ad92ec73"
 HULL_NAME = "AureateWake_WhiteGoldHull_V2_REVIEW.glb"
 BRIDGE_NAME = "AureateWake_BlueGlassBridge_V2_REVIEW.glb"
 BRIDGE_TRANSLATION_CM = (240., 0., 95.)
@@ -74,6 +76,10 @@ def evaluate(vertices, hull_box, bridge_box, *, steps=20):
 
 
 def run(args):
+    if args.wing_source_head != EXPECTED_WING_SOURCE_HEAD:
+        raise V2ReviewHold("Unknown wing actor source revision: verify pose source first")
+    if hashlib.sha256(args.wing_glb.read_bytes()).hexdigest() != EXPECTED_WING_GLB_SHA:
+        raise V2ReviewHold("Unexpected review-wing GLB bytes; do not inherit prior clearance")
     if args.v2_source_head != EXPECTED_V2_SOURCE_HEAD:
         raise V2ReviewHold("Unknown V2 source revision: update only after independent review")
     verify_wing_manifest(args.wing_glb, args.wing_manifest)
