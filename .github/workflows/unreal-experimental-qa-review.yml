@@ -39,6 +39,8 @@ jobs:
         run: python3 unreal/Experiments/VisualQAPilot/preflight_windows.py --self-test
       - name: Render RAM headroom gate (synthetic, no Unreal launch)
         run: python3 unreal/Experiments/VisualQAPilot/memory_gate.py --self-test
+      - name: Reconcile reported native build and D3D12 log semantics (synthetic)
+        run: python3 unreal/Experiments/VisualQAPilot/reconcile_native_attempt.py --self-test
       - name: Assert native evidence remains UNKNOWN by default
         run: |
           python3 unreal/Experiments/CanonPilot/check_canon.py unreal/Experiments/CanonPilot/unknown_observations.json > /tmp/canon-review-results.json
