@@ -105,10 +105,23 @@ def audit_semantics(text):
     }
 
 def check_pinned_file(raw):
+    # Windows Git may materialize a text blob with CRLF (core.autocrlf=true).
+    # Accept ONLY exact LF byte identity or canonical CRLF->LF conversion.
+    # Reject stray CR and content modifications, preserving the raw digest.
+    original = raw
+    line_endings = "EXACT_LF"
+    if b"\r" in raw:
+        if b"\r" in raw.replace(b"\r\n", b""):
+            raise ValueError("mixed or unsupported CR line endings")
+        raw = raw.replace(b"\r\n", b"\n")
+        line_endings = "GIT_WINDOWS_CRLF_NORMALIZED"
     blob = git_blob_sha(raw)
     if blob != PINNED_BLOB_SHA1:
         raise ValueError("source blob is not the pinned PR #656 actor; refuse to extrapolate")
-    return dict(audit_semantics(raw.decode("utf-8")), source_blob_sha1=blob)
+    return dict(audit_semantics(raw.decode("utf-8")),
+                source_blob_sha1=blob,
+                local_source_raw_sha256=hashlib.sha256(original).hexdigest(),
+                local_line_endings=line_endings)
 
 def self_test():
     # Isolate the source grammar and math using a tiny synthetic C++ excerpt,
@@ -168,7 +181,11 @@ UpdateHydrofoilStruts();
         pass
     else:
         raise AssertionError("unpinned test source accepted as real PR")
-    print("PASS: synthetic two-sided math, 8 source mutations, pinned-blob negative")
+    crlf_fixture = b"one\r\ntwo\r\n"
+    assert git_blob_sha(crlf_fixture.replace(b"\r\n", b"\n")) == git_blob_sha(b"one\ntwo\n")
+    mixed = crlf_fixture + b"stray\rno"
+    assert b"\r" in mixed.replace(b"\r\n", b"")
+    print("PASS: synthetic two-sided math, 8 source mutations, pin rejection, CRLF normalization controls")
 
 def main():
     p = argparse.ArgumentParser()
