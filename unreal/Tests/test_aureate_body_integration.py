@@ -99,6 +99,14 @@ class ApprovedReferenceBodyReview(unittest.TestCase):
         self.assertIn("RefreshRootSupportReview();", build)
         self.assertIn("RefreshBodyReviewMeshes();", build)
 
+    def test_supports_synced_before_first_transition_tick(self):
+        # RequestForm must not leave struts one frame behind newly shown foils.
+        tail = REQUEST[REQUEST.index("bTransitioning = true;"):]
+        self.assertIn("UpdateHydrofoilStruts();", tail)
+        self.assertIn("UpdateWingRootMounts();", tail)
+        self.assertLess(tail.index("UpdateHydrofoilStruts();"), tail.index("return true;"))
+        self.assertIn("Companion strut visible at same transition start", NATIVE)
+
     def test_native_rejections_are_registered(self):
         self.assertIn("Missing bridge fails body intake atomically", NATIVE)
         self.assertIn("Rejected body leaves hull mesh untouched", NATIVE)
