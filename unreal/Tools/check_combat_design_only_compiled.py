@@ -202,8 +202,11 @@ def main():
             install = Path(result.stdout.strip()) if result.stdout.strip() else None
             vcvars = install / "VC" / "Auxiliary" / "Build" / "vcvars64.bat" if install else None
             if vcvars and vcvars.is_file():
+                # Python 3.14 Windows list2cmdline re-quotes the batch
+                # pathname incorrectly with cmd /c. The validated trusted
+                # vcvars64 path comes only from installed VS Build Tools.
                 export = subprocess.run(
-                    ["cmd.exe", "/d", "/c", f'call "{vcvars}" >nul && set'],
+                    f'call "{vcvars}" >nul && set', shell=True,
                     capture_output=True, text=True, check=True)
                 env = dict(os.environ)
                 for entry in export.stdout.splitlines():
