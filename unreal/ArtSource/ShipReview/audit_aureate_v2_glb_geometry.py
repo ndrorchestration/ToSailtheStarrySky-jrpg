@@ -13,7 +13,6 @@ from pathlib import Path
 import struct
 
 from build_aureate_fidelity_v2 import FILES
-from import_aureate_fidelity_v2 import inspect
 
 MAX_BYTES = 10_000_000
 MAX_VERTICES_PER_PRIMITIVE = 200_000
@@ -171,7 +170,9 @@ def audit_binary(data:bytes, *, expected_name:str) ->dict:
 
 
 def audit_folder(folder:Path) ->dict:
-    # Existing preflight enforces exact deterministic bytes + manifest SHA.
+    # Import dynamically to avoid a module cycle: the importer calls this
+    # geometry auditor as a mandatory gate before any Editor-side import.
+    from import_aureate_fidelity_v2 import inspect
     provenance=inspect(folder)
     output=[]
     for name in FILES:
