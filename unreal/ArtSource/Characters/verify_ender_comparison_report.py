@@ -9,6 +9,7 @@ from pathlib import Path
 
 from ender_comparison_contract import CAMERAS, EXPECTED, MAP
 from verify_render_pngs import resolve_capture, inspect_png
+from verify_ender_comparison_pixels import check_pair_coverage
 
 
 def verify(report_folder, task_receipt):
@@ -18,6 +19,13 @@ def verify(report_folder, task_receipt):
         raise ValueError("Native comparison task completion receipt missing")
     if receipt.get("map") != MAP:
         raise ValueError("Review map mismatch")
+    if not str(receipt.get("engine", "")).startswith("5.8."):
+        raise ValueError("Unverified or wrong Unreal Engine version")
+    before = receipt.get("saved_review_map_sha256_before")
+    after = receipt.get("saved_review_map_sha256_after")
+    if (not isinstance(before, str) or len(before) != 64 or
+            any(c not in "0123456789abcdef" for c in before) or before != after):
+        raise ValueError("Saved review-map checksum missing or changed")
     if receipt.get("source_sha256") != {key: obj["sha256"] for key, obj in EXPECTED.items()}:
         raise ValueError("Comparison asset provenance mismatch")
     if receipt.get("reference_likeness_approved") is not False:
@@ -28,11 +36,19 @@ def verify(report_folder, task_receipt):
     tasks = receipt.get("capture_tasks", [])
     if [task.get("name") for task in tasks] != names:
         raise ValueError("Missing, reordered or duplicate camera tasks")
+    for task in tasks:
+        if not isinstance(task.get("ticks"), int) or task["ticks"] < 0:
+            raise ValueError("Unverified screenshot completion ticks")
+        requested = str(task.get("requested", "")).replace("\\\\", "/")
+        if not requested.endswith("/" + task["name"] + ".png"):
+            raise ValueError("Missing requested screenshot filename provenance")
     result = {}
     for name in names:
         actual_png = resolve_capture(folder, name)
         metrics = inspect_png(actual_png, (1280, 720))
-        result[name] = {**metrics, "actual_png": str(actual_png)}
+        visibility = check_pair_coverage(actual_png, expected=(1280, 720))
+        result[name] = {**metrics, "actual_png": str(actual_png),
+                        "paired_visibility": visibility["regions"]}
     if len({value["sha256"] for value in result.values()}) != len(result):
         raise ValueError("Distinct camera views contain duplicated native images")
     return {
