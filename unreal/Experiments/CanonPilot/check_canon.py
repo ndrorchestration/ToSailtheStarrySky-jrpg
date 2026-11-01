@@ -86,8 +86,9 @@ def self_test(contract):
                  "source_sha": PINNED_SOURCE_SHA,
                  "manifest_blob_sha": PINNED_BLOB_SHA,
                  "evidence_location": EVIDENCE_URL}
-    assert set(evaluate(contract, candidate).values()) == {
-        "MATCHES_PINNED_LOOKDEV_MANIFEST_NOT_NATIVE_OR_CANON"}
+    candidate_results = evaluate(contract, candidate)
+    assert candidate_results["height_order"] == "MATCHES_PINNED_LOOKDEV_MANIFEST_NOT_NATIVE_OR_CANON"
+    assert set(v for k, v in candidate_results.items() if k != "height_order") == {"UNKNOWN"}
     print("PASS: synthetic-positive, five negative controls, missing-evidence, unknown-field, candidate-source separation")
 
 def main():
