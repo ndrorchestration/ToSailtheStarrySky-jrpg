@@ -11,6 +11,8 @@
 
 ## What this slice adds
 
+The preview actor now refreshes its provisional wing-root and hydrofoil support transforms **in the same `RequestForm` call** that reveals hydrofoils, avoiding a one-frame discrepancy before the first `Tick`. The six-route test checks immediate start visibility and midpoint support-to-pivot tracking. This remains review-only proxy presentation, not physical validation.
+
 An additional Unreal Editor native automation test, `TSTSS.Ship.ReviewSupportSixDirectedRoutes`, in the existing `AureateWakePreviewNativeTests.cpp`. It uses a transient world, native actor components, and an explicitly noncanonical Engine Cube in place of the review wing GLB.
 
 1. Inspects all four provisional root brackets and two hydrofoil struts. Checks hidden default and disabled collision.
