@@ -3,8 +3,9 @@ import struct
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 import zlib
-from verify_render_pngs import PNG_HEADER, inspect_png, EXPECTED
+from verify_render_pngs import PNG_HEADER, inspect_png, EXPECTED, resolve_capture, verify
 
 def chunk(kind, body):
     return struct.pack(">I", len(body)) + kind + body + struct.pack(">I", zlib.crc32(kind + body) & 0xffffffff)
@@ -52,9 +53,22 @@ class RenderIntegrityTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "variation"):
             self.check(sample(blank=True))
 
+    def test_native_report_path_resolution(self):
+        root = Path(self.t.name)
+        report = root / "C__requested_Ender_front.png" / "Windows" / "D3D11_SM5" / "Incoming.png"
+        report.parent.mkdir(parents=True)
+        report.write_bytes(sample())
+        self.assertEqual(resolve_capture(root, "Ender_front"), report)
+
+    def test_duplicate_camera_captures_rejected(self):
+        with mock.patch("verify_render_pngs.resolve_capture", return_value=self.path):
+            with mock.patch("verify_render_pngs.inspect_png", return_value={"sha256": "same"}):
+                with self.assertRaisesRegex(ValueError, "duplicate"):
+                    verify(self.t.name)
+
     def test_required_shots(self):
         self.assertEqual(len(EXPECTED), 5)
-        self.assertEqual(EXPECTED["Five_cast_lineup"], (1600, 900))
+        self.assertEqual(EXPECTED["Five_cast_lineup"], (1280, 720))
 
 if __name__ == "__main__":
     unittest.main()
