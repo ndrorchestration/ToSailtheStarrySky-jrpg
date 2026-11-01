@@ -166,7 +166,7 @@ def main_unreal():
             "Imported Ender asset missing")
     loaded = unreal.EditorAssetLibrary.load_asset(MESH_PATH)
     require(isinstance(loaded, unreal.StaticMesh), "Not a static mesh")
-    require(unreal.EditorAssetLibrary.does_asset_exist(LEVEL_PATH),
+    require((root / "Content" / "EnderReviewScene_63dbfac.umap").is_file(),
             "Review-only level not present: create it in isolated sandbox first")
     require(not getattr(builtins, "_tstss_capture643_active", False),
             "A capture is already running in this Editor")
