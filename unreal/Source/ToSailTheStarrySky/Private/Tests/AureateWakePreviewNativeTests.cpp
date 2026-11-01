@@ -100,8 +100,8 @@ bool FTSTSSAureatePreviewFormTest::RunTest(const FString& Parameters)
         if (TestNotNull(TEXT("Preview hull exists"), HullComponent) &&
             TestNotNull(TEXT("Preview bridge exists"), BridgeComponent))
         {
-            UStaticMesh* OriginalHull = HullComponent->GetStaticMesh();
-            UStaticMesh* OriginalBridge = BridgeComponent->GetStaticMesh();
+            UStaticMesh* OriginalHull = HullComponent->GetStaticMesh().Get();
+            UStaticMesh* OriginalBridge = BridgeComponent->GetStaticMesh().Get();
             Ship->bUseAuthoredBodyReview = true;
             Ship->AuthoredHullReviewMesh = TemporaryWing;
             TestFalse(TEXT("Missing bridge fails body intake atomically"),
@@ -112,9 +112,9 @@ bool FTSTSSAureatePreviewFormTest::RunTest(const FString& Parameters)
             TestFalse(TEXT("Non-allowlisted engine cubes rejected"),
                 Ship->RefreshBodyReviewMeshes());
             TestEqual(TEXT("Rejected body leaves hull mesh untouched"),
-                HullComponent->GetStaticMesh(), OriginalHull);
+                HullComponent->GetStaticMesh().Get(), OriginalHull);
             TestEqual(TEXT("Rejected body leaves bridge mesh untouched"),
-                BridgeComponent->GetStaticMesh(), OriginalBridge);
+                BridgeComponent->GetStaticMesh().Get(), OriginalBridge);
             Ship->bUseHullSilhouetteReview = true;
             TestFalse(TEXT("Conflicting review modes refused"),
                 Ship->RefreshBodyReviewMeshes());
@@ -127,8 +127,8 @@ bool FTSTSSAureatePreviewFormTest::RunTest(const FString& Parameters)
                 Ship->RefreshBodyReviewMeshes());
             TestFalse(TEXT("Disabling review clears applied state"),
                 Ship->IsAuthoredBodyReviewApplied());
-            TestEqual(TEXT("Restored hull source mesh"), HullComponent->GetStaticMesh(), OriginalHull);
-            TestEqual(TEXT("Restored bridge source mesh"), BridgeComponent->GetStaticMesh(), OriginalBridge);
+            TestEqual(TEXT("Restored hull source mesh"), HullComponent->GetStaticMesh().Get(), OriginalHull);
+            TestEqual(TEXT("Restored bridge source mesh"), BridgeComponent->GetStaticMesh().Get(), OriginalBridge);
             Ship->bAllowOrbiterPreview = false;
         }
 
