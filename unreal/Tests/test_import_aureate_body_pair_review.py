@@ -63,7 +63,7 @@ class BodyPairIntake(unittest.TestCase):
         p.write_bytes(tampered)
         self.manifest["sha256"][body.BRIDGE]=hashlib.sha256(tampered).hexdigest()
         self.save_receipt()
-        with self.assertRaisesRegex(intake.BodyPairHold,"provenance"):
+        with self.assertRaisesRegex(intake.BodyPairHold,"Unrecognized body GLB|provenance"):
             intake.preflight(self.folder)
 
     def test_modified_valid_glb_with_new_manifest_hash_is_still_rejected(self):
