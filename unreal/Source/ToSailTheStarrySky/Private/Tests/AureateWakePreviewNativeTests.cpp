@@ -126,10 +126,10 @@ bool FTSTSSAureatePreviewFormTest::RunTest(const FString& Parameters)
             Ship->AuthoredBridgeDomeReviewMesh = TemporaryWing;
             TestFalse(TEXT("Non-allowlisted engine cubes rejected"),
                 Ship->RefreshBodyReviewMeshes());
-            TestEqual(TEXT("Rejected body leaves hull mesh untouched"),
-                HullComponent->GetStaticMesh(), OriginalHull);
-            TestEqual(TEXT("Rejected body leaves bridge mesh untouched"),
-                BridgeComponent->GetStaticMesh(), OriginalBridge);
+            TestTrue(TEXT("Rejected body leaves hull mesh untouched"),
+                HullComponent->GetStaticMesh().Get() == OriginalHull);
+            TestTrue(TEXT("Rejected body leaves bridge mesh untouched"),
+                BridgeComponent->GetStaticMesh().Get() == OriginalBridge);
             Ship->bUseHullSilhouetteReview = true;
             TestFalse(TEXT("Conflicting review modes refused"),
                 Ship->RefreshBodyReviewMeshes());
@@ -142,8 +142,8 @@ bool FTSTSSAureatePreviewFormTest::RunTest(const FString& Parameters)
                 Ship->RefreshBodyReviewMeshes());
             TestFalse(TEXT("Disabling review clears applied state"),
                 Ship->IsAuthoredBodyReviewApplied());
-            TestEqual(TEXT("Restored hull source mesh"), HullComponent->GetStaticMesh(), OriginalHull);
-            TestEqual(TEXT("Restored bridge source mesh"), BridgeComponent->GetStaticMesh(), OriginalBridge);
+            TestTrue(TEXT("Restored hull source mesh"), HullComponent->GetStaticMesh().Get() == OriginalHull);
+            TestTrue(TEXT("Restored bridge source mesh"), BridgeComponent->GetStaticMesh().Get() == OriginalBridge);
             Ship->bAllowOrbiterPreview = false;
         }
 
