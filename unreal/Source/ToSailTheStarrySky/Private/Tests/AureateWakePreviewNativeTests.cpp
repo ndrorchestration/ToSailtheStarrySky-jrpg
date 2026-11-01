@@ -37,6 +37,14 @@ bool FTSTSSAureatePreviewFormTest::RunTest(const FString& Parameters)
         Ship->GetCanopyFramePieceCount(), 40);
     TestFalse(TEXT("Curved hull review is disabled by default"),
         Ship->bUseHullSilhouetteReview);
+    TestFalse(TEXT("No silhouette when no study is requested"),
+        AAureateWakePreviewActor::ShouldShowPrimitiveHullStudy(false, false));
+    TestTrue(TEXT("Primitive study shows only when requested and no body applied"),
+        AAureateWakePreviewActor::ShouldShowPrimitiveHullStudy(true, false));
+    TestFalse(TEXT("Applied authored body overrides conflicting primitive request"),
+        AAureateWakePreviewActor::ShouldShowPrimitiveHullStudy(true, true));
+    TestFalse(TEXT("Applied authored body remains exclusive when study is off"),
+        AAureateWakePreviewActor::ShouldShowPrimitiveHullStudy(false, true));
     TestFalse(TEXT("Approved-reference body candidate defaults off"),
         Ship->bUseAuthoredBodyReview);
     TestFalse(TEXT("Approved-reference body is not applied"),
