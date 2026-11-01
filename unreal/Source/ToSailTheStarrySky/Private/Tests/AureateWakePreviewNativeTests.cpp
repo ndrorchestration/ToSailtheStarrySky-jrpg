@@ -26,6 +26,10 @@ bool FTSTSSAureatePreviewFormTest::RunTest(const FString& Parameters)
 
     TestEqual(TEXT("Exactly four persistent wings"), Ship->GetWingCount(), 4);
     TestEqual(TEXT("Exactly two hydrofoils"), Ship->GetHydrofoilCount(), 2);
+    TestEqual(TEXT("Exactly four removable preview mounts"), Ship->GetWingRootMountCount(), 4);
+    TestEqual(TEXT("Exactly two preview hydrofoil struts"), Ship->GetHydrofoilStrutCount(), 2);
+    TestFalse(TEXT("Cannot finish a transition that has not started"),
+        Ship->FinishOrdinaryPreviewTransitionForReview());
     TestEqual(TEXT("Defaults to Skyborne"), Ship->GetCurrentForm(), EAureateWakeForm::Skyborne);
     TestFalse(TEXT("Orbiter preview is gated off by default"), Ship->bAllowOrbiterPreview);
     TestFalse(TEXT("Authored root pivot requires opt-in"), Ship->bUseRootPivotedWingPose);
@@ -34,7 +38,8 @@ bool FTSTSSAureatePreviewFormTest::RunTest(const FString& Parameters)
 
     TestTrue(TEXT("Skyborne to Seaborne starts"), Ship->RequestForm(EAureateWakeForm::Seaborne));
     TestFalse(TEXT("Cannot interrupt a transition"), Ship->RequestForm(EAureateWakeForm::Submersible));
-    Ship->Tick(Ship->TransitionSeconds + 0.2f);
+    TestTrue(TEXT("Editor-only ordinary review completion is permitted"),
+        Ship->FinishOrdinaryPreviewTransitionForReview());
     TestEqual(TEXT("Seaborne reached"), Ship->GetCurrentForm(), EAureateWakeForm::Seaborne);
     TestFalse(TEXT("Transition finished"), Ship->IsTransitioning());
     TestTrue(TEXT("Seaborne to Submersible starts"), Ship->RequestForm(EAureateWakeForm::Submersible));

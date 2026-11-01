@@ -55,6 +55,27 @@ AAureateWakePreviewActor::AAureateWakePreviewActor()
         SetupPreviewMesh(Foil, Shape);
         Hydrofoils.Add(Foil);
     }
+
+    // Four removable visual brackets: only visible with explicitly opted-in
+    // authored wings, not a claim of physical or pressure-rated mount design.
+    for (int32 Index = 0; Index < 4; ++Index)
+    {
+        const FName Name(*FString::Printf(TEXT("ReviewWingRootBracket_%d"), Index + 1));
+        UStaticMeshComponent* Bracket = CreateDefaultSubobject<UStaticMeshComponent>(Name);
+        Bracket->SetupAttachment(VesselRoot);
+        SetupPreviewMesh(Bracket, Shape);
+        Bracket->SetVisibility(false);
+        WingRootMounts.Add(Bracket);
+    }
+    for (int32 Index = 0; Index < 2; ++Index)
+    {
+        const FName Name(*FString::Printf(TEXT("ReviewHydrofoilStrut_%d"), Index + 1));
+        UStaticMeshComponent* Strut = CreateDefaultSubobject<UStaticMeshComponent>(Name);
+        Strut->SetupAttachment(VesselRoot);
+        SetupPreviewMesh(Strut, Shape);
+        Strut->SetVisibility(false);
+        HydrofoilStruts.Add(Strut);
+    }
     SnapToForm(EAureateWakeForm::Skyborne);
 }
 
@@ -228,6 +249,59 @@ void AAureateWakePreviewActor::RefreshWingMaterials()
     }
 }
 
+void AAureateWakePreviewActor::UpdateWingRootMounts()
+{
+    const bool bReviewMountsVisible = bUseRootPivotedWingPose && AuthoredWingMesh &&
+        CurrentForm != EAureateWakeForm::Orbiter && TargetForm != EAureateWakeForm::Orbiter;
+    for (int32 Index = 0; Index < WingRootMounts.Num(); ++Index)
+    {
+        UStaticMeshComponent* Bracket = WingRootMounts[Index];
+        if (!Bracket) continue;
+        Bracket->SetVisibility(bReviewMountsVisible);
+        if (!bReviewMountsVisible || !Wings.IsValidIndex(Index) || !Wings[Index]) continue;
+        const FVector WingPivot = Wings[Index]->GetRelativeLocation();
+        const float Side = Index % 2 == 0 ? -1.f : 1.f;
+        // Provisional 150cm-wide hull uses +/-75cm half-width. Clamp the
+        // inboard endpoint to the current proxy hull top; no load calculations.
+        const FVector HullAnchor(WingPivot.X, Side * 72.f,
+            FMath::Clamp(WingPivot.Z, -28.f, 28.f));
+        const FVector Span = WingPivot - HullAnchor;
+        const float Length = Span.Size();
+        if (Length <= KINDA_SMALL_NUMBER)
+        {
+            Bracket->SetVisibility(false);
+            continue;
+        }
+        Bracket->SetRelativeLocation((WingPivot + HullAnchor) * .5f);
+        Bracket->SetRelativeRotation(Span.ToOrientationQuat());
+        Bracket->SetRelativeScale3D(FVector(Length / 100.f, .09f, .09f));
+    }
+}
+
+void AAureateWakePreviewActor::UpdateHydrofoilStruts()
+{
+    for (int32 Index = 0; Index < HydrofoilStruts.Num(); ++Index)
+    {
+        UStaticMeshComponent* Strut = HydrofoilStruts[Index];
+        if (!Strut) continue;
+        if (!Hydrofoils.IsValidIndex(Index) || !Hydrofoils[Index] || !Hydrofoils[Index]->IsVisible())
+        {
+            Strut->SetVisibility(false);
+            continue;
+        }
+        const FVector FoilPosition = Hydrofoils[Index]->GetRelativeLocation();
+        const float Side = Index == 0 ? -1.f : 1.f;
+        const FVector HullAnchor(0.f, Side * 60.f, -30.f);
+        const FVector Span = FoilPosition - HullAnchor;
+        const float Length = Span.Size();
+        Strut->SetVisibility(Length > KINDA_SMALL_NUMBER);
+        if (Length <= KINDA_SMALL_NUMBER) continue;
+        Strut->SetRelativeLocation((HullAnchor + FoilPosition) * .5f);
+        Strut->SetRelativeRotation(Span.ToOrientationQuat());
+        Strut->SetRelativeScale3D(FVector(Length / 100.f, .12f, .12f));
+    }
+}
+
 void AAureateWakePreviewActor::SnapToForm(EAureateWakeForm Form)
 {
     for (int32 Index = 0; Index < Wings.Num(); ++Index)
@@ -247,6 +321,8 @@ void AAureateWakePreviewActor::SnapToForm(EAureateWakeForm Form)
     CurrentForm = Form;
     TargetForm = Form;
     bTransitioning = false;
+    UpdateWingRootMounts();
+    UpdateHydrofoilStruts();
 }
 
 bool AAureateWakePreviewActor::RequestForm(EAureateWakeForm RequestedForm)
@@ -287,6 +363,14 @@ bool AAureateWakePreviewActor::RequestForm(EAureateWakeForm RequestedForm)
     return true;
 }
 
+bool AAureateWakePreviewActor::FinishOrdinaryPreviewTransitionForReview()
+{
+    if (!bTransitioning || CurrentForm == EAureateWakeForm::Orbiter ||
+        TargetForm == EAureateWakeForm::Orbiter) return false;
+    Tick(FMath::Max(.1f, TransitionSeconds) + .2f);
+    return !bTransitioning;
+}
+
 void AAureateWakePreviewActor::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
@@ -311,6 +395,8 @@ void AAureateWakePreviewActor::Tick(float DeltaSeconds)
     {
         Hydrofoils[Index]->SetRelativeTransform(Interpolate(StartFoilTransforms[Index], TargetFoilTransforms[Index], Smooth));
     }
+    UpdateWingRootMounts();
+    UpdateHydrofoilStruts();
     if (T >= 1.f)
     {
         SnapToForm(TargetForm);

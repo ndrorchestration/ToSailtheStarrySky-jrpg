@@ -39,6 +39,10 @@ public:
     UFUNCTION(BlueprintPure, Category="Aureate Wake|Preview")
     bool IsTransitioning() const { return bTransitioning; }
 
+    /** Editor-review convenience only: finishes an already permitted ordinary-form transition. */
+    UFUNCTION(BlueprintCallable, Category="Aureate Wake|Preview")
+    bool FinishOrdinaryPreviewTransitionForReview();
+
     /** Deliberately false by default. Orbiter is a story-gated mode, not unlocked by UI. */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Preview")
     bool bAllowOrbiterPreview = false;
@@ -74,6 +78,13 @@ public:
     UFUNCTION(BlueprintPure, Category="Aureate Wake|Preview")
     int32 GetHydrofoilCount() const { return Hydrofoils.Num(); }
 
+    /** Temporary visual-only root brackets, four for four wings; not structural proof. */
+    UFUNCTION(BlueprintPure, Category="Aureate Wake|Preview")
+    int32 GetWingRootMountCount() const { return WingRootMounts.Num(); }
+
+    UFUNCTION(BlueprintPure, Category="Aureate Wake|Preview")
+    int32 GetHydrofoilStrutCount() const { return HydrofoilStruts.Num(); }
+
 protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Preview")
     TObjectPtr<USceneComponent> VesselRoot;
@@ -89,6 +100,14 @@ protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Preview")
     TArray<TObjectPtr<UStaticMeshComponent>> Hydrofoils;
+
+    /** Noncanonical proxy links from the provisional hull side to the wing pivots. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Preview")
+    TArray<TObjectPtr<UStaticMeshComponent>> WingRootMounts;
+
+    /** Review-only hydrofoil support struts; no buoyancy/load engineering claim. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Preview")
+    TArray<TObjectPtr<UStaticMeshComponent>> HydrofoilStruts;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Preview")
     EAureateWakeForm CurrentForm = EAureateWakeForm::Skyborne;
@@ -116,4 +135,6 @@ private:
     static FTransform FoilPose(EAureateWakeForm Form, int32 FoilIndex);
     static FTransform Interpolate(const FTransform& Start, const FTransform& End, float Alpha);
     void SnapToForm(EAureateWakeForm Form);
+    void UpdateWingRootMounts();
+    void UpdateHydrofoilStruts();
 };
