@@ -62,6 +62,26 @@ public:
     UFUNCTION(BlueprintPure, Category="Aureate Wake|Visuals")
     int32 GetCanopyFramePieceCount() const { return CanopyFramePieces.Num(); }
 
+    /** Optional, atomic review-only body candidate intake from the approved-art branch.
+     * The approved visual reference is NOT an approved production mesh.
+     * This mode is mutually exclusive with the primitive silhouette study. */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Visuals|Review")
+    bool bUseAuthoredBodyReview = false;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Visuals|Review")
+    TObjectPtr<UStaticMesh> AuthoredHullReviewMesh;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Visuals|Review")
+    TObjectPtr<UStaticMesh> AuthoredBridgeDomeReviewMesh;
+
+    /** Applies both allowlisted assets together or neither; turning off restores cube proxies.
+     * An authored body cannot bypass the story-gated Orbiter or transform-safety hold. */
+    UFUNCTION(BlueprintCallable, Category="Aureate Wake|Visuals|Review")
+    bool RefreshBodyReviewMeshes();
+
+    UFUNCTION(BlueprintPure, Category="Aureate Wake|Visuals|Review")
+    bool IsAuthoredBodyReviewApplied() const { return bBodyReviewApplied; }
+
     /** Deliberately false by default. Orbiter is a story-gated mode, not unlocked by UI. */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Preview")
     bool bAllowOrbiterPreview = false;
@@ -156,6 +176,8 @@ private:
     UPROPERTY(Transient)
     TObjectPtr<UStaticMesh> OriginalCubeWingMesh;
 
+    /** Tracks actual applied state separately from the user-editable request flag. */
+    bool bBodyReviewApplied = false;
     bool bTransitioning = false;
     float TransitionElapsed = 0.f;
     EAureateWakeForm TargetForm = EAureateWakeForm::Skyborne;
