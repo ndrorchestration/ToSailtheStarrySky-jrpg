@@ -99,3 +99,18 @@ python3 unreal/Experiments/VisualQAPilot/check_strut_source_geometry.py /path/to
 ```
 
 This source-only check is independent of actual GPU rendering and cannot substitute for the missing **post-strut 1280×720 native D3D12 Seaborne screenshot**, reviewer visual assessment and acceptance. Orbiter stays FAIL_CLOSED; art remains unapproved, and all PRs remain draft/unmerged.
+
+## 2026-11-01 — Native compile attempt was interrupted; add separate RAM + commit preflight
+
+A new [stacked review-only native strut test PR #695](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/695) exercised the genuine Windows UE 5.8.4 build path, but **NOT** test execution. The isolated build reached UHT (22 generated files) and compiler start; free physical RAM dropped from **3.37 GiB** to about **0.16 GiB**, so its *own* verified process tree was stopped for safety. The attempt is **INTERRUPTED / NATIVE BUILD NOT VERIFIED**. The earlier successful #656 Editor build remains valid for #656 only, not for the new #695 test source.
+
+To reduce repeats, `build_resources.py` is a Windows **read-only** physical RAM **and** available pagefile/commit headroom preflight. Its default *experimental heuristic floors* are 6 GiB available RAM and 4 GiB available global commit. These are deliberately conservative **local guardrails**, not measured or certified UE 5.8 minimum requirements, and a pass does not guarantee a stable build or successful native tests. The tool does not install anything, terminate processes, or change Windows settings.
+
+```powershell
+py -3 unreal/Experiments/VisualQAPilot/build_resources.py --self-test
+py -3 unreal/Experiments/VisualQAPilot/build_resources.py --minimum-free-gib 6 --minimum-commit-gib 4
+```
+
+A byte-identical source copy (Git blob `ee77bd42bbe72283182c7733be4fb1d18b61e461`) passed **six synthetic boundary and eighteen invalid-input tests** on Windows. Its **real** sample found **1.78 GiB free RAM / 3.442 GiB available commit** and exited 1 with `BLOCK_INSUFFICIENT_BUILD_HEADROOM`. Hosted [engine-free QA #41363430784](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/actions/runs/41363430784) and [smoke #41363430787](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/actions/runs/41363430787) both succeeded for that revision.
+
+**Native test scope once resources are genuinely available:** compile #695 exact SHA, run `TSTSS.Ship.HydrofoilStrutNativeReview` with genuine UnrealEditor-Cmd native automation, inspect a complete exported report with zero failures, then separately obtain the still-missing D3D12 Seaborne *post-strut* PNG on #656 and visually inspect both attachments. Preserve no-merge, noncanonical art and fail-closed Orbiter boundaries.
