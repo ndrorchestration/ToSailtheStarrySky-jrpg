@@ -40,8 +40,19 @@ def inspect(folder:Path) -> dict:
         or m["gameplay_modified"] is not False
         or m["native_unreal_import"]!="NOT_VERIFIED"):
         raise FidelityImportHold("Missing exact review-only authority")
+    # Metadata-only min/max bounds are insufficient. Require independent
+    # full BIN decoding, every face/normal, and actual coordinate extents
+    # before exposing even a review-only Unreal import operation.
+    from audit_aureate_v2_glb_geometry import audit_binary, GeometryHold
+    try:
+        geometry=[audit_binary((folder/name).read_bytes(), expected_name=name)
+                  for name in FILES]
+    except (GeometryHold, OSError) as exc:
+        raise FidelityImportHold("V2 actual GLB binary geometry audit failed") from exc
     return {
         "stage":"REGENERATED_SOURCE_ONLY_NOT_NATIVE",
+        "actual_binary_geometry":"FULL_ALL_VERTICES_AND_TRIANGLES_PASS",
+        "geometry_reports":geometry,
         "sha256":m["sha256"],
         "approved_image_sha256":APPROVED_IMAGE_SHA256,
         "candidate_destinations":DESTINATIONS,
@@ -68,6 +79,16 @@ def import_in_editor(folder:Path, preflight:dict) -> dict:
                  "StaticMesh","load_asset"):
         if not hasattr(unreal,name):
             raise FidelityImportHold("Missing native editor API: "+name)
+
+    # Direct callers cannot bypass CLI preflight. Revalidate exact source
+    # bytes, actual mesh geometry, and provenance immediately before Editor
+    # asset writes, then match the caller's previously issued receipt.
+    fresh=inspect(folder)
+    if (preflight.get("stage")!="REGENERATED_SOURCE_ONLY_NOT_NATIVE"
+        or preflight.get("sha256")!=fresh["sha256"]
+        or preflight.get("approved_image_sha256")!=fresh["approved_image_sha256"]
+        or preflight.get("actual_binary_geometry")!=fresh["actual_binary_geometry"]):
+        raise FidelityImportHold("Stale or incomplete V2 source-geometry intake receipt")
 
     lib=unreal.EditorAssetLibrary
     # Read every destination before touching any; import is isolated, but not
