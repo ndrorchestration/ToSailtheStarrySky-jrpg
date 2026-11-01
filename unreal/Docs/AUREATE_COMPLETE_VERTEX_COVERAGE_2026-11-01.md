@@ -32,6 +32,12 @@ The actual procedural wing generator contains **292 membrane positions, 14,770 v
 
 The engine-free fixture suite now calls `author_aureate_wing_glb.build()` and runs the **actual deterministic generated GLB bytes** through `read_vertices` at the default limit, verifying all three primitive counts against the generator's own manifest. This is stronger than relying only on synthetic fixture meshes, but is **not an actual Unreal import, visual acceptance, or execution of the six-route clearance screen**; the separate end-to-end clearance audit (with SHA-256 manifest and C++ source at a pinned head) is still required.
 
+## Actual generated GLB: six ordinary routes, 126 sampled poses
+
+`test_aureate_full_vertex_coverage.py` now uses the deterministic generator to obtain the **real authored review wing GLB**, reads all 15,140 positions, and runs the existing geometric auditor at its default **20 time intervals per directed transition**. The six directed Skyborne/Seaborne/Submersible transitions therefore cover **126 sampled configurations**, four wing instances per configuration, against the provisional hull/bridge AABBs and the other wings. A clearance below the existing 10-cm screen threshold fails CI. This supplements the synthetic malformed-GLB fixtures and exact-source C++ pose guard.
+
+**Interpretation:** A passing engine-free fixture means the current deterministic procedural geometry does not trigger the auditor's sampled proxy-AABB overlap criteria at those 126 samples. It does NOT mean real GLB importer transforms or materials are verified, that every time between samples is safe, that the brackets and support spars are structural, or that the canonical vessel model is physically/cinematically approved. Direct authored-wing Orbiter transitions remain rejected, not screened.
+
 ## Provenance and evidence limits
 
 - Exact parent is draft PR #660 at `5bbbfa8301396b58ca04538e66c4a43734eaadc3`, itself stacked on the native-tested foundation and ordinary-form review PRs.
