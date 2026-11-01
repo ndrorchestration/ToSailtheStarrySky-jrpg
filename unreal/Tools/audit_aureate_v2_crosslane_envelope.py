@@ -15,6 +15,8 @@ from unittest.mock import patch
 
 import audit_aureate_wing_clearance as wing_audit
 from import_aureate_wing_review import preflight as verify_wing_manifest
+from aureate_indexed_triangles import read_triangles
+from aureate_triangle_narrowphase import nearest_surface
 
 STATUS_HOLD = "HOLD_V2_BROAD_PHASE_NEEDS_NARROW_PHASE"
 STATUS_SCREEN = "BROAD_PHASE_SCREEN_ONLY_NOT_CONTINUOUS_CLEARANCE"
@@ -104,6 +106,37 @@ def run(args):
     hb = extents(hull)
     bb = extents(bridge, BRIDGE_TRANSLATION_CM)
     result = evaluate(wing, hb, bb, steps=args.steps)
+    # Independently inspect actual triangles only at the first flagged endpoint.
+    # An endpoint HOLD is not a certificate for the rest of the motion path.
+    if args.narrow_phase_skyborne:
+        wing_faces=read_triangles(args.wing_glb)
+        hull_faces=read_triangles(args.hull_glb)
+        bridge_faces=read_triangles(args.bridge_glb)
+        per_root=[]
+        for wing_index in range(4):
+            transform=wing_audit.blend(
+                wing_audit.pose("Skyborne",wing_index),
+                wing_audit.pose("Seaborne",wing_index),0.)
+            xyz,quat,scale=transform
+            transformed=[]
+            for p in wing:
+                rotated=wing_audit.qrot(quat,tuple(p[i]*scale[i] for i in range(3)))
+                transformed.append(tuple(rotated[i]+xyz[i] for i in range(3)))
+            hull_result=nearest_surface(transformed,wing_faces,hull,hull_faces)
+            bridge_result=nearest_surface(transformed,wing_faces,
+                                          [tuple(p[i]+BRIDGE_TRANSLATION_CM[i]
+                                                 for i in range(3)) for p in bridge],
+                                          bridge_faces)
+            per_root.append({"wing_index":wing_index,
+                             "hull_surface":hull_result,
+                             "bridge_surface":bridge_result})
+        result["skyborne_t0_triangle_narrow_phase"]={
+            "authority":"ONE_ENDPOINT_TRIANGLE_SURFACE_SCREEN_NOT_CCD",
+            "wing_results":per_root,
+            "disposition":("HOLD_ROOT_SURFACES_WITHIN_10_CM"
+                           if any(v["hull_surface"]["below_threshold"] or
+                                  v["bridge_surface"]["below_threshold"] for v in per_root)
+                           else "SKYBORNE_ENDPOINT_ONLY_PASS_NOT_FULL_ROUTE")}
     return {
         "authority": "CROSS_LANE_CONSERVATIVE_AABB_REVIEW_ONLY",
         "wing_actor_source_head": args.wing_source_head,
@@ -132,6 +165,8 @@ def main(argv=None):
     p.add_argument("--wing-source-head", required=True)
     p.add_argument("--v2-source-head", required=True)
     p.add_argument("--steps", type=int, default=20)
+    p.add_argument("--narrow-phase-skyborne", action="store_true",
+                   help="Exact triangle-surface distance only at Skyborne t0; not swept collision")
     a = p.parse_args(argv)
     try:
         outcome = run(a)
