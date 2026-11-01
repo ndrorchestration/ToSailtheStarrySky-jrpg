@@ -10,7 +10,7 @@ This review branch makes the input policy **all positions or hold**. Each GLB pr
 
 ## Source implementation
 
-- `unreal/Tools/audit_aureate_wing_clearance.py`: removes strided/partial position sampling; accepts legacy `--samples-per-primitive` for compatibility and introduces the accurate alias `--max-vertices-per-primitive` (default 3,000, allowed 100–50,000). Each budget is a **hard upper limit**, not authorization to estimate bounds from a subset. The JSON receipt adds `vertex_coverage: COMPLETE_POSITION_ACCESSORS_WITHIN_BUDGET`.
+- `unreal/Tools/audit_aureate_wing_clearance.py`: removes strided/partial position sampling; accepts legacy `--samples-per-primitive` for compatibility and introduces the accurate alias `--max-vertices-per-primitive` (default 20,000, allowed 100–50,000; still all-or-hold). Each budget is a **hard upper limit**, not authorization to estimate bounds from a subset. The JSON receipt adds `vertex_coverage: COMPLETE_POSITION_ACCESSORS_WITHIN_BUDGET`.
 - `unreal/Tools/test_aureate_full_vertex_coverage.py`: seven engine-free synthetic GLB cases for complete enumeration including an extremal vertex; partial-over-budget refusal; empty accessor refusal; truncated declared position-view refusal; short stride refusal; nonfinite coordinates; unreasonable requested budget.
 - `.github/workflows/unreal-source-preflight.yml`: executes these cases without Unreal, in addition to source registration and ship review-state checks.
 
@@ -25,6 +25,12 @@ This is an intentionally conservative <b>source synchronization gate</b>. It is 
 The clearance auditor formerly read mesh-local positions without checking whether the imported scene applied a translation, rotation, scale, skin, animation, morph target or GLB extension. Such data can change rendered positions while leaving the offline AABB unchanged. The auditor now **refuses** anything other than the deterministic generator's single scene, single node, single mesh and untransformed/unskinned geometry; it does not silently ignore transforms. It also refuses sparse or normalized POSITION accessors, verifies each decoded position is within its declared buffer view, and recomputes each primitive's actual min/max to reject missing, nonfinite or mismatched declared extrema (tolerance 0.0001 glTF meter). This is conservative for review: alternative legitimate GLBs must be explicitly modeled and approved before the auditor can clear them.
 
 The standard-library `test_aureate_full_vertex_coverage.py` suite now covers the canonical untransformed fixture and negative scene mutations (translation, rotation, scale, matrix, nested/duplicated nodes, skinning, animations, glTF extensions, morphs, sparse positions, additional meshes) and accessor metadata mismatches. The CI preflight executes the entire suite. **Engine-free PASS does not establish native Unreal Interchange transform handling, a rendered silhouette or swept collision safety.** The imported GLB's SHA and an actual Unreal mesh bounds review are still required.
+
+## Authored-wing generator size gate — November 1 continuation
+
+The actual procedural wing generator contains **292 membrane positions, 14,770 venation positions and 78 hinge positions** (15,140 total). The inherited 3,000-vertex default did not fit the wing's venation primitive after full-coverage validation replaced partial sampling; the auditor would hold the legitimate generated GLB even when its geometry was unchanged. The source now defaults to 20,000 vertices per primitive, retaining the 50,000 hard upper bound, no vertex subsampling, and the existing manifest/source-parity/scene-graph/bounds/Orbiter holds.
+
+The engine-free fixture suite now calls `author_aureate_wing_glb.build()` and runs the **actual deterministic generated GLB bytes** through `read_vertices` at the default limit, verifying all three primitive counts against the generator's own manifest. This is stronger than relying only on synthetic fixture meshes, but is **not an actual Unreal import, visual acceptance, or execution of the six-route clearance screen**; the separate end-to-end clearance audit (with SHA-256 manifest and C++ source at a pinned head) is still required.
 
 ## Provenance and evidence limits
 
