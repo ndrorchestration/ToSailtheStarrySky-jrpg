@@ -35,3 +35,5 @@ jobs:
         run: python3 unreal/Tests/check_aureate_body_request_cpp.py
       - name: Compile and execute actual preview-visibility predicate (not Unreal runtime)
         run: python3 unreal/Tests/check_aureate_preview_visibility_cpp.py
+      - name: Build and validate noncanonical hull plus canopy GLB pair (not UE import)
+        run: python3 -m unittest discover -s unreal/Tests -p 'test_author_aureate_body_pair.py' -v
