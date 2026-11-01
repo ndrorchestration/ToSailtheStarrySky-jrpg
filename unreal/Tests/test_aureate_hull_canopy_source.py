@@ -16,10 +16,10 @@ NATIVE_TEST = (SOURCE / "Private" / "Tests" / "AureateWakePreviewNativeTests.cpp
 class AureateHullCanopySourceContracts(unittest.TestCase):
     def test_opt_in_only_preserves_old_visuals(self):
         self.assertIn("bool bUseHullSilhouetteReview = false;", HEADER)
-        self.assertIn("Hull->SetVisibility(!bUseHullSilhouetteReview);", CPP)
-        self.assertIn("ForwardBridge->SetVisibility(!bUseHullSilhouetteReview);", CPP)
-        self.assertIn("Section->SetVisibility(bUseHullSilhouetteReview);", CPP)
-        self.assertIn("Rib->SetVisibility(bUseHullSilhouetteReview);", CPP)
+        self.assertIn("Hull->SetVisibility(!bShowPrimitiveStudy);", CPP)
+        self.assertIn("ForwardBridge->SetVisibility(!bShowPrimitiveStudy);", CPP)
+        self.assertIn("Section->SetVisibility(bShowPrimitiveStudy);", CPP)
+        self.assertIn("Rib->SetVisibility(bShowPrimitiveStudy);", CPP)
 
     def test_four_surfaces_and_geodesic_study_frame(self):
         # Exactly four study parts: mid-hull, bow, stern, open deck.
@@ -39,7 +39,7 @@ class AureateHullCanopySourceContracts(unittest.TestCase):
 
     def test_no_fake_glass_without_authored_material(self):
         self.assertIn("OptionalCanopyGlassMaterial", HEADER)
-        self.assertIn("bUseHullSilhouetteReview && OptionalCanopyGlassMaterial != nullptr", CPP)
+        self.assertIn("bShowPrimitiveStudy && OptionalCanopyGlassMaterial != nullptr", CPP)
         self.assertIn("CanopyShell->SetVisibility(bShowGlass);", CPP)
         self.assertIn("CanopyShell->SetCastShadow(false);", CPP)
 
