@@ -115,6 +115,8 @@ class ApprovedReferenceBodyReview(unittest.TestCase):
         call = next(line for line in verifier.splitlines() if line.lstrip().startswith("& $EditorCmd $Project "))
         self.assertIn(" -NOINI ", call)
         self.assertIn(" -NOAUTOINIUPDATE ", call)
+        self.assertIn("'-DisablePlugins=AndroidFileServer'", call)
+        self.assertNotIn("-NoEnginePlugins", call)
         self.assertIn("'-ExecCmds=Automation RunTests TSTSS; Quit'", call)
         self.assertIn("if ($WorkingTree.Count -gt 0)", verifier)
         self.assertIn("if ($LASTEXITCODE -ne 0 -or $FinalWorkingTree.Count -gt 0)", verifier)
