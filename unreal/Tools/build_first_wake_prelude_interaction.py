@@ -175,6 +175,17 @@ def build_in_unreal() -> dict:
         prop = spawn(unreal.StaticMeshActor, n, location)
         set_mesh(prop, cube, scale, False)
 
+    def reflected_enum_member(enum_type, canonical_name):
+        # UE Python exposes UENUM values with its own underscored name policy
+        # (e.g. FLYER_DISCOVERED, not FLYERDISCOVERED). Resolve by comparing
+        # normalized tokens without guessing numbering or bypassing canon.
+        target = canonical_name.replace("_", "").upper()
+        matched = [getattr(enum_type, name) for name in dir(enum_type)
+                   if name.isupper() and name.replace("_", "") == target]
+        if len(matched) != 1:
+            raise RuntimeError("Unknown or ambiguous native enum name: " + canonical_name)
+        return matched[0]
+
     for stop in STOPS:
         actor = spawn(actor_class, stop.label, (stop.x, stop.y, 90))
         set_mesh(actor, cube, (.75, .75, 1.6), True)
@@ -182,11 +193,11 @@ def build_in_unreal() -> dict:
             actor.set_editor_property("b_is_inspection_station", True)
             actor.set_editor_property(
                 "inspection_station",
-                getattr(unreal.TSTSSInspectionStation, stop.inspection.upper()))
+                reflected_enum_member(unreal.TSTSSInspectionStation, stop.inspection))
         else:
             actor.set_editor_property(
                 "milestone",
-                getattr(unreal.TSTSSFirstWakeBeat, stop.milestone.upper()))
+                reflected_enum_member(unreal.TSTSSFirstWakeBeat, stop.milestone))
         # If signage fails we fail the staging operation; no invisible
         # instruction markers should be represented as a playable proof.
         sign = spawn(unreal.TextRenderActor, "SIGN_" + stop.label,
