@@ -54,7 +54,7 @@ def capture_plan(run_id: str) -> dict:
     ]
     if len({s["actor_label"] for s in shots}) != 4 or len({s["filename"] for s in shots}) != 4:
         raise ScreenshotHold("Duplicate shot labels or output filenames")
-    return {"map": MAP_PATH, "ship_label": SHIP_LABEL, "ship_position_cm": list(SHIP_POSITION),
+    return {"run_id": run_id, "map": MAP_PATH, "ship_label": SHIP_LABEL, "ship_position_cm": list(SHIP_POSITION),
             "resolution": [WIDTH, HEIGHT], "shots": shots, "authority": AUTHORITY,
             "native_render_verified": False, "approved_art": False}
 
@@ -132,7 +132,7 @@ def schedule_editor_capture(plan: dict) -> dict:
             unreal.log("TSTSS screenshot task finished; verify physical PNG: " + shot["filename"])
             yield
     return {"status": "CAPTURE_TASKS_SCHEDULED_NOT_VERIFIED",
-            "shots_requested": len(selected), "run_id": plan["shots"][0]["filename"].split("_")[3],
+            "shots_requested": len(selected), "run_id": plan["run_id"],
             "requires_actual_png_file_inspection": True, "authority": AUTHORITY}
 
 
@@ -222,3 +222,4 @@ def main(argv=None):
 
 if __name__ == "__main__":
     main()
+
