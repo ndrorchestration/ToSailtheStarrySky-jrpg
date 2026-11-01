@@ -92,7 +92,7 @@ def read_vertices(glb: Path, per_primitive=DEFAULT_MAX_VERTICES_PER_PRIMITIVE):
         if view.get("buffer") != 0:
             raise GeometryHold("Position view references unsupported buffer")
         count = acc["count"]
-        if not isinstance(count, int) or count <= 0:
+        if type(count) is not int or count <= 0:
             raise GeometryHold("Empty or invalid position accessor")
         if count > per_primitive:
             raise GeometryHold(
@@ -108,17 +108,25 @@ def read_vertices(glb: Path, per_primitive=DEFAULT_MAX_VERTICES_PER_PRIMITIVE):
             raise GeometryHold("Missing/nonfinite declared POSITION min/max: review HOLD")
         actual_min = [float("inf")] * 3
         actual_max = [-float("inf")] * 3
-        base_offset = view.get("byteOffset", 0) + acc.get("byteOffset", 0)
+        # Validate both offsets independently. A negative accessor offset can
+        # cancel a positive view offset and read bytes from a previous view,
+        # despite a combined offset and end-of-view check appearing valid.
+        view_offset = view.get("byteOffset", 0)
+        accessor_offset = acc.get("byteOffset", 0)
         stride = view.get("byteStride", 12)
         view_length = view.get("byteLength")
-        if (not isinstance(base_offset, int) or base_offset < 0 or
-            not isinstance(stride, int) or stride < 12 or
-            not isinstance(view_length, int) or view_length < 12):
+        if (type(view_offset) is not int or view_offset < 0 or view_offset % 4 or
+            type(accessor_offset) is not int or accessor_offset < 0 or accessor_offset % 4 or
+            type(stride) is not int or stride < 12 or stride % 4 or
+            type(view_length) is not int or view_length < 12):
             raise GeometryHold("Invalid GLB position view/stride")
-        view_end = bin_pos + view.get("byteOffset", 0) + view_length
+        view_start = bin_pos + view_offset
+        view_end = view_start + view_length
+        if view_end > bin_pos + blen:
+            raise GeometryHold("GLB position view exceeds embedded BIN chunk")
         for i in range(count):
-            start = bin_pos + base_offset + i * stride
-            if start < bin_pos or start + 12 > min(bin_pos + blen, view_end):
+            start = view_start + accessor_offset + i * stride
+            if start < view_start or start + 12 > view_end:
                 raise GeometryHold("GLB vertex access out of bounds")
             x, y, z = struct.unpack_from("<fff", blob, start)
             if not all(math.isfinite(v) for v in (x,y,z)):
