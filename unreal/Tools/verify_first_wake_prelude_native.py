@@ -39,7 +39,7 @@ for stop in STOPS:
     part = actor.get_component_by_class(unreal.StaticMeshComponent)
     if part is None or not part.get_editor_property("static_mesh"):
         raise RuntimeError("Missing collidable review interaction mesh: " + label)
-    if bool(actor.get_editor_property("b_is_inspection_station")) != bool(stop.inspection):
+    if bool(actor.get_editor_property("is_inspection_station")) != bool(stop.inspection):
         raise RuntimeError("Inspection/milestone type drift: " + label)
 
 start = by_label.get(AUTHORING_PREFIX+"PlayerStart_Ender_REVIEW_PROXY")
