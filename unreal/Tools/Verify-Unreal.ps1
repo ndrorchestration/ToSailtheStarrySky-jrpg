@@ -63,7 +63,8 @@ $RequiredTests = @(
     'TSTSS.Save.RejectsUnsupportedSchema',
     'TSTSS.Save.RejectsUnsafeSlots',
     'TSTSS.Save.RoundTripFirstWakeAndParty',
-    'TSTSS.Ship.PreviewFormsAndOrbiterHold'
+    'TSTSS.Ship.PreviewFormsAndOrbiterHold',
+    'TSTSS.Ship.HydrofoilStrutNativeReview'
 )
 $Entries = @($Report.tests)
 if ($Entries.Count -eq 0 -or $null -eq $Entries[0]) {
