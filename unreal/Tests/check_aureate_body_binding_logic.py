@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Compile/execute the EXACT Unreal preview body-binding method with C++ doubles.
 
-This is a portable behavioral gate, not Unreal/UHT, mesh, or render proof.
+This is a portable behavioral gate for V1 and V2 reviews, not Unreal/UHT, mesh, or render proof.
 """
 from pathlib import Path
 import shutil
@@ -57,7 +57,7 @@ struct UStaticMeshComponent {
 enum class EAureateWakeForm {Skyborne,Seaborne,Submersible,Orbiter};
 struct AAureateWakePreviewActor {
     UStaticMeshComponent *Hull=nullptr,*ForwardBridge=nullptr;
-    bool bTransitioning=false,bUseAuthoredBodyReview=false;
+    bool bTransitioning=false,bUseAuthoredBodyReview=false,bPreferFidelityV2BodyReview=false;
     EAureateWakeForm CurrentForm=EAureateWakeForm::Skyborne;
     TObjectPtr<UStaticMesh> OriginalCubeWingMesh,AuthoredHullReviewMesh,AuthoredBridgeDomeReviewMesh;
     bool RefreshBodyReviewMeshes();
@@ -88,11 +88,14 @@ int main(){
     UStaticMesh oldH{"/Game/OldHull"},oldB{"/Game/OldBridge"};
     UStaticMesh hull{"/Game/TSTSS/Review/ShipArt/HullCandidateV1/Source/StaticMeshes/Hull.Hull"};
     UStaticMesh dome{"/Game/TSTSS/Review/ShipArt/BridgeDomeCandidateV1/Source/StaticMeshes/Dome.Dome"};
+    UStaticMesh v2h{"/Game/TSTSS/Review/ShipArt/IvoryHullCandidateV2/Source/StaticMeshes/Ivory.Ivory"};
+    UStaticMesh v2b{"/Game/TSTSS/Review/ShipArt/BlueGlassBridgeCandidateV2/Source/StaticMeshes/Glass.Glass"};
     UStaticMesh wrongH{"/Game/TSTSS/Review/ShipArt/OtherCandidate/Bad.Bad"};
     UStaticMesh wrongB{"/Game/TSTSS/Review/ShipArt/BridgeDomeCandidateV2/Dome.Dome"};
     struct Case{
         int id;bool review;int form;bool transitioning,hasH,hasB;
         UStaticMesh *cube,*hull,*bridge;bool expected;
+        bool preferV2=false;
     };
     const Case cases[]={
         {0,false,0,false,true,true,&cube,nullptr,nullptr,true},
@@ -113,6 +116,20 @@ int main(){
         {15,false,0,false,true,true,nullptr,&hull,&dome,false},
         {16,true,0,false,true,true,nullptr,&hull,&dome,true},
         {17,false,2,false,true,true,&cube,&hull,nullptr,true},
+        {18,true,0,false,true,true,&cube,&v2h,&v2b,true,true},
+        {19,true,1,false,true,true,&cube,&v2h,&v2b,true,true},
+        {20,true,2,false,true,true,&cube,&v2h,&v2b,true,true},
+        {21,true,3,false,true,true,&cube,&v2h,&v2b,false,true},
+        {22,true,0,false,true,true,&cube,&v2h,&v2b,false,false},
+        {23,true,0,false,true,true,&cube,&hull,&dome,false,true},
+        {24,true,0,false,true,true,&cube,&v2h,&dome,false,true},
+        {25,true,0,false,true,true,&cube,&hull,&v2b,false,true},
+        {26,true,0,false,true,true,&cube,&v2h,nullptr,false,true},
+        {27,true,0,true,true,true,&cube,&v2h,&v2b,false,true},
+        {28,false,0,false,true,true,&cube,&v2h,&v2b,true,true},
+        {29,true,0,false,true,true,nullptr,&v2h,&v2b,true,true},
+        {30,true,1,false,true,true,&cube,&v2h,&dome,false,false},
+
     };
     int failed=0;
     for(const auto& t:cases){
@@ -122,6 +139,7 @@ int main(){
         actor.Hull=t.hasH?&hc:nullptr;
         actor.ForwardBridge=t.hasB?&bc:nullptr;
         actor.bUseAuthoredBodyReview=t.review;
+        actor.bPreferFidelityV2BodyReview=t.preferV2;
         actor.bTransitioning=t.transitioning;
         actor.CurrentForm=static_cast<EAureateWakeForm>(t.form);
         actor.OriginalCubeWingMesh=TObjectPtr<UStaticMesh>(t.cube);
