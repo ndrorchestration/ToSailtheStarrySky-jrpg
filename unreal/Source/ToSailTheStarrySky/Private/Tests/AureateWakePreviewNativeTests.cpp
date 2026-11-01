@@ -61,6 +61,29 @@ bool FTSTSSAureatePreviewFormTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("Orbiter request is rejected"), Ship->RequestForm(EAureateWakeForm::Orbiter));
 
     TestTrue(TEXT("Skyborne to Seaborne starts"), Ship->RequestForm(EAureateWakeForm::Seaborne));
+    // These two supports must be visible on the REQUEST frame, before Tick.
+    // The earlier stacked implementation exposed hydrofoils one frame before
+    // their companion struts, so count-only checks did not catch this.
+    TArray<UStaticMeshComponent*> ImmediateSupportComponents;
+    Ship->GetComponents<UStaticMeshComponent>(ImmediateSupportComponents);
+    for (int32 Side = 1; Side <= 2; ++Side)
+    {
+        UStaticMeshComponent* Foil = nullptr;
+        UStaticMeshComponent* Strut = nullptr;
+        const FName FoilName(*FString::Printf(TEXT("Hydrofoil_%d"), Side));
+        const FName StrutName(*FString::Printf(TEXT("ReviewHydrofoilStrut_%d"), Side));
+        for (UStaticMeshComponent* Component : ImmediateSupportComponents)
+        {
+            if (Component->GetFName() == FoilName) Foil = Component;
+            if (Component->GetFName() == StrutName) Strut = Component;
+        }
+        if (TestNotNull(TEXT("Immediate Seaborne foil found"), Foil) &&
+            TestNotNull(TEXT("Immediate Seaborne strut found"), Strut))
+        {
+            TestTrue(TEXT("Seaborne foil visible at transition start"), Foil->IsVisible());
+            TestTrue(TEXT("Companion strut visible at same transition start"), Strut->IsVisible());
+        }
+    }
     TestFalse(TEXT("Cannot interrupt a transition"), Ship->RequestForm(EAureateWakeForm::Submersible));
     TestTrue(TEXT("Editor-only ordinary review completion is permitted"),
         Ship->FinishOrdinaryPreviewTransitionForReview());
