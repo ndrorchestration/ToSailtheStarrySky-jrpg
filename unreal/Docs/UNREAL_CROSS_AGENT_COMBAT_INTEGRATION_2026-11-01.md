@@ -35,3 +35,7 @@ Added existing read-only-authored QA test source from independent draft [#671](h
 - Strengthened \`TSTSS.CombatData.NonExecutableSkillReconciliation\`: calls the actual guarded spell executor with a converted \`DesignOnly\` row, including an artificially learned and mastered review actor, and confirms action rejection plus unchanged outputs.
 
 All three remain **native automation test source**, not a claim of native execution. \`Verify-Unreal.ps1\` requires their named results alongside the rest of the test inventory.
+
+## 2026-11-01 — Bounded integer counter rollover hardening
+
+The existing deterministic `FTSTSSCombatTurns::TryAction` implementation incremented signed `int32` `AcceptedActions` and `Round` without checking `MAX_int32`; an extremely long or deliberately restored malformed encounter state could otherwise overflow signed counters. A reversible, isolated change denies any action at maximum accepted-action count, and denies only those maximum-round actions that would advance the round. It preserves the output argument on rejection and allows max-round actions that do not wrap. The existing native `TSTSS.Combat.TurnOrderAndAtomicity` suite now includes positive no-wrap and negative max-round/max-action tests, avoiding new test inventory names. No gameplay tuning, save schema or character progression data is changed. **These are native test declarations, not evidence they ran in Unreal.**

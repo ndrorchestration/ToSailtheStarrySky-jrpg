@@ -82,6 +82,46 @@ bool FTSTSSCombatTurnOrderTest::RunTest(const FString& Parameters)
     FTSTSSCombatTurnState Unchanged = After;
     TestFalse(TEXT("Invalid duplicate order rejected"), FTSTSSCombatTurns::TryAction(Invalid, Action, Unchanged));
     TestEqual(TEXT("Invalid state preserves output"), Unchanged.AcceptedActions, 2);
+    // Counter bounds: no signed overflow, no wrapped turn/round authority.
+    // A legal action that does not increment Round remains possible at max Round.
+    FTSTSSCombatTurnState NearRoundLimit = Initial;
+    NearRoundLimit.Round = MAX_int32;
+    FTSTSSCombatAction BeforeWrap;
+    BeforeWrap.ActorId = TEXT("Ender");
+    BeforeWrap.TargetId = TEXT("Foe");
+    BeforeWrap.Power = 0;
+    FTSTSSCombatTurnState StillMaxRound;
+    if (!TestTrue(TEXT("No-wrap action is legal at maximum round"),
+        FTSTSSCombatTurns::TryAction(NearRoundLimit, BeforeWrap, StillMaxRound))) return false;
+    TestEqual(TEXT("Round is unchanged before wrap"), StillMaxRound.Round, MAX_int32);
+    TestEqual(TEXT("Accepted count advances once"), StillMaxRound.AcceptedActions, 1);
+    TestEqual(TEXT("Actor advances at max round without wrap"),
+              FTSTSSCombatTurns::CurrentActor(StillMaxRound), FName(TEXT("Ionia")));
+
+    FTSTSSCombatTurnState RoundOverflow = Initial;
+    RoundOverflow.Cursor = 2;
+    RoundOverflow.Round = MAX_int32;
+    FTSTSSCombatAction Wrap;
+    Wrap.ActorId = TEXT("Foe");
+    Wrap.TargetId = TEXT("Ender");
+    Wrap.Power = 0;
+    FTSTSSCombatTurnState UnchangedBound = After;
+    const int32 PreRound = UnchangedBound.Round;
+    const int32 PreAccepted = UnchangedBound.AcceptedActions;
+    const int32 PreHealth = UnchangedBound.Roster[0].Health;
+    TestFalse(TEXT("Maximum round cannot wrap"),
+        FTSTSSCombatTurns::TryAction(RoundOverflow, Wrap, UnchangedBound));
+    TestEqual(TEXT("Failed round overflow retains output round"), UnchangedBound.Round, PreRound);
+    TestEqual(TEXT("Failed round overflow retains accepted actions"), UnchangedBound.AcceptedActions, PreAccepted);
+    TestEqual(TEXT("Failed round overflow retains output health"), UnchangedBound.Roster[0].Health, PreHealth);
+    TestEqual(TEXT("Round overflow leaves input unchanged"), RoundOverflow.Round, MAX_int32);
+
+    FTSTSSCombatTurnState ActionsOverflow = Initial;
+    ActionsOverflow.AcceptedActions = MAX_int32;
+    TestFalse(TEXT("Maximum accepted-action counter denies action"),
+        FTSTSSCombatTurns::TryAction(ActionsOverflow, BeforeWrap, UnchangedBound));
+    TestEqual(TEXT("Failed action-count overflow retains output"), UnchangedBound.AcceptedActions, PreAccepted);
+    TestEqual(TEXT("Failed action-count overflow preserves input"), ActionsOverflow.AcceptedActions, MAX_int32);
     return true;
 }
 #endif

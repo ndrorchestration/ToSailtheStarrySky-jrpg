@@ -65,6 +65,9 @@ bool FTSTSSCombatTurns::TryAction(const FTSTSSCombatTurnState& State,
                                  const FTSTSSCombatAction& Action,
                                  FTSTSSCombatTurnState& OutState)
 {
+    // Overflow is a denied action, never an implicit counter reset or UB.
+    // No mutable output is touched before the counters can be committed.
+    if (State.AcceptedActions == MAX_int32) return false;
     const FName Active = CurrentActor(State);
     if (Active.IsNone() || Action.ActorId != Active) return false;
     if (!State.Order.Contains(Action.TargetId)) return false;
@@ -80,10 +83,15 @@ bool FTSTSSCombatTurns::TryAction(const FTSTSSCombatTurnState& State,
     if (!NextActor.IsNone())
     {
         const int32 NextIndex = Candidate.Order.IndexOfByKey(NextActor);
-        if (NextIndex <= ActorIndex) ++Candidate.Round;
+        if (NextIndex <= ActorIndex)
+        {
+            if (Candidate.Round == MAX_int32) return false;
+            ++Candidate.Round;
+        }
     }
     else if (ActorIndex == State.Order.Num() - 1)
     {
+        if (Candidate.Round == MAX_int32) return false;
         ++Candidate.Round;
     }
     ++Candidate.AcceptedActions;
