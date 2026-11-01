@@ -130,15 +130,15 @@ class CompleteVertexClearanceIntake(unittest.TestCase):
     def test_real_generator_six_directed_ordinary_routes_sampled(self):
         # Run the actual model through a discrete-time AABB screen, not merely
         # the GLB parser. Collision/under-clearance must FAIL this review test.
-        # Minimum ten intervals covers 66 time samples across six routes.
+        # Exercise the auditor's default twenty intervals (126 poses total).
         glb, _, _ = build_authored_review_wing()
         self.path.write_bytes(glb)
         decoded, counts = read_vertices(self.path)
         self.assertEqual(counts, [292, 14770, 78])
-        result = audit(decoded, steps=10)
+        result = audit(decoded, steps=20)
         self.assertEqual(result["checked_directed_transitions"], 6)
-        self.assertEqual(result["time_samples_per_transition"], 11)
-        self.assertEqual(result["checked_poses"], 66)
+        self.assertEqual(result["time_samples_per_transition"], 21)
+        self.assertEqual(result["checked_poses"], 126)
         self.assertEqual(result["mesh_sample_points"], 15140)
         self.assertGreaterEqual(result["minimum_proxy_aabb_clearance_cm"], 10)
         self.assertGreaterEqual(result["minimum_interwing_aabb_clearance_cm"], 10)
