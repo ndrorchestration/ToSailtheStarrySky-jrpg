@@ -20,6 +20,12 @@ Added `unreal/Tools/test_aureate_pose_source_parity.py` and wired it into source
 
 This is an intentionally conservative <b>source synchronization gate</b>. It is not a mathematical proof that the independent Python transform, FRotator conventions, imported mesh axes, or runtime physics perfectly match Unreal; these must still be checked natively. Updating the pinned snapshot merely because a build fails is forbidden; review the actual change and revise the Python pose model and tests first.
 
+## Review-only glTF scene-graph and accessor admission
+
+The clearance auditor formerly read mesh-local positions without checking whether the imported scene applied a translation, rotation, scale, skin, animation, morph target or GLB extension. Such data can change rendered positions while leaving the offline AABB unchanged. The auditor now **refuses** anything other than the deterministic generator's single scene, single node, single mesh and untransformed/unskinned geometry; it does not silently ignore transforms. It also refuses sparse or normalized POSITION accessors, verifies each decoded position is within its declared buffer view, and recomputes each primitive's actual min/max to reject missing, nonfinite or mismatched declared extrema (tolerance 0.0001 glTF meter). This is conservative for review: alternative legitimate GLBs must be explicitly modeled and approved before the auditor can clear them.
+
+The standard-library `test_aureate_full_vertex_coverage.py` suite now covers the canonical untransformed fixture and negative scene mutations (translation, rotation, scale, matrix, nested/duplicated nodes, skinning, animations, glTF extensions, morphs, sparse positions, additional meshes) and accessor metadata mismatches. The CI preflight executes the entire suite. **Engine-free PASS does not establish native Unreal Interchange transform handling, a rendered silhouette or swept collision safety.** The imported GLB's SHA and an actual Unreal mesh bounds review are still required.
+
 ## Provenance and evidence limits
 
 - Exact parent is draft PR #660 at `5bbbfa8301396b58ca04538e66c4a43734eaadc3`, itself stacked on the native-tested foundation and ordinary-form review PRs.
