@@ -77,6 +77,13 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Visuals|Review")
     bool bUseAuthoredBodyReview = false;
 
+    /**
+     * Default OFF: explicitly select V2 review-only hull + bridge as one
+     * atomic pair. V1 remains the ordinary review default. Never game art.
+     */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Visuals|Review")
+    bool bPreferFidelityV2BodyReview = false;
+
     /** Optional creator-reviewed imported candidate, NOT automatically final art. */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Visuals|Review")
     TObjectPtr<UStaticMesh> AuthoredHullReviewMesh;
