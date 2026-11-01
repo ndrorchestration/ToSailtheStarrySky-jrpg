@@ -202,7 +202,7 @@ MATERIALS = {
 }
 
 
-def encode_glb(name, surfaces):
+def encode_glb(name, surfaces, materials=None):
     blob=bytearray(); views=[]; accessors=[]; primitives=[]
     def buffer(data,target):
         while len(blob)%4:blob.append(0)
@@ -227,7 +227,7 @@ def encode_glb(name, surfaces):
     while len(blob)%4:blob.append(0)
     data={"asset":{"version":"2.0","generator":"TSTSS deterministic Python review GLB"},
           "scene":0,"scenes":[{"nodes":[0]}],"nodes":[{"name":name,"mesh":0}],
-          "meshes":[{"name":name,"primitives":primitives}],"materials":MATERIALS[name],
+          "meshes":[{"name":name,"primitives":primitives}],"materials":MATERIALS[name] if materials is None else materials,
           "accessors":accessors,"bufferViews":views,"buffers":[{"byteLength":len(blob)}],
           "extras":{"authority":STATUS,"source_units":"centimeters","gltf_linear_units":"meters",
                     "sourceToGltfScale":SCALE,"axisRemap":"UE_X_FORWARD_Z_UP_TO_GLTF_Y_UP"}}
