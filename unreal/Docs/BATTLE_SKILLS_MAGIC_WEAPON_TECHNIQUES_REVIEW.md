@@ -42,3 +42,7 @@ A \`CooldownActorTurns\` of 1 blocks the next action turn belonging to that acto
 ## Future production architecture
 
 Follow a sequence of **ability registry → legal target preview → deterministic effect resolver → field state reactions → animation/VFX/audio cue routing → UI → save migration → character/monster integration → cinematic polish**. Assign spell ownership via learned-school mastery rather than jobs, while distinct weapon proficiency and Job Arts remain separately gated. Render specs and effects at three quality tiers (combat readability, boss cinematic, full cutscene) using the same canonical silhouettes and elemental semantics.
+
+## Full 260-seed design catalog export
+
+Run \`node unreal/Tools/export_magic_design_catalog.cjs --write\` then \`--check\` to obtain a deterministic \`unreal/DesignCatalog/ALL_MAGIC_SEEDS_DESIGN_ONLY.json\` manifest from the preserved source modules. The engine-free source-inventory workflow now checks this and uploads the generated manifest as a review artifact. It preserves all source IDs, ranks, domain proposal statuses, role/intent strings and explicit spell-level cross-mastery prerequisites. It deliberately leaves effect, targeting, numeric MP cost, VFX and animation assets **null** because those mechanics do not exist for all 260 seeds. Do not import it as an executable Unreal DataTable or treat an export PASS as editor/build/gameplay proof.

@@ -58,6 +58,7 @@ bool FTSTSSBattleSpellTechniqueTest::RunTest(const FString& Parameters)
             Hybrid.SkillId, Hybrid, Result, Cue));
     Result = FTSTSSBattleSkillState();
     Cue = FTSTSSBattleSkillCue();
+    Knowledge.MasteryByActor.FindOrAdd(TEXT("Ender")).Remove(TEXT("Water"));
 
     FTSTSSBattleSkillRow Unadmitted = Spark;
     Unadmitted.Admission = ETSTSSBattleSkillAdmission::DesignOnly;

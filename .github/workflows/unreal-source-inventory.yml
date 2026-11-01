@@ -20,5 +20,15 @@ jobs:
           persist-credentials: false
       - name: Check required test inventory without Unreal
         run: python3 unreal/Tools/check_unreal_test_inventory.py
+      - name: Verify all magic design seeds are exportable without execution admission
+        run: |
+          node unreal/Tools/export_magic_design_catalog.cjs --write
+          node unreal/Tools/export_magic_design_catalog.cjs --check
+      - name: Upload design-only catalog for Unreal authoring review
+        uses: actions/upload-artifact@v4
+        with:
+          name: unreal-magic-design-only-seeds
+          path: unreal/DesignCatalog/ALL_MAGIC_SEEDS_DESIGN_ONLY.json
+          if-no-files-found: error
       - name: Confirm this is source-only
         run: echo "No Unreal compilation, renderer or native test execution occurred."
