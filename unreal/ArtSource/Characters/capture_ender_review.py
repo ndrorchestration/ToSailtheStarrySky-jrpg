@@ -173,7 +173,8 @@ def main_unreal():
     require(hasattr(unreal, "register_slate_post_tick_callback"),
             "Unreal Slate post-tick callback unavailable")
     level = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
-    require(level.load_level(LEVEL_PATH), "Could not load review-only level")
+    load_result = level.load_level(LEVEL_PATH)
+    require(load_result is not False, "Could not load review-only level")
     actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem).get_all_level_actors()
     subjects = [a for a in actors if a.get_actor_label() == ACTOR_LABEL]
     require(len(subjects) == 1, "Expected one isolated Ender lookdev actor")
