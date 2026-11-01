@@ -141,6 +141,26 @@ bool FTSTSSCombatRejectionTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("Duplicate roster IDs are rejected"), UTSTSSCombatRules::TryApplyAction(Duplicates, Action, Output));
     TestEqual(TEXT("Duplicate roster rejection preserves output size"), Output.Num(), 2);
     TestEqual(TEXT("Input roster remains unchanged"), Initial[1].Health, 10);
+
+    // A generic heal is never an implicit resurrection ability, including through
+    // callers using the low-level resolver instead of the gated skill system.
+    TArray<FTSTSSCombatant> KnockedOut = Initial;
+    KnockedOut[1].Health = 0;
+    FTSTSSCombatAction OrdinaryHeal;
+    OrdinaryHeal.ActorId = TEXT("Ender");
+    OrdinaryHeal.TargetId = TEXT("Foe");
+    OrdinaryHeal.ResourceCost = 1;
+    OrdinaryHeal.Power = 6;
+    OrdinaryHeal.bHealing = true;
+    TArray<FTSTSSCombatant> PriorOutput = Output;
+    TestFalse(TEXT("Unspecified healing cannot revive a zero-HP target"),
+        UTSTSSCombatRules::TryApplyAction(KnockedOut, OrdinaryHeal, Output));
+    TestEqual(TEXT("Rejected healing preserves existing output HP"),
+              Output[1].Health, PriorOutput[1].Health);
+    TestEqual(TEXT("Rejected healing preserves existing output resources"),
+              Output[0].Resource, PriorOutput[0].Resource);
+    TestEqual(TEXT("Rejected healing preserves knocked-out input"),
+              KnockedOut[1].Health, 0);
     return true;
 }
 
