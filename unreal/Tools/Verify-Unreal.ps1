@@ -66,6 +66,7 @@ $RequiredTests = @(
     'TSTSS.CombatIntegration.ProgressiveRecruitmentPartySize',
     'TSTSS.CombatData.NonExecutableSkillReconciliation',
     'TSTSS.CombatIntegration.AdapterRowsRemainDesignOnlyInExecutor',
+    'TSTSS.CombatIntegration.DesignOnlyTurnManagerDenial',
     'TSTSS.Combat.EncounterCompletion',
     'TSTSS.FirstWake.RequiresOrderedMilestones',
     'TSTSS.FirstWake.WaterLandingRequiresMeasuredStability',
