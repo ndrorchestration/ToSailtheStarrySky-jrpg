@@ -140,6 +140,29 @@ bool FTSTSSCombatData::ValidateActions(const TArray<FTSTSSActionDefRow>& Actions
         {
             SeenActions.Add(Row.ActionId);
         }
+        // Deserialized/cast enum values outside the authored schema must never
+        // receive a default combat meaning in the downstream catalog bridge.
+        switch (Row.Category)
+        {
+        case ETSTSSActionCategory::Attack:
+        case ETSTSSActionCategory::Spell:
+        case ETSTSSActionCategory::WeaponTechnique:
+        case ETSTSSActionCategory::Support:
+            break;
+        default:
+            AddIssue(OutIssues, ETSTSSDataIssue::InvalidActionCategory, Row.ActionId);
+            break;
+        }
+        switch (Row.Target)
+        {
+        case ETSTSSActionTarget::Self:
+        case ETSTSSActionTarget::Ally:
+        case ETSTSSActionTarget::Enemy:
+            break;
+        default:
+            AddIssue(OutIssues, ETSTSSDataIssue::InvalidActionTarget, Row.ActionId);
+            break;
+        }
         if (!InRange(Row.Cost, 0) || !InRange(Row.Power, 0))
         {
             AddIssue(OutIssues, ETSTSSDataIssue::ValueOutOfRange, Row.ActionId);

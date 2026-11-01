@@ -242,6 +242,36 @@ bool FTSTSSCombatDataActionsTest::RunTest(const FString& Parameters)
                       ETSTSSDataIssue::ValueOutOfRange);
 
     Rows = FixtureActions();
+    Rows[0].Category = static_cast<ETSTSSActionCategory>(255);
+    ExpectActionIssue(*this, TEXT("Unknown action category rejected"), Rows, false,
+                      ETSTSSDataIssue::InvalidActionCategory);
+
+    Rows = FixtureActions();
+    Rows[0].Target = static_cast<ETSTSSActionTarget>(255);
+    ExpectActionIssue(*this, TEXT("Unknown target rejected"), Rows, false,
+                      ETSTSSDataIssue::InvalidActionTarget);
+
+    // Downstream conversion must not invent a target when deserialization
+    // produces an unknown enum value, even in source-only review mode.
+    TMap<FName, FTSTSSAbilitySpec> SentinelCatalog;
+    FTSTSSAbilitySpec SentinelAbility;
+    SentinelAbility.AbilityId = TEXT("PreserveFixture");
+    SentinelCatalog.Add(SentinelAbility.AbilityId, SentinelAbility);
+    TMap<FName, TSet<FName>> SentinelLearned;
+    SentinelLearned.Add(TEXT("Ender"), TSet<FName>{TEXT("PreserveFixture")});
+    TArray<FTSTSSDataIssueEntry> BadEnumIssues;
+    TestFalse(TEXT("Invalid enum cannot be bridged into a combat catalog"),
+        FTSTSSCombatData::TryBuildAbilityData(
+            FixtureBaselines(), Rows, LevelsAll(1), false,
+            SentinelCatalog, SentinelLearned, BadEnumIssues));
+    TestTrue(TEXT("Invalid bridge target recorded"),
+        HasIssue(BadEnumIssues, ETSTSSDataIssue::InvalidActionTarget));
+    TestEqual(TEXT("Rejected enum conversion keeps prior catalog"),
+              SentinelCatalog.Num(), 1);
+    TestTrue(TEXT("Rejected enum conversion preserves prior learned set"),
+        SentinelLearned.FindChecked(TEXT("Ender")).Contains(TEXT("PreserveFixture")));
+
+    Rows = FixtureActions();
     Rows[0].UnlockLevel = 0;
     ExpectActionIssue(*this, TEXT("Unlock level below 1 rejected"), Rows, false,
                       ETSTSSDataIssue::InvalidUnlockLevel);

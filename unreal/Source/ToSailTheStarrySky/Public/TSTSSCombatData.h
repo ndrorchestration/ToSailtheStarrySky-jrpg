@@ -100,6 +100,8 @@ enum class ETSTSSDataIssue : uint8
     HpOrderViolation,
     InvalidActionId,
     DuplicateAction,
+    InvalidActionCategory,
+    InvalidActionTarget,
     InvalidUnlockLevel,
     NoLearners,
     UnknownLearner,
