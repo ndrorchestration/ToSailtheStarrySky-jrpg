@@ -75,7 +75,7 @@ class ApprovedShipArtContractTests(unittest.TestCase):
         self.assertIn("return false; // Fail closed without modifying either mesh.",section)
         self.assertNotIn("RequestForm(",section)
         self.assertNotIn("SetCollisionEnabled(",section)
-        self.assertNotRegex(section, r"(?m)^\\s*CurrentForm\\s*=(?!=)")
+        self.assertNotRegex(section, r"(?m)^\s*CurrentForm\s*=(?!=)")
 
     def test_reversion_preserves_existing_placeholder_and_scale(self):
         section=self.cpp.split("bool AAureateWakePreviewActor::RefreshBodyReviewMeshes()",1)[1].split(
