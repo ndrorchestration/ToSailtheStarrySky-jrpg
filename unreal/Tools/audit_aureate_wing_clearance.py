@@ -30,7 +30,10 @@ class GeometryHold(ValueError):
 def read_vertices(glb: Path, per_primitive=3000):
     """GLB 2.0 float32 positions, meters/+Y up -> Unreal cm/+Z up."""
     if per_primitive < 100 or per_primitive > 50000:
-        raise GeometryHold("Use 100..50000 sample points per primitive")
+        raise GeometryHold("Use 100..50000 maximum vertices per primitive")
+    # Coverage is all-or-hold. Subsampling can exclude the extreme vertex,
+    # understate an AABB and falsely report clearance. This numeric budget is
+    # an upper safety limit, never permission to screen a partial mesh.
     blob = glb.read_bytes()
     if len(blob) < 28 or blob[:4] != b"glTF":
         raise GeometryHold("Not a GLB")
@@ -56,12 +59,24 @@ def read_vertices(glb: Path, per_primitive=3000):
             raise GeometryHold("Unexpected position accessor format")
         view = doc["bufferViews"][acc["bufferView"]]
         count = acc["count"]
+        if not isinstance(count, int) or count <= 0:
+            raise GeometryHold("Empty or invalid position accessor")
+        if count > per_primitive:
+            raise GeometryHold(
+                f"Partial vertex coverage forbidden: {count} positions exceed "
+                f"per-primitive maximum {per_primitive}; raise budget or HOLD")
         sizes.append(count)
-        stride = max(1, math.ceil(count / per_primitive))
-        indices = sorted({0, count - 1, *range(0, count, stride)})
-        for i in indices:
-            start = bin_pos + view.get("byteOffset", 0) + acc.get("byteOffset", 0) + i * view.get("byteStride", 12)
-            if start + 12 > bin_pos + blen:
+        base_offset = view.get("byteOffset", 0) + acc.get("byteOffset", 0)
+        stride = view.get("byteStride", 12)
+        view_length = view.get("byteLength")
+        if (not isinstance(base_offset, int) or base_offset < 0 or
+            not isinstance(stride, int) or stride < 12 or
+            not isinstance(view_length, int) or view_length < 12):
+            raise GeometryHold("Invalid GLB position view/stride")
+        view_end = bin_pos + view.get("byteOffset", 0) + view_length
+        for i in range(count):
+            start = bin_pos + base_offset + i * stride
+            if start < bin_pos or start + 12 > min(bin_pos + blen, view_end):
                 raise GeometryHold("GLB vertex access out of bounds")
             x, y, z = struct.unpack_from("<fff", blob, start)
             if not all(math.isfinite(v) for v in (x,y,z)):
@@ -209,6 +224,7 @@ def audit(vertices, steps=20):
             frames+=1
     return {"authority":STATUS,"checked_directed_transitions":6,"time_samples_per_transition":steps+1,
             "wing_instances":4,"checked_poses":frames,"mesh_sample_points":len(vertices),
+            "vertex_coverage":"COMPLETE_POSITION_ACCESSORS_WITHIN_BUDGET",
             "minimum_proxy_aabb_clearance_cm":round(worst_static,2),
             "minimum_interwing_aabb_clearance_cm":round(worst_pair,2),
             "unresolved_visual_gates":["approximate 28 cm wing-root to hull-side gap has no authored support spar",
@@ -223,13 +239,15 @@ def main():
     parser.add_argument('--manifest',type=Path,required=True)
     parser.add_argument('--cpp',type=Path,required=True)
     parser.add_argument('--header',type=Path,required=True)
-    parser.add_argument('--samples-per-primitive',type=int,default=3000)
+    parser.add_argument('--max-vertices-per-primitive','--samples-per-primitive',
+                        dest='max_vertices_per_primitive',type=int,default=3000,
+                        help='Fail closed if any primitive exceeds this count; never subsample')
     parser.add_argument('--steps',type=int,default=20)
     args=parser.parse_args()
     try:
         preflight(args.glb, args.manifest)
         assert_source_contract(args.cpp.read_text(encoding='utf-8'),args.header.read_text(encoding='utf-8'))
-        vertices,sizes=read_vertices(args.glb,args.samples_per_primitive)
+        vertices,sizes=read_vertices(args.glb,args.max_vertices_per_primitive)
         result=audit(vertices,args.steps)
         result['source_primitive_vertex_counts']=sizes
         print(json.dumps(result,indent=2))
