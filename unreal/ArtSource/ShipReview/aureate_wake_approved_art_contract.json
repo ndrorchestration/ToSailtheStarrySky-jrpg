@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "project": "To Sail the Starry Sky",
+  "asset": "Aureate Wake",
+  "authority": "CREATOR_APPROVED_VISUAL_REFERENCE",
+  "approval_date": "2026-11-01",
+  "approved_image": {
+    "filename": "Aureate Wake_ Four Configurations.png",
+    "width_px": 1536,
+    "height_px": 1024,
+    "size_bytes": 3837524,
+    "sha256": "03e3d500d8998a1377502f5ea28da79cf3eaf3854ece833d7ac25b4e0b268e13",
+    "source": "creator-uploaded original in the 2026-11-01 TSTSS project conversation",
+    "committed_original_bytes": false
+  },
+  "model_acceptance": "NOT_YET_ESTABLISHED",
+  "story_lock": {
+    "orbiter_locked": true,
+    "moon_bridge_locked": true,
+    "first_wake_allows": [
+      "Skyborne",
+      "Seaborne"
+    ]
+  },
+  "canonical_consistency": {
+    "principal_wing_count": 4,
+    "forms": [
+      "Skyborne",
+      "Seaborne",
+      "Submersible",
+      "Orbiter"
+    ],
+    "persistent": [
+      "single pointed ivory/white hull",
+      "gold/brass framing",
+      "navy mechanical surfaces",
+      "forward geodesic transparent bridge",
+      "open observation/forward deck",
+      "crew spaces",
+      "wing joint and resonance-engine architecture"
+    ],
+    "wings": [
+      "gold-veined translucent blue/violet dragonfly membranes",
+      "individually articulated fore and aft pairs",
+      "same four identities across forms"
+    ]
+  },
+  "form_must_have": {
+    "Skyborne": [
+      "four outward deployed dragonfly wings",
+      "forward glass bridge",
+      "aerial silhouette"
+    ],
+    "Seaborne": [
+      "four wings in marine stabilization configuration",
+      "deployable hydrofoils below hull",
+      "identical hull and bridge"
+    ],
+    "Submersible": [
+      "four visibly tucked but still recognizable wings",
+      "sealed pressure-safe bridge design",
+      "same hull identity"
+    ],
+    "Orbiter": [
+      "four equal radial solar/light sails in top,bottom,port,starboard configuration",
+      "bridge remains forward facing",
+      "narrative/story gate held"
+    ]
+  },
+  "current_review_provenance": {
+    "prior_native_capture_pr": 655,
+    "prior_body_candidate_pr": 664,
+    "previous_native_capture_only": "Skyborne temporary proxy with 4 wing GLBs",
+    "prior_body_candidate": "NONCANONICAL_SOURCE_LOOKDEV_NOT_APPROVED",
+    "native_ue_fidelity_check": "NOT_VERIFIED",
+    "creator_model_approval": "PENDING"
+  },
+  "prototype_dimensions_are_not_canon": true,
+  "native_implementation_gates": [
+    "mesh import orientation and bounds",
+    "matched-scale front/top/side and hero images per form",
+    "creator frame-by-frame comparison",
+    "true native glass and metamaterial rendering",
+    "crew/deck scale review",
+    "ordinary-mode swept collision",
+    "sea contact/flotation",
+    "Orbiter fail-closed proof"
+  ]
+}
