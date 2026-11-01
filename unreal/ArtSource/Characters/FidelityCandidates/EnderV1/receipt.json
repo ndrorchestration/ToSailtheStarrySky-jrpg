@@ -1,0 +1,28 @@
+{
+  "status": "UNRIGGED_NONCANONICAL_FACE_HAIR_STUDY",
+  "name": "Ender",
+  "version": "ender_face_hair_v1",
+  "source_builder": "build_cast.py make('Ender')",
+  "source_baseline_untouched": true,
+  "hair_palette": "temporary existing green palette; exact canon hair color unresolved",
+  "approved_original_art_replaced": false,
+  "source": {
+    "file": "Ender_ender_face_hair_v1.glb",
+    "sha256": "3fc37924bb457dfe3b62877ca8709efb693a1c1c73251cf6f5dcfbe012babd38",
+    "bytes": 374052,
+    "mesh_parts": 135,
+    "mesh_count": 1,
+    "material_sections": 32,
+    "materials": 34
+  },
+  "local_normal_fixes": {
+    "Sculpt face with jaw": 4
+  },
+  "height_order_canon": "Reson > Aepex > Ender > Ionia > Lyra",
+  "limits": [
+    "not a creator-approved likeness",
+    "no skeletal mesh or animation",
+    "no retargeting",
+    "no gameplay admission"
+  ]
+}
