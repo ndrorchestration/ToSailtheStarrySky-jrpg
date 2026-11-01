@@ -128,5 +128,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-[executed on device: neontic (bcce7514-436c-4530-8f45-3b446e98a4b3)]
