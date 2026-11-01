@@ -53,7 +53,7 @@ struct Component {
     void SetVisibility(bool value){visible=value;}
 };
 struct AAureateWakePreviewActor {
-    Array<Component*> Wings, Hydrofoils;
+    Array<Component*> Wings, Hydrofoils, HydrofoilStruts;
     bool bTransitioning=false, bAllowOrbiterPreview=true;
     bool bUseRootPivotedWingPose=false, AuthoredWingMesh=false;
     bool bUseAuthoredBodyReview=false, bBodyReviewApplied=false, bUseHullSilhouetteReview=false;
@@ -62,6 +62,12 @@ struct AAureateWakePreviewActor {
     Array<int> StartWingTransforms,TargetWingTransforms,StartFoilTransforms,TargetFoilTransforms;
     static int WingPoseForMesh(EAureateWakeForm,int){return 0;}
     static int FoilPose(EAureateWakeForm,int){return 0;}
+    // Stub asserts transition-start visibility only, not Unreal transforms.
+    void UpdateWingRootMounts(){}
+    void UpdateHydrofoilStruts(){
+        for(int i=0;i<HydrofoilStruts.Num();++i)
+            HydrofoilStruts[i]->SetVisibility(Hydrofoils[i]->visible);
+    }
     bool RequestForm(EAureateWakeForm);
 };
 '''
@@ -70,10 +76,11 @@ int main(){
     int failures=0, cases=0;
     for(int mode=0;mode<7;++mode) for(int from=0;from<4;++from) for(int to=0;to<4;++to){
         if(from==to) continue;
-        Component components[6];
+        Component components[8];
         AAureateWakePreviewActor actor;
         for(int i=0;i<4;++i) actor.Wings.Add(&components[i]);
         for(int i=4;i<6;++i){components[i].visible=from==1;actor.Hydrofoils.Add(&components[i]);}
+        for(int i=6;i<8;++i){components[i].visible=from==1;actor.HydrofoilStruts.Add(&components[i]);}
         actor.bUseRootPivotedWingPose=(mode==1 || mode==2);
         actor.bUseAuthoredBodyReview=(mode==4);
         actor.bBodyReviewApplied=(mode==5);
@@ -91,6 +98,7 @@ int main(){
         bool expected=wantAccepted ? (from==1 || to==1) : from==1;
         bool ok=accepted==wantAccepted && actor.bTransitioning==wantAccepted &&
             components[4].visible==expected && components[5].visible==expected &&
+            components[6].visible==expected && components[7].visible==expected &&
             actor.CurrentForm==static_cast<EAureateWakeForm>(from);
         if(!wantAccepted) ok=ok && actor.StartWingTransforms.empty() && actor.StartFoilTransforms.empty();
         ++cases;
