@@ -1,5 +1,7 @@
 # Aureate Wake — APPROVED visual reference (creator canon)
 
+**CANONICAL NAME UPDATE — November 1, 2026:** The creator has renamed the four configurations **Skybourne, Seabourne, Submersible, and Starbourne**, respectively. The earlier labels *Skyborne*, *Seaborne*, and *Orbiter* in the historical image and engineering records are now legacy labels. See [the authoritative name and backward-compatibility contract](AUREATE_WAKE_CANONICAL_CONFIGURATION_NAMES_2026-11-01.md). This naming decision **does not replace the approved illustration, modify existing engine enum identifiers, or unlock Starbourne/Moon Bridge**.
+
 **Decision:** Creator-approved reference for **all four ship configurations**, supplied directly in the TSTSS project conversation on **2026-11-01**. This is the visual source of truth for the Aureate Wake's design, not a screenshot of an implemented engine asset.
 
 | Original art integrity | Value |
