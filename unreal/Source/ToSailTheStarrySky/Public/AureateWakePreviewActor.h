@@ -80,6 +80,14 @@ public:
     UFUNCTION(BlueprintCallable, Category="Aureate Wake|Preview")
     void RefreshWingMaterials();
 
+    /** Optional 100 cm local-+X support mesh from the noncanonical PR #631 GLB review.
+     * Uses the existing FOUR visual brackets: never spawns duplicate supports. */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Visuals")
+    TObjectPtr<UStaticMesh> AuthoredRootSupportMesh;
+
+    UFUNCTION(BlueprintCallable, Category="Aureate Wake|Visuals")
+    void RefreshRootSupportReview();
+
     /** Artist-supplied reusable wing mesh. Never changes wing identity or quantity. */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Visuals")
     TObjectPtr<UStaticMesh> AuthoredWingMesh;
