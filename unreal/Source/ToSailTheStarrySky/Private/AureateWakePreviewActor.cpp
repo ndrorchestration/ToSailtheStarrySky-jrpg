@@ -353,16 +353,22 @@ bool AAureateWakePreviewActor::RequestForm(EAureateWakeForm RequestedForm)
         StartWingTransforms.Add(Wings[Index]->GetRelativeTransform());
         TargetWingTransforms.Add(WingPoseForMesh(RequestedForm, Index));
     }
+    // Foils are deployed in Seaborne only. Keep them hidden for direct
+    // Skyborne <-> Submersible travel; show during entry/exit from Seaborne
+    // so the temporary folding animation remains visible.
+    const bool bReviewFoilsInMotion =
+        CurrentForm == EAureateWakeForm::Seaborne ||
+        RequestedForm == EAureateWakeForm::Seaborne;
     for (int32 Index = 0; Index < Hydrofoils.Num(); ++Index)
     {
         StartFoilTransforms.Add(Hydrofoils[Index]->GetRelativeTransform());
         TargetFoilTransforms.Add(FoilPose(RequestedForm, Index));
-        Hydrofoils[Index]->SetVisibility(true);
+        Hydrofoils[Index]->SetVisibility(bReviewFoilsInMotion);
     }
     bTransitioning = true;
-    // The transition exposes both hydrofoils immediately. Synchronize the
-    // removable supports in the same call to avoid a one-frame visual pop
-    // before the first Tick. These remain collision-free review proxies.
+    // Synchronize temporary mounts and hydrofoil struts immediately with
+    // the requested transition; no one-frame visibility pop before Tick.
+    // These remain collision-free, noncanonical review proxies.
     UpdateWingRootMounts();
     UpdateHydrofoilStruts();
     return true;
