@@ -9,6 +9,7 @@ import argparse
 import hashlib
 import json
 import math
+import sys
 from pathlib import Path
 
 PINNED_SOURCE_SHA = "d629faae0838fb1116c629bb8cec480899dfc9d9"
@@ -117,7 +118,7 @@ def main():
         p.error("manifest file extracted from exactly pinned PR #643 required")
     receipt=extract(Path(args.manifest).read_bytes())
     print(json.dumps(receipt,indent=2))
-    print("NOTE: only candidate lookdev metadata is source-checked; NOT canonical numerical height or native Unreal proof.")
+    print("NOTE: only candidate lookdev metadata is source-checked; NOT canonical numerical height or native Unreal proof.", file=sys.stderr)
 
 if __name__ == "__main__":
     main()
