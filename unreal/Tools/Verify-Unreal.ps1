@@ -40,7 +40,11 @@ $ExportArgument = '-ReportExportPath=' + $ReportDirectory
 # settings (including environment-specific tokens) into DefaultEngine.ini.
 # Use Epic-documented no-write flags; NEVER silently allow/revert dirty files.
 # The exact-HEAD and clean-worktree checks below remain mandatory.
-& $EditorCmd $Project -unattended -nop4 -nullrhi -NOINI -NOAUTOINIUPDATE '-ExecCmds=Automation RunTests TSTSS; Quit' $ExportArgument -log 2>&1 |
+# AndroidFileServerEditor::PostInitProperties explicitly generates a local
+# security token via TryUpdateDefaultConfigFile, bypassing generic NOINI.
+# Disable that Android-only plugin for the headless Win64 QA process only;
+# DO NOT modify the project plugin manifest or weaken the post-run diff check.
+& $EditorCmd $Project -unattended -nop4 -nullrhi -NOINI -NOAUTOINIUPDATE '-DisablePlugins=AndroidFileServer' '-ExecCmds=Automation RunTests TSTSS; Quit' $ExportArgument -log 2>&1 |
     Tee-Object (Join-Path $Evidence 'automation.log')
 if ($LASTEXITCODE -ne 0) { throw "Unreal automation command failed ($LASTEXITCODE)" }
 $ReportPath = Join-Path $Evidence 'AutomationReport/index.json'
