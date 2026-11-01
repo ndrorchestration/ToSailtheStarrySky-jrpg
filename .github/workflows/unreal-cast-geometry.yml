@@ -20,6 +20,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Check glTF structure, indices, normals and surface orientation
         run: python3 unreal/ArtSource/Characters/check_cast_geometry.py
+      - name: Check native-lineup receipt contract and canonical cast height order (engine-free)
+        run: python3 -m unittest discover -s unreal/ArtSource/Characters -p test_stage_cast_lineup.py -v
       - name: Regenerate source assets and confirm exact bytes
         env:
           TSTSS_CAST_OUTPUT: unreal/ArtSource/Characters/Candidates
