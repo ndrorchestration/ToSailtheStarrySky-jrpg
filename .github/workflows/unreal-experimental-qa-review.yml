@@ -19,6 +19,10 @@ jobs:
         run: python3 unreal/Experiments/CanonPilot/check_canon.py --self-test
       - name: Visual receipt fail-closed controls (no renderer)
         run: python3 unreal/Experiments/VisualQAPilot/check_capture.py --self-test
+      - name: Synthetic measured-to-canon ordinal adapter checks
+        run: python3 unreal/Experiments/CanonPilot/derive_observations.py --self-test
+      - name: PNG positive and adversarial container-integrity tests (synthetic, not native)
+        run: python3 -m unittest discover -s unreal/Experiments/VisualQAPilot -p 'test_*.py' -v
       - name: Assert native evidence remains UNKNOWN by default
         run: |
           python3 unreal/Experiments/CanonPilot/check_canon.py unreal/Experiments/CanonPilot/unknown_observations.json > /tmp/canon-review-results.json
