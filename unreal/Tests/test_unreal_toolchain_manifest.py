@@ -9,13 +9,14 @@ SETUP = BASE / "Tools/Prepare-UnrealBuildTools.ps1"
 
 
 class UE58BuildToolsConfig(unittest.TestCase):
-    def test_manifest_is_minimal_free_supported_cpp_sdk(self):
+    def test_manifest_includes_unreal_editor_netfx_sdk(self):
         obj = json.loads(MANIFEST.read_text(encoding="utf-8"))
         self.assertEqual(obj["version"], "1.0")
         expected = {
             "Microsoft.VisualStudio.Workload.VCTools",
             "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
             "Microsoft.VisualStudio.Component.Windows11SDK.26100",
+            "Microsoft.Net.Component.4.8.SDK",
         }
         self.assertEqual(set(obj["components"]), expected)
         self.assertEqual(len(obj["components"]), len(expected))
@@ -36,7 +37,7 @@ class UE58BuildToolsConfig(unittest.TestCase):
                           "EpicGamesLauncher.exe", "Engine/Build/BatchFiles"):
             self.assertNotIn(forbidden, script)
 
-    def test_source_manifest_requires_all_three_components(self):
+    def test_source_manifest_requires_all_four_components(self):
         script = SETUP.read_text(encoding="utf-8")
         data = json.loads(MANIFEST.read_text(encoding="utf-8"))
         for c in data["components"]:

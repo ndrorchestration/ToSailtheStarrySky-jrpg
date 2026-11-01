@@ -12,7 +12,8 @@ $Config = Get-Content -LiteralPath $Manifest -Raw | ConvertFrom-Json
 $Required = @(
     'Microsoft.VisualStudio.Workload.VCTools',
     'Microsoft.VisualStudio.Component.VC.Tools.x86.x64',
-    'Microsoft.VisualStudio.Component.Windows11SDK.26100'
+    'Microsoft.VisualStudio.Component.Windows11SDK.26100',
+    'Microsoft.Net.Component.4.8.SDK'
 )
 foreach ($Item in $Required) {
     if ($Config.components -notcontains $Item) {

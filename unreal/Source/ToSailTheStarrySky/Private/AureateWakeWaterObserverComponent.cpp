@@ -50,12 +50,13 @@ void UAureateWakeWaterObserverComponent::TickComponent(float DeltaTime,
     // Mere collision-volume overlap is not proof the hull crossed the
     // surface. This additional AABB test mirrors the foundation adapter's
     // below-surface requirement, without inventing a cinematic contact.
-    FVector HullOrigin, HullExtent;
-    FVector WaterOrigin, WaterExtent;
-    float HullRadius = 0.f;
-    float WaterRadius = 0.f;
-    PhysicalHull->GetComponentBounds(HullOrigin, HullExtent, HullRadius);
-    WaterCollision->GetComponentBounds(WaterOrigin, WaterExtent, WaterRadius);
+    // UE 5.8 exposes the component's current world-space bounds through GetBounds().
+    const FBoxSphereBounds HullBounds = PhysicalHull->GetBounds();
+    const FBoxSphereBounds WaterBounds = WaterCollision->GetBounds();
+    const FVector HullOrigin = HullBounds.Origin;
+    const FVector HullExtent = HullBounds.BoxExtent;
+    const FVector WaterOrigin = WaterBounds.Origin;
+    const FVector WaterExtent = WaterBounds.BoxExtent;
     const bool bTouchingWater =
         TSTSSWaterlineGeometry::HasMeasuredHullWaterlineIntersection(
             PhysicalHull->IsOverlappingComponent(WaterCollision),
