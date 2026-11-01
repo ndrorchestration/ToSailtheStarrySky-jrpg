@@ -37,3 +37,5 @@ jobs:
         run: python3 unreal/Tests/check_aureate_preview_visibility_cpp.py
       - name: Build and validate noncanonical hull plus canopy GLB pair (not UE import)
         run: python3 -m unittest discover -s unreal/Tests -p 'test_author_aureate_body_pair.py' -v
+      - name: Validate fail-closed two-GLB body intake (no Unreal editor)
+        run: python3 -m unittest discover -s unreal/Tests -p 'test_import_aureate_body_pair_review.py' -v
