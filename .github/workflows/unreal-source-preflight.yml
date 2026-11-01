@@ -29,3 +29,5 @@ jobs:
         run: python3 -m unittest discover -s unreal/Tests -p 'test_author_aureate_root_support.py' -v
       - name: Test fail-closed authored wing-root import
         run: python3 -m unittest discover -s unreal/Tests -p 'test_import_aureate_root_support.py' -v
+      - name: Run body integration source tests
+        run: python3 -m unittest discover -s unreal/Tests -p 'test_aureate_body_integration.py' -v
