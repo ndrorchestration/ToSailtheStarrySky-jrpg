@@ -55,6 +55,17 @@ Use `ToSailtheStarrySky-jrpg` and appropriate draft branches as the starting cod
 - Preserve noncanonical art boundaries, collision and Orbiter holds, authoritative story/save behavior, and public spoiler restrictions. No silent merges, source-of-truth replacements, public builds, or approval by passing CI.
 - On handoff use **CREATOR CANON / ESTABLISHED SPEC / IMPLEMENTED / PROPOSAL / OPEN / RESTRICTED**, with links to primary evidence and known failures.
 
+## Current combat integration watchpoints (2026-11-01 source inspection)
+
+The following are **confirmed differences in draft source interfaces**, not native compile results or claims that the branches were already integrated:
+
+1. **Data ownership:** #665 declares `FTSTSSActionDefRow` (`Attack/Spell/WeaponTechnique/Support`, `ETSTSSApproval`, `UnlockLevel`, `Learners`) and derives `FTSTSSAbilitySpec` plus learned sets for the **lower-level** `FTSTSSCombatAbilities::TryUse`. #662 declares a separate `FTSTSSBattleSkillRow` (`Spell/WeaponTechnique/JobArt`, `DesignOnly/ReviewExecutable`, mastery, weapon-class, cooldown) and implements gated `FTSTSSBattleSkillSystem::TryUseDataTable`; #666 calls the latter. **Do not wire #665's low-level catalog straight into turn-manager execution** or infer that level eligibility satisfies #662's authorization rules.
+2. **Admission/provenance:** #665 checks `CreatorApproved` for `bShipping=true`, whereas #662 requires explicit `ReviewExecutable` for its review execution path. An adapter needs a clear, fail-closed mapping and should not convert any `Placeholder`, `Proposed`, or `DesignOnly` entry into executable content.
+3. **Active-party policy:** #665's `ValidateActiveParty` requires exactly **3** distinct protagonists; #666's `InitializeEncounter` accepts **1–3** active entries. Specify separate preview/test vs production encounter semantics before harmonizing; do not silently change behavior.
+4. **Shared test verifier:** #662, #665 and #666 all edit `unreal/Tools/Verify-Unreal.ps1`. Reconcile its required-suite registry and ensure bidirectional inventory checks pass at an actual combined commit, not just on individual PR heads.
+
+**Smallest fail-closed next test:** build a disposable combined-head branch with isolated suites, prove that review-only skill execution still requires independent learning, mastery, equipment and cooldown checks, and add negative cases where level eligibility / proposed provenance alone cannot execute. Compile and run native Unreal automation only after source-level reconciliation; record exact combined SHA and do not merge.
+
 ## Concrete first task for a combat collaborator
 
 1. Inspect the current heads and changed files of #608, #662, #665 and #666; write a short interface/diff reconciliation matrix.
