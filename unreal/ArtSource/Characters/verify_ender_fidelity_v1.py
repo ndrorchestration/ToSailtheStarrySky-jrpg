@@ -11,7 +11,7 @@ from pathlib import Path
 import struct
 import sys
 
-def check(glb, receipt):
+def check(glb, receipt, required_parts=None):
     glb=Path(glb)
     raw=glb.read_bytes()
     assert len(raw)>=28 and raw[:4]==b"glTF"
@@ -32,9 +32,11 @@ def check(glb, receipt):
     assert len(parts)==receipt["source"]["mesh_parts"]
     assert len({p["name"] for p in parts})==len(parts)
     assert not any(p["vertexCount"]<3 for p in parts)
-    for key in ("Sculpt face with jaw","Sculpt nose tip","Sculpt nasal bridge",
-                "Sculpt upper lip","Sculpt goggle ring -1 outer",
-                "Sculpt hair underlayer","Hair strand fringe 00"):
+    if required_parts is None:
+        required_parts = ("Sculpt face with jaw","Sculpt nose tip","Sculpt nasal bridge",
+                          "Sculpt upper lip","Sculpt goggle ring -1 outer",
+                          "Sculpt hair underlayer","Hair strand fringe 00")
+    for key in required_parts:
         assert key in {p["name"] for p in parts}, "Missing detail: "+key
 
     def fetch(index):
