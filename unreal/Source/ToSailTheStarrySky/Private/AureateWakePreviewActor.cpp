@@ -41,7 +41,7 @@ AAureateWakePreviewActor::AAureateWakePreviewActor()
     // readable bow/midship/stern silhouette without replacing approved art.
     // All primitives have collision disabled and default to invisible.
     static ConstructorHelpers::FObjectFinder<UStaticMesh> Sphere(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
-    UStaticMesh* CurvedShape = Sphere.Succeeded() ? Sphere.Object : Shape;
+    UStaticMesh* CurvedShape = Sphere.Succeeded() ? Sphere.Object.Get() : Shape;
     const auto AddHullSection = [this](const TCHAR* Name, UStaticMesh* Mesh,
         const FVector& Location, const FVector& Scale)
     {
