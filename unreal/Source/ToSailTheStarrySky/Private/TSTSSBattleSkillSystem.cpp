@@ -21,6 +21,20 @@ bool FTSTSSBattleSkillSystem::TryUseRow(
         return false;
     }
 
+    // Reject save/reentry state that bypassed the single authoritative action path.
+    // Every accepted action must contribute exactly one actor-local turn.
+    int64 AccountedTurns = 0;
+    for (const TPair<FName, int32>& Entry : State.AcceptedTurnsByActor)
+    {
+        if (Entry.Key.IsNone() || !State.Combat.Order.Contains(Entry.Key) ||
+            Entry.Value < 0 || Entry.Value > State.Combat.AcceptedActions)
+        {
+            return false;
+        }
+        AccountedTurns += Entry.Value;
+    }
+    if (AccountedTurns != State.Combat.AcceptedActions) return false;
+
     const TSet<FName>* Learned = Knowledge.LearnedByActor.Find(ActorId);
     if (!Learned || !Learned->Contains(SkillId)) return false;
 

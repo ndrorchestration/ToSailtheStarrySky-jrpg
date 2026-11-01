@@ -114,6 +114,13 @@ bool FTSTSSBattleSpellTechniqueTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("healing capped"), Healing.Combat.Roster[0].Health, 20);
     TestEqual(TEXT("self healing charges resource"), Healing.Combat.Roster[0].Resource, 10);
 
+    FTSTSSBattleSkillState Bypassed = Initial;
+    Bypassed.Combat.AcceptedActions = 1; // Simulates an action outside the skill pipeline.
+    TestFalse(TEXT("mixed action authority cannot bypass cooldown accounting"),
+        FTSTSSBattleSkillSystem::TryUseRow(Bypassed, Knowledge, Factions,
+        TEXT("crew"), TEXT("enemy"), TEXT("Ender"), TEXT("Foe"),
+        Spark.SkillId, Spark, Rejected, RejectedCue));
+
     // Roll a full turn through the same skill executor to advance actor-local cooldowns.
     FTSTSSBattleSkillRow Claw;
     Claw.SkillId = TEXT("ReviewClaw");

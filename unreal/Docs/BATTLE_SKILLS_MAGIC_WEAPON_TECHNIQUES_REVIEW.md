@@ -46,3 +46,5 @@ Follow a sequence of **ability registry → legal target preview → determinist
 ## Full 260-seed design catalog export
 
 Run \`node unreal/Tools/export_magic_design_catalog.cjs --write\` then \`--check\` to obtain a deterministic \`unreal/DesignCatalog/ALL_MAGIC_SEEDS_DESIGN_ONLY.json\` manifest from the preserved source modules. The engine-free source-inventory workflow now checks this and uploads the generated manifest as a review artifact. It preserves all source IDs, ranks, domain proposal statuses, role/intent strings and explicit spell-level cross-mastery prerequisites. It deliberately leaves effect, targeting, numeric MP cost, VFX and animation assets **null** because those mechanics do not exist for all 260 seeds. Do not import it as an executable Unreal DataTable or treat an export PASS as editor/build/gameplay proof.
+
+**Additional fail-closed gate:** Sum of actor-local accepted turns must equal the combat accepted-action count. If a different turn executor mutates combat without updating the skill runtime, further skills are rejected rather than silently bypassing cooldowns. This rejects mixed-authority wiring; it does not solve save migrations.
