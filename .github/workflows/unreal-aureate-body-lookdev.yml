@@ -1,0 +1,29 @@
+name: Aureate Wake authored-body lookdev source gate
+on:
+  pull_request:
+    paths:
+      - 'unreal/ArtSource/ShipReview/**'
+      - 'unreal/Tests/test_aureate_body_lookdev.py'
+      - '.github/workflows/unreal-aureate-body-lookdev.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  body-mesh-review-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Source-only regression tests; no game import
+        run: python3 -m unittest discover -s unreal/Tests -p test_aureate_body_lookdev.py -v
+      - name: Generate exact two-GLB candidate and verify hashes
+        run: |
+          python3 unreal/ArtSource/ShipReview/build_aureate_body_review.py --build --output-dir /tmp/tstss_body_review
+          python3 unreal/ArtSource/ShipReview/build_aureate_body_review.py --verify --output-dir /tmp/tstss_body_review
+          python3 unreal/ArtSource/ShipReview/import_aureate_body_review.py --check --folder /tmp/tstss_body_review
+      - name: Explicit provenance limits
+        run: echo "Only offline GLB checks; native UE import, orientation, art, collision, gameplay and Orbiter remain unverified."
