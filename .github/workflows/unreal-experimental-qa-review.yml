@@ -1,0 +1,25 @@
+name: Unreal experimental QA review (engine-free)
+on:
+  pull_request:
+    paths:
+      - 'unreal/Experiments/**'
+      - '.github/workflows/unreal-experimental-qa-review.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pilot-negative-controls:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Python version
+        run: python3 --version
+      - name: Public-safe canon positive/negative controls
+        run: python3 unreal/Experiments/CanonPilot/check_canon.py --self-test
+      - name: Visual receipt fail-closed controls (no renderer)
+        run: python3 unreal/Experiments/VisualQAPilot/check_capture.py --self-test
+      - name: Assert native evidence remains UNKNOWN by default
+        run: |
+          python3 unreal/Experiments/CanonPilot/check_canon.py unreal/Experiments/CanonPilot/unknown_observations.json > /tmp/canon-review-results.json
+          python3 -c "import json; x=json.load(open('/tmp/canon-review-results.json')); assert set(x['results'].values()) == {'UNKNOWN'}"
