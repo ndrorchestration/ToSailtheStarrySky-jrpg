@@ -24,6 +24,8 @@ jobs:
         run: python3 unreal/ArtSource/Characters/check_cast_orientation.py
       - name: Cast importer preflight and sideways-axis negative controls
         run: python3 unreal/ArtSource/Characters/editor_intake.py --preflight-only
+      - name: Test native capture policy without launching Unreal
+        run: python3 unreal/ArtSource/Characters/capture_ender_review.py --self-test
       - name: Regenerate source assets and confirm exact bytes
         env:
           TSTSS_CAST_OUTPUT: unreal/ArtSource/Characters/Candidates
