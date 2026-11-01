@@ -32,13 +32,24 @@ Run `python3 check_cast_geometry.py` against `Candidates` in the repo. The gener
 
 `editor_intake.py` checks all five source hashes and GLB structure before touching the Editor. `python3 editor_intake.py --preflight-only` runs outside Unreal. In UE 5.8, enable the built-in Python Script Plugin and Editor Scripting Utilities, compile the project, and run the script in Unreal's Python console, or use the official `UnrealEditor-Cmd.exe <uproject> -ExecutePythonScript=<absolute script path>` command. Default selection is **Ender only**. Set `TSTSS_CAST_IMPORT` to one of the other names or `all` for subsequent reviews, and set a fresh alphanumeric `TSTSS_CAST_SESSION` for a uniquely named receipt.
 
-The script imports only to `/Game/ArtLookdev/Characters/<Name>` and refuses any nonempty destination. It requires exactly one `StaticMesh` and a plausible 150–230 cm maximum bound, then writes `Saved/CharacterLookdev/<session>.json` with source hash, engine version, imported object paths and bounds. A native import PASS is **not** a visual pass or a rigged asset. If the importer fails midway, the receipt says FAILED and the candidate folder must be inspected manually before another attempt; the script never deletes assets. Neither the script nor an Unreal import has been run in an actual UE installation yet.
+The script imports only to `/Game/ArtLookdev/Characters/<Name>` and refuses any nonempty destination. It requires exactly one `StaticMesh` and a 150–230 cm **Z-up** bound that dominates the X/Y bounds, then writes `Saved/CharacterLookdev/<session>.json` with source hash, engine version, imported object paths and bounds. A native import PASS is **not** a visual pass or a rigged asset. If the importer fails midway, the receipt says FAILED and the candidate folder must be inspected manually before another attempt; the script never deletes assets. On November 1, a separate content-only UE 5.8.4 sandbox imported Ender successfully at source SHA-256 `d516f68b49301cd04ae17c58eeeb2ca318b5f9b6a42f300be773fb62a7a3d6f2`, with XYZ extents 56.32 × 31.60 × 185.80 cm. This was not a game-module build or visual acceptance.
 
 Epic references: [Python Editor command line](https://dev.epicgames.com/documentation/en-us/unreal-engine/scripting-the-unreal-editor-using-python), [Interchange glTF import](https://dev.epicgames.com/documentation/unreal-engine/importing-assets-using-interchange-in-unreal-engine), [AssetImportTask](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Editor/UnrealEd/UAssetImportTask).
+
+### Native screenshot workflow — prepared, not run
+
+The earlier Unreal review-only level creation succeeded, but its screenshot attempt failed: the command-line Editor did not expose AutomationScheduler. The alternate launch did not execute. There are **no native screenshots** from that attempt.
+
+The new `capture_ender_review.py` is intended for **Tools > Execute Python Script inside an already-open Unreal Editor**, NOT for `UnrealEditor-Cmd.exe -ExecutePythonScript=...` (which exits immediately after running the script). It uses `register_slate_post_tick_callback` so asynchronous screenshot tasks can advance while the Editor runs. That runtime path remains unverified until the Windows workstation reconnects.
+
+Run the engine-free policy test first: `python3 unreal/ArtSource/Characters/capture_ender_review.py --self-test`. Only the separate content-only `Cast643Review.uproject` within `TSTSS-Cast643-UEImport-Sandbox-*` is permitted. It must have the existing Ender native import receipt (`Saved/CharacterLookdev/ender_63dbfac_native_20261101.json`), the imported candidate mesh, `EnderReviewScene_63dbfac.umap` and its four saved cameras named `ReviewCamera_front_plus_x`, `ReviewCamera_side_plus_y`, `ReviewCamera_rear_minus_x` and `ReviewCamera_threequarter`. These labels describe camera **axes**, not yet-verified anatomical directions.
+
+If the runner succeeds, it writes 800×600 PNG images and `capture_receipt.json` under a one-time Saved-only review folder `Saved/CharacterLookdev/NativeCaptures/ender643_review01`. The receipt records source hash, imported extent, engine, camera names, PNG CRC/hash and status. Any existing destination refuses replacement. The strongest possible automatic result is `CAPTURE_FILES_PRESENT_UNREVIEWED`, **not** visual acceptance. Compare the native captures side-by-side with the approved character reference, check staff grip and orientation, and resolve the conflicting Ender hair-color references before accepting any sculpt.
 
 ## Evidence status
 
 - `IMPLEMENTED`: five original valid glTF 2.0 static character lookdev meshes and deterministic source generator.
-- `OPEN`: Unreal import, Editor build, native render, skeleton/skin, animation, materials/texture quality, cinematic likeness, creator acceptance, integration into gameplay.
+- `NATIVE IMPORT PASS`: Ender static mesh imported successfully into an isolated UE 5.8.4 content-only review project.
+- `OPEN`: native screenshots, game-module Editor build, skeleton/skin, animation, materials/texture quality, cinematic likeness, creator acceptance, integration into gameplay.
 - `CREATOR CANON`: five identities and approved illustration direction; no generated GLB has been accepted as canonical game art.
 
