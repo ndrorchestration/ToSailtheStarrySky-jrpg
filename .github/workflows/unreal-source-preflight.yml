@@ -22,3 +22,5 @@ jobs:
         run: python3 unreal/Tools/test_automation_registry.py
       - name: Compare expected and registered Unreal tests
         run: python3 unreal/Tools/check_automation_registry.py
+      - name: Guard known Unreal 5.8 API and native fixture compatibility (source only)
+        run: python3 -m unittest discover -s unreal/Tools -p 'test_ue58_composed_compatibility.py' -v

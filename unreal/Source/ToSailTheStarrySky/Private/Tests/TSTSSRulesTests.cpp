@@ -196,7 +196,9 @@ bool FTSTSSSaveValidationTest::RunTest(const FString& Parameters)
         Save->PartyRoster.Add(Member);
     }
     TestTrue(TEXT("Five valid identities accepted"), Save->IsStructurallyValid());
-    Save->PartyRoster.Add(Save->PartyRoster[0]);
+    // TArray::Add cannot take a reference into its own potentially relocating data.
+    const FTSTSSCombatant ExtraMember = Save->PartyRoster[0];
+    Save->PartyRoster.Add(ExtraMember);
     TestFalse(TEXT("Oversized roster rejected"), Save->IsStructurallyValid());
     return true;
 }
