@@ -111,8 +111,8 @@ def self_test():
     with tempfile.TemporaryDirectory() as temp:
         utf16_path = Path(temp) / "native-utf16.log"
         utf8_path = Path(temp) / "native-utf8.log"
-        utf16_path.write_bytes(("\ufeff" + build).encode("utf-16-le"))
-        utf8_path.write_bytes(("\\ufeff" + render).encode("utf-8"))
+        utf16_path.write_bytes(b"\xff\xfe" + build.encode("utf-16-le"))
+        utf8_path.write_bytes(b"\xef\xbb\xbf" + render.encode("utf-8"))
         decoded_build, _ = read_log(utf16_path)
         decoded_render, _ = read_log(utf8_path)
         assert analyze(decoded_build, decoded_render, receipt)["native_build"].startswith(
