@@ -2,7 +2,7 @@
 
 **Status (2026-11-01): CREATOR-APPROVED RELATIVE RANKINGS / EXACT NUMBERS OPEN / ENGINE IMPLEMENTATION NOT AUTHORIZED BY THIS DOCUMENT.**
 
-This is a public-safe, narrow handoff of the creator's October 31 direction for *To Sail the Starry Sky*. It does not authorize numeric balancing, modified saves, spell admission, art promotion, release, or a rewrite of the canonical Godot 4.7.2 / GDScript combat source. Unreal is a parallel review/port lane; the native Godot design/behavior contract remains the gameplay authority pending explicit port acceptance.
+This is a public-safe, narrow handoff of the creator's October 31 direction for *To Sail the Starry Sky*. It does not authorize numeric balancing, modified saves, spell admission, art promotion, release, or an unreviewed gameplay rewrite. **Creator correction (2026-11-01): Unreal Engine 5.8.4 C++/Blueprints is the active forward game-development target, NOT Godot.** Former Godot/browser mechanics are legacy reference material, not forward gameplay authority. Historical Godot review PR #658 was closed unmerged as wrong-engine work.
 
 ## Canonical ranking, across all five characters
 
@@ -45,13 +45,13 @@ The above table is **characterization**, not an approved new numeric target. The
 
 Existing creator locks include Ender's Level 1 primary Spirit = 12 and Ionia's Presence = 9. Preserve both until explicitly changed. The primary-stat substrate is Might, Grace, Wits, Spirit, Presence, not the arbitrary ATK/DEF/MAG/LCK numbers printed by prior generated mockups.
 
-## Narrow native implementation plan (not executed by this document)
+## Unreal Engine 5.8.4 implementation plan (review-only; not executed by this document)
 
-1. Pin the actual Godot native combat branch and file/asset identities; inspect current formulas, resources, saves, loading, releveling, and initial roster defaults. Do not assume the browser reference is the native implementation.
-2. Specify whether "MAG" is a user-facing derived power, primary value, or a distinct independent stat, and whether "MP" is a new resource or maps to an existing one. Decide spell cost rules separately. The Five Lights story affinities grant no automatic spell schools, abilities, or stat boosts.
+1. Pin the actual Unreal native combat branch and exact commit; inspect `FTSTSSCombatant`, the combat rules, any approved party DataAsset, SaveGame field mapping, initial roster defaults, growth, and UI projection. Do not assume the old Godot/browser models describe the Unreal implementation.
+2. Specify whether "MAG" is a derived power, primary attribute, or distinct independent stat, and whether "MP" maps to Unreal `Resource/MaxResource` or requires its own SaveGame fields and versioned migration. Until decided, never silently relabel generic resources as MP. The Five Lights story affinities grant no automatic spell schools, abilities, or stat boosts.
 3. Propose exact numeric Level 1 values with an explicit formula or table, plus rationale for fragile-caster survivability; review progression to Level 175 and recruitment-level scaling. Do not equate the Level 1 ranking with a mandatory same rank at every level.
-4. Add unit/regression tests for all strict inequalities; exercise zero equipment and non-zero starter equipment separately; verify initial, save/load, migration, leveling, UI readback and any native-to-Unreal serialization.
-5. Run native Godot smoke/CI at an exact commit head. Require player-facing balance evidence and creator numerical approval before declaring stats canonical. Keep the change in an isolated draft PR; no automatic merge or public release.
+4. Add Unreal automation tests for strict inequalities; exercise unmodified and starter-equipped profiles separately; verify Level 1, save/load migration, leveling, Blueprint/UI readback, and reproducible native Editor behavior.
+5. Run native UE 5.8.4 UBT/UHT Editor compile and TSTSS automation at an exact commit head, then separately review actual gameplay and UI. Require creator approval of numeric balance before canonizing values. Keep work in isolated draft PRs; no automatic merge or release.
 
 ## Visual art and communication contract
 
