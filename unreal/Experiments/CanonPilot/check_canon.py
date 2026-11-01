@@ -21,10 +21,17 @@ def evaluate(contract, receipt):
         raise ValueError("not_observed cannot contain observations")
     if kind in ("native_receipt", "candidate_manifest"):
         if kind == "candidate_manifest":
-            if not re.fullmatch("[0-9a-f]{40}", receipt.get("manifest_blob_sha", "")):
-                raise ValueError("candidate_manifest requires git manifest_blob_sha")
-            if not receipt.get("evidence_location"):
-                raise ValueError("candidate_manifest requires evidence_location")
+            from check_pinned_cast_manifest import (
+                PINNED_SOURCE_SHA, PINNED_BLOB_SHA, EVIDENCE_URL,
+            )
+            if receipt.get("source_sha") != PINNED_SOURCE_SHA:
+                raise ValueError("candidate source commit mismatch")
+            if receipt.get("manifest_blob_sha") != PINNED_BLOB_SHA:
+                raise ValueError("candidate manifest blob mismatch")
+            if receipt.get("evidence_location") != EVIDENCE_URL:
+                raise ValueError("candidate evidence URL mismatch")
+            if set(observed) - {"height_order"}:
+                raise ValueError("candidate lookdev manifest only supports height_order")
     if kind == "native_receipt":
         if not re.fullmatch("[0-9a-f]{40}", receipt.get("source_sha", "")):
             raise ValueError("native_receipt requires source_sha")
@@ -71,8 +78,14 @@ def self_test(contract):
             pass
         else:
             raise AssertionError("unknown field accepted")
-    candidate = {**good, "source_kind": "candidate_manifest",
-                 "manifest_blob_sha": "a"*40, "evidence_location": "git-show pinned fixture"}
+    from check_pinned_cast_manifest import (
+        PINNED_SOURCE_SHA, PINNED_BLOB_SHA, EVIDENCE_URL,
+    )
+    candidate = {"schema_version": 1, "source_kind": "candidate_manifest",
+                 "observations": {"height_order": list(expect["height_order"])},
+                 "source_sha": PINNED_SOURCE_SHA,
+                 "manifest_blob_sha": PINNED_BLOB_SHA,
+                 "evidence_location": EVIDENCE_URL}
     assert set(evaluate(contract, candidate).values()) == {
         "MATCHES_PINNED_LOOKDEV_MANIFEST_NOT_NATIVE_OR_CANON"}
     print("PASS: synthetic-positive, five negative controls, missing-evidence, unknown-field, candidate-source separation")
