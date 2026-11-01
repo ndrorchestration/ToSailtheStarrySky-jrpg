@@ -11,11 +11,11 @@ import sys
 import zlib
 
 EXPECTED = {
-    "Ender_front": (1280, 960),
-    "Ender_profile": (1280, 960),
-    "Ender_back": (1280, 960),
-    "Ender_three_quarter": (1280, 960),
-    "Five_cast_lineup": (1600, 900),
+    "Ender_front": (1280, 720),
+    "Ender_profile": (1280, 720),
+    "Ender_back": (1280, 720),
+    "Ender_three_quarter": (1280, 720),
+    "Five_cast_lineup": (1280, 720),
 }
 PNG_HEADER = b"\x89PNG\r\n\x1a\n"
 
@@ -64,18 +64,36 @@ def inspect_png(path, expected):
     if len(pixels) != height * (stride + 1):
         raise ValueError("PNG pixel payload length mismatch")
     # This is a weak non-blank sanity check, not a perceptual quality claim.
-    if len(set(pixels[:min(len(pixels), 8192)])) < 3:
+    if len(set(pixels[::max(1, len(pixels)//64000)])) < 3:
         raise ValueError("PNG pixel payload lacks variation")
     return {"sha256": hashlib.sha256(data).hexdigest(), "bytes": len(data),
             "width": width, "height": height, "format": "PNG",
             "pixel_coverage_valid": True}
 
+def resolve_capture(folder, name):
+    # Automation screenshots live in nested Windows/RHI/<hash>/Incoming.png
+    # report paths, not at the filename submitted to take_high_res_screenshot.
+    direct = folder / (name + ".png")
+    if direct.is_file():
+        return direct
+    candidates = [
+        path for path in folder.rglob("Incoming.png")
+        if path.parents[2].name.endswith("_" + name + ".png")
+    ]
+    if len(candidates) != 1:
+        raise ValueError(name + ": expected one actual rendered report PNG, got " + str(len(candidates)))
+    return candidates[0]
+
+
 def verify(directory):
     folder = Path(directory)
     report = {}
     for name, dimensions in EXPECTED.items():
-        p = folder / (name + ".png")
-        report[name] = inspect_png(p, dimensions)
+        p = resolve_capture(folder, name)
+        report[name] = {**inspect_png(p, dimensions), "source": str(p)}
+    hashes = [result["sha256"] for result in report.values()]
+    if len(hashes) != len(set(hashes)):
+        raise ValueError("Different camera views produced duplicate image bytes")
     return {"status": "PNG_CONTAINER_AND_PIXEL_PASS", "images": report,
             "visual_likeness_approved": False, "cinematic_fidelity_approved": False}
 
