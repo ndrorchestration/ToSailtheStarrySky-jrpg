@@ -64,6 +64,7 @@ $RequiredTests = @(
     'TSTSS.CombatData.CatalogBridge',
     'TSTSS.CombatIntegration.DataContractCannotAutoAuthorize',
     'TSTSS.CombatIntegration.ProgressiveRecruitmentPartySize',
+    'TSTSS.CombatData.NonExecutableSkillReconciliation',
     'TSTSS.Combat.EncounterCompletion',
     'TSTSS.FirstWake.RequiresOrderedMilestones',
     'TSTSS.FirstWake.WaterLandingRequiresMeasuredStability',
