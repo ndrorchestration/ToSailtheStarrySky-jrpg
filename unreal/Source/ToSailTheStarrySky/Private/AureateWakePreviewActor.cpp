@@ -76,6 +76,64 @@ void AAureateWakePreviewActor::BeginPlay()
     RefreshWingMeshes();
     RefreshWingMaterials();
     RefreshRootSupports();
+    // Review-only body meshes remain inactive unless explicitly opted in.
+    RefreshBodyReviewMeshes();
+}
+
+bool AAureateWakePreviewActor::RefreshBodyReviewMeshes()
+{
+    // Review-only authorization. Never change geometry during an active
+    // transition or from the story-gated Orbiter state.
+    if (!Hull || !ForwardBridge || bTransitioning ||
+        CurrentForm == EAureateWakeForm::Orbiter)
+    {
+        return false;
+    }
+
+    if (!bUseAuthoredBodyReview)
+    {
+        // Fully reversible: reinstate the exact original noncanonical cube
+        // proxies and their original centimer-scale transforms.
+        UStaticMesh* PreviewCube = OriginalCubeWingMesh.Get();
+        if (!PreviewCube)
+        {
+            return false;
+        }
+        Hull->SetStaticMesh(PreviewCube);
+        Hull->SetRelativeLocation(FVector::ZeroVector);
+        Hull->SetRelativeRotation(FRotator::ZeroRotator);
+        Hull->SetRelativeScale3D(FVector(8.f, 1.5f, .65f));
+        ForwardBridge->SetStaticMesh(PreviewCube);
+        ForwardBridge->SetRelativeLocation(FVector(240.f, 0.f, 95.f));
+        ForwardBridge->SetRelativeRotation(FRotator::ZeroRotator);
+        ForwardBridge->SetRelativeScale3D(FVector(2.1f, 1.1f, 1.1f));
+        return true;
+    }
+
+    UStaticMesh* NewHull = AuthoredHullReviewMesh.Get();
+    UStaticMesh* NewBridge = AuthoredBridgeDomeReviewMesh.Get();
+    // Do not permit arbitrary game assets or even other review directories:
+    // import location is NOT proof of art approval, but constrains scope.
+    if (!NewHull || !NewBridge ||
+        !NewHull->GetPathName().StartsWith(
+            TEXT("/Game/TSTSS/Review/ShipArt/HullCandidateV1/")) ||
+        !NewBridge->GetPathName().StartsWith(
+            TEXT("/Game/TSTSS/Review/ShipArt/BridgeDomeCandidateV1/")))
+    {
+        return false; // Fail closed without modifying either mesh.
+    }
+
+    // GLBs are authored as an integrated 1:1 review body in local cm
+    // coordinates. Native meter/up-axis orientation MUST pass editor QA.
+    Hull->SetStaticMesh(NewHull);
+    Hull->SetRelativeLocation(FVector::ZeroVector);
+    Hull->SetRelativeRotation(FRotator::ZeroRotator);
+    Hull->SetRelativeScale3D(FVector::OneVector);
+    ForwardBridge->SetStaticMesh(NewBridge);
+    ForwardBridge->SetRelativeLocation(FVector(240.f, 0.f, 95.f));
+    ForwardBridge->SetRelativeRotation(FRotator::ZeroRotator);
+    ForwardBridge->SetRelativeScale3D(FVector::OneVector);
+    return true; // Render-only geometry; no physics or story authority.
 }
 
 void AAureateWakePreviewActor::RefreshWingMeshes()
@@ -313,6 +371,9 @@ bool AAureateWakePreviewActor::RequestForm(EAureateWakeForm RequestedForm)
         // Root-pivoted authored GLB crosses provisional hull/bridge during
         // direct Orbiter interpolation. Do not attempt until a safe route exists.
         (bUseRootPivotedWingPose && (RequestedForm == EAureateWakeForm::Orbiter || CurrentForm == EAureateWakeForm::Orbiter)) ||
+        // Neither new body lookdev nor its glazing has passed any Orbiter
+        // clearance or creator approval. Explicitly hold those transitions.
+        (bUseAuthoredBodyReview && (RequestedForm == EAureateWakeForm::Orbiter || CurrentForm == EAureateWakeForm::Orbiter)) ||
         bTransitioning || RequestedForm == CurrentForm ||
         (RequestedForm == EAureateWakeForm::Orbiter && !bAllowOrbiterPreview))
     {
