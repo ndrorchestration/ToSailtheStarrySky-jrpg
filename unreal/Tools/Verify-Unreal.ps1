@@ -7,8 +7,27 @@ $ErrorActionPreference = 'Stop'
 $Project = (Resolve-Path (Join-Path $PSScriptRoot '../ToSailTheStarrySky.uproject')).Path
 $BuildTool = Join-Path $EngineRoot 'Engine/Build/BatchFiles/Build.bat'
 $EditorCmd = Join-Path $EngineRoot 'Engine/Binaries/Win64/UnrealEditor-Cmd.exe'
-if (-not (Test-Path $BuildTool)) { throw "Missing Unreal Build.bat at $BuildTool" }
-if (-not (Test-Path $EditorCmd)) { throw "Missing UnrealEditor-Cmd.exe at $EditorCmd" }
+if (-not (Test-Path $BuildTool -PathType Leaf)) { throw "Missing Unreal Build.bat at $BuildTool" }
+if (-not (Test-Path $EditorCmd -PathType Leaf)) { throw "Missing UnrealEditor-Cmd.exe at $EditorCmd" }
+# The project .uproject uses the 5.8 family, but a native review receipt must
+# identify the exact tested Windows patch. Reject a wrong/stale EngineRoot.
+$VersionPath = Join-Path $EngineRoot 'Engine/Build/Build.version'
+if (-not (Test-Path $VersionPath -PathType Leaf)) { throw "Missing Engine/Build/Build.version at $VersionPath" }
+try {
+    $EngineVersion = Get-Content -LiteralPath $VersionPath -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+} catch {
+    throw "Could not parse Unreal Engine version metadata at $VersionPath : $_"
+}
+if ($null -eq $EngineVersion.MajorVersion -or $null -eq $EngineVersion.MinorVersion -or
+    $null -eq $EngineVersion.PatchVersion) {
+    throw "Incomplete Unreal Engine version metadata at $VersionPath"
+}
+if ($EngineVersion.MajorVersion -ne 5 -or $EngineVersion.MinorVersion -ne 8 -or
+    $EngineVersion.PatchVersion -ne 4) {
+    throw ("Incorrect Unreal version: found {0}.{1}.{2}; this review requires 5.8.4" -f
+        $EngineVersion.MajorVersion, $EngineVersion.MinorVersion, $EngineVersion.PatchVersion)
+}
+Write-Host "Verified Unreal Engine build metadata: 5.8.4 (not a native build PASS)"
 $EvidenceRoot = Join-Path $PSScriptRoot '../Saved/MigrationEvidence'
 $GitHead = (git -C (Join-Path $PSScriptRoot '../..') rev-parse HEAD)
 if ($LASTEXITCODE -ne 0 -or -not $GitHead) { throw 'Unable to resolve repository HEAD' }
