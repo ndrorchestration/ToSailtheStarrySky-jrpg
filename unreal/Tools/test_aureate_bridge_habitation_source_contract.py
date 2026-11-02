@@ -73,28 +73,28 @@ class BridgeHabitationSourceContractTests(unittest.TestCase):
         changed = self.source.replace(
             "LivingQuartersEnvelope->SetupAttachment(BridgeHabitationPivot);",
             "LivingQuartersEnvelope->SetupAttachment(VesselRoot);")
-        with self.assertRaisesRegex(ValueError, "C\+\+"):
+        with self.assertRaisesRegex(ValueError, r"C\+\+"):
             check_contract(self.header, changed)
 
     def test_mutant_uncoupling_dome_rejected(self):
         changed = self.source.replace(
             "ForwardBridge->SetupAttachment(BridgeHabitationPivot);",
             "ForwardBridge->SetupAttachment(VesselRoot);")
-        with self.assertRaisesRegex(ValueError, "C\+\+"):
+        with self.assertRaisesRegex(ValueError, r"C\+\+"):
             check_contract(self.header, changed)
 
     def test_mutant_exposing_quarters_by_default_rejected(self):
         changed = self.source.replace(
             "LivingQuartersEnvelope->SetVisibility(false); // No added default art or habitation geometry.",
             "LivingQuartersEnvelope->SetVisibility(true); // No added default art or habitation geometry.")
-        with self.assertRaisesRegex(ValueError, "C\+\+"):
+        with self.assertRaisesRegex(ValueError, r"C\+\+"):
             check_contract(self.header, changed)
 
     def test_mutant_removing_pivot_motion_rejected(self):
         changed = self.source.replace(
             "BridgeHabitationPivot->SetRelativeRotation(FQuat::Slerp(",
             "BridgeHabitationPivot->SetRelativeRotation(FQuat::Identity /*")
-        with self.assertRaisesRegex(ValueError, "C\+\+"):
+        with self.assertRaisesRegex(ValueError, r"C\+\+"):
             check_contract(self.header, changed)
 
 
