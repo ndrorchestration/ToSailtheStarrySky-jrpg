@@ -5,7 +5,7 @@ from pathlib import Path
 import unittest
 import zlib
 
-from verify_ender_comparison_pixels import check_pair_coverage, decode_png_rgb
+from verify_ender_comparison_pixels import check_pair_coverage, check_pair_apparent_height, decode_png_rgb
 
 
 def chunk(kind, payload):
@@ -14,7 +14,7 @@ def chunk(kind, payload):
 
 
 def make_png(width=160, height=120, rgba=False, left=True, right=True,
-             background=(12, 14, 17), filter_method=0):
+             background=(12, 14, 17), filter_method=0, right_top=23):
     channels = 4 if rgba else 3
     lines = []
     prior = bytes(width * channels)
@@ -24,7 +24,7 @@ def make_png(width=160, height=120, rgba=False, left=True, right=True,
             rgb = background
             if left and 19 <= x <= 52 and 23 <= y <= 105:
                 rgb = (180, 95, 74)
-            if right and 107 <= x <= 141 and 23 <= y <= 105:
+            if right and 107 <= x <= 141 and right_top <= y <= 105:
                 rgb = (64, 174, 130)
             pixels.extend(rgb)
             if rgba:
@@ -72,6 +72,17 @@ class PixelPairGateTests(unittest.TestCase):
         self.assertFalse(result["rigging_verified"])
         self.assertGreater(result["regions"]["EnderV1_left"]["foreground_fraction"], .05)
         self.assertGreater(result["regions"]["EnderV2_right"]["foreground_fraction"], .05)
+
+    def test_apparent_height_equal_and_unfair(self):
+        self.path.write_bytes(make_png())
+        passed = check_pair_apparent_height(self.path, expected=(160,120))
+        self.assertEqual(passed["height_ratio"], 1)
+        self.path.write_bytes(make_png(left=False))
+        with self.assertRaisesRegex(ValueError, "missing measurable silhouette"):
+            check_pair_apparent_height(self.path, expected=(160,120))
+        self.path.write_bytes(make_png(right_top=63))
+        with self.assertRaisesRegex(ValueError, "apparent-scale mismatch"):
+            check_pair_apparent_height(self.path, expected=(160,120))
 
     def test_rgba_pair_visible(self):
         self.check(make_png(rgba=True))

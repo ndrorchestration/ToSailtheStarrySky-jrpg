@@ -28,6 +28,12 @@ CAMERAS = (
     ("comparison_front", (0.0, 590.0, 108.0), -90.0, 43.0),
     ("comparison_three_quarter", (400.0, 400.0, 108.0), -135.0, 43.0),
 )
+# Front retains its previously verified perspective camera. One orthographic
+# three-quarter camera eliminates perspective depth-dependent apparent scale.
+CAMERA_PROJECTIONS = {
+    "comparison_front": {"mode": "perspective"},
+    "comparison_three_quarter": {"mode": "orthographic", "ortho_width_cm": 480.0},
+}
 CANON_HEIGHT = "Reson > Aepex > Ender > Ionia > Lyra"
 MAP = "/Game/ArtLookdev/ReviewMaps/TSTSS_EnderFidelityV2_Review"
 
@@ -89,7 +95,15 @@ def review_plan():
     for _, pos, _, fov in CAMERAS:
         if any(not isinstance(v, (int, float)) for v in pos) or not 35 <= fov <= 55:
             raise ValueError("Invalid camera preset")
+    if set(CAMERA_PROJECTIONS) != set(name for name, *_ in CAMERAS):
+        raise ValueError("Missing camera projection contract")
+    if CAMERA_PROJECTIONS["comparison_front"] != {"mode": "perspective"}:
+        raise ValueError("Front camera unexpectedly changed")
+    if CAMERA_PROJECTIONS["comparison_three_quarter"] != {
+            "mode": "orthographic", "ortho_width_cm": 480.0}:
+        raise ValueError("Three-quarter must use matched-scale orthographic projection")
     return {
+        "camera_projections": CAMERA_PROJECTIONS,
         "status": "SOURCE_REVIEW_STAGE_ONLY_NOT_NATIVE_PROOF",
         "map": MAP,
         "candidate_positions_cm": CANDIDATE_POSITIONS,

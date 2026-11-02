@@ -26,6 +26,7 @@ class ComparisonContractTests(unittest.TestCase):
         self.assertTrue(plan["source_character_models_unchanged"])
         self.assertEqual(plan["height_order_canon"], "Reson > Aepex > Ender > Ionia > Lyra")
         self.assertEqual(len(plan["cameras"]), 2)
+        self.assertEqual(plan["camera_projections"]["comparison_three_quarter"]["ortho_width_cm"], 480.0)
 
     def test_disposable_project_only(self):
         with self.assertRaisesRegex(ValueError, "non-disposable"):
