@@ -41,3 +41,5 @@ jobs:
         run: python3 -m unittest discover -s unreal/Tests -p 'test_import_aureate_body_pair_review.py' -v
       - name: Audit every wing triangle for nondegenerate tangent UVs (offline only)
         run: python3 -m unittest discover -s unreal/Tests -p 'test_aureate_wing_uv_tangents.py' -v
+      - name: Validate sky-sea noncanonical preview textures and no-overwrite source
+        run: python3 -m unittest discover -s unreal/Tests -p 'test_author_aureate_sky_sea_review.py' -v
