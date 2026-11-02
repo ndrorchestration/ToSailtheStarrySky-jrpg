@@ -107,6 +107,23 @@ class ApprovedReferenceBodyReview(unittest.TestCase):
         self.assertLess(tail.index("UpdateHydrofoilStruts();"), tail.index("return true;"))
         self.assertIn("Companion strut visible at same transition start", NATIVE)
 
+    def test_headless_native_verifier_prevents_editor_default_ini_rewrites(self):
+        # UE 5.8 Editor initialization can update tracked DefaultEngine.ini
+        # and DefaultInput.ini even when all named native tests succeed.
+        # Keep the real test invocation and BOTH exact-head/clean-tree gates.
+        verifier = (Path(__file__).resolve().parents[1] / "Tools" / "Verify-Unreal.ps1").read_text(encoding="utf-8")
+        call = next(line for line in verifier.splitlines() if line.lstrip().startswith("& $EditorCmd $Project "))
+        self.assertIn(" -nowrite ", call)
+        self.assertIn(" -NOINI ", call)
+        self.assertIn(" -NOAUTOINIUPDATE ", call)
+        self.assertIn("'-DisablePlugins=AndroidFileServer'", call)
+        self.assertNotIn("-NoEnginePlugins", call)
+        self.assertIn("'-ExecCmds=Automation RunTests TSTSS; Quit'", call)
+        self.assertIn("if ($WorkingTree.Count -gt 0)", verifier)
+        self.assertIn("if ($LASTEXITCODE -ne 0 -or $FinalWorkingTree.Count -gt 0)", verifier)
+        self.assertIn("if ($LASTEXITCODE -ne 0 -or $FinalHead -ne $GitHead)", verifier)
+        self.assertIn("throw 'Working tree changed during verification; refusing to bind PASS to a dirty checkout'", verifier)
+
     def test_ue58_tobjectptr_mesh_identity_compatibility(self):
         # Native MSVC C2445/C2665 at the parent head: a TObjectPtr and a
         # raw UStaticMesh* cannot be implicitly mixed in the ternary or
