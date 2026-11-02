@@ -8,7 +8,25 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/InputComponent.h"
 #include "Engine/World.h"
+#include "Engine/Engine.h"
 #include "CollisionQueryParams.h"
+
+namespace
+{
+void ShowFirstWakeReviewObjective(const UTSTSSFirstWakeState* State)
+{
+#if !UE_BUILD_SHIPPING
+    if (GEngine && IsValid(State))
+    {
+        GEngine->AddOnScreenDebugMessage(
+            -1, 8.f, FColor::Cyan,
+            FString::Printf(TEXT("First Wake (review): %s"), *State->GetReviewObjectiveText()));
+    }
+#else
+    (void)State;
+#endif
+}
+}
 
 ATSTSSExplorerCharacter::ATSTSSExplorerCharacter()
 {
@@ -28,6 +46,7 @@ void ATSTSSExplorerCharacter::BeginPlay()
 {
     Super::BeginPlay();
     FirstWakeState = NewObject<UTSTSSFirstWakeState>(this);
+    ShowFirstWakeReviewObjective(FirstWakeState);
 }
 
 void ATSTSSExplorerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -88,7 +107,10 @@ void ATSTSSExplorerCharacter::Interact()
             if (TSTSSInteractionReach::IsInsidePlayerReach(
                     PawnLocation, Hit.ImpactPoint, InteractionDistance))
             {
-                Milestone->TryActivate(FirstWakeState);
+                if (Milestone->TryActivate(FirstWakeState))
+                {
+                    ShowFirstWakeReviewObjective(FirstWakeState);
+                }
             }
         }
     }
@@ -101,7 +123,10 @@ void ATSTSSExplorerCharacter::QuickSave()
 
 void ATSTSSExplorerCharacter::QuickLoad()
 {
-    LoadFirstWake(TEXT("first_wake_quick"));
+    if (LoadFirstWake(TEXT("first_wake_quick")))
+    {
+        ShowFirstWakeReviewObjective(FirstWakeState);
+    }
 }
 
 bool ATSTSSExplorerCharacter::SaveFirstWake(const FString& Slot)
