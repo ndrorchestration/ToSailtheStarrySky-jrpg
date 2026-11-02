@@ -1,6 +1,36 @@
-# Unreal Engine 5.8 migration — experimental source track
+# Unreal Engine 5.8 — active forward-development review track
 
-This is a **native UE C++ project scaffold**, not yet a compiled or playable port. UE 5.8 is the selected initial engine target. The existing Godot project and preserved browser code remain untouched.
+**2026-11-02 · Unreal-first decision · review/experimental; not a completed native game.**
+UE **5.8.4** is the observed Windows development patch within the project's
+`EngineAssociation: "5.8"` family. The preserved Godot and browser projects
+remain historical implementations and regression sources, not the selected
+forward gameplay engine. No automatic engine or legacy-save migration is approved.
+
+**Evidence, with scope:** The native Game and Editor targets have compiled
+and 23/23 Editor automations ran on [draft #685](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/685)
+**at that older head**. Draft [#694](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/694)
+tracks a real, isolated, seven-marker V2 Prelude `.umap`; draft [#704](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/704)
+addresses third-person camera/range interaction. The current stacked
+[draft #712](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/712)
+adds read-only objectives, E/J cues, separate PIE F5/F9 review slots and
+additional source/portable-C++ tests. At its inspected **`a1b07b64841c2cb6b735fdd66f2ecd6426cab016`** head,
+three GitHub source workflows were green. **Native Editor build, all
+25 registered automations, E/J/F5/F9 Play In Editor, renderer acceptance,
+sea-contact physics, full Splashdown and a Windows packaged launch remain
+unverified at #712's head.** Draft ancestors and older test receipts do not
+establish the new revision as playable or production ready.
+
+Start with [First Wake V2 PIE acceptance matrix](Docs/FIRST_WAKE_V2_PIE_ACCEPTANCE_MATRIX_2026-11-02.md),
+[review objective and save behavior](Docs/FIRST_WAKE_REVIEW_OBJECTIVES_2026-11-02.md),
+and [current source/dependency handoff](Docs/FIRST_WAKE_DEPENDENCY_HANDOFF_2026-11-02.md).
+Root `AGENTS.md` and `README.md` still contain dated Godot-first instructions
+on this **unmerged** branch; reconcile engine-authority changes separately
+through the existing [#657](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/657)
+and [#711](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/711)
+review tracks. These root files are **not** used as the current engine
+decision for new work.
+
+## Earlier foundation setup (preserved for provenance)
 
 ## Windows setup
 
@@ -8,7 +38,11 @@ This is a **native UE C++ project scaffold**, not yet a compiled or playable por
 2. Open `unreal/ToSailTheStarrySky.uproject` through the Unreal Editor or generate project files and compile the Editor target.
 3. Verify successful editor launch, then add authored maps, assets, runtime systems, automated functional tests and packaging rules in separate, reviewable changes.
 
-No official character meshes/textures, maps, compiled binaries, or approved cinematic sequences are included in this scaffold. A static approved illustration is **not** by itself an importable rigged game character.
+This repository now contains an isolated noncanonical V2 Prelude review map
+and source-level character/ship blockouts on separate review branches. The
+approved 2D cast reference does **not** automatically approve these 3D models,
+their rigs, materials or any cinematic result. A reviewed older-build receipt
+is not evidence that this branch has compiled or rendered.
 
 ## Migration constraints
 
@@ -17,9 +51,16 @@ No official character meshes/textures, maps, compiled binaries, or approved cine
 - **Party lock:** Ender → Ionia → Lyra → Reson → Aepex. Three active combat members planned. Party resonance is story energy, not automatic combat magic.
 - **Five Lights:** Ender/Spirit, Ionia/Earth, Lyra/Water, Reson/Fire, Aepex/Air are narrative affinities, not mandatory magic classes.
 - **Game systems:** Preserve deterministic, transactional combat semantics and data-driven stats, costs and skills. Define UE native serialization IDs and versioned save migrations before replacing Godot saves.
-- **Ship/world:** Aureate Wake supports flight, sea, submersible and hidden Moon Bridge modes, staged behind separate feature gates. Planet and moon traversal remain future milestones.
+- **Ship/world:** The four player-facing Aureate Wake configuration names are **Skybourne, Seabourne, Submersible, Starbourne**. The early code may retain older enum identifiers for backward serialization. Starbourne remains fail-closed; ship form transitions, hydrofoils and rotating geodesic bridge/living quarters are independently gated visual/physics review prototypes. Planet and moon traversal are future milestones.
 - **Quality:** Prioritize creator-approved cinematic art with documented budget and performance targets. A technical compile or frame capture is not art approval.
 
-## Next thin vertical slice
+## Next admission step — actually playable Prelude
 
-A single noncanonical test map with a third-person Ender pawn, Ionia interaction, boarding trigger and a sea-contact event; use isolated authored assets and capture Windows packaged-build evidence. Only then port the full First Wake beats and combat UI. Do not merge based on this README/scaffold alone.
+A seven-stop V2 review map and native milestone source now exist. The **smallest
+reversible next step** is to compile draft #712 at its exact HEAD with the
+Win64 Unreal Editor, run `unreal/Tools/Verify-Unreal.ps1` with **25 exact
+named automation results**, then perform P01–P13 in a **disposable** PIE
+checkout. Do not create a synthetic sea-contact marker to manufacture
+Splashdown: actual contact and stable flotation require separate native
+physics evidence. Any success must include source SHA, logs, evidence
+and unmodified original map/save files. Do not merge based on this README.
