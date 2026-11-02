@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "status": "DRAFT_SOURCE_DECLARATIONS_ONLY_NO_INSTALL_OR_UPGRADE",
+  "project": {
+    "engine_association": "5.8",
+    "module": "ToSailTheStarrySky",
+    "module_type": "Runtime",
+    "enabled_plugins": [
+      "PythonScriptPlugin"
+    ],
+    "native_module_dependencies": [
+      "Core",
+      "CoreUObject",
+      "Engine",
+      "InputCore"
+    ],
+    "target_build_settings": "V7",
+    "target_include_order": "Unreal5_8",
+    "declared_plugins": [
+      {
+        "Name": "PythonScriptPlugin",
+        "Enabled": true
+      }
+    ],
+    "private_module_dependencies": [],
+    "dynamically_loaded_module_dependencies": [],
+    "public_include_path_module_dependencies": [],
+    "private_include_path_module_dependencies": [],
+    "loading_phase": "Default"
+  },
+  "legacy": {
+    "package_name": "Aetherwake",
+    "lockfile_version": 3,
+    "dev_dependencies": {
+      "nw": "^0.116.0",
+      "nwjs": "^1.4.4",
+      "nw-builder": "^4.5.0",
+      "playwright": "^1.63.0"
+    }
+  },
+  "policy": {
+    "update_versions": false,
+    "install_dependencies": false,
+    "native_unreal_build_verified": false,
+    "release_authorized": false,
+    "root_authority_owner": "separate PR #657 / #711 review"
+  }
+}

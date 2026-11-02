@@ -8,7 +8,78 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/InputComponent.h"
 #include "Engine/World.h"
+#include "Engine/Engine.h"
+#include "Kismet/GameplayStatics.h"
 #include "CollisionQueryParams.h"
+
+namespace
+{
+// This review slot captures story/inspection state, not pawn location.
+void ShowFirstWakeReviewSaveLoadStatus(const bool bLoad, const bool bSucceeded)
+{
+#if !UE_BUILD_SHIPPING
+    if (!GEngine) return;
+    const TCHAR* Message = bLoad
+        ? (bSucceeded
+            ? TEXT("First Wake (review): story progress loaded; position unchanged")
+            : TEXT("First Wake (review): load failed; no progress restored"))
+        : (bSucceeded
+            ? TEXT("First Wake (review): story progress saved; position not saved")
+            : TEXT("First Wake (review): save failed; progress not confirmed"));
+    GEngine->AddOnScreenDebugMessage(
+        -1, 8.f, bSucceeded ? FColor::Green : FColor::Red, Message);
+#else
+    (void)bLoad;
+    (void)bSucceeded;
+#endif
+}
+
+// Rejected interactions show the current objective, without implying the
+// engine determined why the milestone was refused (order, repetition, etc.).
+void ShowFirstWakeReviewProtectedSlotWarning(const bool bLoad)
+{
+#if !UE_BUILD_SHIPPING
+    if (GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 8.f, FColor::Red,
+            bLoad
+                ? TEXT("First Wake (review): no quicksave made in this PIE session")
+                : TEXT("First Wake (review): existing PIE quicksave protected; refusing overwrite"));
+    }
+#else
+    (void)bLoad;
+#endif
+}
+
+void ShowFirstWakeReviewBlockedInteraction(const UTSTSSFirstWakeState* State)
+{
+#if !UE_BUILD_SHIPPING
+    if (GEngine && IsValid(State))
+    {
+        GEngine->AddOnScreenDebugMessage(
+            -1, 5.f, FColor::Yellow,
+            FString::Printf(TEXT("First Wake (review): no progress; objective: %s"),
+                            *State->GetReviewObjectiveText()));
+    }
+#else
+    (void)State;
+#endif
+}
+
+void ShowFirstWakeReviewObjective(const UTSTSSFirstWakeState* State)
+{
+#if !UE_BUILD_SHIPPING
+    if (GEngine && IsValid(State))
+    {
+        GEngine->AddOnScreenDebugMessage(
+            -1, 8.f, FColor::Cyan,
+            FString::Printf(TEXT("First Wake (review): %s  [J to recall]"), *State->GetReviewObjectiveText()));
+    }
+#else
+    (void)State;
+#endif
+}
+}
 
 ATSTSSExplorerCharacter::ATSTSSExplorerCharacter()
 {
@@ -28,6 +99,8 @@ void ATSTSSExplorerCharacter::BeginPlay()
 {
     Super::BeginPlay();
     FirstWakeState = NewObject<UTSTSSFirstWakeState>(this);
+    bPIEReviewQuickSlotOwned = false;
+    ShowFirstWakeReviewObjective(FirstWakeState);
 }
 
 void ATSTSSExplorerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -41,6 +114,7 @@ void ATSTSSExplorerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
     PlayerInputComponent->BindAction(TEXT("Interact"), IE_Pressed, this, &ATSTSSExplorerCharacter::Interact);
     PlayerInputComponent->BindAction(TEXT("QuickSave"), IE_Pressed, this, &ATSTSSExplorerCharacter::QuickSave);
     PlayerInputComponent->BindAction(TEXT("QuickLoad"), IE_Pressed, this, &ATSTSSExplorerCharacter::QuickLoad);
+    PlayerInputComponent->BindAction(TEXT("ReviewObjective"), IE_Pressed, this, &ATSTSSExplorerCharacter::ShowObjectiveReview);
 }
 
 void ATSTSSExplorerCharacter::MoveForward(float Value)
@@ -88,20 +162,66 @@ void ATSTSSExplorerCharacter::Interact()
             if (TSTSSInteractionReach::IsInsidePlayerReach(
                     PawnLocation, Hit.ImpactPoint, InteractionDistance))
             {
-                Milestone->TryActivate(FirstWakeState);
+                if (Milestone->TryActivate(FirstWakeState))
+                {
+                    ShowFirstWakeReviewObjective(FirstWakeState);
+                }
+                else
+                {
+                    // A valid, in-reach marker rejected the state transition.
+                    // This does not grant progression or claim that E hit when
+                    // the camera trace missed or the target was out of reach.
+                    ShowFirstWakeReviewBlockedInteraction(FirstWakeState);
+                }
             }
         }
     }
 }
 
+void ATSTSSExplorerCharacter::ShowObjectiveReview()
+{
+    // Read-only recall of the existing short-lived objective cue.
+    ShowFirstWakeReviewObjective(FirstWakeState);
+}
+
 void ATSTSSExplorerCharacter::QuickSave()
 {
-    SaveFirstWake(TEXT("first_wake_quick"));
+    // PIE testing must not write the normal quicksave slot. Never adopt or
+    // overwrite a leftover review save from another Editor session.
+    const UWorld* World = GetWorld();
+    const bool bPIE = World && World->WorldType == EWorldType::PIE;
+    const FString Slot = bPIE ? TEXT("tstss_prelude_pie_quick") : TEXT("first_wake_quick");
+    if (bPIE && !bPIEReviewQuickSlotOwned &&
+        UGameplayStatics::DoesSaveGameExist(Slot, 0))
+    {
+        ShowFirstWakeReviewProtectedSlotWarning(false);
+        return;
+    }
+    const bool bSaved = SaveFirstWake(Slot);
+    if (bPIE && bSaved)
+    {
+        bPIEReviewQuickSlotOwned = true;
+    }
+    ShowFirstWakeReviewSaveLoadStatus(false, bSaved);
 }
 
 void ATSTSSExplorerCharacter::QuickLoad()
 {
-    LoadFirstWake(TEXT("first_wake_quick"));
+    const UWorld* World = GetWorld();
+    const bool bPIE = World && World->WorldType == EWorldType::PIE;
+    const FString Slot = bPIE ? TEXT("tstss_prelude_pie_quick") : TEXT("first_wake_quick");
+    // No stale PIE save from an earlier test session can change this pawn.
+    if (bPIE && !bPIEReviewQuickSlotOwned)
+    {
+        ShowFirstWakeReviewProtectedSlotWarning(true);
+        return;
+    }
+    const bool bLoaded = LoadFirstWake(Slot);
+    if (bLoaded)
+    {
+        ShowFirstWakeReviewObjective(FirstWakeState);
+    }
+    ShowFirstWakeReviewSaveLoadStatus(true, bLoaded);
 }
 
 bool ATSTSSExplorerCharacter::SaveFirstWake(const FString& Slot)

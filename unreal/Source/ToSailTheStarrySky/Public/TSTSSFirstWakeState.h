@@ -41,6 +41,11 @@ public:
     UFUNCTION(BlueprintPure, Category="TSTSS|First Wake")
     bool HasStarted() const { return bStarted; }
 
+    // Read-only, provisional objective cue for Unreal Prelude playtests.
+    // Does not advance the story, grant abilities, or mutate save state.
+    UFUNCTION(BlueprintPure, Category="TSTSS|First Wake|Review")
+    FString GetReviewObjectiveText() const;
+
     // Splashdown is the Prelude/Chapter 1 Act 1 boundary.
     // This is a derived view of the existing version-2 save beat, not a new slot.
     UFUNCTION(BlueprintPure, Category="TSTSS|Story")

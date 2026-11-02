@@ -80,8 +80,17 @@ def inspect_input_source(project: Path) -> dict:
                         "TSTSSInteractionReach::IsInsidePlayerReach" in cpp)
     if "LineTraceSingleByChannel" not in cpp or not pawn_range_check:
         raise RuntimeError("Pawn interaction trace or world-distance gate absent")
-    if "SaveFirstWake(TEXT(\"first_wake_quick\"))" not in cpp or "LoadFirstWake(TEXT(\"first_wake_quick\"))" not in cpp:
-        raise RuntimeError("F5/F9 native handler drift")
+    # Native input must isolate PIE saves from the normal player slot.
+    for contract in (
+        'SaveFirstWake(Slot)', 'LoadFirstWake(Slot)',
+        'EWorldType::PIE', 'TEXT("tstss_prelude_pie_quick")',
+        'TEXT("first_wake_quick")', 'bPIEReviewQuickSlotOwned',
+        'UGameplayStatics::DoesSaveGameExist(Slot, 0)',
+        'ShowFirstWakeReviewProtectedSlotWarning(false)',
+        'ShowFirstWakeReviewProtectedSlotWarning(true)',
+    ):
+        if contract not in cpp:
+            raise RuntimeError("F5/F9 review slot safety contract drift: " + contract)
     return {"config_mapping_count": len(EXPECTED_MAPPINGS) + len(EXPECTED_ACTIONS),
             "source_handlers_verified": True, "player_keyboard_input_executed": False}
 
