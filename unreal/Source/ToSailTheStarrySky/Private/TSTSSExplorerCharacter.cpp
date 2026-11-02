@@ -13,6 +13,26 @@
 
 namespace
 {
+// This review slot captures story/inspection state, not pawn location.
+void ShowFirstWakeReviewSaveLoadStatus(const bool bLoad, const bool bSucceeded)
+{
+#if !UE_BUILD_SHIPPING
+    if (!GEngine) return;
+    const TCHAR* Message = bLoad
+        ? (bSucceeded
+            ? TEXT("First Wake (review): story progress loaded; position unchanged")
+            : TEXT("First Wake (review): load failed; no progress restored"))
+        : (bSucceeded
+            ? TEXT("First Wake (review): story progress saved; position not saved")
+            : TEXT("First Wake (review): save failed; progress not confirmed"));
+    GEngine->AddOnScreenDebugMessage(
+        -1, 8.f, bSucceeded ? FColor::Green : FColor::Red, Message);
+#else
+    (void)bLoad;
+    (void)bSucceeded;
+#endif
+}
+
 void ShowFirstWakeReviewObjective(const UTSTSSFirstWakeState* State)
 {
 #if !UE_BUILD_SHIPPING
@@ -118,15 +138,18 @@ void ATSTSSExplorerCharacter::Interact()
 
 void ATSTSSExplorerCharacter::QuickSave()
 {
-    SaveFirstWake(TEXT("first_wake_quick"));
+    const bool bSaved = SaveFirstWake(TEXT("first_wake_quick"));
+    ShowFirstWakeReviewSaveLoadStatus(false, bSaved);
 }
 
 void ATSTSSExplorerCharacter::QuickLoad()
 {
-    if (LoadFirstWake(TEXT("first_wake_quick")))
+    const bool bLoaded = LoadFirstWake(TEXT("first_wake_quick"));
+    if (bLoaded)
     {
         ShowFirstWakeReviewObjective(FirstWakeState);
     }
+    ShowFirstWakeReviewSaveLoadStatus(true, bLoaded);
 }
 
 bool ATSTSSExplorerCharacter::SaveFirstWake(const FString& Slot)
