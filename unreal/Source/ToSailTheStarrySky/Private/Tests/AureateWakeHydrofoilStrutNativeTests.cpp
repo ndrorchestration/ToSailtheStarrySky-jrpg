@@ -167,6 +167,95 @@ bool FTSTSSHydrofoilStrutReviewTest::RunTest(const FString& Parameters)
             Foils[Index]->IsVisible());
     }
 
+    // Exercise all six ordered ordinary form routes in the *actual* native
+    // actor, rather than relying on engine-free proxy arithmetic. Sample
+    // 20 intermediate phases per route, plus the completed endpoint.
+    // This intentionally does NOT simulate swept geometry or fluid loads.
+    const EAureateWakeForm OrdinaryForms[3] = {
+        EAureateWakeForm::Skyborne,
+        EAureateWakeForm::Seaborne,
+        EAureateWakeForm::Submersible
+    };
+    int32 VerifiedSupportPoses = 0;
+    for (int32 FromIndex = 0; FromIndex < 3; ++FromIndex)
+    {
+        for (int32 ToIndex = 0; ToIndex < 3; ++ToIndex)
+        {
+            if (FromIndex == ToIndex) continue;
+            const EAureateWakeForm Start = OrdinaryForms[FromIndex];
+            const EAureateWakeForm Finish = OrdinaryForms[ToIndex];
+            if (Ship->GetCurrentForm() != Start)
+            {
+                if (!TestTrue(TEXT("Prepare ordinary route start"), Ship->RequestForm(Start)) ||
+                    !TestTrue(TEXT("Finish ordinary route preparation"),
+                        Ship->FinishOrdinaryPreviewTransitionForReview()))
+                {
+                    World->DestroyWorld(false);
+                    return false;
+                }
+            }
+            if (!TestTrue(TEXT("Six-route native transition starts"), Ship->RequestForm(Finish)))
+            {
+                World->DestroyWorld(false);
+                return false;
+            }
+            const float StartZ = Start == EAureateWakeForm::Seaborne ? -140.f : -45.f;
+            const float FinishZ = Finish == EAureateWakeForm::Seaborne ? -140.f : -45.f;
+            const float StepSeconds = FMath::Max(.1f, Ship->TransitionSeconds) / 20.f;
+            for (int32 Step = 0; Step < 20; ++Step)
+            {
+                Ship->Tick(Step == 0 ? 0.f : StepSeconds);
+                const float Alpha = static_cast<float>(Step) / 20.f;
+                const float Smooth = Alpha * Alpha * (3.f - 2.f * Alpha);
+                const float ExpectedZ = FMath::Lerp(StartZ, FinishZ, Smooth);
+                for (int32 Index = 0; Index < 2; ++Index)
+                {
+                    const float Side = Index == 0 ? -1.f : 1.f;
+                    const FVector Anchor(0.f, Side * 60.f, -30.f);
+                    const FVector ExpectedFoil(0.f, Side * 80.f, ExpectedZ);
+                    const FVector ExpectedMid = (Anchor + ExpectedFoil) * .5f;
+                    const FVector Span = ExpectedFoil - Anchor;
+                    const FTransform Proxy = Struts[Index]->GetRelativeTransform();
+                    const FString Prefix = FString::Printf(
+                        TEXT("Ordinary route %d to %d step %d side %d: "),
+                        FromIndex, ToIndex, Step, Index);
+                    TestTrue(*(Prefix + TEXT("foil visible while moving")), Foils[Index]->IsVisible());
+                    TestTrue(*(Prefix + TEXT("strut visible while moving")), Struts[Index]->IsVisible());
+                    TestTrue(*(Prefix + TEXT("actual foil center matches eased path")),
+                        FVector::Dist(Foils[Index]->GetRelativeLocation(), ExpectedFoil) < 0.2f);
+                    TestTrue(*(Prefix + TEXT("actual support center matches proxy span")),
+                        FVector::Dist(Struts[Index]->GetRelativeLocation(), ExpectedMid) < 0.2f);
+                    TestTrue(*(Prefix + TEXT("support length matches moving endpoints")),
+                        FMath::Abs(Struts[Index]->GetRelativeScale3D().X - Span.Size()/100.f) < 0.005f);
+                    TestTrue(*(Prefix + TEXT("inboard cube end contacts proxy anchor")),
+                        FVector::Dist(Proxy.TransformPosition(FVector(-50.f,0.f,0.f)), Anchor) < 0.3f);
+                    TestTrue(*(Prefix + TEXT("outboard cube end contacts foil center")),
+                        FVector::Dist(Proxy.TransformPosition(FVector(50.f,0.f,0.f)), ExpectedFoil) < 0.3f);
+                    ++VerifiedSupportPoses;
+                }
+            }
+            if (!TestTrue(TEXT("Complete sampled ordinary transition"),
+                Ship->FinishOrdinaryPreviewTransitionForReview()))
+            {
+                World->DestroyWorld(false);
+                return false;
+            }
+            TestEqual(TEXT("Correct end form of sampled route"), Ship->GetCurrentForm(), Finish);
+            for (int32 Index = 0; Index < 2; ++Index)
+            {
+                const bool bDeployed = Finish == EAureateWakeForm::Seaborne;
+                TestEqual(TEXT("Completed foil visibility matches destination"),
+                    Foils[Index]->IsVisible(), bDeployed);
+                TestEqual(TEXT("Completed support visibility matches destination"),
+                    Struts[Index]->IsVisible(), bDeployed);
+                ++VerifiedSupportPoses;
+            }
+            TestFalse(TEXT("Orbiter remains unavailable after ordinary route"),
+                Ship->RequestForm(EAureateWakeForm::Orbiter));
+        }
+    }
+    TestEqual(TEXT("Six routes x 21 phases x two supports"), VerifiedSupportPoses, 252);
+
     World->DestroyWorld(false);
     return true;
 }
