@@ -111,6 +111,15 @@ def distance(a, b):
 # imported mesh, physics simulation, render or continuous-collision proof.
 ORDINARY_FOIL_Z = {"Skyborne": -45.0, "Seaborne": -140.0, "Submersible": -45.0}
 
+def route_support_visible(start, end, complete=False):
+    if start == end or start not in ORDINARY_FOIL_Z or end not in ORDINARY_FOIL_Z:
+        raise ValueError("route must contain distinct ordinary forms")
+    # Hardware must be exposed only while entering/leaving Seaborne.
+    # After completion the destination form has the final authority.
+    if complete:
+        return end == "Seaborne"
+    return start == "Seaborne" or end == "Seaborne"
+
 def ordinary_route(start, end, side, fraction):
     if start == end or start not in ORDINARY_FOIL_Z or end not in ORDINARY_FOIL_Z:
         raise ValueError("route must select two distinct ordinary forms")
@@ -227,6 +236,8 @@ class ContractTests(unittest.TestCase):
     def test_six_ordinary_routes_126_samples_two_supports_each(self):
         forms = tuple(ORDINARY_FOIL_Z)
         count = 0
+        visible = 0
+        hidden = 0
         for start in forms:
             for end in forms:
                 if start == end:
@@ -254,12 +265,28 @@ class ContractTests(unittest.TestCase):
                                 self.assertAlmostEqual(last, foil[2])
                         previous[side] = foil[2]
                         per_side[side] = (anchor, foil, length)
+                        if route_support_visible(start, end, complete=(step == 20)):
+                            visible += 1
+                        else:
+                            hidden += 1
                         count += 1
                     left, right = per_side[-1], per_side[1]
                     self.assertAlmostEqual(left[2], right[2])
                     self.assertAlmostEqual(left[1][1], -right[1][1])
                     self.assertAlmostEqual(left[1][2], right[1][2])
         self.assertEqual(count, 252)  # 6 form routes x 21 phases x 2 supports
+        self.assertEqual(visible, 164)
+        self.assertEqual(hidden, 88)
+
+    def test_hydrofoils_stay_concealed_on_direct_non_seaborne_routes(self):
+        self.assertFalse(route_support_visible("Skyborne", "Submersible"))
+        self.assertFalse(route_support_visible("Submersible", "Skyborne"))
+        self.assertTrue(route_support_visible("Seaborne", "Skyborne"))
+        self.assertTrue(route_support_visible("Skyborne", "Seaborne"))
+        self.assertFalse(route_support_visible("Seaborne", "Skyborne", complete=True))
+        self.assertTrue(route_support_visible("Skyborne", "Seaborne", complete=True))
+        with self.assertRaises(ValueError):
+            route_support_visible("Orbiter", "Seaborne")
 
     def test_route_mutations_are_rejected(self):
         for bad in (("Skyborne", "Skyborne", 1, .5),
