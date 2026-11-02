@@ -113,6 +113,7 @@ class ApprovedReferenceBodyReview(unittest.TestCase):
         # Keep the real test invocation and BOTH exact-head/clean-tree gates.
         verifier = (Path(__file__).resolve().parents[1] / "Tools" / "Verify-Unreal.ps1").read_text(encoding="utf-8")
         call = next(line for line in verifier.splitlines() if line.lstrip().startswith("& $EditorCmd $Project "))
+        self.assertIn(" -nowrite ", call)
         self.assertIn(" -NOINI ", call)
         self.assertIn(" -NOAUTOINIUPDATE ", call)
         self.assertIn("'-DisablePlugins=AndroidFileServer'", call)
