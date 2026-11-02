@@ -1,6 +1,7 @@
 #include "TSTSSExplorerCharacter.h"
 #include "TSTSSMilestoneActor.h"
 #include "TSTSSPersistence.h"
+#include "TSTSSInteractionReach.h"
 #include "TSTSSSaveGame.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -65,16 +66,27 @@ void ATSTSSExplorerCharacter::Interact()
 {
     if (!FirstWakeState || !FollowCamera || !GetWorld()) return;
     const FVector Start = FollowCamera->GetComponentLocation();
-    const FVector End = Start + FollowCamera->GetForwardVector() * FMath::Max(0.f, InteractionDistance);
+    const FVector PawnLocation = GetActorLocation();
+    const float CameraTraceLength =
+        TSTSSInteractionReach::GetCameraTraceLength(Start, PawnLocation, InteractionDistance);
+    if (CameraTraceLength <= 0.f)
+    {
+        return;
+    }
+
+    // Trace across the camera boom before applying the *separate* pawn
+    // reach check. At a 360 cm boom and 300 cm interact range the old
+    // camera-only 300 cm ray could end behind the player entirely.
+    const FVector End = Start + FollowCamera->GetForwardVector() * CameraTraceLength;
     FHitResult Hit;
     FCollisionQueryParams Query(SCENE_QUERY_STAT(TSTSSInteract), false, this);
     if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Query))
     {
         if (ATSTSSMilestoneActor* Milestone = Cast<ATSTSSMilestoneActor>(Hit.GetActor()))
         {
-            // Camera boom distance cannot extend usable interaction range.
-            const float Range = FMath::Max(0.f, InteractionDistance);
-            if (FVector::DistSquared(GetActorLocation(), Hit.ImpactPoint) <= FMath::Square(Range))
+            // A longer camera ray never increases interaction reach.
+            if (TSTSSInteractionReach::IsInsidePlayerReach(
+                    PawnLocation, Hit.ImpactPoint, InteractionDistance))
             {
                 Milestone->TryActivate(FirstWakeState);
             }

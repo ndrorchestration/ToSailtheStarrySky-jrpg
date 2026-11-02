@@ -34,5 +34,9 @@ jobs:
           python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_v2_independent.py' -v
           python3 unreal/Tools/verify_first_wake_v2_independent.py --source unreal
           python3 -m py_compile unreal/Tools/verify_first_wake_v2_independent.py
+      - name: Validate third-person E interaction ray includes camera boom (source only)
+        run: python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_interaction_reach.py' -v
+      - name: Reject detached Game startup false-positive and BufferReader crash logs
+        run: python3 -m unittest discover -s unreal/Tools -p 'test_unreal_game_startup_log.py' -v
       - name: Compile and exercise actual DesignOnly C++ adapter (API doubles, not Unreal)
         run: python3 unreal/Tools/check_combat_design_only_compiled.py

@@ -76,7 +76,9 @@ def inspect_input_source(project: Path) -> dict:
     for action in EXPECTED_ACTIONS:
         if 'BindAction(TEXT("' + action + '")' not in cpp:
             raise RuntimeError("Missing native controller action binder " + action)
-    if "LineTraceSingleByChannel" not in cpp or "FVector::DistSquared" not in cpp:
+    pawn_range_check = ("FVector::DistSquared" in cpp or
+                        "TSTSSInteractionReach::IsInsidePlayerReach" in cpp)
+    if "LineTraceSingleByChannel" not in cpp or not pawn_range_check:
         raise RuntimeError("Pawn interaction trace or world-distance gate absent")
     if "SaveFirstWake(TEXT(\"first_wake_quick\"))" not in cpp or "LoadFirstWake(TEXT(\"first_wake_quick\"))" not in cpp:
         raise RuntimeError("F5/F9 native handler drift")
