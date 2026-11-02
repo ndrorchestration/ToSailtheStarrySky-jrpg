@@ -1,5 +1,8 @@
 # To Sail the Starry Sky — agent entrypoint
 
+> **Engine direction — November 1, 2026:** The creator now directs new game implementation in **Unreal Engine 5.8.4**, superseding the older Godot-first implementation instructions retained below for historical context. Preserve creator-approved story canon and Godot/browser references. Work in review-only Unreal branches; do not merge, unlock Starbourne, or treat procedural art and successful tests as art/release approval. See [engine/dependency authority register](unreal/Docs/UNREAL_DEPENDENCY_AND_AUTHORITY_REGISTER_2026-11-01.md).
+
+
 > **Required native entry gate (2026-10-28):** Do not promote the legacy Chapter 1 review scene as canonical: a genuine Godot 4.7.2 Windows capture at pinned SHA `4d2ec5fb` showed Ender + Lyra at start and Ionia-first labeled opt-in. Insist on the *normal default Godot startup* launching the creator-approved Ionia-first route, plus visual overlap inspection, before declaring Chapter 1 integration. [QA audit](docs/CHAPTER_1_NATIVE_INTEGRATION_AUDIT_2026-10-28.md).
 
 > **Planning authority, 2026-10-28:** Before new Chapter 1 feature work, read [the solo beta roadmap](docs/CHAPTER_1_BETA_ROADMAP.md) (November integration gate, March 2027 alpha, May 2027 beta planning target). Keep monthly evidence gates and exact branch state visible. Do not turn schedule estimates into ship promises; treat unmerged drafts separately from the browser reference on `main`.
