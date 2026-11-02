@@ -40,6 +40,8 @@ jobs:
         run: python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_objective_review.py' -v
       - name: Compile actual First Wake objective C++ with API stand-ins and mutation control
         run: python3 unreal/Tools/check_first_wake_objective_compiled.py --self-test
+      - name: Compile actual F5/F9 handler bodies with simulated PIE save protection
+        run: python3 unreal/Tools/check_first_wake_pie_save_compiled.py --self-test
       - name: Reject detached Game startup false-positive and BufferReader crash logs
         run: python3 -m unittest discover -s unreal/Tools -p 'test_unreal_game_startup_log.py' -v
       - name: Compile and exercise actual DesignOnly C++ adapter (API doubles, not Unreal)
