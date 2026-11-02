@@ -56,6 +56,17 @@ production assets.
 | P12 | After engineering signoff in V2, inspect story state and try to progress to Splashdown using available review markers | No false `SeaContact`, `FlotationConfirmed` or Chapter 1 Act 1 completion |
 | P13 | In a fresh PIE session with an **already existing** `tstss_prelude_pie_quick` save, press F5 and F9; preserve original bytes for comparison | F5 refuses to overwrite the pre-existing review save, F9 refuses to load it, and the external `first_wake_quick` player slot is never touched |
 
+**Existing player-save safety extension:** Before any actual native
+save test, ensure the disposable test profile contains **only**
+review-created data; never copy genuine player saves into the
+test directory. `SaveFirstWake(Slot)` is now source-gated against
+overwriting any existing SaveGame with nonempty party data or
+corrupt/unreadable metadata. A separate direct-call negative test for
+that protection is still required in a disposable native environment.
+Do not mark this as independently run by completing P09/P13 alone.
+If the engine returns a different result, preserve original file
+hashes and report BLOCKED rather than deleting or replacing the slot.
+
 **Save-test safety:** P09 must use a disposable checkout with no pre-existing
 PIE review slot. In PIE, F5/F9 now select `tstss_prelude_pie_quick`; the
 pawn records ownership only after its first successful save in the
