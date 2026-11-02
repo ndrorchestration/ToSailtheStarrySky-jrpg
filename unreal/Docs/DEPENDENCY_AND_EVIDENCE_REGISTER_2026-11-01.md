@@ -2,6 +2,71 @@
 
 **Scope:** Unreal-first development under a draft branch; **as-of November 1, 2026**. This is a *source declaration inventory and change-control contract*, not an installed-dependency audit, third-party license approval, release authorization or verified game build. The user selected **Unreal Engine 5.8.4** for forward development; historical Godot and NW.js builds are preserved for reference and recovery, not forward game changes. The separate creator-engine-authority [PR #657](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/657) proposes the canonical root `AGENTS.md` reconciliation; **this PR deliberately does not edit `AGENTS.md`**, to avoid racing that review.
 
+## Consolidation decision and merge boundaries — November 1, 2026
+
+**Review-candidate register: this file, in a draft branch only.** This section
+reconciles the overlapping documentation approaches below; it is **not**
+a declaration that any draft branch, dependency setting, or model asset has
+been adopted into protected `main`. Choose one integration target and recheck
+its exact head before promoting this candidate. Preserve the original dated
+Godot/browser evidence and the creator's Unreal-first direction simultaneously.
+
+| Draft | Exact head inspected, 2026-11-01 | Review base / distinct contribution | Consolidation disposition |
+| --- | --- | --- | --- |
+| [#707](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/707) | `b5ce6647adc1321546356bde7ff720c7336ff98d` | Stacks on #699; Unreal-first root routing, four form display labels, handoff guidance and no-explicit-plugin baseline | Retain the root/agent entrypoint proposal for a **separate** authority review against #657; link useful scope here, do not wholesale copy its ancestor |
+| [#708](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/708) | `245c31fe1f02949476338590a0ab0203b4d7bed5` | Stacks on #704; this evidence register, `dependency_baseline.json`, fail-closed checker, native-test commands, First Wake evidence | **Selected review-candidate document and source checker**, NOT merged or canonized; its baseline is specific to its own branch |
+| [#709](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/709) | `95139eb3790bc5564abc204f7a1776b645bdfada` | Stacks on #705; Godot/legacy reconciliation, ship D3D12 evidence, auroral/ocean study and **black sky HOLD** | Incorporate its distinct asset/provenance and visual-status *references*, not a duplicate authority register or untested VFX code |
+| [#657](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/657) | root-authority draft, head must be rechecked on merge | Root `AGENTS.md`, creator/character authority proposal | **Existing separate owner** for root agent authority; do not race with #707/#709 root-file edits |
+
+### One important branch-specific plugin decision — do not paper over it
+
+The actual `unreal/ToSailTheStarrySky.uproject` manifests fetched at the
+three exact documentation heads differ:
+
+- **#708:** `EngineAssociation="5.8"`, runtime module
+  `ToSailTheStarrySky`, with explicitly enabled `PythonScriptPlugin`.
+  The current `unreal/Tools/dependency_baseline.json` therefore requires
+  `enabled_project_plugins=["PythonScriptPlugin"]` in this review stack.
+- **#707 and #709:** `EngineAssociation="5.8"`, the same runtime module,
+  and **no explicit `Plugins` array**. This means *no project-enabled
+  plugins are declared in those particular manifests*, **not** that
+  Unreal's engine distribution has no plugins.
+- The variants must **not** be normalized by silently changing the baseline
+  or suppressing the check. Before taking the checker to a chosen integration
+  commit, decide explicitly whether Editor Python needs project-level
+  activation, verify editor-only versus packaged-game scope, inspect the
+  real manifest and plugin license/packaging behavior, then **write a new
+  versioned baseline** with a matching negative-control regression and
+  exact-head CI/native proof. Do not infer a runtime Python requirement
+  from Editor-only authoring scripts.
+
+**Do not auto-merge the three PRs.** Their parents #699, #704 and #705
+contain unrelated naming, First Wake and atmospheric/visual review work.
+A green check in one lineage does not establish its content on another.
+
+### Documentation ownership and acceptance ledger
+
+| Area | Preferred owner / next safe action | Admission evidence |
+| --- | --- | --- |
+| Root `AGENTS.md`, root `README.md`, agent handoff | Reconcile #657 against #707/#709 under one authority edit; date the Unreal-first supersession without deleting original Godot QA | Source diff and explicit creator engine direction; no claim of merged Unreal game |
+| Native dependency declarations | This register plus `unreal/Tools/dependency_baseline.json` and `check_dependency_contract.py` | Project/Build.cs/Target.cs/legacy npm lock comparison and negative controls at **integration SHA** |
+| Native compilation and automation | `unreal/Docs/UNREAL_TEST_COMMANDS.md`, `unreal/Docs/PRODUCTION_VERIFICATION_MATRIX.md` | Per-PR/commit **SOURCE / GAME BUILD / EDITOR BUILD / NAMED TEST JSON / CLEAN TREE** entries; Live Coding/INI drift must not be bypassed |
+| First Wake → Splashdown | `unreal/Docs/FIRST_WAKE_PLAYABLE_LEVEL_SETUP.md` and story handoff | Seven-actor scene and map hashes separately from real **PIE E interaction, F5/F9 save/load, ordered Ionia recruitment, sea landing** |
+| Aureate Wake and environment studies | Source/provenance docs for #692, #697, #700, #702, #705, #706 | **IMPORT / D3D12 RENDER / continuous swept COLLISION / CREATOR ART ACCEPTANCE** independently; sampled endpoint checks are not continuous collision proof, and #705's black-sky visual status remains **HOLD** |
+| New GLB/texture/character/rig/shader | Asset manifest, rights/source, deterministic input and SHA-256, import path/units, skeleton/LOD and materials | Exact native import/render, clearance or gameplay proof, and separate visual approval; approved 2D references do not approve generated 3D |
+| Node/NW.js legacy security | Root `package.json` + `package-lock.json`, security triage **read only** | Confirm affected dependency paths/advisories/fix versions, runtime reachability and Windows legacy tests before any scoped change |
+
+A **GitHub push banner reporting advisory counts is not a package-level
+security audit**. No specific affected dependency or safe fixed version has
+been independently verified from that notice; do not claim an npm fix or
+change an Unreal runtime dependency based on it.
+
+**Explicit holds:** do not install/upgrade Unreal, MSVC, SDK, plugin, Python,
+npm, lockfile or GitHub Action major; do not toggle release jobs, merge
+protected branches, expose host tokens, promote review art, claim chapter
+playability, or unlock Starbourne/Orbiter. Only scoped review documentation,
+CI source checks and exact-head evidence can advance here.
+
 ## Dependency baseline: what the repository really declares
 
 | Domain | Current declaration | Role and disposition |

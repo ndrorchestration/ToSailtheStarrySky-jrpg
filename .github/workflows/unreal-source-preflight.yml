@@ -5,6 +5,7 @@ on:
     paths:
       - 'unreal/Source/**'
       - 'unreal/Tools/**'
+      - 'unreal/Docs/DEPENDENCY_AND_EVIDENCE_REGISTER_2026-11-01.md'
       - 'unreal/ToSailTheStarrySky.uproject'
       - 'package.json'
       - 'package-lock.json'
@@ -44,6 +45,7 @@ jobs:
       - name: Confirm UE dependency declarations and held legacy lock are unchanged
         run: |
           python3 -m unittest discover -s unreal/Tools -p 'test_dependency_contract.py' -v
+          python3 -m unittest discover -s unreal/Tools -p 'test_dependency_register_reconciliation.py' -v
           python3 unreal/Tools/check_dependency_contract.py --repo .
       - name: Compile and exercise actual DesignOnly C++ adapter (API doubles, not Unreal)
         run: python3 unreal/Tools/check_combat_design_only_compiled.py
