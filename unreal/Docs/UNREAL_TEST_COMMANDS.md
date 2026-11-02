@@ -116,3 +116,10 @@ reported as 25/25 automation acceptance.
 
 The source/CI checks for this exact-head and evidence-retention behavior
 are not a substitute for a native Windows PowerShell/UE5.8.4 run.
+
+**Version admission:** The script requires the selected `-EngineRoot` to
+contain a readable `Engine/Build/Build.version` whose major/minor/patch is
+`5.8.4`. It refuses wrong or malformed metadata **before** any native
+process is run. CI now parses the same PowerShell file and executes
+only the wrong-engine and wrong-SHA fail-closed paths with temporary
+fake host files; this is not native UE runtime verification.
