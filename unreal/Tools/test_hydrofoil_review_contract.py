@@ -26,7 +26,7 @@ REQUIRED_TEST_FRAGMENTS = (
     "Seaborne support %d",
     "inboard tip reaches hull proxy",
     "outboard tip reaches hydrofoil center",
-    "support %d remains visible during fold",
+    "Support %d remains visible during fold",
     "Submersible support", "Submersible foil",
     "Submersible to Seaborne starts",
     "Return support", "Return hydrofoil",
