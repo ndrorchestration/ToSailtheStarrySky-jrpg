@@ -20,6 +20,7 @@ def check_contract(header: str, source: str):
         "FRotator SeaborneHabitationReviewRotation = FRotator::ZeroRotator;",
         "FRotator SubmersibleHabitationReviewRotation = FRotator::ZeroRotator;",
         "bool RefreshCentralBridgeHabitationReview();",
+        "bool bHabitationReviewLatchedForTransition = false;",
     )
     c = (
         'BridgeHabitationPivot = CreateDefaultSubobject<USceneComponent>(TEXT("BridgeHabitationPivot"));',
@@ -36,6 +37,11 @@ def check_contract(header: str, source: str):
         "StartHabitationReviewRotation, TargetHabitationReviewRotation, Smooth).GetNormalized());",
         "StartHabitationReviewRotation = BridgeHabitationPivot",
         "TargetHabitationReviewRotation = bPreviewCentralBridgeHabitation",
+        "bHabitationReviewLatchedForTransition = bPreviewCentralBridgeHabitation;",
+        "if (bHabitationReviewLatchedForTransition && BridgeHabitationPivot)",
+        "bHabitationReviewLatchedForTransition = false;",
+        "if (!RefreshCentralBridgeHabitationReview()) return false;",
+        "(bPreviewCentralBridgeHabitation &&",
         "CurrentForm == EAureateWakeForm::Orbiter",
         "RequestedForm == EAureateWakeForm::Orbiter && !bAllowOrbiterPreview",
     )
@@ -87,6 +93,20 @@ class BridgeHabitationSourceContractTests(unittest.TestCase):
         changed = self.source.replace(
             "LivingQuartersEnvelope->SetVisibility(false); // No added default art or habitation geometry.",
             "LivingQuartersEnvelope->SetVisibility(true); // No added default art or habitation geometry.")
+        with self.assertRaisesRegex(ValueError, r"C\+\+"):
+            check_contract(self.header, changed)
+
+    def test_mutant_dropping_midflight_latch_rejected(self):
+        changed = self.source.replace(
+            "bHabitationReviewLatchedForTransition = bPreviewCentralBridgeHabitation;",
+            "bHabitationReviewLatchedForTransition = true;")
+        with self.assertRaisesRegex(ValueError, r"C\+\+"):
+            check_contract(self.header, changed)
+
+    def test_mutant_removing_central_orbiter_rejection_rejected(self):
+        changed = self.source.replace(
+            "(bPreviewCentralBridgeHabitation &&",
+            "(false /* REVIEW GATE REMOVED */ &&")
         with self.assertRaisesRegex(ValueError, r"C\+\+"):
             check_contract(self.header, changed)
 
