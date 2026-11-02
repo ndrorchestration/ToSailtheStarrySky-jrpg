@@ -46,9 +46,31 @@ class ReviewObjectiveSourceTests(unittest.TestCase):
         self.assertIn("GEngine->AddOnScreenDebugMessage(", self.explorer)
         self.assertIn("First Wake (review):", self.explorer)
         self.assertIn("if (Milestone->TryActivate(FirstWakeState))", self.explorer)
-        self.assertIn("if (LoadFirstWake(TEXT(\"first_wake_quick\")))", self.explorer)
+        self.assertIn('const bool bLoaded = LoadFirstWake(TEXT("first_wake_quick"));', self.explorer)
         self.assertIn("TSTSSInteractionReach::IsInsidePlayerReach(", self.explorer)
         self.assertIn("TSTSSInteractionReach::GetCameraTraceLength(", self.explorer)
+
+    def test_quicksave_load_feedback_is_result_bound(self):
+        self.assertIn('const bool bSaved = SaveFirstWake(TEXT("first_wake_quick"));', self.explorer)
+        self.assertIn("ShowFirstWakeReviewSaveLoadStatus(false, bSaved);", self.explorer)
+        self.assertIn('const bool bLoaded = LoadFirstWake(TEXT("first_wake_quick"));', self.explorer)
+        self.assertIn("if (bLoaded)", self.explorer)
+        self.assertIn("ShowFirstWakeReviewSaveLoadStatus(true, bLoaded);", self.explorer)
+        self.assertIn("load failed; no progress restored", self.explorer)
+        self.assertIn("save failed; progress not confirmed", self.explorer)
+        self.assertIn("story progress saved; position not saved", self.explorer)
+        self.assertIn("story progress loaded; position unchanged", self.explorer)
+        self.assertIn("bSucceeded ? FColor::Green : FColor::Red", self.explorer)
+
+    def test_review_status_is_non_shipping_and_read_only(self):
+        section = self.explorer.split("void ShowFirstWakeReviewSaveLoadStatus", 1)[1].split(
+            "void ShowFirstWakeReviewObjective", 1
+        )[0]
+        self.assertIn("#if !UE_BUILD_SHIPPING", section)
+        self.assertIn("#else", section)
+        self.assertIn("GEngine->AddOnScreenDebugMessage(", section)
+        for prohibited in ("SaveProgress(", "Restore(", "AdvanceTo("):
+            self.assertNotIn(prohibited, section)
 
     def test_native_regression_registered_for_exact_head_verification(self):
         name = "TSTSS.FirstWake.ReviewObjectivesAreReadOnly"
