@@ -123,3 +123,14 @@ contain a readable `Engine/Build/Build.version` whose major/minor/patch is
 process is run. CI now parses the same PowerShell file and executes
 only the wrong-engine and wrong-SHA fail-closed paths with temporary
 fake host files; this is not native UE runtime verification.
+
+## Native report consistency and synthetic test boundaries
+
+The native verifier uses `unreal/Tools/Assert-NativeAutomationReport.ps1`
+to reject invalid or contradictory engine automation JSON rather than
+trusting a `succeeded` aggregate. The engine must report all 25 distinct
+required test names and exactly matching successful per-test entries.
+The companion hosted `Test-NativeAutomationReportFixtures.ps1`
+tests this validation with fake JSON reports, including missing, duplicate,
+failed, skipped and inconsistent test records. Those hosted fixtures do
+**not** constitute a UE Editor build or 25/25 test receipt.
