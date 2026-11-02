@@ -93,3 +93,26 @@ reproducible player run. No field inherits a PASS from another source SHA.
 The direct uncooked Game executable's earlier asset-registry/BufferReader
 crash is not packaged-runtime proof. See
 [dependency/source register](FIRST_WAKE_DEPENDENCY_HANDOFF_2026-11-02.md).
+
+## Integrated draft — safe repeatable evidence retention (2026-11-02)
+
+On a *disposable, source-clean Windows checkout* of the review candidate,
+from repo root:
+
+```powershell
+$Head = (git rev-parse HEAD).Trim()
+.\unreal\Tools\Verify-Unreal.ps1 -EngineRoot "C:\Program Files\Epic Games\UE_5.8" -ExpectedHead $Head
+```
+
+Use the **actual installed EngineRoot** rather than assuming the example
+directory is correct. The script validates a full 40-character expected
+SHA before running, and creates a new private ignored
+`unreal/Saved/MigrationEvidence/<sha>-<utc>-<nonce>/` per invocation.
+`build.log`, `automation.log`, `head.txt` and native JSON are
+retained together. Older failed and successful receipts are never erased.
+An invalid SHA, dirty checkout, missing tool, collision or incomplete
+automation evidence is a **HOLD**. The `-SkipTests` option cannot be
+reported as 25/25 automation acceptance.
+
+The source/CI checks for this exact-head and evidence-retention behavior
+are not a substitute for a native Windows PowerShell/UE5.8.4 run.
