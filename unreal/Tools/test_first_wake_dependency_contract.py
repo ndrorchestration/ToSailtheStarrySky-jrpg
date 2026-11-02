@@ -43,6 +43,49 @@ class FirstWakeDependencyContractTests(unittest.TestCase):
         args[1].pop("Plugins")
         self.assert_rejected(args, "Plugin list absent")
 
+    def test_new_disabled_plugin_must_also_be_reviewed(self):
+        args = list(copy.deepcopy(self.original))
+        args[1]["Plugins"].append({"Name": "UnexpectedOptionalEditorPlugin", "Enabled": False})
+        self.assert_rejected(args, "Project plugin declarations differ")
+
+    def test_duplicate_disabled_plugin_is_rejected(self):
+        args = list(copy.deepcopy(self.original))
+        args[1]["Plugins"].extend([
+            {"Name": "OptionalReview", "Enabled": False},
+            {"Name": "OptionalReview", "Enabled": False},
+        ])
+        self.assert_rejected(args, "Duplicate project plugin")
+
+    def test_native_module_loading_phase_drift(self):
+        args = list(copy.deepcopy(self.original))
+        args[1]["Modules"][0]["LoadingPhase"] = "PostEngineInit"
+        self.assert_rejected(args, "module loading phase")
+
+    def test_extra_public_dependency_add_not_hidden(self):
+        args = list(copy.deepcopy(self.original))
+        args[2] += '\nPublicDependencyModuleNames.Add("Slate");\n'
+        self.assert_rejected(args, "Native module dependency drift")
+
+    def test_private_cpp_module_addition_must_be_reviewed(self):
+        args = list(copy.deepcopy(self.original))
+        args[2] += '\nPrivateDependencyModuleNames.Add("Slate");\n'
+        self.assert_rejected(args, "PrivateDependencyModuleNames declaration drift")
+
+    def test_dynamic_cpp_module_addition_must_be_reviewed(self):
+        args = list(copy.deepcopy(self.original))
+        args[2] += '\nDynamicallyLoadedModuleNames.Add("OptionalRuntime");\n'
+        self.assert_rejected(args, "DynamicallyLoadedModuleNames declaration drift")
+
+    def test_nonliteral_native_dependency_declaration_fails_closed(self):
+        args = list(copy.deepcopy(self.original))
+        args[2] += '\nPrivateDependencyModuleNames.Add(SelectedModule);\n'
+        self.assert_rejected(args, "Unparsed or nonliteral PrivateDependencyModuleNames")
+
+    def test_extra_target_module_addition_must_be_reviewed(self):
+        args = list(copy.deepcopy(self.original))
+        args[3] += '\nExtraModuleNames.Add("Unexpected");\n'
+        self.assert_rejected(args, "Game extra module drift")
+
     def test_cpp_module_addition_must_be_reviewed(self):
         args = list(copy.deepcopy(self.original))
         args[2] = args[2].replace('"InputCore"','"InputCore", "Slate"')
