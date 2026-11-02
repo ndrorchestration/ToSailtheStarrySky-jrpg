@@ -122,3 +122,21 @@ checks exact SHA gating, log retention, unique paths and negative
 mutations. This does **not** execute PowerShell, compile Unreal or
 establish the performance of the new verifier on Windows. Its first
 actual test must occur in a disposable, user-authorized checkout.
+
+## Exact engine identification — integrated review addendum
+
+The native verification script now reads the actual installed
+`<EngineRoot>/Engine/Build/Build.version` **before starting** UBT or
+creating a receipt. It must report **5.8.4** (`MajorVersion=5`,
+`MinorVersion=8`, `PatchVersion=4`). Missing/unparseable metadata
+or a different patch triggers **HOLD**, even if the project's
+`EngineAssociation` is still `5.8`. A future legitimate patch change
+requires deliberate review rather than silent acceptance.
+
+GitHub hosted `Unreal source preflight` additionally uses the real
+PowerShell parser, and exercises the native script against **synthetic**
+wrong-version and wrong-SHA fixtures that must fail **before** launching
+any executable or creating review evidence. These are genuine script
+failure-path checks but **not** Windows UE build or playtest evidence.
+All fixtures are temporary under the GitHub runner and cannot access
+player SaveGame files.
