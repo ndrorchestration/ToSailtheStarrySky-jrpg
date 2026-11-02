@@ -36,7 +36,7 @@ def check_contract(header: str, source: str):
         "BridgeHabitationPivot->SetRelativeRotation(FQuat::Slerp(",
         "StartHabitationReviewRotation, TargetHabitationReviewRotation, Smooth).GetNormalized());",
         "StartHabitationReviewRotation = BridgeHabitationPivot",
-        "TargetHabitationReviewRotation = bPreviewCentralBridgeHabitation",
+        "TargetHabitationReviewRotation = bHabitationReviewLatchedForTransition",
         "bHabitationReviewLatchedForTransition = bPreviewCentralBridgeHabitation;",
         "if (bHabitationReviewLatchedForTransition && BridgeHabitationPivot)",
         "bHabitationReviewLatchedForTransition = false;",
