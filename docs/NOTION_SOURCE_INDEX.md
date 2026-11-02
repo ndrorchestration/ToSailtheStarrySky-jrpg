@@ -1,5 +1,8 @@
 # Notion → GitHub evidence map (public-safe)
 
+> **Unreal-first status bridge (2026-11-01):** [Parallel Unreal completion and authority sync](https://app.notion.com/p/40bf5bad238b81e3a3b0e0cbfa61ec6d) and [Aureate Wake four-form design gate](https://app.notion.com/p/40af5bad238b8120bc19fad79d9bda69) map to [Unreal dependency and authority register](../unreal/Docs/UNREAL_DEPENDENCY_AND_AUTHORITY_REGISTER_2026-11-01.md). The older Godot-era links below are preserved dated history, not current Unreal completion evidence. Use exact commit/PR evidence and do not copy private source text or restricted assets into this public index.
+
+
 > **2026-10-28 production verification link:** [Native graphical / integration audit](CHAPTER_1_NATIVE_INTEGRATION_AUDIT_2026-10-28.md) ↔ [Notion Native Chapter 1 Integration Audit](https://app.notion.com/p/407f5bad238b812abfbed83ad2acebf4). Nine Windows frames passed at `4d2ec5fb`; inspected legacy review frames reveal Lyra-first default and opt-in Ionia-first wording, plus UI overlap. This is a documented blocking discrepancy, not an artistic acceptance.
 
 > **Roadmap bridge (2026-10-28):** [Chapter 1 beta milestones and quality gates](CHAPTER_1_BETA_ROADMAP.md) ↔ [Notion Chapter 1 Beta Roadmap](https://app.notion.com/p/407f5bad238b81879510f3b490c4b48a). The Operational Control Center links to this planning record. Historical and draft sources must not be promoted to merged implementation status.
