@@ -43,6 +43,10 @@ REQUIRED_ACTOR_FRAGMENTS = (
     "Hydrofoils[Index]->SetVisibility(Form == EAureateWakeForm::Seaborne)",
     "UpdateHydrofoilStruts();",
     "RequestedForm == EAureateWakeForm::Orbiter && !bAllowOrbiterPreview",
+    "const FVector HullAnchor(0.f, Side * 60.f, -30.f);",
+    "FVector(0, Side * 80.f, bDeployed ? -140.f : -45.f)",
+    "T * T * (3.f - 2.f * T)",
+    "Hydrofoils[Index]->SetVisibility(true);",
 )
 
 def source_contract(test_source, actor_source):
@@ -83,6 +87,44 @@ def endpoints(side, blend):
 def distance(a, b):
     return math.dist(a, b)
 
+# Only the three ordinary-form *proxy* foil-center Z values, not an
+# imported mesh, physics simulation, render or continuous-collision proof.
+ORDINARY_FOIL_Z = {"Skyborne": -45.0, "Seaborne": -140.0, "Submersible": -45.0}
+
+def ordinary_route(start, end, side, fraction):
+    if start == end or start not in ORDINARY_FOIL_Z or end not in ORDINARY_FOIL_Z:
+        raise ValueError("route must select two distinct ordinary forms")
+    if type(side) is not int or side not in (-1, 1):
+        raise ValueError("port/starboard must be explicit")
+    if not isinstance(fraction, (float, int)) or isinstance(fraction, bool) or not math.isfinite(fraction) or not 0.0 <= fraction <= 1.0:
+        raise ValueError("fraction must be finite within [0, 1]")
+    smooth = fraction * fraction * (3.0 - 2.0 * fraction)
+    foil_z = (1.0 - smooth) * ORDINARY_FOIL_Z[start] + smooth * ORDINARY_FOIL_Z[end]
+    anchor = (0.0, side * 60.0, -30.0)
+    foil = (0.0, side * 80.0, foil_z)
+    length = distance(anchor, foil)
+    center = tuple((u + v) * .5 for u, v in zip(anchor, foil))
+    direction = tuple((v - u) / length for u, v in zip(anchor, foil))
+    inboard = tuple(center[i] - length * .5 * direction[i] for i in range(3))
+    outboard = tuple(center[i] + length * .5 * direction[i] for i in range(3))
+    return anchor, foil, inboard, outboard, length
+
+def hull_exit_parameter(anchor, foil):
+    # Provisional 100cm Unreal BasicShapes cube, hull scale (8, 1.5, .65),
+    # with root-local y±75 cm, z±32.5 cm. Support begins INSIDE the
+    # review hull at z=-30: that overlap is an intentional proxy anchor.
+    # This only calculates where its centerline *leaves* an axis-aligned
+    # box, not whether a strut mesh collides with any authored geometry.
+    if abs(anchor[1]) >= 75.0 or abs(anchor[2]) >= 32.5:
+        raise ValueError("expected proxy hull anchor within hull y/z bounds")
+    dz = foil[2] - anchor[2]
+    if dz >= 0 or foil[2] >= -32.5:
+        raise ValueError("foil must extend below proxy hull for this review")
+    vertical_exit = (-32.5 - anchor[2]) / dz
+    dy = abs(foil[1] - anchor[1])
+    lateral_exit = (75.0 - abs(anchor[1])) / dy if dy else math.inf
+    return min(vertical_exit, lateral_exit)
+
 class ContractTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -115,6 +157,54 @@ class ContractTests(unittest.TestCase):
                 self.assertGreater(length, 0)
                 observed.append(length)
             self.assertAlmostEqual(observed[0], observed[1], places=7)
+
+    def test_six_ordinary_routes_126_samples_two_supports_each(self):
+        forms = tuple(ORDINARY_FOIL_Z)
+        count = 0
+        for start in forms:
+            for end in forms:
+                if start == end:
+                    continue
+                previous = {side: None for side in (-1, 1)}
+                for step in range(21):
+                    fraction = step / 20.0
+                    per_side = {}
+                    for side in (-1, 1):
+                        anchor, foil, inboard, outboard, length = ordinary_route(
+                            start, end, side, fraction)
+                        self.assertLess(distance(anchor, inboard), 1e-8)
+                        self.assertLess(distance(foil, outboard), 1e-8)
+                        self.assertGreater(length, 24.9)
+                        self.assertTrue(0.0 < hull_exit_parameter(anchor, foil) < 0.2)
+                        self.assertAlmostEqual(foil[1], side * 80.0)
+                        if previous[side] is not None:
+                            delta = ORDINARY_FOIL_Z[end] - ORDINARY_FOIL_Z[start]
+                            last = previous[side]
+                            if delta < 0:
+                                self.assertGreaterEqual(last + 1e-8, foil[2])
+                            elif delta > 0:
+                                self.assertLessEqual(last - 1e-8, foil[2])
+                            else:
+                                self.assertAlmostEqual(last, foil[2])
+                        previous[side] = foil[2]
+                        per_side[side] = (anchor, foil, length)
+                        count += 1
+                    left, right = per_side[-1], per_side[1]
+                    self.assertAlmostEqual(left[2], right[2])
+                    self.assertAlmostEqual(left[1][1], -right[1][1])
+                    self.assertAlmostEqual(left[1][2], right[1][2])
+        self.assertEqual(count, 252)  # 6 form routes x 21 phases x 2 supports
+
+    def test_route_mutations_are_rejected(self):
+        for bad in (("Skyborne", "Skyborne", 1, .5),
+                    ("Skyborne", "Orbiter", 1, .5),
+                    ("Skyborne", "Seaborne", 0, .5),
+                    ("Skyborne", "Seaborne", -1, float("nan")),
+                    ("Skyborne", "Seaborne", 1, 1.01)):
+            with self.assertRaises(ValueError):
+                ordinary_route(*bad)
+        with self.assertRaises(ValueError):
+            hull_exit_parameter((0.0, 60.0, -30.0), (0.0, 80.0, -10.0))
 
     def test_old_wrong_constant_length_fails_endpoint_alignment(self):
         anchor, foil, inward, outward, length = endpoints(-1, 1.0)
