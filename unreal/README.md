@@ -1,5 +1,7 @@
 # Unreal Engine 5.8 — active forward-development review track
 
+**Combined review orientation:** [PR #713](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/713) is the current integrated **draft** of #712 First Wake, scoped #657 creator authority and #711 dependency register. See [review integration gate](Docs/INTEGRATION_GATE_2026-11-02.md). This branch has not passed native UE build or gameplay acceptance and is not merged to main.
+
 **2026-11-02 · Unreal-first decision · review/experimental; not a completed native game.**
 UE **5.8.4** is the observed Windows development patch within the project's
 `EngineAssociation: "5.8"` family. The preserved Godot and browser projects
