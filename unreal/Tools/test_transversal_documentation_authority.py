@@ -68,15 +68,17 @@ def check_paths(files: dict):
                                  "40bf5bad238b81e3a3b0e0cbfa61ec6d",
                                  "3e2f5bad238b813cae95ee61e4b517cc",
                                  "3ecf5bad238b8128ab03e72edf1482de"]),
-        ("Unreal README", unreal, ["native automations = HOLD", "DefaultEngine.ini",
-                                   "P01–P13 PIE = NOT TESTED"]),
-        ("Production matrix", matrix, ["fd0b68c28e6289d45f8b8c70228631c24577a352",
-                                       "HOLD — CONFIG_MUTATION", "25 distinct Success",
-                                       "DefaultInput.ini"]),
+        ("Unreal README", unreal, ["SUPERSEDING NATIVE VERIFICATION RECEIPT",
+                                   "NATIVE_25=PASS", "DefaultEngine.ini",
+                                   "P01–P13"]),
+        ("Production matrix", matrix, ["SUPERSEDING NATIVE VERIFICATION RECEIPT",
+                                       "NATIVE_25=PASS", "25 distinct Success",
+                                       "DefaultInput.ini", "PIE_P01_P13=NOT_TESTED"]),
         ("Dependency register", dependency, ["installed", "5.8.4",
                                             "Android File Server", "not stage"]),
-        ("Integration handoff", gate, ["25 distinct successful named",
-                                      "P01–P13", "NOT MERGED"]),
+        ("Integration handoff", gate, ["LATEST PINNED UE 5.8.4 NATIVE RESULT",
+                                      "25 distinct successful named", "P01–P13",
+                                      "NOT MERGED"]),
     ]:
         for token in tokens:
             if token.lower() not in body.lower():
@@ -131,6 +133,15 @@ class TransversalAuthorityTests(unittest.TestCase):
 
     def test_exact_current_source_authority(self):
         check_paths(self.files)
+
+    def test_negative_current_native_receipt_removed(self):
+        copies = dict(self.files)
+        copies["unreal/Docs/PRODUCTION_VERIFICATION_MATRIX.md"] = (
+            copies["unreal/Docs/PRODUCTION_VERIFICATION_MATRIX.md"].replace(
+                "SUPERSEDING NATIVE VERIFICATION RECEIPT", "UNVERIFIED NATIVE CLAIM")
+        )
+        with self.assertRaisesRegex(ValueError, "Production matrix"):
+            check_paths(copies)
 
     def test_negative_wrong_recruitment_order(self):
         wrong = self.files["docs/CANON_AND_REVEAL_POLICY.md"].replace(
