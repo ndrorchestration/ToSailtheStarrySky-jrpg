@@ -134,7 +134,7 @@ class ReviewObjectiveSourceTests(unittest.TestCase):
                      "UE 5.8.4 isolated PIE acceptance matrix"):
             self.assertIn(gate, matrix)
         self.assertIn("never overwrite or delete", matrix)
-        self.assertIn("not preserve Ender's world position", matrix)
+        self.assertIn("player world position does **not** rewind", matrix)
 
     def test_native_regression_registered_for_exact_head_verification(self):
         name = "TSTSS.FirstWake.ReviewObjectivesAreReadOnly"
