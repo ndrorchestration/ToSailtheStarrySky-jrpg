@@ -72,7 +72,7 @@ class UnrealDependencyBaselineTests(unittest.TestCase):
             validate_deps(**kwargs)
 
     def test_unlisted_native_regression_holds(self):
-        with self.assertRaisesRegex(DependencyContractHold,"test requirement"):
+        with self.assertRaisesRegex(DependencyContractHold,"native regression removed"):
             validate_deps(**self.altered(
                 "native_verifier",
                 "'TSTSS.Ship.CentralBridgeHabitationReview'",
