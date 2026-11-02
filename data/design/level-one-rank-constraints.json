@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "status": "CREATOR_APPROVED_RELATIVE_RANKS_NUMERIC_VALUES_OPEN",
+  "effective_date": "2026-10-31",
+  "level": 1,
+  "comparison": "unmodified initial values before equipment, buffs, statuses and story energy",
+  "roster": [
+    "ender",
+    "lyra",
+    "ionia",
+    "reson",
+    "aepex"
+  ],
+  "stats": {
+    "mag": {
+      "label": "MAG",
+      "native_binding": null,
+      "description": "Magic power; not yet proven identical to legacy aetherAttack"
+    },
+    "mp": {
+      "label": "MP",
+      "native_binding": null,
+      "description": "Starting maximum magic points; not defined by legacy JS model"
+    },
+    "hp": {
+      "label": "HP",
+      "native_binding": null,
+      "description": "Starting maximum hit points; verify native Godot implementation"
+    }
+  },
+  "strict_rank_rules": [
+    {
+      "stat": "mag",
+      "direction": "descending",
+      "first": "ender",
+      "second": "lyra"
+    },
+    {
+      "stat": "mp",
+      "direction": "descending",
+      "first": "ender",
+      "second": "lyra"
+    },
+    {
+      "stat": "hp",
+      "direction": "ascending",
+      "first": "lyra",
+      "second": "ender"
+    }
+  ],
+  "numeric_values_approved": false,
+  "gameplay_implementation_authorized": false
+}
