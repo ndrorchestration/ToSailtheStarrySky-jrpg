@@ -1,0 +1,75 @@
+{
+  "schema_version": 2,
+  "decision_date": "2026-11-01",
+  "asset": "Aureate Wake",
+  "authority": "CREATOR_APPROVED_NAMING_SUPERSEDES_PRIOR_DISPLAY_LABELS",
+  "prior_visual_reference_sha256": "03e3d500d8998a1377502f5ea28da79cf3eaf3854ece833d7ac25b4e0b268e13",
+  "canonical_display_order": [
+    "Skybourne",
+    "Seabourne",
+    "Submersible",
+    "Starbourne"
+  ],
+  "forms": [
+    {
+      "internal_enum": "Skyborne",
+      "display_name": "Skybourne",
+      "legacy_names": [
+        "Skyborne"
+      ],
+      "environment": "atmospheric flight",
+      "first_wake_available": true
+    },
+    {
+      "internal_enum": "Seaborne",
+      "display_name": "Seabourne",
+      "legacy_names": [
+        "Seaborne"
+      ],
+      "environment": "ocean sailing and hydrofoil travel",
+      "first_wake_available": true
+    },
+    {
+      "internal_enum": "Submersible",
+      "display_name": "Submersible",
+      "legacy_names": [],
+      "environment": "deep ocean",
+      "first_wake_available": false
+    },
+    {
+      "internal_enum": "Orbiter",
+      "display_name": "Starbourne",
+      "legacy_names": [
+        "Orbiter",
+        "Orbital",
+        "Orbital form"
+      ],
+      "environment": "celestial and lunar traversal",
+      "first_wake_available": false
+    }
+  ],
+  "guardrails": {
+    "starbourne_story_locked": true,
+    "moon_bridge_locked": true,
+    "debug_orbiter_preview_opt_in_default": false,
+    "physical_clearance_hold_unchanged": true,
+    "moon_bridge_lunar_gates_unchanged": true,
+    "enum_ordinals_preserved": true,
+    "serialization_migration_required": false,
+    "model_art_approval_granted": false,
+    "gameplay_unlocked": false
+  },
+  "canonical_visual_requirements": {
+    "principal_wings": 4,
+    "starbourne_radial_sails": 4,
+    "starbourne_equal_sail_size": true,
+    "starbourne_sail_positions": [
+      "top",
+      "bottom",
+      "port",
+      "starboard"
+    ],
+    "forward_facing_bridge_persists": true
+  },
+  "compatibility_policy": "Public text and Unreal UENUM display labels use new names. Stable internal EAureateWakeForm enumerators, legacy asset paths, historical approved-image text, exact GitHub evidence references and previous receipts remain unchanged. Do not reinterpret renamed form as progression or clearance approval."
+}

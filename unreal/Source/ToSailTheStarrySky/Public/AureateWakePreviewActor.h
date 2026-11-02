@@ -10,13 +10,16 @@ class UMaterialInterface;
 class UStaticMesh;
 class UMaterialInstanceDynamic;
 
+// Unreal enum identifiers are deliberately stable for existing C++ calls,
+// serialized Blueprint enum values, and fail-closed Starbourne clearance gates.
+// Creator-facing names were revised on 2026-11-01. Do NOT rename these keys.
 UENUM(BlueprintType)
 enum class EAureateWakeForm : uint8
 {
-    Skyborne,
-    Seaborne,
-    Submersible,
-    Orbiter
+    Skyborne UMETA(DisplayName="Skybourne"),
+    Seaborne UMETA(DisplayName="Seabourne"),
+    Submersible UMETA(DisplayName="Submersible"),
+    Orbiter UMETA(DisplayName="Starbourne")
 };
 
 /** Noncanonical geometric preview. Does NOT simulate buoyancy, pressure, sail thrust, or navigation. */
