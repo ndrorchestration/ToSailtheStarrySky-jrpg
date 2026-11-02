@@ -83,6 +83,9 @@ jobs:
             throw "PowerShell parser rejected native verifier: $($parseErrors -join '; ')"
           }
           Write-Output "PASS: native verifier PowerShell syntax (no engine launched)"
+      - name: Exercise actual native report validator with positive and negative PowerShell fixtures
+        shell: pwsh
+        run: ./unreal/Tools/Test-NativeAutomationReportFixtures.ps1
       - name: Exercise native verifier wrong-engine and wrong-SHA holds (synthetic fixture)
         shell: pwsh
         run: |
