@@ -1,5 +1,9 @@
 # Agent handoff — documentation routing
 
+> **2026-11-01 creator task routing:** For new game engineering, 3D character/ship/world implementation, visual reviews and native First Wake work, route to **Unreal Engine 5.8.4**, preserving Godot 4.7.2 and browser/NW.js branches as separate playable/historical baselines and regression oracles. The older Godot-first work instructions in this index are date-bounded; do not merge branches or assume current Unreal visuals are accepted production art. [Dependency and documentation authority](UNREAL_DEPENDENCY_AND_DOCUMENTATION_AUTHORITY_2026-11-01.md), [Unreal test commands](../unreal/Docs/UNREAL_TEST_COMMANDS.md), and [native acceptance matrix](../unreal/Docs/PRODUCTION_VERIFICATION_MATRIX.md).
+
+> **Four-form display canon:** Skybourne · Seabourne · Submersible · Starbourne. Preserve stable engine enum identifiers and Starbourne/Moon Bridge locks. [Canonical naming contract](../unreal/Docs/AUREATE_WAKE_CANONICAL_CONFIGURATION_NAMES_2026-11-01.md).
+
 > **Latest QA routing (2026-10-28):** Consult [native integration audit](CHAPTER_1_NATIVE_INTEGRATION_AUDIT_2026-10-28.md) before claiming the Chapter 1 story is integrated. At pinned `4d2ec5fb`, five Godot scripts and nine Windows renderer frames passed, but the inspected legacy review scene still starts Lyra-first and displays Ionia-first as opt-in; UI/art acceptance is pending. Validate normal F5 canonical entry separately.
 
 > **Current P0 schedule:** [Chapter 1 beta roadmap](CHAPTER_1_BETA_ROADMAP.md) — prioritize consolidation of native First Wake, berth, narrative, save and Windows packaging before broader visual or planetary expansion. Dates are targets, not admission evidence.
