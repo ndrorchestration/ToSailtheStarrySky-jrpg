@@ -39,11 +39,11 @@ def check_script(script: str) -> None:
         "Working tree changed during verification",
         "Evidence retained at $Evidence",
     )
+    if re.search(r'\bRemove-Item\b|\bClear-Content\b|\bMove-Item\b', script):
+        raise ValueError("Native verifier contains a destructive evidence action")
     for token in mandatory:
         if token not in script:
             raise ValueError("Unsafe or unverifiable native review script: " + token)
-    if re.search(r'\bRemove-Item\b|\bClear-Content\b|\bMove-Item\b', script):
-        raise ValueError("Native verifier contains a destructive evidence action")
     if script.count("TSTSS.FirstWake.ReviewObjectivesAreReadOnly") != 1:
         raise ValueError("First Wake objective native test declaration lost or duplicated")
     # Ensure SHA and clean tree are checked before any fresh evidence is written.
@@ -81,7 +81,7 @@ class NativeEvidenceSafetyTests(unittest.TestCase):
     def test_unsafe_static_evidence_reuse_is_rejected(self):
         altered = self.code.replace("$Evidence = Join-Path $EvidenceRoot $RunId",
                                     "$Evidence = $EvidenceRoot")
-        self.reject(altered, "per-run")
+        self.reject(altered, "Unsafe or unverifiable")
 
     def test_disabled_clean_tree_check_is_rejected(self):
         altered = self.code.replace("Working tree has uncommitted changes",
