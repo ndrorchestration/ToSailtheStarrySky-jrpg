@@ -1,6 +1,18 @@
-# Unreal verification — NOT YET EXECUTED
+# Unreal verification — exact-head procedure and historical receipts
 
-Run against a real Windows machine with Unreal Engine 5.8 installed; replace engine path as needed.
+**Updated 2026-11-02.** Prior draft #685 had an actual UE5.8.4 Win64 Game
+and Editor build and 23/23 native automations **at its own source SHA**.
+Draft #704 had a Game build but a raw, uncooked startup failure; later
+native test coverage was not run at that exact head. Current draft
+[#712](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/712)
+registers **25** required native tests. GitHub source workflows and
+portable C++ API-double cases passed on inspected commit
+`a1b07b64841c2cb6b735fdd66f2ecd6426cab016`; **no native build, 25-test
+Editor report or PIE walkthrough exists for that head**.
+
+Run the following on a voluntarily idle Windows UE5.8.4 workstation,
+using a disposable exact-head review checkout. Do not modify normal player
+save files or terminate parallel Editors to obtain a pass.
 
 1. Generate IDE project files from `unreal/ToSailTheStarrySky.uproject`.
 2. Build `ToSailTheStarrySkyEditor Win64 Development` with UnrealBuildTool.
@@ -10,7 +22,11 @@ Run against a real Windows machine with Unreal Engine 5.8 installed; replace eng
 5. Run a renderer-enabled scene capture separately. NullRHI proves no visuals.
 6. Package a Windows development build only after native runtime/asset imports are verified.
 
-Current code-only scope: First Wake milestone ordering, deterministic combat transactions, basic versioned SaveGame validation. There is no native map, cooked character asset, robust save migration/serialization, or installer on this branch yet. Do not represent the tests as passing until executed.
+Current review scope includes a tracked V2 Prelude `.umap` with seven
+milestone actors and native C++ explorer/milestone/SaveGame logic.
+**This does not establish PIE movement, E/J/F5/F9 operation, approved cinematic
+characters, true ship-water physics or a cooked/packaged installer.**
+Do not infer native PASS from source registration or compiler API doubles.
 
 Testability follow-up: implement round-trip save/load, mirrored Godot combat fixtures and screenshot comparisons, then enforce Windows CI build gates.
 
@@ -49,3 +65,31 @@ The verifier no longer uses the obsolete fixed `succeeded >= 6` threshold. It no
 ## Confirmed engine-free CI result — 2026-10-31
 
 GitHub reported the **Unreal source preflight** workflow as completed/success on exact commit `4c43979883b713697ed0d3f4c09bb3cb0d34a704`, along with successful Unreal source inventory and Aetherwake smoke workflows. This is an actual GitHub Actions receipt for source-level validation, **not** Unreal Engine 5.8 compilation, runtime tests, graphics capture, or a playable installer. Verification must be repeated against the integration commit being promoted. The connected Windows device remained offline at review.
+
+## Current exact-head gate — November 2, 2026
+
+The recommended invocable verification script is
+`unreal/Tools/Verify-Unreal.ps1 -EngineRoot "<verified UE 5.8.4 install root>"`,
+run from a clean isolated checkout. It checks exact `git HEAD`,
+tracked-tree cleanliness before/after, Win64 Editor build, full Unreal
+JSON automation output and exactly one success entry for each of the
+**25 mandatory named tests**. Do not use `-SkipTests` to claim 25/25;
+that mode proves a build only.
+
+After passing that gate, load the independent V2 Prelude map in the
+Unreal Editor and execute [P01–P13](FIRST_WAKE_V2_PIE_ACCEPTANCE_MATRIX_2026-11-02.md)
+with actual keyboard input and evidence. Test a fresh quicksave slot in a
+disposable test profile: the PIE slot is `tstss_prelude_pie_quick`,
+distinct from the non-PIE `first_wake_quick` slot. An existing PIE
+test slot should cause F5 to refuse a first overwrite in a new session.
+Never delete unowned saves. J reads objectives; E has a separate 300 cm
+pawn-centered check; F9 cannot adopt a prior session's test slot.
+
+**Distinct evidence labels:** `SOURCE_PREFLIGHT=PASS` means CI/source
+tests, `PORTABLE_CPP=PASS` means true C++ methods under API doubles,
+`EDITOR_BUILD=PASS` means actual Win64 UBT at exact HEAD,
+`NATIVE_25=PASS` requires exact JSON, and `PIE=PASS` requires a
+reproducible player run. No field inherits a PASS from another source SHA.
+The direct uncooked Game executable's earlier asset-registry/BufferReader
+crash is not packaged-runtime proof. See
+[dependency/source register](FIRST_WAKE_DEPENDENCY_HANDOFF_2026-11-02.md).
