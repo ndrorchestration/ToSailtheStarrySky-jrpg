@@ -1,4 +1,7 @@
-# Unreal Engine 5.8 migration — experimental source track
+# Unreal Engine 5.8 — active draft implementation
+
+> **2026-11-01 update:** Unreal 5.8.4 is now the creator-directed implementation target. The scaffold-only wording below is historic: specific draft PRs have genuine native Editor builds, 13/13 automation checks, GLB imports and D3D12 screenshots. The latest atmosphere preview still has a black-sky visual HOLD; no creator-approved shipping port is claimed. See [engine and dependency register](Docs/UNREAL_DEPENDENCY_AND_AUTHORITY_REGISTER_2026-11-01.md). Starbourne remains gated.
+
 
 This is a **native UE C++ project scaffold**, not yet a compiled or playable port. UE 5.8 is the selected initial engine target. The existing Godot project and preserved browser code remain untouched.
 
