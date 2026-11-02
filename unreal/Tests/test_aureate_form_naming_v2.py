@@ -73,6 +73,22 @@ class ShipFormNamingTests(unittest.TestCase):
         self.assertFalse(self.data["guardrails"]["model_art_approval_granted"])
         self.assertEqual(self.history["story_lock"]["orbiter_locked"],True)
 
+    def test_native_reflected_display_labels_have_registered_unreal_automation(self):
+        filename=ROOT/"Source"/"ToSailTheStarrySky"/"Private"/"Tests"/"AureateWakeCanonicalFormNamesTests.cpp"
+        self.assertTrue(filename.is_file())
+        native=filename.read_text(encoding="utf-8")
+        self.assertIn("TSTSS.AureateWake.Canon.FormDisplayNames",native)
+        self.assertIn("StaticEnum<EAureateWakeForm>()",native)
+        self.assertIn("GetDisplayNameTextByValue(Value)",native)
+        self.assertIn("GetNameStringByValue(Value)",native)
+        self.assertIn("TestFalse(TEXT(\"Starbourne debug preview remains gated off by default\"),",native)
+        for internal,display in zip(
+            ["Skyborne","Seaborne","Submersible","Orbiter"],
+            ["Skybourne","Seabourne","Submersible","Starbourne"]
+        ):
+            self.assertIn('EAureateWakeForm::'+internal,native)
+            self.assertIn('TEXT("'+display+'")',native)
+
     def test_no_new_gameplay_or_forced_form_change(self):
         self.assertNotIn("bAllowOrbiterPreview = true",self.header)
         self.assertNotIn("EAureateWakeForm::Starbourne",self.header)
