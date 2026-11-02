@@ -19,7 +19,10 @@ from audit_aureate_v2_crosslane_envelope import (
 )
 from aureate_indexed_triangles import read_triangles
 from aureate_triangle_narrowphase import nearest_surface
-from audit_aureate_root_support_routes import source_sections
+from audit_aureate_root_support_routes import (
+    source_sections, form_routes, screen_category, transform_vertices_np,
+    THRESHOLD_CM as ROOT_SCREEN_THRESHOLD,
+)
 from prepare_aureate_v2_support_variant import (
     EXPERIMENTAL_SUPPORT_RECIPE, BASE_SUPPORT_RECIPE,
     BASE_SOURCE_SHA, BASELINE_HULL_SHA, BASELINE_BRIDGE_SHA,
@@ -123,6 +126,81 @@ def run(args):
     }
 
 
+def compare_full_route(args, wing_positions, wing_faces, candidate_vertices,
+                       hull_faces, candidate_hull_sha):
+    """Candidate full-route test; baseline provenance and counts independently verified.
+
+    Return category totals for sampled wing-times, NOT min distances or CCD.
+    This does not approve the variant even when count decreases to zero.
+    """
+    try:
+        import numpy as np
+    except ImportError as exc:
+        raise V2ReviewHold("NumPy required for real full-route candidate test") from exc
+    baseline=json.loads(args.baseline_route_receipt.read_text(encoding="utf-8"))
+    if (baseline.get("sha256",{}).get("wing") != EXPECTED_WING_GLB_SHA or
+        baseline.get("sha256",{}).get("hull") != BASELINE_HULL_SHA or
+        baseline.get("all_route_samples_completed") is not True or
+        baseline.get("total_venation_under_10cm_wing_samples") != 164 or
+        baseline.get("total_hinge_under_10cm_wing_samples") != 256 or
+        baseline.get("sampling",{}).get("total_route_samples") != 126 or
+        baseline.get("wing_actor_source_head") != EXPECTED_WING_SOURCE_HEAD or
+        baseline.get("v2_hull_source_head") != EXPECTED_V2_SOURCE_HEAD or
+        baseline.get("root_support_screen_status") != "NEAR_SUPPORT_SURFACE_HOLD"):
+        raise V2ReviewHold("Original V2 126-pose receipt/source totals changed: HOLD")
+    parts=source_sections(wing_faces,hull_faces)
+    np_hull=np.asarray(candidate_vertices,dtype=np.float64)
+    tubes=[np_hull[np.asarray(hull_faces[240+32*i:240+32*(i+1)],
+                               dtype=np.int64)] for i in range(4)]
+    wp=np.asarray(wing_positions,dtype=np.float64)
+    by_route=[]
+    group_key=None
+    for src,dst,index,t in form_routes(steps=20):
+        key=(src,dst)
+        if key!=group_key:
+            by_route.append({"from":src,"to":dst,
+                             "pose_samples":0,
+                             "venation_under_10cm_wing_samples":0,
+                             "hinge_under_10cm_wing_samples":0,
+                             "first_venation_witness":None,
+                             "first_hinge_witness":None})
+            group_key=key
+        route=by_route[-1]
+        route["pose_samples"]+=1
+        for wing_index in range(4):
+            tr=wing_audit.blend(wing_audit.pose(src,wing_index),
+                                wing_audit.pose(dst,wing_index),t)
+            world=transform_vertices_np(wp,tr,np)
+            for section in ("venation","hinge"):
+                outcome=screen_category(world,parts[section],tubes,np,
+                                        ROOT_SCREEN_THRESHOLD)
+                if outcome["under_threshold"]:
+                    route[section+"_under_10cm_wing_samples"]+=1
+                    key="first_"+section+"_witness"
+                    if route[key] is None:
+                        route[key]={"wing_index":wing_index,
+                                    "sample_index":index,
+                                    "time_fraction":round(t,6),
+                                    **outcome}
+    ven=sum(r["venation_under_10cm_wing_samples"] for r in by_route)
+    hinge=sum(r["hinge_under_10cm_wing_samples"] for r in by_route)
+    if len(by_route)!=6 or any(r["pose_samples"]!=21 for r in by_route):
+        raise V2ReviewHold("Not all 126 candidate route configurations completed")
+    return {
+        "authority":"TRIAL_HULL_126_POSE_TARGETED_SUPPORT_TRIANGLES_ONLY",
+        "candidate_hull_sha256":candidate_hull_sha,
+        "baseline_hull_sha256":BASELINE_HULL_SHA,
+        "baseline_observation_counts":{
+            "venation":164,"hinge":256},
+        "candidate_observation_counts":{
+            "venation":ven,"hinge":hinge},
+        "route_breakdown":by_route,
+        "wing_time_observations":504,
+        "review_status":"HOLD_EXPERIMENT_NOT_STRUCTURALLY_OR_ARTISTICALLY_ACCEPTED",
+        "limits":"No full hull/bridge, swept collision or approved attachment; first witnesses are not minima",
+    }
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--wing-glb",required=True,type=Path)
@@ -133,9 +211,21 @@ def main():
     parser.add_argument("--header",required=True,type=Path)
     parser.add_argument("--wing-source-head",required=True)
     parser.add_argument("--v2-source-head",required=True)
+    parser.add_argument("--baseline-route-receipt",type=Path,
+                        help="Full 126-pose parent source-bound receipt for comparison")
     args=parser.parse_args()
     try:
         data=run(args)
+        if args.baseline_route_receipt is not None:
+            verified_candidate=verify_candidate(
+                args.recipe_receipt,args.candidate_dir,args.baseline_dir)
+            wing,_=wing_audit.read_vertices(args.wing_glb)
+            candidate,_=wing_audit.read_vertices(args.candidate_dir/HULL_FILE)
+            faces=read_triangles(args.wing_glb)
+            hull_faces=read_triangles(args.candidate_dir/HULL_FILE)
+            data["full_route_targeted_support_comparison"]=compare_full_route(
+                args,wing,faces,candidate,hull_faces,
+                verified_candidate["candidate_mesh_sha256"]["hull"])
     except (V2ReviewHold,wing_audit.GeometryHold,ValueError,OSError,KeyError,TypeError) as exc:
         parser.exit(3,"CANDIDATE_INPUT_HOLD: "+str(exc)+"\n")
     print(json.dumps(data,sort_keys=True,indent=2))
