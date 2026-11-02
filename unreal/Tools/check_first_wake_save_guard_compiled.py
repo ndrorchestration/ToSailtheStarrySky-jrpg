@@ -226,9 +226,16 @@ def build_run(compiler: str, method: str) -> subprocess.CompletedProcess[str]:
         source = root / "save.cpp"
         binary = root / "save"
         source.write_text(PREFIX + method + SUFFIX, encoding="utf-8")
+        is_msvc = Path(compiler).name.lower() == "cl.exe"
+        if is_msvc:
+            binary = root / "save.exe"
+            args = [compiler, "/nologo", "/std:c++17", "/EHsc",
+                    str(source), "/Fo:" + str(root / "save.obj"), "/Fe:" + str(binary)]
+        else:
+            args = [compiler, "-std=c++17", "-O0", "-Wall", "-Wextra", "-Werror",
+                    "-pedantic", str(source), "-o", str(binary)]
         built = subprocess.run(
-            [compiler, "-std=c++17", "-O0", "-Wall", "-Wextra", "-Werror",
-             "-pedantic", str(source), "-o", str(binary)],
+            args,
             capture_output=True, text=True, timeout=45, check=False)
         if built.returncode:
             raise RuntimeError("C++ portable compile failed: " + built.stderr[-5000:])
@@ -243,7 +250,9 @@ def main() -> int:
     compiler = next((exe for name in ("g++", "clang++", "c++")
                      if (exe := shutil.which(name))), None)
     if compiler is None:
-        raise RuntimeError("C++17 compiler required: native Unreal not available")
+        compiler = shutil.which("cl")
+    if compiler is None:
+        raise RuntimeError("C++17 compiler required: no supported compiler located")
     method = extract(SOURCE.read_text(encoding="utf-8"))
     actual = build_run(compiler, method)
     if actual.returncode:
