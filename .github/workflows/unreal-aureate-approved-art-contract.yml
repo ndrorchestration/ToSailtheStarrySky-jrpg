@@ -16,6 +16,16 @@ on:
       - 'unreal/Tests/test_aureate_skyborne_composite_plan.py'
       - 'unreal/Source/ToSailTheStarrySky/**/AureateWakePreviewActor.*'
       - 'unreal/Docs/AUREATE_WAKE_APPROVED_ART_REFERENCE_2026-11-01.md'
+      - 'unreal/Tests/test_unreal_documentation_dependency_authority.py'
+      - 'docs/UNREAL_DEPENDENCY_AND_DOCUMENTATION_AUTHORITY_2026-11-01.md'
+      - 'AGENTS.md'
+      - 'README.md'
+      - 'docs/AGENT_HANDOFF_INDEX.md'
+      - 'unreal/README.md'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'unreal/ToSailTheStarrySky.uproject'
+      - 'unreal/Source/ToSailTheStarrySky/ToSailTheStarrySky.Build.cs'
       - '.github/workflows/unreal-aureate-approved-art-contract.yml'
   workflow_dispatch:
 
@@ -34,6 +44,8 @@ jobs:
         run: python3 -m unittest discover -s unreal/Tests -p test_aureate_approved_art_contract.py -v
       - name: Validate creator's four current form labels and preserve legacy Unreal identifiers
         run: python3 -m unittest discover -s unreal/Tests -p test_aureate_form_naming_v2.py -v
+      - name: Source-only engine, dependency manifest and handoff consistency
+        run: python3 -m unittest discover -s unreal/Tests -p test_unreal_documentation_dependency_authority.py -v
       - name: Compile and execute exact hull/bridge binding guards (31 cases, no Unreal runtime)
         run: python3 unreal/Tests/check_aureate_body_binding_logic.py
       - name: Validate four-wing Skyborne layout against current C++ pose and creator art
