@@ -1,6 +1,7 @@
 param(
     [Parameter(Mandatory=$true)][string]$EngineRoot,
-    [switch]$SkipTests
+    [switch]$SkipTests,
+    [string]$ExpectedHead = ''
 )
 $ErrorActionPreference = 'Stop'
 $Project = (Resolve-Path (Join-Path $PSScriptRoot '../ToSailTheStarrySky.uproject')).Path
@@ -8,14 +9,26 @@ $BuildTool = Join-Path $EngineRoot 'Engine/Build/BatchFiles/Build.bat'
 $EditorCmd = Join-Path $EngineRoot 'Engine/Binaries/Win64/UnrealEditor-Cmd.exe'
 if (-not (Test-Path $BuildTool)) { throw "Missing Unreal Build.bat at $BuildTool" }
 if (-not (Test-Path $EditorCmd)) { throw "Missing UnrealEditor-Cmd.exe at $EditorCmd" }
-$Evidence = Join-Path $PSScriptRoot '../Saved/MigrationEvidence'
+$EvidenceRoot = Join-Path $PSScriptRoot '../Saved/MigrationEvidence'
 $GitHead = (git -C (Join-Path $PSScriptRoot '../..') rev-parse HEAD)
 if ($LASTEXITCODE -ne 0 -or -not $GitHead) { throw 'Unable to resolve repository HEAD' }
+if ($GitHead -notmatch '^[0-9a-fA-F]{40}$') { throw "Unexpected Git SHA: $GitHead" }
+if ($ExpectedHead -ne '' -and $GitHead -ne $ExpectedHead) {
+    throw "Source HEAD differs from the explicitly requested review commit: actual=$GitHead expected=$ExpectedHead"
+}
 $WorkingTree = @(git -C (Join-Path $PSScriptRoot '../..') status --porcelain)
 if ($LASTEXITCODE -ne 0) { throw 'Unable to inspect working tree' }
 if ($WorkingTree.Count -gt 0) { throw 'Working tree has uncommitted changes; evidence cannot be bound to HEAD' }
-New-Item -Path $Evidence -ItemType Directory -Force | Out-Null
+# Every verification attempt receives a fresh, non-overwriting receipt folder.
+# Keep previous success AND failure logs for head-specific review and debugging.
+$RunId = ('{0}-{1}-{2}' -f $GitHead.Substring(0, 12),
+    ([DateTime]::UtcNow.ToString('yyyyMMddTHHmmssfffZ')),
+    ([guid]::NewGuid().ToString('N').Substring(0, 8)))
+$Evidence = Join-Path $EvidenceRoot $RunId
+if (Test-Path $Evidence) { throw "Evidence folder already exists; refusing overwrite: $Evidence" }
+New-Item -Path $Evidence -ItemType Directory -ErrorAction Stop | Out-Null
 $GitHead | Set-Content (Join-Path $Evidence 'head.txt')
+Write-Host "Review evidence directory (unique; retained on failure): $Evidence"
 & $BuildTool ToSailTheStarrySkyEditor Win64 Development "-Project=$Project" -WaitMutex 2>&1 |
     Tee-Object (Join-Path $Evidence 'build.log')
 if ($LASTEXITCODE -ne 0) { throw "Unreal editor build failed ($LASTEXITCODE)" }
@@ -33,8 +46,8 @@ if ($SkipTests) {
     exit 0
 }
 $ReportDirectory = Join-Path $Evidence 'AutomationReport'
-if (Test-Path $ReportDirectory) { Remove-Item $ReportDirectory -Recurse -Force }
-New-Item -Path $ReportDirectory -ItemType Directory -Force | Out-Null
+if (Test-Path $ReportDirectory) { throw 'Review automation evidence collision; refusing overwrite' }
+New-Item -Path $ReportDirectory -ItemType Directory -ErrorAction Stop | Out-Null
 $ExportArgument = '-ReportExportPath=' + $ReportDirectory
 & $EditorCmd $Project -unattended -nop4 -nullrhi '-ExecCmds=Automation RunTests TSTSS; Quit' $ExportArgument -log 2>&1 |
     Tee-Object (Join-Path $Evidence 'automation.log')
@@ -102,4 +115,4 @@ $FinalWorkingTree = @(git -C (Join-Path $PSScriptRoot '../..') status --porcelai
 if ($LASTEXITCODE -ne 0 -or $FinalWorkingTree.Count -gt 0) {
     throw 'Working tree changed during verification; refusing to bind PASS to a dirty checkout'
 }
-Write-Host "Native build and reported automation checks passed at $GitHead. Visual acceptance remains separate."
+Write-Host "Native build and reported automation checks passed at $GitHead. Evidence retained at $Evidence. Visual acceptance remains separate."
