@@ -5,6 +5,9 @@ on:
     paths:
       - 'unreal/Source/**'
       - 'unreal/Tools/**'
+      - 'unreal/ToSailTheStarrySky.uproject'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/unreal-source-preflight.yml'
   workflow_dispatch:
 
