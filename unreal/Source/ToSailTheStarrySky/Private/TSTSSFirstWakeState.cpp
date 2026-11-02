@@ -1,5 +1,42 @@
 #include "TSTSSFirstWakeState.h"
 
+// Temporary objective copy for First Wake review UX; no story authority changes.
+// Blueprints may read this value without relying on debug-screen rendering.
+FString UTSTSSFirstWakeState::GetReviewObjectiveText() const
+{
+    if (!bStarted)
+    {
+        return TEXT("Find Ionia's flyer");
+    }
+
+    switch (CurrentBeat)
+    {
+    case ETSTSSFirstWakeBeat::FlyerDiscovered:
+        return TEXT("Speak with Captain Ionia");
+    case ETSTSSFirstWakeBeat::IoniaHired:
+        return TEXT("Board the Aureate Wake");
+    case ETSTSSFirstWakeBeat::BoardedAureateWake:
+        if ((InspectionMask & 0x01u) == 0) return TEXT("Inspect the levitation lift");
+        if ((InspectionMask & 0x02u) == 0) return TEXT("Inspect the pressure systems");
+        if ((InspectionMask & 0x04u) == 0) return TEXT("Inspect the reserve systems");
+        return TEXT("Complete engineering signoff");
+    case ETSTSSFirstWakeBeat::EngineeringChecked:
+        return TEXT("Prepare for the First Wake launch");
+    case ETSTSSFirstWakeBeat::Launched:
+        return TEXT("Navigate the First Wake flight");
+    case ETSTSSFirstWakeBeat::SeaContact:
+        return TEXT("Stabilize the water landing");
+    case ETSTSSFirstWakeBeat::FlotationConfirmed:
+        return TEXT("Investigate the empty reserves");
+    case ETSTSSFirstWakeBeat::EmptyReserveInspected:
+        return TEXT("Return to berth");
+    case ETSTSSFirstWakeBeat::ReturnedToBerth:
+        return TEXT("First Wake review sequence complete");
+    default:
+        return TEXT("Review objective unavailable");
+    }
+}
+
 bool UTSTSSFirstWakeState::AdvanceTo(const ETSTSSFirstWakeBeat RequestedBeat)
 {
     const uint8 Requested = static_cast<uint8>(RequestedBeat);
