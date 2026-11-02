@@ -29,5 +29,10 @@ jobs:
           python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_prelude_interaction.py' -v
           python3 unreal/Tools/build_first_wake_prelude_interaction.py --validate
           python3 -m py_compile unreal/Tools/build_first_wake_prelude_interaction.py
+      - name: Verify tracked V2 Prelude map, controls and separate native QA source
+        run: |
+          python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_v2_independent.py' -v
+          python3 unreal/Tools/verify_first_wake_v2_independent.py --source unreal
+          python3 -m py_compile unreal/Tools/verify_first_wake_v2_independent.py
       - name: Compile and exercise actual DesignOnly C++ adapter (API doubles, not Unreal)
         run: python3 unreal/Tools/check_combat_design_only_compiled.py
