@@ -16,8 +16,13 @@ class IndependentV2GateTests(TestCase):
         self.assertEqual(qa.MAP_PACKAGE, "/Game/TSTSS/Review/FirstWake_PreludeInteraction_V2")
 
     def test_original_sandbox_and_wrong_project_denied(self):
-        with self.assertRaisesRegex(RuntimeError, "outside unique"):
-            qa.project_guard(str(PROJECT))
+        # The *actual* independent checkout must be admitted, never rejected.
+        # A missing or tampered copy is still refused by the map hash guard.
+        if PROJECT.parent.name == qa.EXPECTED_PARENT:
+            self.assertEqual(qa.project_guard(str(PROJECT)), PROJECT.resolve())
+        else:
+            with self.assertRaisesRegex(RuntimeError, "outside unique"):
+                qa.project_guard(str(PROJECT))
         with tempfile.TemporaryDirectory() as parent:
             folder = Path(parent) / "NotTheIndependentSandbox" / "unreal"
             folder.mkdir(parents=True)
