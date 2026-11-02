@@ -126,6 +126,25 @@ def run(args):
     }
 
 
+def read_verified_json_receipt(path: Path):
+    """Read only normal UTF-8 or PowerShell BOM-marked UTF-16 LE receipts.
+
+    Encoding compatibility never bypasses the immutable SHA/source/count
+    validation that follows. Reject undecorated UTF-16 and unknown encodings.
+    """
+    blob=path.read_bytes()
+    if blob.startswith(bytes((255,254))):
+        decoded=blob.decode("utf-16")
+    elif blob.startswith(bytes((239,187,191))):
+        decoded=blob.decode("utf-8-sig")
+    else:
+        decoded=blob.decode("utf-8")
+    result=json.loads(decoded)
+    if not isinstance(result,dict):
+        raise V2ReviewHold("Expected JSON object source receipt")
+    return result
+
+
 def compare_full_route(args, wing_positions, wing_faces, candidate_vertices,
                        hull_faces, candidate_hull_sha):
     """Candidate full-route test; baseline provenance and counts independently verified.
@@ -137,7 +156,7 @@ def compare_full_route(args, wing_positions, wing_faces, candidate_vertices,
         import numpy as np
     except ImportError as exc:
         raise V2ReviewHold("NumPy required for real full-route candidate test") from exc
-    baseline=json.loads(args.baseline_route_receipt.read_text(encoding="utf-8"))
+    baseline=read_verified_json_receipt(args.baseline_route_receipt)
     if (baseline.get("sha256",{}).get("wing") != EXPECTED_WING_GLB_SHA or
         baseline.get("sha256",{}).get("hull") != BASELINE_HULL_SHA or
         baseline.get("all_route_samples_completed") is not True or
