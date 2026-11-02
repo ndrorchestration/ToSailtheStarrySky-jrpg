@@ -43,6 +43,11 @@ REQUIRED_TEST_FRAGMENTS = (
     "inboard cube end contacts proxy anchor",
     "outboard cube end contacts foil center",
     "Completed support visibility matches destination",
+    "foil visibility matches route",
+    "strut visibility matches route",
+    "Visible support observations on Seaborne routes",
+    "Hidden support observations on non-Seaborne routes",
+    "if (bRouteUsesHydrofoils)",
     "Orbiter remains unavailable after ordinary route",
     "TestEqual(TEXT(\"Six routes x 21 phases x two supports\"), VerifiedSupportPoses, 252)",
     "World->DestroyWorld(false)",
@@ -58,7 +63,10 @@ REQUIRED_ACTOR_FRAGMENTS = (
     "const FVector HullAnchor(0.f, Side * 60.f, -30.f);",
     "FVector(0, Side * 80.f, bDeployed ? -140.f : -45.f)",
     "T * T * (3.f - 2.f * T)",
-    "Hydrofoils[Index]->SetVisibility(true);",
+    "const bool bShowFoilsDuringTransition =",
+    "CurrentForm == EAureateWakeForm::Seaborne ||",
+    "RequestedForm == EAureateWakeForm::Seaborne;",
+    "Hydrofoils[Index]->SetVisibility(bShowFoilsDuringTransition);",
 )
 
 def source_contract(test_source, actor_source):
@@ -175,6 +183,21 @@ class ContractTests(unittest.TestCase):
             self.assertTrue(
                 source_contract(self.test_source.replace(original, changed, 1), self.actor_source),
                 f"native assertion mutation unexpectedly accepted: {original}")
+
+    def test_direct_non_seaborne_visibility_guard_resists_mutation(self):
+        mutations = (
+            ("Hydrofoils[Index]->SetVisibility(bShowFoilsDuringTransition);",
+             "Hydrofoils[Index]->SetVisibility(true);"),
+            ("CurrentForm == EAureateWakeForm::Seaborne ||",
+             "CurrentForm == EAureateWakeForm::Orbiter ||"),
+            ("RequestedForm == EAureateWakeForm::Seaborne;",
+             "RequestedForm == EAureateWakeForm::Skyborne;"),
+        )
+        for original, changed in mutations:
+            self.assertIn(original, self.actor_source)
+            self.assertTrue(
+                source_contract(self.test_source, self.actor_source.replace(original, changed, 1)),
+                f"hydrofoil gate drift unexpectedly accepted: {original}")
 
     def test_actor_foil_and_hull_literal_mutations_fail_closed(self):
         changes = (
