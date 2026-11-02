@@ -88,6 +88,21 @@ class RootSupportVariantGuardTests(unittest.TestCase):
         with self.assertRaisesRegex(V2ReviewHold,"approval/provenance"):
             self.inspect()
 
+    def test_power_shell_utf16le_receipt_with_bom_is_decoded(self):
+        receipt=Path(self.tmp.name)/"powershell.json"
+        receipt.write_bytes(("\ufeff"+json.dumps({"status":"HOLD"})).encode("utf-16-le"))
+        self.assertEqual(comparison.read_verified_json_receipt(receipt)["status"],"HOLD")
+
+    def test_utf8_receipt_is_decoded(self):
+        self.assertEqual(comparison.read_verified_json_receipt(self.report)["approval"],
+                         "NOT_GRANTED")
+
+    def test_nonobject_baseline_json_is_refused(self):
+        receipt=Path(self.tmp.name)/"not_object.json"
+        receipt.write_text("[]",encoding="utf-8")
+        with self.assertRaisesRegex(V2ReviewHold,"Expected JSON object"):
+            comparison.read_verified_json_receipt(receipt)
+
     def test_variant_preparation_never_overwrites_output(self):
         with self.assertRaisesRegex(ValueError,"already exists"):
             variant.prepare(Path(self.tmp.name),Path(self.tmp.name))
