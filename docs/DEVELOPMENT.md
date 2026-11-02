@@ -1,5 +1,8 @@
 # To Sail the Starry Sky — Development Guide
 
+> **Active engine update (2026-11-01):** The creator now directs new implementation in **Unreal Engine 5.8.4**. Earlier Godot-forward plans and browser/NW.js release evidence below remain historically accurate for their dated checkpoints but are not the forward runtime target. See [Unreal dependency/authority register](../unreal/Docs/UNREAL_DEPENDENCY_AND_AUTHORITY_REGISTER_2026-11-01.md); native draft compile, automation, imports and D3D12 captures are not art approval or a released game. Preserve security holds and Starbourne restrictions.
+
+
 > **Native graphical gate (2026-10-28):** Official Godot 4.7.2 imported pinned `4d2ec5fb` and passed five native tests plus nine genuine Windows 960×640 frames. Inspected frames show that the old Chapter 1 review scene is Lyra-first, while the revised Ionia-first opening is opt-in; it is *not* canonical default-entry acceptance. Visual HUD occlusions and prototype art remain; Windows installed-launch security and unassisted gameplay have not been demonstrated by these tests. [Detailed QA](CHAPTER_1_NATIVE_INTEGRATION_AUDIT_2026-10-28.md).
 
 > **2026-10-28 authority notice:** This guide retains historical **Aetherwake browser/desktop-preview evidence**; it must not be interpreted as native Godot Chapter 1 completion. The forward engine is Godot 4.7.2 / GDScript. See [Chapter 1 beta roadmap](CHAPTER_1_BETA_ROADMAP.md) for 2026-11 through 2027-05 integration/alpha/beta milestones and quality gates. Native Ionia-first First Wake story authority supersedes older Lyra-first browser onboarding for new production work. Distinguish merged main, exact-head draft PRs, released historical artifacts and creator artistic acceptance.
