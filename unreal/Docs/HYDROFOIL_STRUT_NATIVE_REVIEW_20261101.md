@@ -46,3 +46,15 @@ Native compilation remains blocked on insufficient headroom. [Draft PR #677](htt
 | Authoritative art promotion, merge or Orbiter unlock | NOT_AUTHORIZED |
 
 When available memory/commit headroom improves **and there is no conflicting Editor**, create a fresh detached **exact-head** worktree; run the resource gate; run one native Unreal Win64 Editor build and `TSTSS.Ship.HydrofoilStrutNativeReview` with a report exported to a new `Saved/` evidence path. If insufficient headroom, leave the machine untouched and preserve the pending state. Native test success is separate from visual or art approval.
+
+## Further source-only transition audit — 2026-11-01
+
+This review branch now runs a bounded analytical model of **all six ordered routes between Skyborne, Seaborne and Submersible** at 21 interpolation fractions per route, for **both** hydrofoil struts: 6 × 21 × 2 = **252 support poses**. The check uses the observed C++ review-proxy constants (hull anchor `Y=±60, Z=-30cm`; hydrofoil center `Y=±80, Z=-45/-140cm`), the source's cubic smoothstep easing, and an axis-aligned provisional hull half-width/half-height of **75/32.5 cm** derived from the BasicShapes cube proxy.
+
+For each sampled pose it checks endpoint alignment, nonzero span, port/starboard symmetry, monotonic Z movement, and that each *centerline* exits the temporary hull proxy in the first 20% of its travel from the deliberately internal hull anchor. The inferred hull overlap at the anchor is **intentional**, not a clearance PASS. Only simple line arithmetic is verified; mesh radii, imported model surfaces, bridge intersection, hydrodynamic force, continuous sweeping, shaders and actual native rendering are outside the evidence.
+
+The Python audit explicitly refuses Orbiter, malformed side/fraction inputs and unauthorized geometry changes: controls mutate the source hull anchor, deployed foil depth and easing expression and assert fail-closed detection. It also retains the prior per-form source and registered C++ test checks.
+
+Observed at exact source `60e744b9bf90d87c551ad8ca398454e9bf5c180b` in a new clean detached Windows source worktree: **7/7 engine-free contract tests PASS; 14/14 registered native test names PASS; 14/14 source inventory PASS; no tracked changes**. Further source-only mutation controls were committed after that snapshot; see the latest hosted CI result for their status. **Native C++ test is still NOT COMPILED or EXECUTED** because local resource limits are not met.
+
+This audit is source- and proxy-bound, with no art approval and no permission to enable Orbiter, merge drafts or describe the ship as flight-/water-/pressure-safe.
