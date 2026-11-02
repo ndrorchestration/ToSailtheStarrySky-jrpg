@@ -1,0 +1,73 @@
+# Cross-agent Unreal combat integration review — November 1, 2026
+
+**Stack:** foundation #608 → magic/weapon permission executor #662 → initiative/component #666 → **this draft**, with the additive validator/data contract copied from independent Claude draft #665 at head \`a0be01ed280279e3a650d4c8f5d9f051ef6f4a00\`. Copying source into this isolated review branch is **not** merging #665 or accepting its fixture values into main.
+
+## Integration mechanics
+
+- Preserve the original #665 \`FTSTSSCombatData\` validators for five protagonists, Five Lights as narrative tags, Level 1 HP/MP/MAG relative ordering, user-specified level-gated learned-set calculation, and source provenance.
+- Preserve #662 \`FTSTSSBattleSkillSystem\` execution: requires explicit learned, mastery, equipment, admission and actor-local cooldown checks; prohibits accidental spells from narrative affinity and data export.
+- Preserve #666 \`UTSS_CombatTurnManager\`: only one turn executor, explicit 1–3 active party selection, deterministic speed initiative, legally executed skill rows.
+- **New guarded bridge** \`FTSTSSCombatSkillReconciliation::TryPrepareDesignOnly\` converts only compatible Spell/WeaponTechnique authoring metadata (identity/power/cost/healing/target) into \`FTSTSSBattleSkillRow\` with permanent \`DesignOnly\` admission at this stage. Even a row marked \`CreatorApproved\` by the #665 schema is never automatically executable. It does **not** claim per-character learned/mastery authorization, infer school from Five Lights, infer equipped weapon, or emit fabricated FX assets. Unknown/generic categories and malformed input fail atomically.
+- All new/ported native automation test declarations are required in \`Verify-Unreal.ps1\`. Source-only CI checks registration and legacy smoke; only native UE 5.8.4 verifies C++ and editor reflection.
+
+## Explicit unresolved contract differences
+
+1. **Party count:** #665 \`ValidateActiveParty\` requires EXACTLY THREE, while #666 supports 1–3 to handle recruitment (Ender → Ionia → Lyra). Do not change the former silently; treat it as a later fully populated selection gate, and keep early encounters 1–3 pending authored chapter-integration review.
+2. **Action ownership and school:** #665 \`Learners + UnlockLevel\` is not enough to satisfy #662's learned school, mastery rank, equipped-weapon requirement, or gameplay admission.
+3. **Stats and economy:** #665 \`StartMagic\` and \`StartMaxMP\` are not wired into #666's generic Combatant Resource/Attack, and no creator-approved numeric baselines exist. Do not equate the resource pool to canonical MP or port the legacy JS HP values.
+4. **Category map:** #665 Attack/Support are not automatically the JobArt category in #662; require explicit authored classification or separate resolvers.
+5. **Provenance:** \`CreatorApproved\` (data ownership/provenance) and \`ReviewExecutable\` (isolated mechanic opt-in) remain distinct gates, neither sufficient alone for shipping.
+
+## Required verification
+
+1. Read exact-source branch SHA, run both hosted Unreal source preflight/inventory plus generic smoke; report FAIL if any regression, and no false native pass.
+2. Isolated UE 5.8.4 Win64 Editor compile + UnrealHeaderTool + exact report of all \`TSTSS.Combat*\` tests, including \`TSTSS.CombatData.NonExecutableSkillReconciliation\`.
+3. Import DataTables using each separate row type; verify Blueprint shapes and absence of automatic spell learning.
+4. Independently test underfunded/wrong target, weapon swapping, status/knockout, initiative ties, 1-/2-/3-member recruitment boundaries, reserve save continuity and terminal victory/defeat.
+5. Real renderer VFX/montage and cinematic captures are outside this source-only slice. Do not merge or release until independently accepted.
+
+## 2026-11-01 — Regression consolidation from other active agent branches
+
+Added existing read-only-authored QA test source from independent draft [#671](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/671) at \`3dc716ddcce000373a79d504cf476c135b5916fa\`, and [#672](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/672) at \`b4dad1a01a696b910421f88b6ac308ffd19b7c40\`. These are copied tests (not merged PRs), and retain original noncanonical fixtures.
+
+- \`TSTSS.CombatIntegration.DataContractCannotAutoAuthorize\`: verifies that level-derived proposed actions do not gain shipping approval or the separate learned/mastery/admission gate, and that failure preserves existing state.
+- \`TSTSS.CombatIntegration.ProgressiveRecruitmentPartySize\`: verifies solo Ender → duo Ender/Ionia → trio Ender/Ionia/Lyra without phantom recruits or a fourth active member.
+- Strengthened \`TSTSS.CombatData.NonExecutableSkillReconciliation\`: calls the actual guarded spell executor with a converted \`DesignOnly\` row, including an artificially learned and mastered review actor, and confirms action rejection plus unchanged outputs.
+
+All three remain **native automation test source**, not a claim of native execution. \`Verify-Unreal.ps1\` requires their named results alongside the rest of the test inventory.
+
+## 2026-11-01 — Bounded integer counter rollover hardening
+
+The existing deterministic `FTSTSSCombatTurns::TryAction` implementation incremented signed `int32` `AcceptedActions` and `Round` without checking `MAX_int32`; an extremely long or deliberately restored malformed encounter state could otherwise overflow signed counters. A reversible, isolated change denies any action at maximum accepted-action count, and denies only those maximum-round actions that would advance the round. It preserves the output argument on rejection and allows max-round actions that do not wrap. The existing native `TSTSS.Combat.TurnOrderAndAtomicity` suite now includes positive no-wrap and negative max-round/max-action tests, avoiding new test inventory names. No gameplay tuning, save schema or character progression data is changed. **These are native test declarations, not evidence they ran in Unreal.**
+
+## 2026-11-01 — Generic healing cannot resurrect knocked-out targets
+
+`UTSTSSCombatRules::TryApplyAction` previously rejected damage targeting HP=0 but accepted ordinary healing on HP=0, potentially granting an unapproved resurrection through direct callers below `FTSTSSBattleSkillSystem`. The existing higher-level skill executor already denied such healing. This isolated core correction makes <b>all generic combat actions reject HP=0 targets</b> (including healing) while preserving outputs on rejection. The existing `TSTSS.Combat.RejectsInvalidActionsWithoutMutation` native test now checks the zero-HP heal denial and output/input preservation. This does not remove or implement an explicitly authored future resurrection mechanic; any such mechanic needs a separate approval and typed resolver. Unreal native execution remains unverified until exact-head UE 5.8.4 compilation and Editor tests.
+
+## 2026-11-01 — Strict action-category/target enum validation
+
+The authoring `ValidateActions` path previously did not reject cast/deserialized category/target values outside its declared enum schema. In `TryBuildAbilityData`, its target switch has no default, so an invalid target could silently retain an initialized default. `ETSTSSDataIssue::InvalidActionCategory` and `InvalidActionTarget` now cause source and shipping validation to fail rather than reinterpreting malformed input. Existing `TSTSS.CombatData.ActionDefinitions` test adds invalid category and target cases, including a catalog bridge rejection that preserves existing outputs. This remains a review-only validator and does not authorize gameplay magic, invent content, or claim native UE compilation.
+
+## 2026-11-01 — UE 5.8.4 source compatibility correction before native verification
+
+The exact-head native review workspace was connected and checked but the Unreal Editor had Live Coding active and other agents' builds ran concurrently, preventing our own native compile. Independent combat draft [#685](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/685) documented previously encountered UE5.8 build defects and regression fixture failure, originally resolved on foundation [#650](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/650). Selectively ported only: (1) both Target.cs defaults to BuildSettingsVersion.V7 + EngineIncludeOrderVersion.Unreal5_8, (2) water-contact component bounds to `Hull->GetBounds()` without removing the finite bounds requirements, and (3) self-referential `Save->PartyRoster.Add(Save->PartyRoster[0])` into an independent copy before add. New engine-free Python checks guard all three exact source contracts in hosted preflight. No C++ native tests or compile proof can be inferred; remote Editor still running. No protected merges, content promotions, or gameplay canon changes.
+
+## 2026-11-01 — Safe native verification fail-closed preflight
+
+Native `Verify-Unreal.ps1` now explicitly inspects interactive `UnrealEditor` and `UnrealEditor-Cmd` processes and other `Build.bat`/UnrealBuildTool processes before creating or overwriting any migration evidence or starting a build. Existing sessions trigger a descriptive HOLD rather than queueing duplicate compilers or killing someone else's editor. Inability to query running build processes also refuses verification. Two engine-free source tests verify guard ordering and absence of any kill command, wired into hosted CI; these cannot substitute for PowerShell parser or actual Windows gate execution. The current neontic Editor session (PID 57212) remains running; native PR #674 compilation is not authorized while it remains active. The source guard itself does not stop processes, modify gameplay, merge PRs, or claim a native PASS.
+
+## 2026-11-01 — Host-native C++ guard for the exact DesignOnly adapter method
+
+An additive test harness from draft #685 (source `813abdce5fd74ac32f685b9d6dbbee17d3863e7c`) is selectively copied into this independent review branch, after byte-for-byte inspection confirmed its input `TSTSSCombatSkillReconciliation.cpp` implementation is **identical** between the donor and PR #674 at the integration point. The script extracts and compiles the exact real C++ implementation against minimal Unreal API stand-ins, runs 22 bounded authorization/atomicity tests, and supports installed MSVC on Windows through vcvars64 as well as hosted GCC/Clang. Source preflight executes it on GitHub. Stand-in `ValidateActions` is explicitly not Unreal's real validator: do not claim full UE UHT/Editor/C++ compilation, gameplay abilities, or native 22-case test execution from this harness. The actual native UE 5.8.4 22-case automation suite remains pending the competing host build processes and isolated complete run.
+
+## 2026-11-01 — Exact-head native evidence and Unreal config drift containment
+
+On authorized `neontic`, prior integration SHA `0014f1cbcae07781ba4c374d06a0ee0b0d755aa8` **passed the UE 5.8.4 native Editor-module build** (UHT 26 generated files, 6 compile/link actions) and produced a genuine Editor AutomationReport `succeeded=22, failed=0, notRun=0`. The overall verifier correctly returned HOLD because headless Unreal Editor mutated two tracked files: `Config/DefaultEngine.ini` gained machine-local Android File Server settings, and `Config/DefaultInput.ini` was rewritten with generated axis mappings. The workstation-specific token was not copied into source, comments or documentation. Only those two known changed files were restored from the pinned source head in the isolated checkout; a subsequent `git status --short` returned clean.
+
+Epic's *Unreal Engine 5.8 Command-Line Arguments Reference* describes `-nowrite` as disabling configuration file writes and `-NOINI` as suppressing configuration updates. The headless `UnrealEditor-Cmd` automation invocation now includes both switches; an additive test verifies their presence, the existing final exact-head/clean-tree evidence gate, and the absence of process-kill commands. This is **mitigation source, not proof** that UE config changes are eliminated until the exact new head completes native build and 22 named Editor tests with a clean Git worktree. 
+
+## 2026-11-01 — Cross-agent no-write verification reconciliation
+
+Independent [draft PR #691](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/691) independently reproduced the two tracked INI changes, verified that just `-NOINI -NOAUTOINIUPDATE` was insufficient, identified AndroidFileServerEditor settings initialization as a source of a locally generated security token, and completed a separately pinned **13/13 real UE 5.8 Editor automation run with a clean Git worktree** when `-nowrite -NOINI -NOAUTOINIUPDATE -DisablePlugins=AndroidFileServer` were passed to the headless Editor. The standalone native demonstration is *not* an exact-head #674 test result.
+
+For defense-in-depth, this integration review's headless `UnrealEditor-Cmd` invocation now uses the same four documented/session-specific options while leaving all existing process/preflight, Git HEAD, and full clean-tree postconditions intact. Only the verification subprocess excludes AndroidFileServer; the `.uproject`, other engine/editor sessions, and runtime plugin settings are not altered. Updated engine-free regression verifies the complete argument bundle. The prior #674 exact native build and 22/22 successful test entries remain a separate earlier-head result with final custody HOLD. This revised head must complete its own build + 22 named cases + exact-head clean-tree check to claim full native verification PASS.

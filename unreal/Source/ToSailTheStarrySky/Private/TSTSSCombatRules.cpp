@@ -42,7 +42,9 @@ bool UTSTSSCombatRules::TryApplyAction(const TArray<FTSTSSCombatant>& Roster,
     {
         return false;
     }
-    if (!Action.bHealing && Roster[TargetIndex].Health <= 0)
+    // Generic healing and damage cannot act upon knocked-out targets. Future
+    // resurrection requires its own explicitly authorized mechanic and type.
+    if (Roster[TargetIndex].Health <= 0)
     {
         return false;
     }

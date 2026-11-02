@@ -14,6 +14,27 @@ if ($LASTEXITCODE -ne 0 -or -not $GitHead) { throw 'Unable to resolve repository
 $WorkingTree = @(git -C (Join-Path $PSScriptRoot '../..') status --porcelain)
 if ($LASTEXITCODE -ne 0) { throw 'Unable to inspect working tree' }
 if ($WorkingTree.Count -gt 0) { throw 'Working tree has uncommitted changes; evidence cannot be bound to HEAD' }
+
+# Refuse to launch a competing native build or overwrite an earlier receipt
+# while an interactive Editor (possibly with Live Coding) is open.
+$ActiveEditors = @(Get-Process -Name UnrealEditor,UnrealEditor-Cmd -ErrorAction SilentlyContinue)
+if ($ActiveEditors.Count -ne 0) {
+    throw "Native verification HOLD: close existing Unreal Editor sessions safely before building; running editor PID(s): $(($ActiveEditors.Id -join ', '))"
+}
+# The engine's Build.bat shares a global lock. Don't enqueue another build
+# behind a parallel agent or starve memory. Fail before writing any receipts.
+try {
+    $ExistingBuilds = @(Get-CimInstance Win32_Process -ErrorAction Stop |
+        Where-Object {
+            ($_.Name -in @('cmd.exe','dotnet.exe','UnrealBuildTool.exe')) -and
+            ($_.CommandLine -match 'UnrealBuildTool|Build\.bat')
+        })
+} catch {
+    throw "Native verification HOLD: cannot safely inspect competing Unreal builds: $($_.Exception.Message)"
+}
+if ($ExistingBuilds.Count -ne 0) {
+    throw "Native verification HOLD: another Unreal build is active; PID(s): $(($ExistingBuilds.ProcessId -join ', '))"
+}
 New-Item -Path $Evidence -ItemType Directory -Force | Out-Null
 $GitHead | Set-Content (Join-Path $Evidence 'head.txt')
 & $BuildTool ToSailTheStarrySkyEditor Win64 Development "-Project=$Project" -WaitMutex 2>&1 |
@@ -36,7 +57,12 @@ $ReportDirectory = Join-Path $Evidence 'AutomationReport'
 if (Test-Path $ReportDirectory) { Remove-Item $ReportDirectory -Recurse -Force }
 New-Item -Path $ReportDirectory -ItemType Directory -Force | Out-Null
 $ExportArgument = '-ReportExportPath=' + $ReportDirectory
-& $EditorCmd $Project -unattended -nop4 -nullrhi '-ExecCmds=Automation RunTests TSTSS; Quit' $ExportArgument -log 2>&1 |
+# -NOINI and -nowrite are UE 5.8's documented config write suppression flags.
+# Reject any remaining source mutation via the unchanged final clean-tree gate.
+# Exclude AndroidFileServer only in this Win64 QA session: its settings
+# initialization can generate a machine-specific token. Normal gameplay
+# and Editor/project plugin configuration remain unchanged.
+& $EditorCmd $Project -unattended -nop4 -nullrhi -NOINI -NOAUTOINIUPDATE -nowrite '-DisablePlugins=AndroidFileServer' '-ExecCmds=Automation RunTests TSTSS; Quit' $ExportArgument -log 2>&1 |
     Tee-Object (Join-Path $Evidence 'automation.log')
 if ($LASTEXITCODE -ne 0) { throw "Unreal automation command failed ($LASTEXITCODE)" }
 $ReportPath = Join-Path $Evidence 'AutomationReport/index.json'
@@ -56,6 +82,13 @@ $RequiredTests = @(
     'TSTSS.Combat.TurnOrderAndAtomicity',
     'TSTSS.Combat.AbilityAuthorization',
     'TSTSS.Combat.MagicAndWeaponTechniques',
+    'TSTSS.CombatData.ProtagonistContracts',
+    'TSTSS.CombatData.ActionDefinitions',
+    'TSTSS.CombatData.ActiveParty',
+    'TSTSS.CombatData.CatalogBridge',
+    'TSTSS.CombatData.NonExecutableSkillReconciliation',
+    'TSTSS.CombatIntegration.DataContractCannotAutoAuthorize',
+    'TSTSS.CombatIntegration.ProgressiveRecruitmentPartySize',
     'TSTSS.Combat.InitiativeAndActiveParty',
     'TSTSS.Combat.TurnManagerTerminalOutcomes',
     'TSTSS.Combat.EncounterCompletion',
