@@ -28,6 +28,8 @@ class NativeScriptSafetyTests(unittest.TestCase):
         self.assertIn("check_project(unreal.Paths.project_dir())", self.source)
         self.assertIn("load_intake_receipts(PROJECT)", self.source)
         self.assertIn("refuse overwrite", self.source)
+        self.assertIn("CameraProjectionMode.ORTHOGRAPHIC", self.source)
+        self.assertIn("ortho_width", self.source)
 
     def test_unreal_automation_tasks_do_not_claim_art_pass(self):
         self.assertIn("UNREAL_SCREENSHOT_TASKS_COMPLETE_NATIVE_PNG_QA_PENDING", self.source)

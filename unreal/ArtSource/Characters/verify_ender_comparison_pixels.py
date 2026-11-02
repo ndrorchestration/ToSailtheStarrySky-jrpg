@@ -151,6 +151,39 @@ def check_pair_coverage(path, expected=(1280, 720), min_fraction=0.012):
     }
 
 
+def check_pair_apparent_height(path, expected=(1280, 720), min_height_ratio=0.88):
+    """Technical apparent-size guard, not anatomical or artistic approval.
+
+    Measure foreground silhouette vertical extent independently in both
+    isolated half-frame regions. Includes the staff, so it certifies fair
+    presentation rather than matching faces or true bodily dimensions.
+    """
+    (width, height), channels, rows = decode_png_rgb(path)
+    if (width, height) != tuple(expected):
+        raise ValueError("Apparent-height screenshot size mismatch")
+    bg = [rows[0][i] for i in range(3)]
+    heights = {}
+    for key, lo, hi in (("EnderV1_left", .06, .46), ("EnderV2_right", .54, .94)):
+        active = []
+        for y in range(int(height * .07), int(height * .95)):
+            line = rows[y]
+            hits = 0
+            for x in range(int(width*lo), int(width*hi), 2):
+                rgb = line[x*channels:x*channels+3]
+                if max(abs(rgb[i]-bg[i]) for i in range(3)) > 36 and max(rgb)>28:
+                    hits += 1
+            if hits >= 2:  # reject isolated fireflies/compression noise
+                active.append(y)
+        if not active:
+            raise ValueError(key + " missing measurable silhouette")
+        heights[key] = max(active) - min(active) + 1
+    ratio = min(heights.values())/max(heights.values())
+    if ratio < min_height_ratio:
+        raise ValueError("Three-quarter apparent-scale mismatch: " + str(round(ratio, 3)))
+    return {"heights_px": heights, "height_ratio": round(ratio, 4),
+            "status": "TECHNICAL_APPARENT_HEIGHT_PASS_NOT_ART_ACCEPTANCE"}
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("native_png", type=Path)

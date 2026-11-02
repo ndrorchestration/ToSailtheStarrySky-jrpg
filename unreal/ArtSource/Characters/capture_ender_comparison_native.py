@@ -17,7 +17,7 @@ import unreal
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from ender_comparison_contract import (  # noqa: E402
-    CAMERAS, CANDIDATE_POSITIONS, EXPECTED, MAP,
+    CAMERAS, CAMERA_PROJECTIONS, CANDIDATE_POSITIONS, EXPECTED, MAP,
     check_project, load_intake_receipts, review_plan,
 )
 
@@ -83,6 +83,16 @@ def review_camera(name, xyz, yaw, fov):
     comp = camera.get_component_by_class(unreal.CameraComponent)
     if comp is None:
         raise RuntimeError("CameraComponent missing")
+    projection = CAMERA_PROJECTIONS[name]
+    if projection["mode"] == "orthographic":
+        comp.set_editor_property("projection_mode", unreal.CameraProjectionMode.ORTHOGRAPHIC)
+        comp.set_editor_property("ortho_width", float(projection["ortho_width_cm"]))
+        if comp.get_editor_property("projection_mode") != unreal.CameraProjectionMode.ORTHOGRAPHIC:
+            raise RuntimeError("Native orthographic camera mode did not stick")
+        if abs(comp.get_editor_property("ortho_width") - projection["ortho_width_cm"]) > 0.01:
+            raise RuntimeError("Native orthographic width did not stick")
+    elif projection["mode"] != "perspective":
+        raise RuntimeError("Unrecognized native review projection")
     comp.set_editor_property("field_of_view", float(fov))
     setting = comp.get_editor_property("post_process_settings")
     setting.set_editor_property("override_auto_exposure_method", True)

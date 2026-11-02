@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch
-from ender_comparison_contract import EXPECTED, CAMERAS, MAP
+from ender_comparison_contract import EXPECTED, CAMERAS, CAMERA_PROJECTIONS, MAP
 import verify_ender_comparison_report as subject
 
 
@@ -12,6 +12,7 @@ def receipt():
     return {
         "status": "UNREAL_SCREENSHOT_TASKS_COMPLETE_NATIVE_PNG_QA_PENDING",
         "map": MAP,
+        "camera_projections": CAMERA_PROJECTIONS,
         "engine": "5.8.4-58902052+++UE5+Release-5.8",
         "saved_review_map_sha256_before": "a" * 64,
         "saved_review_map_sha256_after": "a" * 64,
@@ -34,7 +35,8 @@ class NativeComparisonReceiptTests(unittest.TestCase):
         self.path.write_text(json.dumps(content), encoding="utf-8")
         with patch.object(subject, "resolve_capture", side_effect=lambda folder, name: self.root / (name + ".png")), \
              patch.object(subject, "inspect_png", side_effect=[{"sha256": x} for x in png_hashes]), \
-             patch.object(subject, "check_pair_coverage", return_value={"regions": {"left": 0.12, "right": 0.11}}):
+             patch.object(subject, "check_pair_coverage", return_value={"regions": {"left": 0.12, "right": 0.11}}), \
+             patch.object(subject, "check_pair_apparent_height", return_value={"height_ratio": 1.01}):
             return subject.verify(self.root, self.path)
 
     def test_complete_real_distinct_pngs_required(self):
@@ -50,6 +52,7 @@ class NativeComparisonReceiptTests(unittest.TestCase):
     def test_false_source_canon_or_camera_evidence_rejected(self):
         fields = [
             ("status", "PENDING"), ("map", "other"),
+            ("camera_projections", {"comparison_front": {"mode": "perspective"}}),
             ("reference_likeness_approved", True),
             ("source_files_modified", True), ("saved_unreal_map_modified", True),
             ("capture_tasks", [{"name": "comparison_front"}]),

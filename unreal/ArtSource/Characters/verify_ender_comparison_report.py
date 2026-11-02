@@ -7,9 +7,9 @@ import argparse
 import json
 from pathlib import Path
 
-from ender_comparison_contract import CAMERAS, EXPECTED, MAP
+from ender_comparison_contract import CAMERAS, CAMERA_PROJECTIONS, EXPECTED, MAP
 from verify_render_pngs import resolve_capture, inspect_png
-from verify_ender_comparison_pixels import check_pair_coverage
+from verify_ender_comparison_pixels import check_pair_coverage, check_pair_apparent_height
 
 
 def verify(report_folder, task_receipt):
@@ -17,6 +17,8 @@ def verify(report_folder, task_receipt):
     receipt = json.loads(Path(task_receipt).read_text(encoding="utf-8"))
     if receipt.get("status") != "UNREAL_SCREENSHOT_TASKS_COMPLETE_NATIVE_PNG_QA_PENDING":
         raise ValueError("Native comparison task completion receipt missing")
+    if receipt.get("camera_projections") != CAMERA_PROJECTIONS:
+        raise ValueError("Camera projection evidence missing or wrong")
     if receipt.get("map") != MAP:
         raise ValueError("Review map mismatch")
     if not str(receipt.get("engine", "")).startswith("5.8."):
@@ -47,8 +49,11 @@ def verify(report_folder, task_receipt):
         actual_png = resolve_capture(folder, name)
         metrics = inspect_png(actual_png, (1280, 720))
         visibility = check_pair_coverage(actual_png, expected=(1280, 720))
+        scale = check_pair_apparent_height(actual_png) if name == "comparison_three_quarter" else None
         result[name] = {**metrics, "actual_png": str(actual_png),
                         "paired_visibility": visibility["regions"]}
+        if scale is not None:
+            result[name]["apparent_height"] = scale
     if len({value["sha256"] for value in result.values()}) != len(result):
         raise ValueError("Distinct camera views contain duplicated native images")
     return {
