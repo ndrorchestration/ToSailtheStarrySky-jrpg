@@ -133,3 +133,24 @@ matrix now adds **P13** for a stale-slot negative test.
 
 These controls have passed no native UE5.8.4 runtime test at the new
 source revision; actual write/load behavior is still an explicit hold.
+
+## 2026-11-02 continuation — compiled F5/F9 handler behavior
+
+Source-only code-inspection tests do not establish that `QuickSave()` and
+`QuickLoad()` actually make the intended calls. The new standalone
+`unreal/Tools/check_first_wake_pie_save_compiled.py --self-test` extracts
+those **exact existing C++ method bodies** and compiles them against
+small in-memory API stand-ins (no modifications to game methods).
+It executes 12 behavioral assertions for PIE save refusal, stale-save
+load refusal, failed save, successful current-session save and rewrite,
+successful/failed current-session load, new-session isolation, and
+non-PIE compatibility. A deliberately unsafe mutation that disables the
+existing pre-save collision check must fail the same executable test.
+The script writes to temporary compiler files only, never to actual
+Unreal SaveGame slots, and uses no native engine dependencies.
+
+The hosted Unreal source-preflight workflow now runs the compiled probe.
+A passing result proves these C++ method bodies behave as expected **under
+the test stand-ins**, not that Unreal's engine SaveGame service or PIE
+runtime follows the same behavior. Exact-source native Windows UE 5.8.4
+validation and real keyboard playtesting remain required and unclaimed.
