@@ -72,6 +72,28 @@ class ReviewObjectiveSourceTests(unittest.TestCase):
         for prohibited in ("SaveProgress(", "Restore(", "AdvanceTo("):
             self.assertNotIn(prohibited, section)
 
+    def test_j_recall_is_read_only_and_exposed_by_review_input(self):
+        config = (ROOT / "Config/DefaultInput.ini").read_text(encoding="utf-8")
+        explorer_header = (PUBLIC / "TSTSSExplorerCharacter.h").read_text(encoding="utf-8")
+        self.assertIn('+ActionMappings=(ActionName="ReviewObjective",Key=J)', config)
+        self.assertIn('BindAction(TEXT("ReviewObjective"), IE_Pressed', self.explorer)
+        self.assertIn('&ATSTSSExplorerCharacter::ShowObjectiveReview', self.explorer)
+        self.assertIn("void ShowObjectiveReview();", explorer_header)
+        handler = self.explorer.split(
+            "void ATSTSSExplorerCharacter::ShowObjectiveReview()", 1
+        )[1].split("void ATSTSSExplorerCharacter::QuickSave()", 1)[0]
+        self.assertIn("ShowFirstWakeReviewObjective(FirstWakeState);", handler)
+        for forbidden in ("AdvanceTo(", "InspectStation(", "SaveFirstWake(", "LoadFirstWake("):
+            self.assertNotIn(forbidden, handler)
+        self.assertIn("[J to recall]", self.explorer)
+
+    def test_portable_compiled_probe_is_present(self):
+        code = (ROOT / "Tools/check_first_wake_objective_compiled.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("FString UTSTSSFirstWakeState::GetReviewObjectiveText() const", code)
+        self.assertIn("semantic mutation control rejected wrong objective", code)
+
     def test_native_regression_registered_for_exact_head_verification(self):
         name = "TSTSS.FirstWake.ReviewObjectivesAreReadOnly"
         self.assertIn(name, self.test_file)
