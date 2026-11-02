@@ -40,7 +40,7 @@ void ShowFirstWakeReviewObjective(const UTSTSSFirstWakeState* State)
     {
         GEngine->AddOnScreenDebugMessage(
             -1, 8.f, FColor::Cyan,
-            FString::Printf(TEXT("First Wake (review): %s"), *State->GetReviewObjectiveText()));
+            FString::Printf(TEXT("First Wake (review): %s  [J to recall]"), *State->GetReviewObjectiveText()));
     }
 #else
     (void)State;
@@ -80,6 +80,7 @@ void ATSTSSExplorerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
     PlayerInputComponent->BindAction(TEXT("Interact"), IE_Pressed, this, &ATSTSSExplorerCharacter::Interact);
     PlayerInputComponent->BindAction(TEXT("QuickSave"), IE_Pressed, this, &ATSTSSExplorerCharacter::QuickSave);
     PlayerInputComponent->BindAction(TEXT("QuickLoad"), IE_Pressed, this, &ATSTSSExplorerCharacter::QuickLoad);
+    PlayerInputComponent->BindAction(TEXT("ReviewObjective"), IE_Pressed, this, &ATSTSSExplorerCharacter::ShowObjectiveReview);
 }
 
 void ATSTSSExplorerCharacter::MoveForward(float Value)
@@ -134,6 +135,12 @@ void ATSTSSExplorerCharacter::Interact()
             }
         }
     }
+}
+
+void ATSTSSExplorerCharacter::ShowObjectiveReview()
+{
+    // Read-only recall of the existing short-lived objective cue.
+    ShowFirstWakeReviewObjective(FirstWakeState);
 }
 
 void ATSTSSExplorerCharacter::QuickSave()
