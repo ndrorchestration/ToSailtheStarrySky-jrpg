@@ -38,6 +38,18 @@ class DependencyDeclarationContractTests(unittest.TestCase):
         edit(data)
         target.write_text(json.dumps(data), encoding="utf-8")
 
+    def test_ci_triggers_when_declared_dependencies_change(self):
+        workflow = (ROOT/".github/workflows/unreal-source-preflight.yml").read_text(encoding="utf-8")
+        for path in (
+            "unreal/Source/**",
+            "unreal/Tools/**",
+            "unreal/ToSailTheStarrySky.uproject",
+            "package.json",
+            "package-lock.json",
+        ):
+            with self.subTest(path=path):
+                self.assertIn("- '" + path + "'", workflow)
+
     def test_actual_declarations_match_inventory(self):
         check = validate(ROOT)
         self.assertEqual(check["engine_association"], "5.8")
