@@ -6,6 +6,7 @@ on:
       - 'unreal/ArtSource/ShipReview/verify_aureate_reference.py'
       - 'unreal/Tests/test_aureate_approved_art_contract.py'
       - 'unreal/Tests/test_aureate_form_naming_v2.py'
+      - 'unreal/Source/ToSailTheStarrySky/Private/Tests/AureateWakeCanonicalFormNamesTests.cpp'
       - 'unreal/ArtSource/ShipReview/aureate_wake_canonical_form_names_v2.json'
       - 'unreal/Docs/AUREATE_WAKE_CANONICAL_CONFIGURATION_NAMES_2026-11-01.md'
       - 'unreal/Tests/check_aureate_body_binding_logic.py'
