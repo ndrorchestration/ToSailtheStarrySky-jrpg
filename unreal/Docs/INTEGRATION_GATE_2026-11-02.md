@@ -62,10 +62,16 @@ idle Windows UE 5.8.4 Editor and disposable SaveGame context:
 
 1. Record current Git HEAD and clean tracked tree, UE build tool path/version,
    any actual plugin availability and exact engine installation.
-2. Compile Win64 Editor through `unreal/Tools/Verify-Unreal.ps1` and obtain
-   **25 distinct successful named native automation results**, including
+2. Compile Win64 Editor through `unreal/Tools/Verify-Unreal.ps1`
+   with `-EngineRoot` and `-ExpectedHead` set to the **full exact 40-character
+   SHA** of the isolated checkout. Require **25 distinct successful named
+   native automation results**, including
    `TSTSS.FirstWake.ReviewObjectivesAreReadOnly`. Do not transfer #685's
-   23/23 result or a source-registered 25-name list.
+   23/23 result or a source-registered 25-name list. Each run now writes its
+   own ignored `Saved/MigrationEvidence/<SHA>-<UTC>-<nonce>/` folder with
+   `head.txt`, `build.log`, `automation.log`, and `AutomationReport/index.json`.
+   Previous failures and successes are **never deleted or overwritten** by
+   the verifier; `-SkipTests` remains build-only and cannot certify 25/25.
 3. Open `/Game/TSTSS/Review/FirstWake_PreludeInteraction_V2` in PIE and
    execute the documented [P01–P13 protocol](FIRST_WAKE_V2_PIE_ACCEPTANCE_MATRIX_2026-11-02.md).
    Verify E visibility/reach, J objective recall, story order and F5/F9 actual
@@ -97,3 +103,22 @@ idle Windows UE 5.8.4 Editor and disposable SaveGame context:
 
 The composed branch is a **reviewable next candidate**, not a new canonical
 production engine build or approval to close the source PRs.
+
+## Repeat-run evidence protection — integrated review
+
+The prior `Verify-Unreal.ps1` reused one report folder and deleted the
+old automation result before another run. The integrated draft eliminates
+that deletion. It checks full-length `-ExpectedHead` against actual
+`git rev-parse HEAD` **before** creating an evidence directory; it
+still requires a clean worktree, real Win64 Editor build, and 25
+exact per-test successful native JSON entries. A per-run folder under
+ignored `Saved/MigrationEvidence/` includes a UTC timestamp and random
+nonce so repeated and failed attempts do not overwrite one another.
+An evidence directory collision throws rather than reuses a prior run.
+Do not share logs containing any generated local credentials.
+
+**Source-only protection:** `unreal/Tools/test_native_evidence_safety.py`
+checks exact SHA gating, log retention, unique paths and negative
+mutations. This does **not** execute PowerShell, compile Unreal or
+establish the performance of the new verifier on Windows. Its first
+actual test must occur in a disposable, user-authorized checkout.
