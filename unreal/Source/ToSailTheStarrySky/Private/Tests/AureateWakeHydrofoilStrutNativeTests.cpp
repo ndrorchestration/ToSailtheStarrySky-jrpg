@@ -177,6 +177,8 @@ bool FTSTSSHydrofoilStrutReviewTest::RunTest(const FString& Parameters)
         EAureateWakeForm::Submersible
     };
     int32 VerifiedSupportPoses = 0;
+    int32 VisibleSupportObservations = 0;
+    int32 HiddenSupportObservations = 0;
     for (int32 FromIndex = 0; FromIndex < 3; ++FromIndex)
     {
         for (int32 ToIndex = 0; ToIndex < 3; ++ToIndex)
@@ -199,6 +201,8 @@ bool FTSTSSHydrofoilStrutReviewTest::RunTest(const FString& Parameters)
                 World->DestroyWorld(false);
                 return false;
             }
+            const bool bRouteUsesHydrofoils =
+                Start == EAureateWakeForm::Seaborne || Finish == EAureateWakeForm::Seaborne;
             const float StartZ = Start == EAureateWakeForm::Seaborne ? -140.f : -45.f;
             const float FinishZ = Finish == EAureateWakeForm::Seaborne ? -140.f : -45.f;
             const float StepSeconds = FMath::Max(.1f, Ship->TransitionSeconds) / 20.f;
@@ -219,18 +223,30 @@ bool FTSTSSHydrofoilStrutReviewTest::RunTest(const FString& Parameters)
                     const FString Prefix = FString::Printf(
                         TEXT("Ordinary route %d to %d step %d side %d: "),
                         FromIndex, ToIndex, Step, Index);
-                    TestTrue(*(Prefix + TEXT("foil visible while moving")), Foils[Index]->IsVisible());
-                    TestTrue(*(Prefix + TEXT("strut visible while moving")), Struts[Index]->IsVisible());
+                    TestEqual(*(Prefix + TEXT("foil visibility matches route")),
+                        Foils[Index]->IsVisible(), bRouteUsesHydrofoils);
+                    TestEqual(*(Prefix + TEXT("strut visibility matches route")),
+                        Struts[Index]->IsVisible(), bRouteUsesHydrofoils);
                     TestTrue(*(Prefix + TEXT("actual foil center matches eased path")),
                         FVector::Dist(Foils[Index]->GetRelativeLocation(), ExpectedFoil) < 0.2f);
-                    TestTrue(*(Prefix + TEXT("actual support center matches proxy span")),
-                        FVector::Dist(Struts[Index]->GetRelativeLocation(), ExpectedMid) < 0.2f);
-                    TestTrue(*(Prefix + TEXT("support length matches moving endpoints")),
-                        FMath::Abs(Struts[Index]->GetRelativeScale3D().X - Span.Size()/100.f) < 0.005f);
-                    TestTrue(*(Prefix + TEXT("inboard cube end contacts proxy anchor")),
-                        FVector::Dist(Proxy.TransformPosition(FVector(-50.f,0.f,0.f)), Anchor) < 0.3f);
-                    TestTrue(*(Prefix + TEXT("outboard cube end contacts foil center")),
-                        FVector::Dist(Proxy.TransformPosition(FVector(50.f,0.f,0.f)), ExpectedFoil) < 0.3f);
+                    if (bRouteUsesHydrofoils)
+                    {
+                        TestTrue(*(Prefix + TEXT("actual support center matches proxy span")),
+                            FVector::Dist(Struts[Index]->GetRelativeLocation(), ExpectedMid) < 0.2f);
+                        TestTrue(*(Prefix + TEXT("support length matches moving endpoints")),
+                            FMath::Abs(Struts[Index]->GetRelativeScale3D().X - Span.Size()/100.f) < 0.005f);
+                        TestTrue(*(Prefix + TEXT("inboard cube end contacts proxy anchor")),
+                            FVector::Dist(Proxy.TransformPosition(FVector(-50.f,0.f,0.f)), Anchor) < 0.3f);
+                        TestTrue(*(Prefix + TEXT("outboard cube end contacts foil center")),
+                            FVector::Dist(Proxy.TransformPosition(FVector(50.f,0.f,0.f)), ExpectedFoil) < 0.3f);
+                        ++VisibleSupportObservations;
+                    }
+                    else
+                    {
+                        // Hidden support transforms need not track the invisible
+                        // foil. Only visibility and foil pose are authoritative here.
+                        ++HiddenSupportObservations;
+                    }
                     ++VerifiedSupportPoses;
                 }
             }
@@ -248,6 +264,8 @@ bool FTSTSSHydrofoilStrutReviewTest::RunTest(const FString& Parameters)
                     Foils[Index]->IsVisible(), bDeployed);
                 TestEqual(TEXT("Completed support visibility matches destination"),
                     Struts[Index]->IsVisible(), bDeployed);
+                if (bDeployed) ++VisibleSupportObservations;
+                else ++HiddenSupportObservations;
                 ++VerifiedSupportPoses;
             }
             TestFalse(TEXT("Orbiter remains unavailable after ordinary route"),
@@ -255,6 +273,8 @@ bool FTSTSSHydrofoilStrutReviewTest::RunTest(const FString& Parameters)
         }
     }
     TestEqual(TEXT("Six routes x 21 phases x two supports"), VerifiedSupportPoses, 252);
+    TestEqual(TEXT("Visible support observations on Seaborne routes"), VisibleSupportObservations, 164);
+    TestEqual(TEXT("Hidden support observations on non-Seaborne routes"), HiddenSupportObservations, 88);
 
     World->DestroyWorld(false);
     return true;
