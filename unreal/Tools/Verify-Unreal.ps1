@@ -62,6 +62,7 @@ if ($Report.failed -gt 0 -or $Report.notRun -gt 0) {
 # Unreal AutomationTool exports per-test entries under tests[].fullTestPath/state.
 $RequiredTests = @(
     'TSTSS.AureateWake.Review.FourFormMechanics',
+    'TSTSS.AureateWake.Canon.FormDisplayNames',
     'TSTSS.Combat.TransactionalActions',
     'TSTSS.Combat.RejectsInvalidActionsWithoutMutation',
     'TSTSS.Combat.TurnOrderAndAtomicity',
