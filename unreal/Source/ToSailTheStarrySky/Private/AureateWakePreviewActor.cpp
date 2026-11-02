@@ -353,11 +353,17 @@ bool AAureateWakePreviewActor::RequestForm(EAureateWakeForm RequestedForm)
         StartWingTransforms.Add(Wings[Index]->GetRelativeTransform());
         TargetWingTransforms.Add(WingPoseForMesh(RequestedForm, Index));
     }
+    // Only transitions into or out of Seaborne need exposed hydrofoil
+    // hardware. Direct Skyborne <-> Submersible changes must not briefly
+    // reveal supports that neither endpoint form uses (review proxies only).
+    const bool bShowFoilsDuringTransition =
+        CurrentForm == EAureateWakeForm::Seaborne ||
+        RequestedForm == EAureateWakeForm::Seaborne;
     for (int32 Index = 0; Index < Hydrofoils.Num(); ++Index)
     {
         StartFoilTransforms.Add(Hydrofoils[Index]->GetRelativeTransform());
         TargetFoilTransforms.Add(FoilPose(RequestedForm, Index));
-        Hydrofoils[Index]->SetVisibility(true);
+        Hydrofoils[Index]->SetVisibility(bShowFoilsDuringTransition);
     }
     bTransitioning = true;
     return true;
