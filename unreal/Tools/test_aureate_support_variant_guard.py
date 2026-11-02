@@ -22,7 +22,7 @@ class RootSupportVariantGuardTests(unittest.TestCase):
         self.data={
             "authority":"NONCANONICAL_ROOT_SUPPORT_DIAGNOSTIC_DO_NOT_IMPORT_AS_ART",
             "base_v2_source_head":comparison.EXPECTED_V2_SOURCE_HEAD,
-            "base_source_shas":variant.BASE_SOURCE_SHA,
+            "base_source_shas":copy.deepcopy(variant.BASE_SOURCE_SHA),
             "original_support_recipe":variant.BASE_SUPPORT_RECIPE,
             "experiment_support_recipe":variant.EXPERIMENTAL_SUPPORT_RECIPE,
             "approval":"NOT_GRANTED",
