@@ -83,7 +83,7 @@ def check_paths(files: dict):
         "docs/AGENT_HANDOFF_INDEX.md",
         "docs/CHAPTER_1_BETA_ROADMAP.md",
         "docs/NOTION_SOURCE_INDEX.md",
-        "unreal/Docs/",
+        "unreal/Docs/**",
     ):
         if "'" + name + "'" not in workflow:
             raise ValueError("Unreal source preflight lacks authority/document trigger: " + name)
