@@ -36,4 +36,5 @@ private:
     void LookUp(float Value);
     void QuickSave();
     void QuickLoad();
+    void ShowObjectiveReview();
 };
