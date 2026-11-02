@@ -31,13 +31,25 @@ Prior exact-head wing/hull clearance receipts, screenshots and hydrofoil-strut t
 5. Capture before/after and mid-transition **native Unreal** images/short reviews from matched camera angles for Skybourne, Seabourne and Submersible. Include the bridge dome **and living quarters beneath**, not dome-only animation. Starbourne visual work may remain an isolated locked-gate preview; do not authorize its gameplay transition.
 6. Present the smallest successful reversible prototype to the creator for approval **before** replacing model assets, relocating the bridge, changing the approved four-form silhouettes or merging into protected main.
 
+## Isolated source prototype added to draft #702 (not yet native verified)
+
+**Implemented in the review actor only:** new `BridgeHabitationPivot` `USceneComponent` attaches to `VesselRoot`. Both the existing `ForwardBridge` review mesh and a new `LivingQuartersEnvelope` collision-disabled cube attach to this **same** pivot, so form interpolation rotates the dome and the quarters together. This implements a reversible *proof-of-architecture*, not a modeled living space, physical axle, seal or usable corridor.
+
+**Defaults remain unchanged.** `bPreviewCentralBridgeHabitation = false`; the new living-quarters cube begins hidden, the pivot is at the origin and the existing forward bridge is still at its legacy relative `(240,0,95)` cm. No Starbourne/Orbiter authorization is changed.
+
+**Opt-in review only:** when the actor is idle and `RefreshCentralBridgeHabitationReview()` is called with the opt-in enabled, the provisional pivot moves to `(0,0,50)` cm; the bridge is offset `(0,0,80)` within it; and the quarters cube appears beneath at `(0,0,-25)`. These numbers are explicitly **prototype coordinates**, *not new creator-established canon*. Each ordinary form has its own editable `FRotator` target. All three default to **zero**, because no fixed real-world rotation axis or angles have yet been approved. A review artist may enter temporary targets to demonstrate transformation via the existing smooth transition interpolation. Calling the refresh method during active transformation is rejected; opting out when idle restores the original bridge layout and hides the quarters cube.
+
+**Regression QA:** the new transient native `TSTSS.Ship.CentralBridgeHabitationReview` test verifies default silhouette, coupling, disabled collision, prototype activation, review-only noncanonical yaw test inputs, smooth halfway orientation, six component invariants, opt-out rollback and Starbourne gate. `Verify-Unreal.ps1` now requires **15 named native automation successes**, not 14. Engine-free mutation tests protect disabled defaults, both pivot attachments, hidden quarters and actual quaternion interpolation. The new native test **must be run in Unreal 5.8.4** at exact SHA before declaring a native PASS. At creation time another concurrent Unreal Editor/commandlet was active on the authorized workstation, so it was deliberately not interrupted; no native performance, collision or visual validation is claimed for this new head.
+
+**Open engineering:** pivot/hull collision is untested; the provisional quarters cube has no walkable interior or life support. World/crew gravity, accessibility and connection seals are unresolved. Existing wing-root clearance HOLD, support variant HOLD and locked Starbourne paths are not bypassed.
+
 ## Acceptance / governance
 
 **Design intent:** creator stated, recorded here.
 
-**Mechanism:** **PROPOSED — NOT IMPLEMENTED OR ART APPROVED.**
+**Mechanism:** reversible **noncanonical C++ review prototype IMPLEMENTED**, but pivot coordinates/angles, true mechanics and art remain **NOT APPROVED**.
 
-**Tests:** no native rotating bridge/habitation build, animation, collision report or screenshot is claimed by this documentation.
+**Tests:** new source registration and engine-free mutation tests are available; native UE build/automation and rotating-quarters visuals remain **PENDING**, with no collision or screenshot claimed for this new SHA.
 
 **Prior review status:** V2 root-support variant in draft #701 remains a noncanonical support-clearance experiment with attachment integrity HOLD. A future pivot prototype must not override that hold or inherit clearance evidence without rechecking the new moving bodies.
 
