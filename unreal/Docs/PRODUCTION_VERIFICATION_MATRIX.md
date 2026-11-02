@@ -1,5 +1,12 @@
 # Unreal production verification matrix — 2026-10-31
 
+> **Evidence reconciliation — November 1, 2026.** The initial "no native build" hold below is historical, not universally current. [#685](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/685) independently demonstrated Game+Editor UBT and **23/23** NullRHI automation checks at exact head `813abdce`. [#704](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/704) adds a **24th** required native test; Game-target compiler/link proof exists at C++ ancestor `0a6160b4`, but Editor 24-test JSON and PIE remain held. The directly launched uncooked Windows executable logged a premade asset-registry/BufferReader **crash**, so runtime/packaging is explicitly **FAIL / NOT VERIFIED**; it does not negate Game target compilation proof. No D3D12 artistic acceptance or player-facing First Wake exists at those exact heads. See [current dependency/evidence register](DEPENDENCY_AND_EVIDENCE_REGISTER_2026-11-01.md) and maintain the separate branch-specific gates below.
+
+### Historical matrix (2026-10-31)
+
+The original planning contract follows; interpret it at its authored date.
+
+
 Status: workflow contract, not executed evidence. Applies to draft PR #608; Godot is unchanged. Creator-approved story/art authority takes priority over historical engine assumptions.
 
 ## Quality gates by discipline
