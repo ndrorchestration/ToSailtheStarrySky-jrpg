@@ -34,3 +34,5 @@ jobs:
         run: python3 unreal/Tools/test_aureate_triangle_narrowphase.py
       - name: Assert pinned ordinary form route support screening contract
         run: python3 unreal/Tools/test_aureate_root_support_routes.py
+      - name: Reject unapproved root support variant or changed provenance
+        run: python3 unreal/Tools/test_aureate_support_variant_guard.py
