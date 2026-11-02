@@ -19,9 +19,12 @@ production assets.
    `main`, a player's real project checkout, or a shared sandbox.
 2. Do not interfere with a parallel Unreal Editor/Live Coding build. Require
    installed UE **5.8.4** and normal supported Windows toolchain.
-3. The isolated project must not contain
-   `unreal/Saved/SaveGames/first_wake_quick.sav` before running tests. If it
-   exists, **stop**; never overwrite or delete a possibly valuable save.
+3. The isolated project must not contain a pre-existing
+   `unreal/Saved/SaveGames/tstss_prelude_pie_quick.sav` before testing F5.
+   The game itself refuses to adopt or overwrite a stale PIE slot.
+   Any existing `first_wake_quick.sav` is a potentially valuable non-PIE
+   player save; it must be left untouched. **Stop** if either slot's
+   provenance is uncertain; never overwrite or delete a possibly valuable save.
 4. Execute `unreal/Tools/Verify-Unreal.ps1` with an explicit `-EngineRoot`
    on the clean checkout; require complete success, 25 named UE automation
    results, exact HEAD and clean tracked tree. The earlier 23/23 and 13/13
@@ -51,13 +54,16 @@ production assets.
 | P10 | Press E without hitting a marker, through an occluder, or outside reach | No progression or misleading 'marker rejected' cue for a miss; visibility/reach checks remain active |
 | P11 | Inspect a station a second time | Rejected with no mask mutation and no premature engineering signoff |
 | P12 | After engineering signoff in V2, inspect story state and try to progress to Splashdown using available review markers | No false `SeaContact`, `FlotationConfirmed` or Chapter 1 Act 1 completion |
+| P13 | In a fresh PIE session with an **already existing** `tstss_prelude_pie_quick` save, press F5 and F9; preserve original bytes for comparison | F5 refuses to overwrite the pre-existing review save, F9 refuses to load it, and the external `first_wake_quick` player slot is never touched |
 
-**Save-test safety:** P09 must use a disposable checkout and a verified
-absent review quicksave file. The game's F5 behavior is a normal quicksave,
-which can overwrite an existing slot; this test does not authorize using a
-player's save folder. Discard temporary *review-only* save artifacts only
-after preserving the test result and confirming they were created during
-this run.
+**Save-test safety:** P09 must use a disposable checkout with no pre-existing
+PIE review slot. In PIE, F5/F9 now select `tstss_prelude_pie_quick`; the
+pawn records ownership only after its first successful save in the
+current session. Further F5 writes in the same session may update that
+same review slot; new sessions with an existing review slot fail closed.
+Non-PIE use still targets `first_wake_quick`. Never touch a player's
+non-PIE save folder; discard review-only artifacts only after
+preserving test results and proving this session created them.
 
 **Accessibility/UX observations, not acceptance yet:** Record text legibility
 at typical play resolution, contrast of green/red/yellow/cyan debug text,
@@ -81,7 +87,7 @@ PIE_E_AND_OCCLUSION=NOT_TESTED|PASS|FAIL
 PIE_J_OBJECTIVE=NOT_TESTED|PASS|FAIL
 PIE_F5_F9_STORY_SAVE=NOT_TESTED|PASS|FAIL
 PIE_CHAPTER_BOUNDARY=NOT_TESTED|PASS|FAIL
-CASE_RESULTS=P01:NOT_TESTED,...,P12:NOT_TESTED
+CASE_RESULTS=P01:NOT_TESTED,...,P13:NOT_TESTED
 STARTUP_LOG_PATH=<local review-only path or NONE>
 SCREENSHOTS=<local review-only paths or NONE>
 FAILED_CASE_EVIDENCE=<path(s) or NONE>
@@ -101,7 +107,7 @@ someone else's Editor, and leave all game data untouched.
 ## Success criterion for this bounded review
 
 A real Windows Editor build and full 25-test report pass at the exact
-source, and a human operator executes P01–P12 on the isolated map with
+source, and a human operator executes P01–P13 on the isolated map with
 logs, captured evidence and clean project provenance. This would establish
 **a playable Prelude interaction review slice**, not a completed First Wake,
 Splashdown, release, shipping build or cinematic acceptance.
