@@ -154,3 +154,23 @@ A passing result proves these C++ method bodies behave as expected **under
 the test stand-ins**, not that Unreal's engine SaveGame service or PIE
 runtime follows the same behavior. Exact-source native Windows UE 5.8.4
 validation and real keyboard playtesting remain required and unclaimed.
+
+## November 2, 2026 — Preserve existing party saves on story-only F5
+
+A native `UTSTSSSaveGame` payload can contain valid `PartyRoster`
+data, but the First Wake review pawn does **not** manage that party.
+Previously `SaveFirstWake` always allocated a fresh, roster-empty
+save object. Saving to an existing `first_wake_quick` slot could
+therefore silently discard a roster. The method now **refuses writes**
+to an existing save when the file is unsupported, corrupted, unreadable
+or contains a nonempty `PartyRoster`. A valid existing roster-free
+save can be updated by reusing the loaded object, preserving fields
+outside the First Wake story snapshot.
+
+The direct C++ source method is compiled/exercised against in-memory
+stand-ins by `check_first_wake_save_guard_compiled.py --self-test`,
+including a negative mutation that removes the roster protection.
+The test uses no actual disk SaveGame or Windows Unreal service. Native
+PIE evidence, 25 named automations and external save hash verification
+remain pending. This safeguard does **not** authorize party recruitment
+or an automatic combat roster synchronized from narrative story state.
