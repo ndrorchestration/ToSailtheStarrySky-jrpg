@@ -99,6 +99,36 @@ bool FTSTSSAureateBridgeHabitationReviewTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Central pivot returned to identity position"),
         Pivot->GetRelativeLocation().Equals(FVector::ZeroVector,.01f));
     TestFalse(TEXT("No additional quarters art shown when disabled"), Quarters->IsVisible());
+    // A direct Inspector/Blueprint bool edit during movement must NOT strand
+    // a rotated bridge after completion, and an opt-in pivot must not defeat
+    // Orbiter safety even if the older cube-art preview toggle is true.
+    Ship->bAllowOrbiterPreview = true;
+    Ship->bPreviewCentralBridgeHabitation = true;
+    TestTrue(TEXT("Review pivot can re-enable while idle"),
+        Ship->RefreshCentralBridgeHabitationReview());
+    TestFalse(TEXT("Central habitation cannot use unvalidated Orbiter path"),
+        Ship->RequestForm(EAureateWakeForm::Orbiter));
+    TestTrue(TEXT("Ordinary movement still begins"), Ship->RequestForm(EAureateWakeForm::Seaborne));
+    Ship->Tick(Ship->TransitionSeconds * .5f);
+    const float BeforeDeferredToggleYaw = Pivot->GetRelativeRotation().Yaw;
+    Ship->bPreviewCentralBridgeHabitation = false;
+    TestFalse(TEXT("Live preview refresh cannot mutate active motion"),
+        Ship->RefreshCentralBridgeHabitationReview());
+    Ship->Tick(Ship->TransitionSeconds * .25f);
+    TestTrue(TEXT("Latched pivot motion finishes without an abrupt midflight reset"),
+        Pivot->GetRelativeRotation().Yaw > BeforeDeferredToggleYaw);
+    TestTrue(TEXT("Midflight opt-out completes original ordinary route"),
+        Ship->FinishOrdinaryPreviewTransitionForReview());
+    TestTrue(TEXT("Deferred opt-out restores original bridge translation"),
+        Bridge->GetRelativeLocation().Equals(FVector(240.f,0.f,95.f),.01f));
+    TestTrue(TEXT("Deferred opt-out resets the pivot position"),
+        Pivot->GetRelativeLocation().Equals(FVector::ZeroVector,.01f));
+    TestTrue(TEXT("Deferred opt-out resets the pivot rotation"),
+        Pivot->GetRelativeRotation().IsNearlyZero(.01f));
+    TestFalse(TEXT("Deferred opt-out hides quarters"), Quarters->IsVisible());
+    TestFalse(TEXT("No Orbiter gate bypass after opt out of the central module"),
+        Ship->RequestForm(EAureateWakeForm::Orbiter) && Ship->bUseRootPivotedWingPose);
+
     TestEqual(TEXT("Original four wing components retained"), Ship->GetWingCount(), 4);
     TestEqual(TEXT("Original two foil components retained"), Ship->GetHydrofoilCount(), 2);
 
