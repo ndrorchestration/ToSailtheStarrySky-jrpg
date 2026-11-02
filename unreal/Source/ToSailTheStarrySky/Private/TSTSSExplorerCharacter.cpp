@@ -226,8 +226,33 @@ void ATSTSSExplorerCharacter::QuickLoad()
 
 bool ATSTSSExplorerCharacter::SaveFirstWake(const FString& Slot)
 {
-    if (!IsValid(FirstWakeState)) return false;
-    UTSTSSSaveGame* Save = NewObject<UTSTSSSaveGame>(this);
+    if (!IsValid(FirstWakeState) || !UTSTSSPersistence::IsValidSlotName(Slot))
+    {
+        return false;
+    }
+
+    // This review actor does not own the combat party. An existing save may
+    // contain a valid roster (or be corrupt/future-versioned). Never replace
+    // such player data with an empty story-only payload. For a validated,
+    // roster-free save, reuse its object to preserve other schema fields.
+    UTSTSSSaveGame* Save = nullptr;
+    if (UGameplayStatics::DoesSaveGameExist(Slot, 0))
+    {
+        Save = UTSTSSPersistence::LoadProgress(Slot);
+        if (!IsValid(Save) || Save->PartyRoster.Num() != 0)
+        {
+            return false;
+        }
+    }
+    else
+    {
+        Save = NewObject<UTSTSSSaveGame>(this);
+    }
+    if (!IsValid(Save))
+    {
+        return false;
+    }
+
     Save->bFirstWakeStarted = FirstWakeState->HasStarted();
     Save->FirstWakeBeat = FirstWakeState->GetCurrentBeat();
     Save->InspectionMask = FirstWakeState->GetInspectionMask();
