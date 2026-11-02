@@ -5,6 +5,9 @@ on:
     paths:
       - 'unreal/Source/**'
       - 'unreal/Tools/**'
+      - 'unreal/ToSailTheStarrySky.uproject'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/unreal-source-preflight.yml'
   workflow_dispatch:
 
@@ -38,5 +41,9 @@ jobs:
         run: python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_interaction_reach.py' -v
       - name: Reject detached Game startup false-positive and BufferReader crash logs
         run: python3 -m unittest discover -s unreal/Tools -p 'test_unreal_game_startup_log.py' -v
+      - name: Confirm UE dependency declarations and held legacy lock are unchanged
+        run: |
+          python3 -m unittest discover -s unreal/Tools -p 'test_dependency_contract.py' -v
+          python3 unreal/Tools/check_dependency_contract.py --repo .
       - name: Compile and exercise actual DesignOnly C++ adapter (API doubles, not Unreal)
         run: python3 unreal/Tools/check_combat_design_only_compiled.py

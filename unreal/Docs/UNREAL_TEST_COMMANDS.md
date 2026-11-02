@@ -1,5 +1,14 @@
 # Unreal verification — NOT YET EXECUTED
 
+> **Native status update — November 1, 2026.** The original "NOT YET EXECUTED" section below is historical and superseded where exact-head reports exist. [Draft #685](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/685) **passed** UE5.8.4 Win64 Game+Editor builds and **23/23 actual named native Editor automation tests** at exact head `813abdce`. That PASS does **not** transfer to the stacked [#704](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/704), which adds a **24th** camera-boom interaction regression. At the #704 C++ ancestor `0a6160b4`, Win64 **Game compile/link succeeded**, but a direct, uncooked `.exe` launch **crashed** on premade-asset-registry/BufferReader; the current #704 native Editor 24-test export and PIE gameplay remain **pending**. [Full evidence/dependency register](DEPENDENCY_AND_EVIDENCE_REGISTER_2026-11-01.md).
+
+**Current safest verification sequence:** pin a clean exact SHA in a separate checkout; first run `python unreal/Tools/check_dependency_contract.py --repo .`, then source CI checks. From a Windows host, when no other Unreal Editor has Live Coding active, use `pwsh -NoProfile -File unreal/Tools/Verify-Unreal.ps1 -EngineRoot "C:\\Program Files\\Epic Games\\UE_5.8"`. Demand exit 0, JSON `Saved/MigrationEvidence/AutomationReport/index.json` with every named test `Success`, and unchanged HEAD + clean tracked tree. Source checkers are not native automation. For executable runtime, first distinguish **uncooked vs cooked/packaged** launch and inspect the actual Unreal log; `python unreal/Tools/check_unreal_game_startup_log.py --log <actual-log>` is fail-closed and rejects the observed crash. Running an OS shell wrapper without verifying the engine process/log is not a runtime PASS.
+
+### Archived 2026-10-31 instructions
+
+The earlier workflow and statements below are retained as historical evidence rather than current engine availability.
+
+
 Run against a real Windows machine with Unreal Engine 5.8 installed; replace engine path as needed.
 
 1. Generate IDE project files from `unreal/ToSailTheStarrySky.uproject`.
