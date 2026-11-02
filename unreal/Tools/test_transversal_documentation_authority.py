@@ -43,6 +43,17 @@ def check_paths(files: dict):
     dependency = files["unreal/Docs/FIRST_WAKE_DEPENDENCY_HANDOFF_2026-11-02.md"]
     gate = files["unreal/Docs/INTEGRATION_GATE_2026-11-02.md"]
     workflow = files[".github/workflows/unreal-source-preflight.yml"]
+    engine_ini = files["unreal/Config/DefaultEngine.ini"]
+    input_ini = files["unreal/Config/DefaultInput.ini"]
+    # Unreal Editor may generate host-specific Android File Server credentials
+    # in a TRACKED DefaultEngine.ini during a headless automation run. Do not
+    # accept that state into Git regardless of what individual tests report.
+    if re.search(r"^\s*SecurityToken\s*=", engine_ini, flags=re.M) or (
+        "[/Script/AndroidFileServerEditor.AndroidFileServerRuntimeSettings]" in engine_ini):
+        raise ValueError("Host-generated Android File Server settings are not authorized in tracked default INI")
+    for mapping in ("Interact", "QuickSave", "QuickLoad", "ReviewObjective"):
+        if input_ini.count(f'ActionName="{mapping}"') != 1:
+            raise ValueError("Native First Wake input mapping missing or duplicated: " + mapping)
 
     for label, body, tokens in [
         ("AGENTS", agents, ["Unreal Engine 5.8.4", "Splashdown is the beginning of Chapter 1, Act 1",
@@ -84,6 +95,7 @@ def check_paths(files: dict):
         "docs/CHAPTER_1_BETA_ROADMAP.md",
         "docs/NOTION_SOURCE_INDEX.md",
         "unreal/Docs/**",
+        "unreal/Config/**",
     ):
         if "'" + name + "'" not in workflow:
             raise ValueError("Unreal source preflight lacks authority/document trigger: " + name)
@@ -106,6 +118,8 @@ PATHS = (
     "unreal/Docs/PRODUCTION_VERIFICATION_MATRIX.md",
     "unreal/Docs/FIRST_WAKE_DEPENDENCY_HANDOFF_2026-11-02.md",
     "unreal/Docs/INTEGRATION_GATE_2026-11-02.md",
+    "unreal/Config/DefaultEngine.ini",
+    "unreal/Config/DefaultInput.ini",
     ".github/workflows/unreal-source-preflight.yml",
 )
 
@@ -144,6 +158,23 @@ class TransversalAuthorityTests(unittest.TestCase):
             copies[".github/workflows/unreal-source-preflight.yml"].replace(
                 "test_transversal_documentation_authority.py", "removed_document_gate.py"))
         with self.assertRaisesRegex(ValueError, "not wired"):
+            check_paths(copies)
+
+    def test_negative_generated_android_file_server_settings_in_tracked_ini(self):
+        copies = dict(self.files)
+        copies["unreal/Config/DefaultEngine.ini"] += (
+            "\n[/Script/AndroidFileServerEditor.AndroidFileServerRuntimeSettings]\n"
+            "SecurityToken=" + ("A" * 32) + "\n"
+        )
+        with self.assertRaisesRegex(ValueError, "Host-generated Android File Server"):
+            check_paths(copies)
+
+    def test_negative_duplicate_review_key(self):
+        copies = dict(self.files)
+        copies["unreal/Config/DefaultInput.ini"] += (
+            '\n+ActionMappings=(ActionName="ReviewObjective",Key=J)\n'
+        )
+        with self.assertRaisesRegex(ValueError, "input mapping"):
             check_paths(copies)
 
     def test_negative_host_generated_secret_in_docs(self):
