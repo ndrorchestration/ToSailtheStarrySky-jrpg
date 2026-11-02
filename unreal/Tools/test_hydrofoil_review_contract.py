@@ -33,6 +33,18 @@ REQUIRED_TEST_FRAGMENTS = (
     "Seaborne to Skyborne starts",
     "Restored Skyborne support", "Restored Skyborne hydrofoil",
     "Orbiter request still refused",
+    "const EAureateWakeForm OrdinaryForms[3]",
+    "for (int32 FromIndex = 0; FromIndex < 3; ++FromIndex)",
+    "for (int32 ToIndex = 0; ToIndex < 3; ++ToIndex)",
+    "for (int32 Step = 0; Step < 20; ++Step)",
+    "Ship->Tick(Step == 0 ? 0.f : StepSeconds)",
+    "actual foil center matches eased path",
+    "actual support center matches proxy span",
+    "inboard cube end contacts proxy anchor",
+    "outboard cube end contacts foil center",
+    "Completed support visibility matches destination",
+    "Orbiter remains unavailable after ordinary route",
+    "TestEqual(TEXT(\"Six routes x 21 phases x two supports\"), VerifiedSupportPoses, 252)",
     "World->DestroyWorld(false)",
 )
 REQUIRED_ACTOR_FRAGMENTS = (
@@ -146,6 +158,23 @@ class ContractTests(unittest.TestCase):
             "RequestedForm == EAureateWakeForm::Orbiter && bAllowOrbiterPreview",
             1)
         self.assertTrue(source_contract(self.test_source, bad))
+
+    def test_native_six_route_assertions_are_held_by_contract(self):
+        mutations = (
+            ("for (int32 Step = 0; Step < 20; ++Step)",
+             "for (int32 Step = 0; Step < 1; ++Step)"),
+            ("actual support center matches proxy span",
+             "support center not asserted"),
+            ("Orbiter remains unavailable after ordinary route",
+             "Orbiter is not checked after routes"),
+            ("TestEqual(TEXT(\"Six routes x 21 phases x two supports\"), VerifiedSupportPoses, 252)",
+             "TestEqual(TEXT(\"Wrong total\"), VerifiedSupportPoses, 12)"),
+        )
+        for original, changed in mutations:
+            self.assertIn(original, self.test_source)
+            self.assertTrue(
+                source_contract(self.test_source.replace(original, changed, 1), self.actor_source),
+                f"native assertion mutation unexpectedly accepted: {original}")
 
     def test_actor_foil_and_hull_literal_mutations_fail_closed(self):
         changes = (
