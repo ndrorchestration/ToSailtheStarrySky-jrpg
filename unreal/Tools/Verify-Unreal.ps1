@@ -78,15 +78,8 @@ $ExportArgument = '-ReportExportPath=' + $ReportDirectory
 if ($LASTEXITCODE -ne 0) { throw "Unreal automation command failed ($LASTEXITCODE)" }
 $ReportPath = Join-Path $Evidence 'AutomationReport/index.json'
 if (-not (Test-Path $ReportPath)) { throw 'No automation JSON evidence; refusing to mark PASS' }
-$Report = Get-Content $ReportPath -Raw | ConvertFrom-Json
-if ($null -eq $Report.succeeded -or $null -eq $Report.failed -or $null -eq $Report.notRun) {
-    throw 'Automation report schema missing required summary fields; cannot claim PASS'
-}
-if ($Report.failed -gt 0 -or $Report.notRun -gt 0) {
-    throw "Automation evidence incomplete: succeeded=$($Report.succeeded), failed=$($Report.failed), notRun=$($Report.notRun)"
-}
-# Require evidence for named critical tests, not merely an aggregate success count.
-# Unreal AutomationTool exports per-test entries under tests[].fullTestPath/state.
+# Keep the 25-name registry local; a separate read-only PowerShell function
+# checks that JSON summary and distinct per-test paths genuinely agree.
 $RequiredTests = @(
     'TSTSS.Combat.TransactionalActions',
     'TSTSS.Combat.RejectsInvalidActionsWithoutMutation',
@@ -114,21 +107,12 @@ $RequiredTests = @(
     'TSTSS.Save.RejectsUnsafeSlots',
     'TSTSS.Save.RoundTripFirstWakeAndParty'
 )
-$Entries = @($Report.tests)
-if ($Entries.Count -eq 0 -or $null -eq $Entries[0]) {
-    throw 'No per-test automation evidence; refusing aggregate-only PASS'
-}
-if ($Report.succeeded -lt $RequiredTests.Count) {
-    throw "Automation success count $($Report.succeeded) is below required test count $($RequiredTests.Count)"
-}
-foreach ($TestName in $RequiredTests) {
-    $Matches = @($Entries | Where-Object { $_.fullTestPath -eq $TestName })
-    if ($Matches.Count -ne 1) {
-        throw "Required test missing or duplicated in report: $TestName"
-    }
-    if ($Matches[0].state -ne 'Success') {
-        throw "Required test is not successful: $TestName ($($Matches[0].state))"
-    }
+# Native verification must call the very same validator exercised by hosted
+# synthetic JSON fixtures. The validator never changes source or report bytes.
+. (Join-Path $PSScriptRoot 'Assert-NativeAutomationReport.ps1')
+$VerifiedReport = Assert-TSTSSNativeAutomationReport -ReportPath $ReportPath -RequiredTests $RequiredTests
+if ($VerifiedReport.Status -ne 'REPORTED_NATIVE_AUTOMATIONS_SUCCESS') {
+    throw 'Native automation report validator failed to provide accepted status'
 }
 # Recheck the checkout after execution so a moving branch cannot inherit stale evidence.
 $FinalHead = (git -C (Join-Path $PSScriptRoot '../..') rev-parse HEAD)
