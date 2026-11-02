@@ -40,3 +40,7 @@ jobs:
         run: python3 unreal/Tools/test_aureate_bridge_habitation_source_contract.py
       - name: Reject stale rotating habitation envelope or changed native demo geometry
         run: python3 unreal/Tools/test_aureate_bridge_habitation_envelope.py
+      - name: Verify Unreal and optional geometry dependency contract (no installs)
+        run: |
+          python3 unreal/Tools/check_unreal_dependency_contract.py
+          python3 unreal/Tools/test_unreal_dependency_contract.py
