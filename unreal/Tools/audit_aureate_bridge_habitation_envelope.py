@@ -12,6 +12,7 @@ import argparse
 import hashlib
 import json
 import math
+import subprocess
 from pathlib import Path
 
 import audit_aureate_wing_clearance as wing_audit
@@ -91,6 +92,15 @@ def to_coupled_local(world, yaw_degrees, center, np):
 
 
 def run(args, np):
+    root=args.cpp.resolve().parents[4]
+    proc=subprocess.run(["git","-C",str(root),"rev-parse","HEAD"],
+                        capture_output=True,text=True,check=True)
+    if proc.stdout.strip() != args.actor_source_head:
+        raise EnvelopeHold("Actor source head does not match exact reviewed checkout")
+    tree=subprocess.run(["git","-C",str(root),"status","--porcelain"],
+                        capture_output=True,text=True,check=True)
+    if tree.stdout.strip():
+        raise EnvelopeHold("Review actor checkout changed; refuse stale receipt")
     if args.steps != 20:
         raise EnvelopeHold("Only the 126-pose 20-interval baseline is currently source-bound")
     if hashlib.sha256(args.wing_glb.read_bytes()).hexdigest()!=EXPECTED_WING_SHA256:
