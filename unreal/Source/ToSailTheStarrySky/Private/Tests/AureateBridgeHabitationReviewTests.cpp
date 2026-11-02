@@ -127,6 +127,74 @@ bool FTSTSSAureateBridgeHabitationReviewTest::RunTest(const FString& Parameters)
         Pivot->GetRelativeRotation().IsNearlyZero(.01f));
     TestFalse(TEXT("Deferred opt-out hides quarters"), Quarters->IsVisible());
 
+    // Exercise all six directed ordinary transitions with the coupled
+    // habitation opt-in. This is a preview transform test, NOT physics/CCD.
+    Ship->bAllowOrbiterPreview = false;
+    Ship->bPreviewCentralBridgeHabitation = true;
+    TestTrue(TEXT("Six-route habitation review enabled while idle"),
+        Ship->RefreshCentralBridgeHabitationReview());
+    const EAureateWakeForm OrdinaryForms[] = {
+        EAureateWakeForm::Skyborne,
+        EAureateWakeForm::Seaborne,
+        EAureateWakeForm::Submersible
+    };
+    const auto PreviewYaw = [](EAureateWakeForm Form) -> float
+    {
+        switch (Form)
+        {
+        case EAureateWakeForm::Seaborne: return 30.f;
+        case EAureateWakeForm::Submersible: return 75.f;
+        default: return 0.f;
+        }
+    };
+    int32 DirectedRoutes = 0;
+    for (const EAureateWakeForm Start : OrdinaryForms)
+    {
+        if (Ship->GetCurrentForm() != Start)
+        {
+            TestTrue(TEXT("Can navigate to an ordinary start form"),
+                Ship->RequestForm(Start));
+            TestTrue(TEXT("Ordinary start form reached"),
+                Ship->FinishOrdinaryPreviewTransitionForReview());
+        }
+        for (const EAureateWakeForm Target : OrdinaryForms)
+        {
+            if (Start == Target) continue;
+            if (Ship->GetCurrentForm() != Start)
+            {
+                TestTrue(TEXT("Can return to the route start form"),
+                    Ship->RequestForm(Start));
+                TestTrue(TEXT("Route start reached"),
+                    Ship->FinishOrdinaryPreviewTransitionForReview());
+            }
+            TestFalse(TEXT("Starbourne stays gated during six-route review"),
+                Ship->RequestForm(EAureateWakeForm::Orbiter));
+            TestTrue(TEXT("Ordinary coupled-pivot route starts"), Ship->RequestForm(Target));
+            Ship->Tick(Ship->TransitionSeconds * .5f);
+            TestTrue(TEXT("Pivot follows review-only midpoint yaw"),
+                FMath::IsNearlyEqual(Pivot->GetRelativeRotation().Yaw,
+                    .5f * (PreviewYaw(Start) + PreviewYaw(Target)), 1.0f));
+            TestTrue(TEXT("Dome and quarters remain parented during each route"),
+                Bridge->GetAttachParent() == Pivot && Quarters->GetAttachParent() == Pivot);
+            TestTrue(TEXT("Quarters remain visible during pivot review"),
+                Quarters->IsVisible());
+            TestTrue(TEXT("Ordinary coupled-pivot route finishes"),
+                Ship->FinishOrdinaryPreviewTransitionForReview());
+            TestEqual(TEXT("Directed form completed"), Ship->GetCurrentForm(), Target);
+            TestTrue(TEXT("Pivot reaches review-only target yaw"),
+                FMath::IsNearlyEqual(Pivot->GetRelativeRotation().Yaw,
+                    PreviewYaw(Target), 1.0f));
+            ++DirectedRoutes;
+        }
+    }
+    TestEqual(TEXT("All six directed coupled-pivot routes covered"), DirectedRoutes, 6);
+    Ship->bPreviewCentralBridgeHabitation = false;
+    TestTrue(TEXT("Six-route preview can restore legacy layout"),
+        Ship->RefreshCentralBridgeHabitationReview());
+    TestTrue(TEXT("Final legacy bridge pose restored"),
+        Bridge->GetRelativeLocation().Equals(FVector(240.f,0.f,95.f),.01f));
+    TestFalse(TEXT("Final quarters stand-in hidden"), Quarters->IsVisible());
+
     TestEqual(TEXT("Original four wing components retained"), Ship->GetWingCount(), 4);
     TestEqual(TEXT("Original two foil components retained"), Ship->GetHydrofoilCount(), 2);
 
