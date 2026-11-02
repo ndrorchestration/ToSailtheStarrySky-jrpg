@@ -11,6 +11,10 @@ on:
       - 'AGENTS.md'
       - 'README.md'
       - 'docs/CHARACTER_AND_ART_AUTHORITY.md'
+      - 'docs/CANON_AND_REVEAL_POLICY.md'
+      - 'docs/AGENT_HANDOFF_INDEX.md'
+      - 'docs/CHAPTER_1_BETA_ROADMAP.md'
+      - 'docs/NOTION_SOURCE_INDEX.md'
       - 'docs/LEVEL_ONE_STAT_RANK_CANON_2026_11_01.md'
       - 'data/design/level-one-rank-constraints.json'
       - 'tests/level-one-stat-ranks.test.js'
@@ -68,6 +72,8 @@ jobs:
           python3 -m unittest discover -s unreal/Tools -p 'test_dependency_register_reconciliation.py' -v
       - name: Enforce relative-only Level 1 creator stat ranking (not game balance)
         run: node tests/level-one-stat-ranks.test.js
+      - name: Enforce transversal Unreal canon, documentation and Notion links (source-only)
+        run: python3 -m unittest discover -s unreal/Tools -p 'test_transversal_documentation_authority.py' -v
       - name: Reconcile authority and both dependency baselines without native claims
         run: |
           python3 unreal/Tools/check_integrated_review_contract.py
