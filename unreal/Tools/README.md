@@ -1,5 +1,22 @@
 # Native Windows verification
 
+> **As-of 2026-11-01:** A prior pinned UE5.8.4 native foundation build and **12/12 automation tests passed** ([receipt](../Docs/UE58_NATIVE_BUILD_VERIFICATION_2026-11-01.md)), but that evidence does **not** validate newer ship drafts. The current [rotating bridge and quarters draft #702](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/702) requires **15 native tests** in the exact-head report; engine-free registration and proxy-geometry tests are not native execution. Do not launch a competing UBT build while another Unreal Editor/Live Coding session is active.
+
+## Dependency and source-only checks (no installation)
+
+Run from repository root, using Python 3:
+
+```powershell
+py -3.14 -B unreal/Tools/check_unreal_dependency_contract.py
+py -3.14 -B unreal/Tools/test_unreal_dependency_contract.py
+py -3.14 -B unreal/Tools/check_automation_registry.py
+py -3.14 -B unreal/Tools/test_aureate_bridge_habitation_source_contract.py
+py -3.14 -B unreal/Tools/test_aureate_bridge_habitation_envelope.py
+```
+
+The first two are **standard-library only** and enforce the documented engine/C++ module baseline, optional pinned NumPy dependency, and native-report registration count. They do not call pip, download software, compile the game or certify graphics. Full generated-mesh studies require the **optional** [`requirements-geometry.txt`](requirements-geometry.txt) (NumPy 2.5.1 observed with Python 3.14.5 on `neontic`); the dependency file is a declaration, **not an installation or upgrade**. See [dependency update policy](../Docs/UNREAL_DEPENDENCY_BASELINE_2026-11-01.md).
+
+
 Run from PowerShell on a Windows machine with licensed Unreal Engine 5.8 installed:
 
 ```powershell

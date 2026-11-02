@@ -1,4 +1,7 @@
-# Unreal verification — NOT YET EXECUTED
+# Unreal verification — evidence is exact-source scoped
+
+> **Current status (2026-11-01):** The “not yet executed” language in the historical sections below refers to early drafts, not all Unreal development. An [earlier UE5.8.4 foundation build and 12/12 native automation PASS](UE58_NATIVE_BUILD_VERIFICATION_2026-11-01.md) is verified **only for its exact source revision**. Newer [review draft #702](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/702) has **15 registered native automation tests**, engine-free source CI and a source-pinned sampled bridge/quarters proxy clearance check; **native build/15-test execution on that head remains pending**. Use [`Verify-Unreal.ps1`](../Tools/Verify-Unreal.ps1) from an uncontended, clean checkout and inspect its per-test JSON report. Do not equate that with D3D12 rendering, whole-hull collision, playability, a Windows release or creator art approval. [Dependency baseline](UNREAL_DEPENDENCY_BASELINE_2026-11-01.md) specifies separate engine, optional Python and legacy JS dependencies.
+
 
 Run against a real Windows machine with Unreal Engine 5.8 installed; replace engine path as needed.
 

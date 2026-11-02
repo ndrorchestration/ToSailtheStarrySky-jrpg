@@ -1,0 +1,4 @@
+# OPTIONAL offline geometry audit dependency (not used by UnrealBuildTool or basic CI).
+# Verified on authorized Windows workstation 2026-11-01 with CPython 3.14.5.
+# Engine-free source contract/unit tests must also work without NumPy.
+numpy==2.5.1

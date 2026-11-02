@@ -1,6 +1,10 @@
-# Unreal Engine 5.8 migration — experimental source track
+# Unreal Engine 5.8.4 — primary development and review tracks
 
-This is a **native UE C++ project scaffold**, not yet a compiled or playable port. UE 5.8 is the selected initial engine target. The existing Godot project and preserved browser code remain untouched.
+**Creator-selected primary development engine as of 2026-11-01: Unreal Engine 5.8.4.** The Godot and browser/NW.js prototypes remain intact as historical gameplay/story-system references; preserved evidence and migration contracts do not make Godot the forward engine.
+
+**Verified, source-scoped status:** [The native foundation receipt](Docs/UE58_NATIVE_BUILD_VERIFICATION_2026-11-01.md) documents a successful Win64 Unreal Editor build and **12/12 native automation tests at its own pinned source revision**. Separate later ship branches have additional image/build evidence, which **cannot automatically validate newer drafts**. The coupled rotating bridge and living-quarters assembly is implemented in [review draft #702](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/702): source checks and a noncanonical 126-pose geometry screen passed, and 15 native test names are registered. **Native C++ compilation, 15/15 native automation, real V2 assembled collision and creator art approval remain pending at that source head.**
+
+See [dependency inventory](Docs/UNREAL_DEPENDENCY_BASELINE_2026-11-01.md), [current source/native verification](Tools/README.md), and [central bridge/habitation design](Docs/AUREATE_CENTRAL_ROTATING_BRIDGE_HABITATION_DESIGN_2026-11-01.md).
 
 ## Windows setup
 
