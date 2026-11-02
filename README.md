@@ -1,5 +1,8 @@
 # To Sail the Starry Sky
 
+> **Current engine direction (November 1, 2026):** New game implementation is **Unreal Engine 5.8.4** at the creator's direction. The Godot-forward and browser-preview statements below are retained as *dated historical evidence*. Native Unreal draft review work has compiled, run 13/13 engine automation tests, imported assets, and produced D3D12 frames, but is not an approved or released game. See [Unreal engine/dependency register](unreal/Docs/UNREAL_DEPENDENCY_AND_AUTHORITY_REGISTER_2026-11-01.md). Starbourne remains gated.
+
+
 > **Latest native graphical QA (2026-10-28):** A pinned clean Windows Godot 4.7.2 source (`4d2ec5fb`) passed native import, five bounded Chapter 1 headless regression scripts and a nine-frame 960×640 OpenGL capture. **Critical distinction:** the inspected Chapter 1 review scene still starts with Ender + Lyra and marks Ionia-first as an optional prototype; it is not the accepted canonical default. Rendered UI overlaps and older character presentation also remain. [Exact evidence and blockers](docs/CHAPTER_1_NATIVE_INTEGRATION_AUDIT_2026-10-28.md). No human chapter completion, creator visual approval or installer security acceptance was established.
 
 > **Current project orientation — October 28, 2026:** Native **Godot 4.7.2 / GDScript** is the forward production target for the cinematic Chapter 1 JRPG. The main-branch browser/p5.js material below is **historical reference and compatibility documentation**, not the current Godot player guide or proof of a released Chapter 1. Native First Wake development uses an **Ionia-first** opening; the older Lyra-first sequence described below remains browser-era provenance until explicitly reconciled.
