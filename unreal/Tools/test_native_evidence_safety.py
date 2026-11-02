@@ -17,6 +17,11 @@ INTEGRATION = ROOT / "Docs/INTEGRATION_GATE_2026-11-02.md"
 def check_script(script: str) -> None:
     mandatory = (
         "[Parameter(Mandatory=$true)][string]$EngineRoot",
+        "Engine/Build/Build.version",
+        "ConvertFrom-Json -ErrorAction Stop",
+        "Incorrect Unreal version:",
+        "this review requires 5.8.4",
+        "Verified Unreal Engine build metadata: 5.8.4 (not a native build PASS)",
         "[string]$ExpectedHead = ''",
         "ExpectedHead must be a full 40-character Git commit SHA",
         "actual=$GitHead expected=$ExpectedHead",
@@ -73,6 +78,14 @@ class NativeEvidenceSafetyTests(unittest.TestCase):
             "if (Test-Path $ReportDirectory) { Remove-Item $ReportDirectory -Recurse -Force }",
         )
         self.reject(altered, "destructive evidence")
+
+    def test_engine_version_metadata_gate_is_required(self):
+        altered = self.code.replace("Engine/Build/Build.version", "Engine/Build/NO_VERSION")
+        self.reject(altered, "Build.version")
+
+    def test_refuse_wrong_engine_patch_only_review_584(self):
+        altered = self.code.replace("this review requires 5.8.4", "accept all versions")
+        self.reject(altered, "this review requires 5.8.4")
 
     def test_expected_sha_gate_is_required(self):
         altered = self.code.replace("[string]$ExpectedHead = ''", "")
