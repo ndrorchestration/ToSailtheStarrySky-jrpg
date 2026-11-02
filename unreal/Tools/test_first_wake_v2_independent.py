@@ -46,6 +46,14 @@ class IndependentV2GateTests(TestCase):
             with self.assertRaisesRegex(RuntimeError, "mapping drift"):
                 qa.inspect_input_source(PROJECT)
 
+    def test_pie_quicksave_cannot_reuse_production_slot(self):
+        source = (PROJECT / "Source/ToSailTheStarrySky/Private/TSTSSExplorerCharacter.cpp").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn('bPIE ? TEXT("tstss_prelude_pie_quick") : TEXT("first_wake_quick")', source)
+        self.assertIn("bPIEReviewQuickSlotOwned = false;", source)
+        self.assertIn("UGameplayStatics::DoesSaveGameExist(Slot, 0)", source)
+
     def test_temp_save_slot_is_distinct_from_player_slot(self):
         self.assertNotEqual(qa.SLOT, "first_wake_quick")
         self.assertTrue(qa.SLOT.startswith("tstss_prelude_v2_independent"))
