@@ -1,6 +1,18 @@
-# Unreal production verification matrix — 2026-10-31
+# Unreal production verification matrix — updated November 2, 2026
 
-Status: workflow contract, not executed evidence. Applies to draft PR #608; Godot is unchanged. Creator-approved story/art authority takes priority over historical engine assumptions.
+**Applies to the Unreal-first draft development workstream**, not to a
+merged, shipping or creator-approved game. This matrix began under #608.
+It now also links the stacked #694 → #703 → #704 → #712 First Wake review
+sequence and retains the historical Godot/browser evidence as separate.
+Creator-approved story and visuals retain authority over generated art.
+
+**Source-scoped evidence:** #685 actually passed Win64 Game/Editor and
+23/23 native automations at its own head. At inspected #712 commit
+`a1b07b64841c2cb6b735fdd66f2ecd6426cab016`, CI/source work
+passed but the current 25 required automation names were **registered,
+not run in UE**, and P01–P13 PIE remained **NOT TESTED**. This matrix
+itself is not a native verification receipt.
+
 
 ## Quality gates by discipline
 
@@ -33,3 +45,24 @@ Each lane must produce a reviewable artifact on a named branch, with source SHA,
 ## Immediate critical issue
 
 At authoring time no actual Unreal editor build, PIE capture, true ship buoyancy validation, Unreal-approved 3D cast, or verified Windows installer is available in this thread. Do not promote source availability, automation test names or this matrix as a native PASS.
+
+## Reconciled November 2 gate ledger (do not infer passes)
+
+| Gate | Valid evidence | Current #712 status |
+|---|---|---|
+| Engine and native module declarations | `.uproject`, both V7/UE5.8 targets, `Build.cs`, source contract | SOURCE-INVENTORIED; packaged role unverified |
+| Hosted source inventory and regression | GitHub workflow completion at exact head | PASS at `a1b07b64841c2cb6b735fdd66f2ecd6426cab016`; rerun on future heads |
+| Objective/read-only and PIE slot handlers | 16 + 12 source-extracted C++ behavior checks using stand-ins, mutation controls | PASS at above head; **not native engine results** |
+| Win64 Editor native build | UHT/UBT log and SHA-bound, clean-tree receipt | NOT TESTED at #712 |
+| Native automation | `Verify-Unreal.ps1` JSON with 25 unique exact successful named tests | NOT TESTED at #712 |
+| V2 Prelude player operation | P01–P13, direct PIE input and screen/log evidence | NOT TESTED |
+| Source-bound sea landing/Chapter 1 | genuine physics and flotation evidence, no marker bypass | NOT AUTHORIZED |
+| D3D12 visual cast/ship approval | source-asset manifests and creator signoff | NOT AUTHORIZED |
+| Windows packaged runtime/release | cooked installed launch, hashes, Defender-on and save replay | NOT TESTED |
+
+**Dependencies and controls:** [First Wake dependency handoff](FIRST_WAKE_DEPENDENCY_HANDOFF_2026-11-02.md)
+tracks this branch's `5.8` association, Editor Python plugin,
+native modules, legacy npm separation, and the other draft register
+[#711](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/711).
+Do not copy #711's baseline without comparing manifests at the exact
+merge candidate SHA. Nothing in this matrix authorizes upgrades or imports.
