@@ -22,9 +22,14 @@ Machine-readable source contract:
 `unreal/Tools/first_wake_dependency_contract.json`.
 Checker:
 `python3 unreal/Tools/check_first_wake_dependency_contract.py`.
-It compares exactly these declarations plus the npm lockfile root record, and
-refuses drift. Negative-control tests modify **in-memory** representations,
-never the real project or lockfile. A success means **source agreement only**.
+It compares the full explicit project-plugin array (including disabled
+entries), public/private/dynamically loaded and include-path C++ module
+declarations, both targets' extra-module lists, runtime module loading phase
+and npm lockfile root record. Newly introduced **nonliteral** module
+declarations fail closed rather than silently disappearing from the audit.
+Negative-control tests modify **in-memory** representations, never the real
+project or lockfile. A success means **source agreement only** and cannot
+enumerate engine-transitive dependencies or prove plugin packaging.
 
 ## Other review ownership and conflicts
 
@@ -79,3 +84,20 @@ and an explicit scoped creator approval.
 
 This document and its source checker are an upgrade-readiness ledger,
 **not a justification for silently upgrading dependencies**.
+
+## November 2 continuation — closed declaration blind spots
+
+The earlier contract compared only the enabled plugin names and the
+first public `Build.cs` dependency range. It could therefore miss new
+disabled project-plugin entries, an extra literal `Add` call, or added
+private/dynamic C++ modules. The bounded checker now inspects these
+declaration surfaces and both target `ExtraModuleNames` lists. Added
+negative tests must fail on each such drift and on a nonliteral module
+declaration. No dependency manifest or installed package has changed.
+
+**Independent authority finding:** [draft #657](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/657)
+already corrects root `AGENTS.md` to Unreal-first, but its root
+`README.md` still describes Godot as the forward target at its
+inspected head `a79a63a29babf3b1a1dc3522245d8b26f8eb3167`.
+That mismatch should be fixed **on #657's own authority branch**,
+not by rewriting root files in the First Wake gameplay draft.
