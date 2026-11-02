@@ -6,6 +6,8 @@ on:
       - 'unreal/ArtSource/ShipReview/verify_aureate_reference.py'
       - 'unreal/Tests/test_aureate_approved_art_contract.py'
       - 'unreal/Tests/test_aureate_form_naming_v2.py'
+      - 'unreal/Tools/Verify-StarbourneNames.ps1'
+      - 'unreal/Docs/STARBOURNE_NATIVE_REFLECTION_ACCEPTANCE.md'
       - 'unreal/Source/ToSailTheStarrySky/Private/Tests/AureateWakeCanonicalFormNamesTests.cpp'
       - 'unreal/ArtSource/ShipReview/aureate_wake_canonical_form_names_v2.json'
       - 'unreal/Docs/AUREATE_WAKE_CANONICAL_CONFIGURATION_NAMES_2026-11-01.md'
