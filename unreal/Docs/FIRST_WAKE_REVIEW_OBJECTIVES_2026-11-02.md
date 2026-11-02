@@ -72,3 +72,27 @@ Additional engine-free source checks cover the success/failure control flow.
 No native UE test was executed by this continuation, and the suite remains
 25 required registered native tests. Player-level F5/F9 behavior is still
 pending independent PIE verification.
+
+## 2026-11-02 continuation — J objective recall and compiled behavior
+
+The temporary on-screen review cue can be recalled with **J**, even after its
+eight-second display has expired. This is a read-only convenience action:
+the handler only reads `FirstWakeState`, never advances a milestone,
+mutates inspection evidence, changes save data, or grants progression.
+The default action mapping is explicit in `Config/DefaultInput.ini`.
+The transient label now hints `[J to recall]`. This is not a production
+journal, visual HUD or accessibility acceptance.
+
+The new host-side `Tools/check_first_wake_objective_compiled.py --self-test`
+extracts the **actual** `GetReviewObjectiveText()` C++ implementation,
+compiles it with a C++17 compiler against minimal type stand-ins, and tests
+16 started/unstarted/inspection/launch/water/invalid-state cases. Each
+asserts objective text, stable repeated reads and no state mutation. A
+single mutated objective string must produce a failing run, proving the
+probe detects semantic drift. GitHub source preflight runs this experiment.
+
+**Limit:** Compiling this real function body with API stand-ins does not
+compile Unreal HeaderTool reflection, native module dependencies, input
+binding behavior in PIE, screen rendering, or native automation. All 25
+registered native test cases and the manual E/J/F5/F9 playtest remain on
+HOLD until an isolated UE5.8.4 Windows run passes at this exact head.
