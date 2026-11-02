@@ -156,6 +156,8 @@ private:
     TArray<FTransform> TargetFoilTransforms;
     FQuat StartHabitationReviewRotation = FQuat::Identity;
     FQuat TargetHabitationReviewRotation = FQuat::Identity;
+    /** Latch review participation at request time; mid-flight editor toggles are deferred. */
+    bool bHabitationReviewLatchedForTransition = false;
 
     static FTransform WingPose(EAureateWakeForm Form, int32 WingIndex);
     static FTransform RootPivotedWingPose(EAureateWakeForm Form, int32 WingIndex);
