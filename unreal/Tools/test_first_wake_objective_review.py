@@ -121,6 +121,21 @@ class ReviewObjectiveSourceTests(unittest.TestCase):
         self.assertNotIn("AdvanceTo(", helper)
         self.assertNotIn("InspectStation(", helper)
 
+    def test_pie_acceptance_matrix_cannot_omit_player_safety_gates(self):
+        matrix = (ROOT / "Docs/FIRST_WAKE_V2_PIE_ACCEPTANCE_MATRIX_2026-11-02.md").read_text(
+            encoding="utf-8"
+        )
+        for number in range(1, 13):
+            self.assertIn(f"| P{number:02d} |", matrix)
+        for gate in ("SOURCE_HEAD=", "NATIVE_AUTOMATION_25=", "PIE_E_AND_OCCLUSION=",
+                     "PIE_J_OBJECTIVE=", "PIE_F5_F9_STORY_SAVE=",
+                     "CLEAN_TREE_BEFORE=", "CLEAN_TREE_AFTER=", "NOT_TESTED",
+                     "NOT_AUTHORIZED", "first_wake_quick.sav",
+                     "UE 5.8.4 isolated PIE acceptance matrix"):
+            self.assertIn(gate, matrix)
+        self.assertIn("never overwrite or delete", matrix)
+        self.assertIn("not preserve Ender's world position", matrix)
+
     def test_native_regression_registered_for_exact_head_verification(self):
         name = "TSTSS.FirstWake.ReviewObjectivesAreReadOnly"
         self.assertIn(name, self.test_file)
