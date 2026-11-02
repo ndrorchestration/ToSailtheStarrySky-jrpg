@@ -104,7 +104,7 @@ class NativeEvidenceSafetyTests(unittest.TestCase):
 
     def test_combined_review_does_not_claim_engine_execution(self):
         doc = INTEGRATION.read_text(encoding="utf-8")
-        self.assertRegex(doc, r"25 distinct successful named\\s+native automation results")
+        self.assertRegex(doc, r"25 distinct successful named\s+native automation results")
         self.assertIn("P01–P13", doc)
         self.assertIn("NOT MERGED", doc)
         self.assertIn("NOT PLAYABLE-CERTIFIED", doc)
