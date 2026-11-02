@@ -99,6 +99,23 @@ void AAureateWakePreviewActor::BeginPlay()
     RefreshCentralBridgeHabitationReview();
 }
 
+bool AAureateWakePreviewActor::HasFiniteHabitationReviewRotation(EAureateWakeForm Form) const
+{
+    // EditAnywhere/BlueprintWrite rotations are untrusted review inputs.
+    // TRotator::ContainsNaN rejects NaN and +/-Inf before Quaternion().
+    switch (Form)
+    {
+    case EAureateWakeForm::Skyborne:
+        return !SkyborneHabitationReviewRotation.ContainsNaN();
+    case EAureateWakeForm::Seaborne:
+        return !SeaborneHabitationReviewRotation.ContainsNaN();
+    case EAureateWakeForm::Submersible:
+        return !SubmersibleHabitationReviewRotation.ContainsNaN();
+    default:
+        return false; // No rotating habitation pose in gated Orbiter.
+    }
+}
+
 FQuat AAureateWakePreviewActor::HabitationReviewRotationForForm(EAureateWakeForm Form) const
 {
     // Artist-editable review poses; ZeroRotator defaults avoid inventing canon.
@@ -119,6 +136,14 @@ bool AAureateWakePreviewActor::RefreshCentralBridgeHabitationReview()
 {
     if (bTransitioning || CurrentForm == EAureateWakeForm::Orbiter ||
         !BridgeHabitationPivot || !ForwardBridge || !LivingQuartersEnvelope)
+    {
+        return false;
+    }
+
+    // Validate before making the pivot, bridge or quarters visible/moving.
+    // Turning the review OFF must always remain able to restore legacy art.
+    if (bPreviewCentralBridgeHabitation &&
+        !HasFiniteHabitationReviewRotation(CurrentForm))
     {
         return false;
     }
@@ -400,6 +425,11 @@ bool AAureateWakePreviewActor::RequestForm(EAureateWakeForm RequestedForm)
         // authorizes this additional moving assembly in Orbiter.
         (bPreviewCentralBridgeHabitation &&
             (RequestedForm == EAureateWakeForm::Orbiter || CurrentForm == EAureateWakeForm::Orbiter)) ||
+        // Fail closed before Refresh mutates any component. The active and
+        // requested form poses must both be finite when the pivot is enabled.
+        (bPreviewCentralBridgeHabitation &&
+            (!HasFiniteHabitationReviewRotation(CurrentForm) ||
+             !HasFiniteHabitationReviewRotation(RequestedForm))) ||
         bTransitioning || RequestedForm == CurrentForm ||
         (RequestedForm == EAureateWakeForm::Orbiter && !bAllowOrbiterPreview))
     {

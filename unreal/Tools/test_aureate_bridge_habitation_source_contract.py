@@ -21,6 +21,7 @@ def check_contract(header: str, source: str):
         "FRotator SubmersibleHabitationReviewRotation = FRotator::ZeroRotator;",
         "bool RefreshCentralBridgeHabitationReview();",
         "bool bHabitationReviewLatchedForTransition = false;",
+        "bool HasFiniteHabitationReviewRotation(EAureateWakeForm Form) const;",
     )
     c = (
         'BridgeHabitationPivot = CreateDefaultSubobject<USceneComponent>(TEXT("BridgeHabitationPivot"));',
@@ -41,6 +42,12 @@ def check_contract(header: str, source: str):
         "if (bHabitationReviewLatchedForTransition && BridgeHabitationPivot)",
         "bHabitationReviewLatchedForTransition = false;",
         "if (!RefreshCentralBridgeHabitationReview()) return false;",
+        "bool AAureateWakePreviewActor::HasFiniteHabitationReviewRotation(EAureateWakeForm Form) const",
+        "return !SkyborneHabitationReviewRotation.ContainsNaN();",
+        "return !SeaborneHabitationReviewRotation.ContainsNaN();",
+        "return !SubmersibleHabitationReviewRotation.ContainsNaN();",
+        "if (bPreviewCentralBridgeHabitation &&\n        !HasFiniteHabitationReviewRotation(CurrentForm))",
+        "!HasFiniteHabitationReviewRotation(RequestedForm)",
         "(bPreviewCentralBridgeHabitation &&",
         "CurrentForm == EAureateWakeForm::Orbiter",
         "RequestedForm == EAureateWakeForm::Orbiter && !bAllowOrbiterPreview",
@@ -67,6 +74,35 @@ class BridgeHabitationSourceContractTests(unittest.TestCase):
 
     def test_current_source_contract(self):
         self.assertTrue(check_contract(self.header, self.source))
+
+    def test_mutant_removing_invalid_target_guard_is_rejected(self):
+        changed = self.source.replace(
+            "!HasFiniteHabitationReviewRotation(RequestedForm)",
+            "false /* invalid requested angle guard removed */")
+        with self.assertRaisesRegex(ValueError, r"C\+\+"):
+            check_contract(self.header, changed)
+
+    def test_mutant_removing_active_refresh_guard_is_rejected(self):
+        changed = self.source.replace(
+            "if (bPreviewCentralBridgeHabitation &&\n        !HasFiniteHabitationReviewRotation(CurrentForm))",
+            "if (false /* active-angle gate removed */)")
+        with self.assertRaisesRegex(ValueError, r"C\+\+"):
+            check_contract(self.header, changed)
+
+    def test_mutant_skipping_finite_seaborne_check_is_rejected(self):
+        changed = self.source.replace(
+            "return !SeaborneHabitationReviewRotation.ContainsNaN();",
+            "return true;")
+        with self.assertRaisesRegex(ValueError, r"C\+\+"):
+            check_contract(self.header, changed)
+
+    def test_nonfinite_native_regressions_registered(self):
+        native = (ROOT / "Source/ToSailTheStarrySky/Private/Tests/AureateBridgeHabitationReviewTests.cpp").read_text(encoding="utf-8")
+        self.assertIn("NaN destination angle rejects a form request atomically", native)
+        self.assertIn("Infinity in active review angle blocks movement", native)
+        self.assertIn("Opt out recovers even with an invalid stored editor angle", native)
+        self.assertIn("std::numeric_limits<float>::quiet_NaN()", native)
+        self.assertIn("std::numeric_limits<float>::infinity()", native)
 
     def test_mutant_enabling_review_by_default_rejected(self):
         changed = self.header.replace(

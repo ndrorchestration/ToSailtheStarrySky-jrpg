@@ -3,6 +3,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/World.h"
 #include "Misc/AutomationTest.h"
+#include <limits>
 
 #if WITH_DEV_AUTOMATION_TESTS
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTSTSSAureateBridgeHabitationReviewTest,
@@ -194,6 +195,45 @@ bool FTSTSSAureateBridgeHabitationReviewTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Final legacy bridge pose restored"),
         Bridge->GetRelativeLocation().Equals(FVector(240.f,0.f,95.f),.01f));
     TestFalse(TEXT("Final quarters stand-in hidden"), Quarters->IsVisible());
+
+    // A malformed inspector or Blueprint angle must not inject NaN/Inf
+    // into either child's transform or consume the ship transition state.
+    // These non-finite values are deliberately assigned to the existing
+    // FRotator fields, avoiding constructor-time normalization.
+    Ship->bPreviewCentralBridgeHabitation = true;
+    TestTrue(TEXT("Finite bridge review can re-enable before invalid-input tests"),
+        Ship->RefreshCentralBridgeHabitationReview());
+    const FQuat BeforeBadPose = Pivot->GetRelativeRotation().Quaternion();
+    const FVector BeforeBadLocation = Pivot->GetRelativeLocation();
+    const EAureateWakeForm BeforeBadForm = Ship->GetCurrentForm();
+    Ship->SkyborneHabitationReviewRotation.Yaw =
+        std::numeric_limits<float>::quiet_NaN();
+    TestFalse(TEXT("NaN destination angle rejects a form request atomically"),
+        Ship->RequestForm(EAureateWakeForm::Skyborne));
+    TestFalse(TEXT("NaN destination cannot start bridge motion"), Ship->IsTransitioning());
+    TestEqual(TEXT("NaN destination preserves form"), Ship->GetCurrentForm(), BeforeBadForm);
+    TestTrue(TEXT("NaN destination leaves pivot rotation unchanged"),
+        Pivot->GetRelativeRotation().Quaternion().Equals(BeforeBadPose, .001f));
+    TestTrue(TEXT("NaN destination leaves pivot location unchanged"),
+        Pivot->GetRelativeLocation().Equals(BeforeBadLocation, .001f));
+    Ship->SkyborneHabitationReviewRotation.Yaw = 0.f;
+
+    // Current-form nonfinite input also rejects refresh before relocating
+    // the dome and quarters; opt-out still recovers the static preview.
+    Ship->SeaborneHabitationReviewRotation.Yaw =
+        std::numeric_limits<float>::infinity();
+    TestFalse(TEXT("Infinity in active review angle blocks refresh"),
+        Ship->RefreshCentralBridgeHabitationReview());
+    TestFalse(TEXT("Infinity in active review angle blocks movement"),
+        Ship->RequestForm(EAureateWakeForm::Submersible));
+    TestTrue(TEXT("Invalid active review angle leaves pivot intact"),
+        Pivot->GetRelativeRotation().Quaternion().Equals(BeforeBadPose, .001f) &&
+        Pivot->GetRelativeLocation().Equals(BeforeBadLocation, .001f));
+    Ship->bPreviewCentralBridgeHabitation = false;
+    TestTrue(TEXT("Opt out recovers even with an invalid stored editor angle"),
+        Ship->RefreshCentralBridgeHabitationReview());
+    TestFalse(TEXT("Opt out hides review quarters"), Quarters->IsVisible());
+    Ship->SeaborneHabitationReviewRotation.Yaw = 30.f;
 
     TestEqual(TEXT("Original four wing components retained"), Ship->GetWingCount(), 4);
     TestEqual(TEXT("Original two foil components retained"), Ship->GetHydrofoilCount(), 2);
