@@ -140,3 +140,26 @@ any executable or creating review evidence. These are genuine script
 failure-path checks but **not** Windows UE build or playtest evidence.
 All fixtures are temporary under the GitHub runner and cannot access
 player SaveGame files.
+
+## Native automation JSON receipt validation — no aggregate-only acceptance
+
+The integrated native script now **calls** a separate source-controlled,
+read-only PowerShell function in `unreal/Tools/Assert-NativeAutomationReport.ps1`.
+It accepts a report only with all **25 unique required named tests**,
+zero failed and zero not-run, well-formed nonnegative integer summary
+counts, distinct per-test `fullTestPath` values, `Success` state for
+all reported test entries, and agreement between the reported success
+count and the number of actual successful entries. A missing name,
+duplicate, contradictory aggregate or malformed JSON **fails closed**.
+The validator does **not** grant PIE, character-art or release approval.
+
+The companion `unreal/Tools/Test-NativeAutomationReportFixtures.ps1`
+replays the **same actual validation function** in hosted PowerShell
+against synthetic success and invalid-report variants (inflated counts,
+missing/duplicate test names, skipped/failed entries, missing fields
+and malformed JSON). All fixtures live in a temporary folder; **no
+Unreal Engine process or SaveGame is opened**. This is a stronger check
+of report-admission logic, not proof that UE5.8.4 emits the currently
+expected JSON schema or that 25 native tests executed at this head.
+Keep raw native JSON and logs if the real engine schema differs;
+investigate rather than changing fields to manufacture acceptance.
