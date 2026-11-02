@@ -122,3 +122,18 @@ source, and a human operator executes P01–P13 on the isolated map with
 logs, captured evidence and clean project provenance. This would establish
 **a playable Prelude interaction review slice**, not a completed First Wake,
 Splashdown, release, shipping build or cinematic acceptance.
+
+## Native automation source-custody finding (2026-11-02)
+
+An actual Win64 Unreal 5.8.4 Editor run at
+`fd0b68c28e6289d45f8b8c70228631c24577a352`
+compiled successfully and exported 25 distinct successful native
+test entries, but clean-tree acceptance was **REJECTED** when Unreal
+rewrote `unreal/Config/DefaultEngine.ini` and
+`unreal/Config/DefaultInput.ini`. The first file contained a
+host-generated Android File Server security token: preserve it as
+private **uncommitted** evidence, never commit or copy its value.
+This is a **native report observed**, not a verified clean end-to-end
+pass and not a P01–P13 gameplay run. A fresh isolated test must
+prevent config-file writes without changing the commit or weakening
+the final custody gate. The original dirty worktree is retained.
