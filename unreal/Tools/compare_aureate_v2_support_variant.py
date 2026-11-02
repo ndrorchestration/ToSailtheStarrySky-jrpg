@@ -245,6 +245,12 @@ def main():
             data["full_route_targeted_support_comparison"]=compare_full_route(
                 args,wing,faces,candidate,hull_faces,
                 verified_candidate["candidate_mesh_sha256"]["hull"])
+            data["not_verified"]=[
+                "Complete V2 hull, glass bridge, wing-to-wing clearance and full mesh interactions",
+                "Continuous swept motion between the 126 support-only sample configurations",
+                "Fastener/hinge structural continuity and visual geometry quality",
+                "Native Unreal import, assembled D3D12 captures, creator art approval and Orbiter"]
+
     except (V2ReviewHold,wing_audit.GeometryHold,ValueError,OSError,KeyError,TypeError) as exc:
         parser.exit(3,"CANDIDATE_INPUT_HOLD: "+str(exc)+"\n")
     print(json.dumps(data,sort_keys=True,indent=2))
