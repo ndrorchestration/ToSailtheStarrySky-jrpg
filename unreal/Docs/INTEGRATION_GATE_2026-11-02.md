@@ -163,3 +163,36 @@ of report-admission logic, not proof that UE5.8.4 emits the currently
 expected JSON schema or that 25 native tests executed at this head.
 Keep raw native JSON and logs if the real engine schema differs;
 investigate rather than changing fields to manufacture acceptance.
+
+## Story-only save overwrite protection — source-side review
+
+The First Wake explorer can persist **story/inspection progress only**;
+it has no authority to capture or modify a combat party roster. Its
+`SaveFirstWake(Slot)` now checks the slot name, and when a SaveGame slot
+already exists, requires that `UTSTSSPersistence::LoadProgress(Slot)`
+returns a valid, supported, structurally valid payload with **no party
+members**. Any unreadable, future-versioned, corrupt, or roster-bearing
+existing save produces **false without calling SaveProgress**. When a
+roster-free existing payload is valid, the method reuses the loaded object,
+updating only its First Wake story fields and keeping other save fields
+intact. An absent slot uses a fresh payload. This applies to explicit
+`SaveFirstWake(Slot)` calls as well as normal/PIE quicksave routing.
+
+The source check
+`python3 unreal/Tools/check_first_wake_save_guard_compiled.py --self-test`
+compiles the **actual production SaveFirstWake method** against API doubles
+with in-memory fake slots and tests legitimate first/updated story saves,
+preservation of future unrelated fields, denial of player roster/invalid
+slots/corrupted or unreadable existing saves, and persistence failures. It
+intentionally deletes the roster safeguard in a test copy and requires
+that mutation to fail. This does **not** execute the Unreal SaveGame service
+or guarantee atomic disk writes, multiplayer race freedom, or real keyboard
+PIE behavior. Do not claim that player saves were migrated or modified.
+
+**Native follow-up:** A user-authorized disposable Windows checkout
+must separately check that direct Blueprint `SaveFirstWake` and F5
+refuse a seeded roster-bearing or unreadable slot without byte changes;
+preserve original hashes and never use actual player saves. Avoid
+representing a positive source fixture as in-engine validation. If
+native validation fails, keep PR #713 draft; inspect the engine record
+without overwriting or deleting it.
