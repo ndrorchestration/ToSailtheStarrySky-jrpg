@@ -13,6 +13,9 @@ $EvidenceRoot = Join-Path $PSScriptRoot '../Saved/MigrationEvidence'
 $GitHead = (git -C (Join-Path $PSScriptRoot '../..') rev-parse HEAD)
 if ($LASTEXITCODE -ne 0 -or -not $GitHead) { throw 'Unable to resolve repository HEAD' }
 if ($GitHead -notmatch '^[0-9a-fA-F]{40}$') { throw "Unexpected Git SHA: $GitHead" }
+if ($ExpectedHead -ne '' -and $ExpectedHead -notmatch '^[0-9a-fA-F]{40}$') {
+    throw 'ExpectedHead must be a full 40-character Git commit SHA'
+}
 if ($ExpectedHead -ne '' -and $GitHead -ne $ExpectedHead) {
     throw "Source HEAD differs from the explicitly requested review commit: actual=$GitHead expected=$ExpectedHead"
 }
@@ -25,6 +28,8 @@ $RunId = ('{0}-{1}-{2}' -f $GitHead.Substring(0, 12),
     ([DateTime]::UtcNow.ToString('yyyyMMddTHHmmssfffZ')),
     ([guid]::NewGuid().ToString('N').Substring(0, 8)))
 $Evidence = Join-Path $EvidenceRoot $RunId
+# Parent directory is ignored, but may not exist in a fresh isolated checkout.
+New-Item -Path $EvidenceRoot -ItemType Directory -Force -ErrorAction Stop | Out-Null
 if (Test-Path $Evidence) { throw "Evidence folder already exists; refusing overwrite: $Evidence" }
 New-Item -Path $Evidence -ItemType Directory -ErrorAction Stop | Out-Null
 $GitHead | Set-Content (Join-Path $Evidence 'head.txt')
