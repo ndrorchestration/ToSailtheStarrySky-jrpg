@@ -12,7 +12,7 @@ if ($Required.Count -ne 25 -or @($Required | Select-Object -Unique).Count -ne 25
 $FixtureRoot = Join-Path ([IO.Path]::GetTempPath()) ("tstss-report-fixtures-" + [guid]::NewGuid().ToString('N'))
 $PassedCases = 0
 try {
-    New-Item -LiteralPath $FixtureRoot -ItemType Directory -ErrorAction Stop | Out-Null
+    New-Item -Path $FixtureRoot -ItemType Directory -ErrorAction Stop | Out-Null
     $ReportPath = Join-Path $FixtureRoot 'index.json'
     function Save-Report([object]$Data) {
         ConvertTo-Json -InputObject $Data -Depth 10 | Set-Content -LiteralPath $ReportPath -Encoding utf8
