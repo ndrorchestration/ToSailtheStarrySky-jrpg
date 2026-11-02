@@ -46,7 +46,7 @@ def check_contract(header: str, source: str):
         "return !SkyborneHabitationReviewRotation.ContainsNaN();",
         "return !SeaborneHabitationReviewRotation.ContainsNaN();",
         "return !SubmersibleHabitationReviewRotation.ContainsNaN();",
-        "if (bPreviewCentralBridgeHabitation &&\\n        !HasFiniteHabitationReviewRotation(CurrentForm))",
+        "if (bPreviewCentralBridgeHabitation &&\n        !HasFiniteHabitationReviewRotation(CurrentForm))",
         "!HasFiniteHabitationReviewRotation(RequestedForm)",
         "(bPreviewCentralBridgeHabitation &&",
         "CurrentForm == EAureateWakeForm::Orbiter",
@@ -79,21 +79,21 @@ class BridgeHabitationSourceContractTests(unittest.TestCase):
         changed = self.source.replace(
             "!HasFiniteHabitationReviewRotation(RequestedForm)",
             "false /* invalid requested angle guard removed */")
-        with self.assertRaisesRegex(ValueError, r"C\\+\\+"):
+        with self.assertRaisesRegex(ValueError, r"C\+\+"):
             check_contract(self.header, changed)
 
     def test_mutant_removing_active_refresh_guard_is_rejected(self):
         changed = self.source.replace(
-            "if (bPreviewCentralBridgeHabitation &&\\n        !HasFiniteHabitationReviewRotation(CurrentForm))",
+            "if (bPreviewCentralBridgeHabitation &&\n        !HasFiniteHabitationReviewRotation(CurrentForm))",
             "if (false /* active-angle gate removed */)")
-        with self.assertRaisesRegex(ValueError, r"C\\+\\+"):
+        with self.assertRaisesRegex(ValueError, r"C\+\+"):
             check_contract(self.header, changed)
 
     def test_mutant_skipping_finite_seaborne_check_is_rejected(self):
         changed = self.source.replace(
             "return !SeaborneHabitationReviewRotation.ContainsNaN();",
             "return true;")
-        with self.assertRaisesRegex(ValueError, r"C\\+\\+"):
+        with self.assertRaisesRegex(ValueError, r"C\+\+"):
             check_contract(self.header, changed)
 
     def test_nonfinite_native_regressions_registered(self):
