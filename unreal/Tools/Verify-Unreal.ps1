@@ -44,7 +44,10 @@ $ExportArgument = '-ReportExportPath=' + $ReportDirectory
 # security token via TryUpdateDefaultConfigFile, bypassing generic NOINI.
 # Disable that Android-only plugin for the headless Win64 QA process only;
 # DO NOT modify the project plugin manifest or weaken the post-run diff check.
-& $EditorCmd $Project -unattended -nop4 -nullrhi -NOINI -NOAUTOINIUPDATE '-DisablePlugins=AndroidFileServer' '-ExecCmds=Automation RunTests TSTSS; Quit' $ExportArgument -log 2>&1 |
+# UE 5.8 ConfigCacheIni::AreWritesAllowedGlobally checks the 'nowrite'
+# command-line flag in SaveBranch. Apply it to native verification only;
+# keep the genuine TSTSS automation tests and clean-Git postcondition.
+& $EditorCmd $Project -unattended -nop4 -nullrhi -nowrite -NOINI -NOAUTOINIUPDATE '-DisablePlugins=AndroidFileServer' '-ExecCmds=Automation RunTests TSTSS; Quit' $ExportArgument -log 2>&1 |
     Tee-Object (Join-Path $Evidence 'automation.log')
 if ($LASTEXITCODE -ne 0) { throw "Unreal automation command failed ($LASTEXITCODE)" }
 $ReportPath = Join-Path $Evidence 'AutomationReport/index.json'
