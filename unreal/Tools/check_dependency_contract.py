@@ -37,7 +37,19 @@ def _modules(code: str) -> list[str]:
     )
     if not blocks:
         raise DependencyDrift("No explicit runtime module dependency block found")
-    names = []
+    # Catch Add("X") as well as AddRange({...}); reject dynamic dependency
+    # expressions rather than silently omitting their modules from inventory.
+    singles = re.findall(
+        r'(?:Public|Private)DependencyModuleNames\s*\.\s*Add\s*\(\s*"([^"]+)"\s*\)',
+        code
+    )
+    all_calls = re.findall(
+        r'(?:Public|Private)DependencyModuleNames\s*\.\s*Add(?:Range)?\s*\(',
+        code
+    )
+    if len(all_calls) != len(blocks) + len(singles):
+        raise DependencyDrift("Unreviewed dynamic runtime module dependency expression")
+    names = list(singles)
     for block in blocks:
         names += re.findall(r'"([^"]+)"', block)
     if len(set(names)) != len(names):
