@@ -18,16 +18,19 @@ guidance, not a forced new progression gate. Read-only queries leave state intac
 
 In non-shipping builds only, the native explorer temporarily displays the
 review objective (8 seconds) at BeginPlay, after a **successful** E milestone,
-and after a **successful** F9 quickload. It does not display success for rejected
-interactions or failed loads. This is a **debug-screen cue**, not a final
+and after a **successful** F9 quickload. F5 and F9 now also display explicit
+success or failure feedback based on their actual save/load return values.
+The successful messages disclose that the review save covers **story state
+only** and does not preserve Ender's world position. Failed operations never
+claim persistence. Messages are disabled in shipping builds. This is a **debug-screen cue**, not a final
 approved quest HUD, localization, dialogue system or cinematic UI. Blueprints
 can read the objective independently of the debug rendering.
 
 ## Verification
 
 - `python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_objective_review.py' -v`
-  checks source read-only behavior, every beat, masks, guard calls and native
-  test registration, **not execution in Unreal**.
+  checks source read-only behavior, every beat, masks, guard calls,
+  save/load-result feedback and native test registration, **not execution in Unreal**.
 - `python3 unreal/Tools/check_automation_registry.py` checks one new required
   native test is registered.
 - `TSTSS.FirstWake.ReviewObjectivesAreReadOnly` exercises unstarted,
@@ -54,3 +57,18 @@ can read the objective independently of the debug rendering.
 
 No protected-main merge, production art acceptance, installer or public
 release is approved by this branch.
+
+## 2026-11-02 continuation: truthful F5/F9 feedback
+
+The same draft PR adds conditional F5/F9 success/failure messages rather
+than introducing another competing branch. F5 confirms saving only when
+`SaveFirstWake` returned true; F9 refreshes the objective only when
+`LoadFirstWake` returned true. Both actions report failure on false.
+The messages explicitly distinguish story-state persistence from player
+position, which remains unchanged on load and is not stored on save.
+No story beat, actor position, SaveGame schema or save slot was changed.
+
+Additional engine-free source checks cover the success/failure control flow.
+No native UE test was executed by this continuation, and the suite remains
+25 required registered native tests. Player-level F5/F9 behavior is still
+pending independent PIE verification.
