@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'unreal/Source/**'
+      - 'unreal/Config/**'
       - 'unreal/Tools/**'
       - 'unreal/Docs/**'
       - 'unreal/README.md'
