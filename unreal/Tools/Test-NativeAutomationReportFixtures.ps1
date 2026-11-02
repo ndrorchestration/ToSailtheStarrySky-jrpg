@@ -28,7 +28,7 @@ try {
             }
             $Rejected = $true
         }
-        if (-not $Rejected) { throw "$Name: unsafe native report accepted" }
+        if (-not $Rejected) { throw "${Name}: unsafe native report accepted" }
         $script:PassedCases++
     }
     function Clone-Report([object]$Data) {
