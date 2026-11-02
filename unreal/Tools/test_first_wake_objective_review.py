@@ -94,6 +94,33 @@ class ReviewObjectiveSourceTests(unittest.TestCase):
         self.assertIn("FString UTSTSSFirstWakeState::GetReviewObjectiveText() const", code)
         self.assertIn("semantic mutation control rejected wrong objective", code)
 
+    def test_rejected_in_reach_milestone_provides_truthful_review_hint(self):
+        self.assertIn("void ShowFirstWakeReviewBlockedInteraction(", self.explorer)
+        self.assertIn("First Wake (review): no progress; objective:", self.explorer)
+        self.assertIn("FColor::Yellow", self.explorer)
+        self.assertIn("if (Milestone->TryActivate(FirstWakeState))", self.explorer)
+        # The rejected branch must stay inside both the camera hit test and
+        # the player-reach gate, not claim a failed interaction at a distance.
+        section = self.explorer.split("void ATSTSSExplorerCharacter::Interact()", 1)[1].split(
+            "void ATSTSSExplorerCharacter::ShowObjectiveReview()", 1
+        )[0]
+        self.assertLess(section.index("LineTraceSingleByChannel"),
+                        section.index("IsInsidePlayerReach("))
+        self.assertLess(section.index("IsInsidePlayerReach("),
+                        section.index("Milestone->TryActivate(FirstWakeState)"))
+        self.assertIn(
+            "else\n                {\n"
+            "                    // A valid, in-reach marker rejected the state transition.",
+            section,
+        )
+        self.assertIn("ShowFirstWakeReviewBlockedInteraction(FirstWakeState);", section)
+        helper = self.explorer.split("void ShowFirstWakeReviewBlockedInteraction(", 1)[1].split(
+            "void ShowFirstWakeReviewObjective(", 1
+        )[0]
+        self.assertIn("#if !UE_BUILD_SHIPPING", helper)
+        self.assertNotIn("AdvanceTo(", helper)
+        self.assertNotIn("InspectStation(", helper)
+
     def test_native_regression_registered_for_exact_head_verification(self):
         name = "TSTSS.FirstWake.ReviewObjectivesAreReadOnly"
         self.assertIn(name, self.test_file)
