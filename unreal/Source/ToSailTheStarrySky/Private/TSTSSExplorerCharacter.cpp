@@ -9,6 +9,7 @@
 #include "Components/InputComponent.h"
 #include "Engine/World.h"
 #include "Engine/Engine.h"
+#include "Kismet/GameplayStatics.h"
 #include "CollisionQueryParams.h"
 
 namespace
@@ -35,6 +36,21 @@ void ShowFirstWakeReviewSaveLoadStatus(const bool bLoad, const bool bSucceeded)
 
 // Rejected interactions show the current objective, without implying the
 // engine determined why the milestone was refused (order, repetition, etc.).
+void ShowFirstWakeReviewProtectedSlotWarning(const bool bLoad)
+{
+#if !UE_BUILD_SHIPPING
+    if (GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 8.f, FColor::Red,
+            bLoad
+                ? TEXT("First Wake (review): no quicksave made in this PIE session")
+                : TEXT("First Wake (review): existing PIE quicksave protected; refusing overwrite"));
+    }
+#else
+    (void)bLoad;
+#endif
+}
+
 void ShowFirstWakeReviewBlockedInteraction(const UTSTSSFirstWakeState* State)
 {
 #if !UE_BUILD_SHIPPING
@@ -83,6 +99,7 @@ void ATSTSSExplorerCharacter::BeginPlay()
 {
     Super::BeginPlay();
     FirstWakeState = NewObject<UTSTSSFirstWakeState>(this);
+    bPIEReviewQuickSlotOwned = false;
     ShowFirstWakeReviewObjective(FirstWakeState);
 }
 
@@ -169,13 +186,37 @@ void ATSTSSExplorerCharacter::ShowObjectiveReview()
 
 void ATSTSSExplorerCharacter::QuickSave()
 {
-    const bool bSaved = SaveFirstWake(TEXT("first_wake_quick"));
+    // PIE testing must not write the normal quicksave slot. Never adopt or
+    // overwrite a leftover review save from another Editor session.
+    const UWorld* World = GetWorld();
+    const bool bPIE = World && World->WorldType == EWorldType::PIE;
+    const FString Slot = bPIE ? TEXT("tstss_prelude_pie_quick") : TEXT("first_wake_quick");
+    if (bPIE && !bPIEReviewQuickSlotOwned &&
+        UGameplayStatics::DoesSaveGameExist(Slot, 0))
+    {
+        ShowFirstWakeReviewProtectedSlotWarning(false);
+        return;
+    }
+    const bool bSaved = SaveFirstWake(Slot);
+    if (bPIE && bSaved)
+    {
+        bPIEReviewQuickSlotOwned = true;
+    }
     ShowFirstWakeReviewSaveLoadStatus(false, bSaved);
 }
 
 void ATSTSSExplorerCharacter::QuickLoad()
 {
-    const bool bLoaded = LoadFirstWake(TEXT("first_wake_quick"));
+    const UWorld* World = GetWorld();
+    const bool bPIE = World && World->WorldType == EWorldType::PIE;
+    const FString Slot = bPIE ? TEXT("tstss_prelude_pie_quick") : TEXT("first_wake_quick");
+    // No stale PIE save from an earlier test session can change this pawn.
+    if (bPIE && !bPIEReviewQuickSlotOwned)
+    {
+        ShowFirstWakeReviewProtectedSlotWarning(true);
+        return;
+    }
+    const bool bLoaded = LoadFirstWake(Slot);
     if (bLoaded)
     {
         ShowFirstWakeReviewObjective(FirstWakeState);
