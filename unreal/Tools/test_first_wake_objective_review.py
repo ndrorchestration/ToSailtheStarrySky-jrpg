@@ -152,6 +152,19 @@ class ReviewObjectiveSourceTests(unittest.TestCase):
         self.assertIn("never overwrite or delete", matrix)
         self.assertIn("player world position does **not** rewind", matrix)
 
+    def test_extracted_cpp_f5_f9_behavior_probe_is_wired_to_ci(self):
+        source = (ROOT / "Tools/check_first_wake_pie_save_compiled.py").read_text(
+            encoding="utf-8"
+        )
+        workflow = (ROOT.parent / ".github/workflows/unreal-source-preflight.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("SAVE_START = \"void ATSTSSExplorerCharacter::QuickSave()", source)
+        self.assertIn("LOAD_START = \"void ATSTSSExplorerCharacter::QuickLoad()", source)
+        self.assertIn("HANDLER_BEHAVIOR_FAILURE", source)
+        self.assertIn("unsafe pre-existing-slot overwrite mutation detected", source)
+        self.assertIn("check_first_wake_pie_save_compiled.py --self-test", workflow)
+
     def test_native_regression_registered_for_exact_head_verification(self):
         name = "TSTSS.FirstWake.ReviewObjectivesAreReadOnly"
         self.assertIn(name, self.test_file)
