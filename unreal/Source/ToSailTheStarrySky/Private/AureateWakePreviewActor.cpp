@@ -378,10 +378,11 @@ void AAureateWakePreviewActor::SnapToForm(EAureateWakeForm Form)
     CurrentForm = Form;
     TargetForm = Form;
     bTransitioning = false;
-    if (bPreviewCentralBridgeHabitation && BridgeHabitationPivot)
-    {
-        BridgeHabitationPivot->SetRelativeRotation(HabitationReviewRotationForForm(Form));
-    }
+    bHabitationReviewLatchedForTransition = false;
+    // Apply opt-in or restore the original forward bridge unconditionally.
+    // Editing the exposed review flag during animation must not leave a
+    // half-rotated dome stranded after the wing motion completes.
+    RefreshCentralBridgeHabitationReview();
     UpdateWingRootMounts();
     UpdateHydrofoilStruts();
 }
@@ -394,16 +395,25 @@ bool AAureateWakePreviewActor::RequestForm(EAureateWakeForm RequestedForm)
         // Root-pivoted authored GLB crosses provisional hull/bridge during
         // direct Orbiter interpolation. Do not attempt until a safe route exists.
         (bUseRootPivotedWingPose && (RequestedForm == EAureateWakeForm::Orbiter || CurrentForm == EAureateWakeForm::Orbiter)) ||
+        // The rotating habitation envelope has not cleared Orbiter's sail
+        // and hull geometry. The independent visual preview flag never
+        // authorizes this additional moving assembly in Orbiter.
+        (bPreviewCentralBridgeHabitation &&
+            (RequestedForm == EAureateWakeForm::Orbiter || CurrentForm == EAureateWakeForm::Orbiter)) ||
         bTransitioning || RequestedForm == CurrentForm ||
         (RequestedForm == EAureateWakeForm::Orbiter && !bAllowOrbiterPreview))
     {
         return false;
     }
 
+    // Reconcile any idle inspector/Blueprint toggle before sampling the pose.
+    // The snapshot below is then stable even if properties change mid-flight.
+    if (!RefreshCentralBridgeHabitationReview()) return false;
+    bHabitationReviewLatchedForTransition = bPreviewCentralBridgeHabitation;
     TargetForm = RequestedForm;
     StartHabitationReviewRotation = BridgeHabitationPivot
         ? BridgeHabitationPivot->GetRelativeRotation().Quaternion() : FQuat::Identity;
-    TargetHabitationReviewRotation = bPreviewCentralBridgeHabitation
+    TargetHabitationReviewRotation = bHabitationReviewLatchedForTransition
         ? HabitationReviewRotationForForm(RequestedForm) : FQuat::Identity;
     StartSailBlend = OrbiterSailBlend;
     TargetSailBlend = RequestedForm == EAureateWakeForm::Orbiter ? 1.f : 0.f;
@@ -463,7 +473,7 @@ void AAureateWakePreviewActor::Tick(float DeltaSeconds)
     {
         if (Dynamic) Dynamic->SetScalarParameterValue(TEXT("OrbiterSailBlend"), OrbiterSailBlend);
     }
-    if (bPreviewCentralBridgeHabitation && BridgeHabitationPivot)
+    if (bHabitationReviewLatchedForTransition && BridgeHabitationPivot)
     {
         BridgeHabitationPivot->SetRelativeRotation(FQuat::Slerp(
             StartHabitationReviewRotation, TargetHabitationReviewRotation, Smooth).GetNormalized());
