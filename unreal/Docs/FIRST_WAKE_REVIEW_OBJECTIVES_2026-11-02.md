@@ -96,3 +96,20 @@ compile Unreal HeaderTool reflection, native module dependencies, input
 binding behavior in PIE, screen rendering, or native automation. All 25
 registered native test cases and the manual E/J/F5/F9 playtest remain on
 HOLD until an isolated UE5.8.4 Windows run passes at this exact head.
+
+## 2026-11-02 continuation — rejected marker interaction feedback
+
+An in-reach marker that **rejects** `TryActivate(FirstWakeState)` now shows
+a temporary yellow review hint that no progress occurred and repeats the
+current read-only objective. The message does not guess whether the cause
+was a wrong story order, a repeated inspection, or another legitimate
+refusal. It is emitted **only after a real camera visibility hit, an
+`ATSTSSMilestoneActor` match and successful pawn-centered range check**.
+No claim of interaction is made for missing hits or out-of-range markers.
+All debug text remains outside shipping builds.
+
+Source tests verify the gate order, denial branch, absence of story
+mutation and shipping exclusion; no PIE interaction or visual capture
+has yet run at this exact head. This keeps the review progression
+transparent during keyboard playtesting without altering canon, physics
+or the save format.
