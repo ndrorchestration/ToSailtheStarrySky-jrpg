@@ -66,6 +66,26 @@ class DependencyDeclarationContractTests(unittest.TestCase):
         with self.assertRaisesRegex(DependencyDrift, "module dependencies"):
             validate(self.root)
 
+    def test_unreviewed_single_module_add_is_detected(self):
+        p = self.root/"unreal/Source/ToSailTheStarrySky/ToSailTheStarrySky.Build.cs"
+        text = p.read_text(encoding="utf-8").replace(
+            'PublicDependencyModuleNames.AddRange(',
+            'PublicDependencyModuleNames.Add("Niagara");\n        PublicDependencyModuleNames.AddRange('
+        )
+        p.write_text(text, encoding="utf-8")
+        with self.assertRaisesRegex(DependencyDrift, "module dependencies"):
+            validate(self.root)
+
+    def test_dynamic_module_add_expression_fails_closed(self):
+        p = self.root/"unreal/Source/ToSailTheStarrySky/ToSailTheStarrySky.Build.cs"
+        p.write_text(
+            p.read_text(encoding="utf-8") +
+            '\n        PrivateDependencyModuleNames.Add(ExtraModuleFromEnvironment);\n',
+            encoding="utf-8"
+        )
+        with self.assertRaisesRegex(DependencyDrift, "dynamic runtime module"):
+            validate(self.root)
+
     def test_target_build_settings_change_rejected(self):
         p = self.root/"unreal/Source/ToSailTheStarrySkyEditor.Target.cs"
         p.write_text(p.read_text(encoding="utf-8").replace("BuildSettingsVersion.V7",
