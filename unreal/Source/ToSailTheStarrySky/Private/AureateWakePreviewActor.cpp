@@ -31,11 +31,23 @@ AAureateWakePreviewActor::AAureateWakePreviewActor()
     SetupPreviewMesh(Hull, Shape);
     Hull->SetRelativeScale3D(FVector(8.0, 1.5, 0.65));
 
+    // Coupled review-only pivot: identity at baseline, so the original static
+    // forward bridge remains in precisely the same position until opted in.
+    BridgeHabitationPivot = CreateDefaultSubobject<USceneComponent>(TEXT("BridgeHabitationPivot"));
+    BridgeHabitationPivot->SetupAttachment(VesselRoot);
+
     ForwardBridge = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ForwardBridge"));
-    ForwardBridge->SetupAttachment(VesselRoot);
+    ForwardBridge->SetupAttachment(BridgeHabitationPivot);
     SetupPreviewMesh(ForwardBridge, Shape);
     ForwardBridge->SetRelativeLocation(FVector(240, 0, 95));
     ForwardBridge->SetRelativeScale3D(FVector(2.1, 1.1, 1.1));
+
+    LivingQuartersEnvelope = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LivingQuartersEnvelope"));
+    LivingQuartersEnvelope->SetupAttachment(BridgeHabitationPivot);
+    SetupPreviewMesh(LivingQuartersEnvelope, Shape);
+    LivingQuartersEnvelope->SetRelativeLocation(FVector(0, 0, -25));
+    LivingQuartersEnvelope->SetRelativeScale3D(FVector(2.2, 1.15, .35));
+    LivingQuartersEnvelope->SetVisibility(false); // No added default art or habitation geometry.
 
     // Exactly four persistent, independently articulated, dragonfly-derived wings.
     for (int32 Index = 0; Index < 4; ++Index)
@@ -84,6 +96,51 @@ void AAureateWakePreviewActor::BeginPlay()
     Super::BeginPlay();
     RefreshWingMeshes();
     RefreshWingMaterials();
+    RefreshCentralBridgeHabitationReview();
+}
+
+FQuat AAureateWakePreviewActor::HabitationReviewRotationForForm(EAureateWakeForm Form) const
+{
+    // Artist-editable review poses; ZeroRotator defaults avoid inventing canon.
+    switch (Form)
+    {
+    case EAureateWakeForm::Skyborne:
+        return SkyborneHabitationReviewRotation.Quaternion();
+    case EAureateWakeForm::Seaborne:
+        return SeaborneHabitationReviewRotation.Quaternion();
+    case EAureateWakeForm::Submersible:
+        return SubmersibleHabitationReviewRotation.Quaternion();
+    default:
+        return FQuat::Identity; // Orbiter/Starbourne remains independently gated.
+    }
+}
+
+bool AAureateWakePreviewActor::RefreshCentralBridgeHabitationReview()
+{
+    if (bTransitioning || CurrentForm == EAureateWakeForm::Orbiter ||
+        !BridgeHabitationPivot || !ForwardBridge || !LivingQuartersEnvelope)
+    {
+        return false;
+    }
+
+    if (bPreviewCentralBridgeHabitation)
+    {
+        // Provisional position only: central shared pivot, dome above quarters.
+        // Real pressure seals, access corridors and vessel clearance are HOLD.
+        BridgeHabitationPivot->SetRelativeLocation(FVector(0, 0, 50));
+        ForwardBridge->SetRelativeLocation(FVector(0, 0, 80));
+        LivingQuartersEnvelope->SetVisibility(true);
+        BridgeHabitationPivot->SetRelativeRotation(HabitationReviewRotationForForm(CurrentForm));
+    }
+    else
+    {
+        // Exact original default silhouette: static bridge at (240,0,95).
+        BridgeHabitationPivot->SetRelativeLocation(FVector::ZeroVector);
+        BridgeHabitationPivot->SetRelativeRotation(FQuat::Identity);
+        ForwardBridge->SetRelativeLocation(FVector(240, 0, 95));
+        LivingQuartersEnvelope->SetVisibility(false);
+    }
+    return true;
 }
 
 void AAureateWakePreviewActor::RefreshWingMeshes()
@@ -321,6 +378,11 @@ void AAureateWakePreviewActor::SnapToForm(EAureateWakeForm Form)
     CurrentForm = Form;
     TargetForm = Form;
     bTransitioning = false;
+    bHabitationReviewLatchedForTransition = false;
+    // Apply opt-in or restore the original forward bridge unconditionally.
+    // Editing the exposed review flag during animation must not leave a
+    // half-rotated dome stranded after the wing motion completes.
+    RefreshCentralBridgeHabitationReview();
     UpdateWingRootMounts();
     UpdateHydrofoilStruts();
 }
@@ -333,13 +395,26 @@ bool AAureateWakePreviewActor::RequestForm(EAureateWakeForm RequestedForm)
         // Root-pivoted authored GLB crosses provisional hull/bridge during
         // direct Orbiter interpolation. Do not attempt until a safe route exists.
         (bUseRootPivotedWingPose && (RequestedForm == EAureateWakeForm::Orbiter || CurrentForm == EAureateWakeForm::Orbiter)) ||
+        // The rotating habitation envelope has not cleared Orbiter's sail
+        // and hull geometry. The independent visual preview flag never
+        // authorizes this additional moving assembly in Orbiter.
+        (bPreviewCentralBridgeHabitation &&
+            (RequestedForm == EAureateWakeForm::Orbiter || CurrentForm == EAureateWakeForm::Orbiter)) ||
         bTransitioning || RequestedForm == CurrentForm ||
         (RequestedForm == EAureateWakeForm::Orbiter && !bAllowOrbiterPreview))
     {
         return false;
     }
 
+    // Reconcile any idle inspector/Blueprint toggle before sampling the pose.
+    // The snapshot below is then stable even if properties change mid-flight.
+    if (!RefreshCentralBridgeHabitationReview()) return false;
+    bHabitationReviewLatchedForTransition = bPreviewCentralBridgeHabitation;
     TargetForm = RequestedForm;
+    StartHabitationReviewRotation = BridgeHabitationPivot
+        ? BridgeHabitationPivot->GetRelativeRotation().Quaternion() : FQuat::Identity;
+    TargetHabitationReviewRotation = bHabitationReviewLatchedForTransition
+        ? HabitationReviewRotationForForm(RequestedForm) : FQuat::Identity;
     StartSailBlend = OrbiterSailBlend;
     TargetSailBlend = RequestedForm == EAureateWakeForm::Orbiter ? 1.f : 0.f;
     TransitionElapsed = 0.f;
@@ -397,6 +472,11 @@ void AAureateWakePreviewActor::Tick(float DeltaSeconds)
     for (UMaterialInstanceDynamic* Dynamic : DynamicWingMaterials)
     {
         if (Dynamic) Dynamic->SetScalarParameterValue(TEXT("OrbiterSailBlend"), OrbiterSailBlend);
+    }
+    if (bHabitationReviewLatchedForTransition && BridgeHabitationPivot)
+    {
+        BridgeHabitationPivot->SetRelativeRotation(FQuat::Slerp(
+            StartHabitationReviewRotation, TargetHabitationReviewRotation, Smooth).GetNormalized());
     }
     for (int32 Index = 0; Index < Wings.Num(); ++Index)
     {
