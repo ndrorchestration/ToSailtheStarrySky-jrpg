@@ -85,6 +85,24 @@ public:
     UFUNCTION(BlueprintPure, Category="Aureate Wake|Preview")
     int32 GetHydrofoilStrutCount() const { return HydrofoilStruts.Num(); }
 
+    /** REVIEW ONLY: a coupled bridge + living-quarters pivot. Default false preserves legacy art. */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Bridge Review")
+    bool bPreviewCentralBridgeHabitation = false;
+
+    /** Editable *review* poses, NOT creator-approved form angles or gameplay constraints. */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Bridge Review")
+    FRotator SkyborneHabitationReviewRotation = FRotator::ZeroRotator;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Bridge Review")
+    FRotator SeaborneHabitationReviewRotation = FRotator::ZeroRotator;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Bridge Review")
+    FRotator SubmersibleHabitationReviewRotation = FRotator::ZeroRotator;
+
+    /** Toggle only while idle. Never authorizes Orbiter or a physical attachment. */
+    UFUNCTION(BlueprintCallable, Category="Aureate Wake|Bridge Review")
+    bool RefreshCentralBridgeHabitationReview();
+
 protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Preview")
     TObjectPtr<USceneComponent> VesselRoot;
@@ -92,8 +110,16 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Preview")
     TObjectPtr<UStaticMeshComponent> Hull;
 
+    /** Independent rotating review frame; coupled dome/quarters both attach here. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Bridge Review")
+    TObjectPtr<USceneComponent> BridgeHabitationPivot;
+
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Preview")
     TObjectPtr<UStaticMeshComponent> ForwardBridge;
+
+    /** Hidden, collision-free cuboid stand-in for living quarters (NOT designed interior). */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Bridge Review")
+    TObjectPtr<UStaticMeshComponent> LivingQuartersEnvelope;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Preview")
     TArray<TObjectPtr<UStaticMeshComponent>> Wings;
@@ -128,11 +154,14 @@ private:
     TArray<FTransform> TargetWingTransforms;
     TArray<FTransform> StartFoilTransforms;
     TArray<FTransform> TargetFoilTransforms;
+    FQuat StartHabitationReviewRotation = FQuat::Identity;
+    FQuat TargetHabitationReviewRotation = FQuat::Identity;
 
     static FTransform WingPose(EAureateWakeForm Form, int32 WingIndex);
     static FTransform RootPivotedWingPose(EAureateWakeForm Form, int32 WingIndex);
     FTransform WingPoseForMesh(EAureateWakeForm Form, int32 WingIndex) const;
     static FTransform FoilPose(EAureateWakeForm Form, int32 FoilIndex);
+    FQuat HabitationReviewRotationForForm(EAureateWakeForm Form) const;
     static FTransform Interpolate(const FTransform& Start, const FTransform& End, float Alpha);
     void SnapToForm(EAureateWakeForm Form);
     void UpdateWingRootMounts();
