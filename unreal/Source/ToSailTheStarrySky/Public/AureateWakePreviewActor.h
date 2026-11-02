@@ -163,6 +163,8 @@ private:
     static FTransform RootPivotedWingPose(EAureateWakeForm Form, int32 WingIndex);
     FTransform WingPoseForMesh(EAureateWakeForm Form, int32 WingIndex) const;
     static FTransform FoilPose(EAureateWakeForm Form, int32 FoilIndex);
+    /** Reject non-finite editor rotations before any bridge pose or transition mutates. */
+    bool HasFiniteHabitationReviewRotation(EAureateWakeForm Form) const;
     FQuat HabitationReviewRotationForForm(EAureateWakeForm Form) const;
     static FTransform Interpolate(const FTransform& Start, const FTransform& End, float Alpha);
     void SnapToForm(EAureateWakeForm Form);
