@@ -38,8 +38,9 @@ def check_script(script: str) -> None:
         "if (Test-Path $ReportDirectory) { throw",
         "New-Item -Path $ReportDirectory -ItemType Directory -ErrorAction Stop",
         "AutomationReport/index.json",
-        "if ($Matches.Count -ne 1)",
-        "if ($Matches[0].state -ne 'Success')",
+        ". (Join-Path $PSScriptRoot 'Assert-NativeAutomationReport.ps1')",
+        "Assert-TSTSSNativeAutomationReport -ReportPath $ReportPath -RequiredTests $RequiredTests",
+        "REPORTED_NATIVE_AUTOMATIONS_SUCCESS",
         "Repository HEAD changed during verification",
         "Working tree changed during verification",
         "Evidence retained at $Evidence",
@@ -107,6 +108,23 @@ class NativeEvidenceSafetyTests(unittest.TestCase):
             "'TSTSS.FirstWake.ReviewObjectivesAreReadOnly',\n    'TSTSS.FirstWake.ReviewObjectivesAreReadOnly',",
         )
         self.reject(altered, "lost or duplicated")
+
+    def test_json_validator_and_synthetic_fixtures_are_both_present(self):
+        validator = (ROOT / "Tools/Assert-NativeAutomationReport.ps1").read_text(
+            encoding="utf-8"
+        )
+        fixtures = (ROOT / "Tools/Test-NativeAutomationReportFixtures.ps1").read_text(
+            encoding="utf-8"
+        )
+        workflow = (ROOT.parent / ".github/workflows/unreal-source-preflight.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("function Assert-TSTSSNativeAutomationReport", validator)
+        self.assertIn("summary and per-test successes disagree", validator)
+        self.assertIn("Duplicate test path", validator)
+        self.assertIn("MustReject 'missing-required'", fixtures)
+        self.assertIn("MustReject 'inflated-summary'", fixtures)
+        self.assertIn("Test-NativeAutomationReportFixtures.ps1", workflow)
 
     def test_manual_pie_remains_not_executed(self):
         doc = MANUAL.read_text(encoding="utf-8")
