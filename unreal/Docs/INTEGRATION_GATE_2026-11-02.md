@@ -196,3 +196,44 @@ preserve original hashes and never use actual player saves. Avoid
 representing a positive source fixture as in-engine validation. If
 native validation fails, keep PR #713 draft; inspect the engine record
 without overwriting or deleting it.
+
+## November 2 native Win64 exact-head receipt — partial, source custody blocked
+
+An isolated detached worktree on authorized Windows workstation `neontic`
+ran `unreal/Tools/Verify-Unreal.ps1` at exact source
+`fd0b68c28e6289d45f8b8c70228631c24577a352`, using installed
+Unreal Engine **5.8.4**, MSVC 14.44 and Windows SDK 10.0.26100.
+**Native Win64 Editor compilation succeeded.** A second invocation of
+the verifier actually launched native Editor automation and produced a
+JSON report with **25 distinct tests marked Success**, zero failed and
+zero not-run. The existing strict report parser accepted the contents,
+but the verifier's final *source-custody* check **failed**, correctly
+refusing to mark the total operation PASS.
+
+Cause: Unreal itself rewrote tracked `unreal/Config/DefaultEngine.ini`
+and `unreal/Config/DefaultInput.ini` in the isolated worktree during
+automation. The first change included Android File Server host settings
+and a generated local security token. These two changed files **remain
+uncommitted in the isolated worktree for forensic review**. **Never
+stage/publish their diffs, send the token to an external system, or
+reset the evidence as a shortcut.** The clean tree check is intentionally
+fail-closed. Retained local evidence is under
+`C:\TSTSS_PR713_NativeReview_20261102\unreal\Saved\MigrationEvidence\`
+with per-run `head.txt`, build/automation logs and JSON.
+
+**Strict status:** `EDITOR_BUILD=PASS` at the pinned old SHA;
+`NATIVE_AUTOMATION_REPORT=25_SUCCESS_ENTRIES`;
+`NATIVE_25_ACCEPTANCE=HOLD_CONFIG_MUTATION`;
+`PIE_P01_P13=NOT_TESTED`; `MAIN_MERGE=NOT_AUTHORIZED`.
+This receipt does **not** transfer to later documentation commits.
+
+**Smallest reversible native follow-up:** use a **fresh** isolated
+checkout at the integration candidate's exact new SHA, record
+pre-run hashes for the two tracked INI files, and experimentally
+prevent engine-side rewrites only within that disposable checkout
+(e.g. Windows read-only file attributes) while retaining Engine output
+and all logs. Do not silence source-integrity checks or auto-discard
+other modifications. The native report must again contain 25
+unique successful tests and a pristine tracked tree *after* execution.
+If read-only config prevents native execution, mark BLOCKED and
+investigate; do not publish token-bearing defaults.
