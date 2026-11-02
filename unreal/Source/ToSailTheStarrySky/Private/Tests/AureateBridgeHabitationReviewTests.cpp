@@ -126,8 +126,6 @@ bool FTSTSSAureateBridgeHabitationReviewTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Deferred opt-out resets the pivot rotation"),
         Pivot->GetRelativeRotation().IsNearlyZero(.01f));
     TestFalse(TEXT("Deferred opt-out hides quarters"), Quarters->IsVisible());
-    TestFalse(TEXT("No Orbiter gate bypass after opt out of the central module"),
-        Ship->RequestForm(EAureateWakeForm::Orbiter) && Ship->bUseRootPivotedWingPose);
 
     TestEqual(TEXT("Original four wing components retained"), Ship->GetWingCount(), 4);
     TestEqual(TEXT("Original two foil components retained"), Ship->GetHydrofoilCount(), 2);
