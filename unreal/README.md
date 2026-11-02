@@ -1,5 +1,18 @@
 # Unreal Engine 5.8 migration — experimental source track
 
+> **Current Unreal-first development status (Nov 1, 2026).** Unreal Engine **5.8.4** is the creator-selected forward target; the root browser/NW.js project and Godot material are legacy references, not active forward-gameplay dependencies. The separate root-authority change is [draft #657](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/657) and is not merged. See the [dependency and evidence register](Docs/DEPENDENCY_AND_EVIDENCE_REGISTER_2026-11-01.md) for exact versions, roles, and review holds.
+
+**Native evidence is now branch-specific, not absent.** [Draft combat #685](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/685) had Game+Editor builds and 23 native NullRHI tests PASS at its exact verified SHA. [Draft Prelude #694](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/694) contains an actual source-tracked V2 Unreal `.umap`, still blockout/noncanonical. [Draft interaction #704](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/704) Game target compiled at C++ head `0a6160b4`, but its direct un-packaged executable startup **FAILED** with an asset-registry/BufferReader crash; the 24th native Editor test and actual PIE E/F5/F9 remain open. Do not confuse source CI or UBT compilation with playability, package approval, or cinematic signoff.
+
+### Native development entry
+
+Clone the exact draft ref in a **distinct clean Windows checkout**, confirm Git HEAD and UE 5.8.4 + MSVC/SDK, and run `python unreal/Tools/check_dependency_contract.py --repo .` plus the source preflight. Use `unreal/Tools/Verify-Unreal.ps1` for native Editor build and named automation results when Live Coding in other Editor sessions is not active. Review the [verification commands](Docs/UNREAL_TEST_COMMANDS.md) and avoid launching a raw, uncooked Game executable as proof of packaged-game startup.
+
+### Historical scaffold note
+
+The paragraphs below record the initial migration scaffold and must not override the newer dated evidence above.
+
+
 This is a **native UE C++ project scaffold**, not yet a compiled or playable port. UE 5.8 is the selected initial engine target. The existing Godot project and preserved browser code remain untouched.
 
 ## Windows setup
