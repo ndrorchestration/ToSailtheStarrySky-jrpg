@@ -147,6 +147,20 @@ class ContractTests(unittest.TestCase):
             1)
         self.assertTrue(source_contract(self.test_source, bad))
 
+    def test_actor_foil_and_hull_literal_mutations_fail_closed(self):
+        changes = (
+            ("const FVector HullAnchor(0.f, Side * 60.f, -30.f);",
+             "const FVector HullAnchor(0.f, Side * 65.f, -30.f);"),
+            ("FVector(0, Side * 80.f, bDeployed ? -140.f : -45.f)",
+             "FVector(0, Side * 80.f, bDeployed ? -120.f : -45.f)"),
+            ("T * T * (3.f - 2.f * T)", "T * T * T"),
+        )
+        for original, replacement in changes:
+            self.assertIn(original, self.actor_source)
+            altered = self.actor_source.replace(original, replacement, 1)
+            self.assertTrue(source_contract(self.test_source, altered),
+                            f"changed proxy contract unexpectedly accepted: {original}")
+
     def test_proxy_cube_endpoints_are_symmetric_at_three_phases(self):
         for phase in (0.0, 0.5, 1.0):
             observed = []
