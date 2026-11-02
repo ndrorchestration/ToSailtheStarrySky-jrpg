@@ -93,7 +93,7 @@ if after != prior:
     raise RuntimeError("Review map was modified by verification")
 out_dir = project/"Saved"/"PreludeInteractionV2"
 out_dir.mkdir(parents=True, exist_ok=True)
-out_file = out_dir/"native_actor_verification.json"
+out_file = out_dir/"native_actor_verification_pr694.json"
 if out_file.exists():
     raise RuntimeError("Native actor receipt exists: refuse overwrite")
 receipt = {
