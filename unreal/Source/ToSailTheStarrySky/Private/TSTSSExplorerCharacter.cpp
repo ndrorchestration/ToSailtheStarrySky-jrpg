@@ -33,6 +33,23 @@ void ShowFirstWakeReviewSaveLoadStatus(const bool bLoad, const bool bSucceeded)
 #endif
 }
 
+// Rejected interactions show the current objective, without implying the
+// engine determined why the milestone was refused (order, repetition, etc.).
+void ShowFirstWakeReviewBlockedInteraction(const UTSTSSFirstWakeState* State)
+{
+#if !UE_BUILD_SHIPPING
+    if (GEngine && IsValid(State))
+    {
+        GEngine->AddOnScreenDebugMessage(
+            -1, 5.f, FColor::Yellow,
+            FString::Printf(TEXT("First Wake (review): no progress; objective: %s"),
+                            *State->GetReviewObjectiveText()));
+    }
+#else
+    (void)State;
+#endif
+}
+
 void ShowFirstWakeReviewObjective(const UTSTSSFirstWakeState* State)
 {
 #if !UE_BUILD_SHIPPING
@@ -131,6 +148,13 @@ void ATSTSSExplorerCharacter::Interact()
                 if (Milestone->TryActivate(FirstWakeState))
                 {
                     ShowFirstWakeReviewObjective(FirstWakeState);
+                }
+                else
+                {
+                    // A valid, in-reach marker rejected the state transition.
+                    // This does not grant progression or claim that E hit when
+                    // the camera trace missed or the target was out of reach.
+                    ShowFirstWakeReviewBlockedInteraction(FirstWakeState);
                 }
             }
         }
