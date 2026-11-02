@@ -113,3 +113,23 @@ mutation and shipping exclusion; no PIE interaction or visual capture
 has yet run at this exact head. This keeps the review progression
 transparent during keyboard playtesting without altering canon, physics
 or the save format.
+
+## 2026-11-02 continuation — PIE save isolation
+
+F5/F9 now use separate slots by engine world type: in **Play In Editor**
+(`EWorldType::PIE`) they use `tstss_prelude_pie_quick`; outside PIE they
+continue using the original `first_wake_quick`.
+
+A transient per-pawn ownership flag is set only after a successful first
+PIE write. A new PIE session refuses to overwrite an already existing
+review slot and refuses to load any review slot it did not itself
+successfully save. In both cases a non-shipping diagnostic explains the
+hold. Repeated saves **within the same PIE session** remain possible.
+
+No player save is migrated, deleted or overwritten by this update.
+No serialized schema, story beat, ship physics or game art is changed.
+The independent source verifier enforces the new routing; the PIE test
+matrix now adds **P13** for a stale-slot negative test.
+
+These controls have passed no native UE5.8.4 runtime test at the new
+source revision; actual write/load behavior is still an explicit hold.
