@@ -59,7 +59,10 @@ New-Item -Path $ReportDirectory -ItemType Directory -Force | Out-Null
 $ExportArgument = '-ReportExportPath=' + $ReportDirectory
 # -NOINI and -nowrite are UE 5.8's documented config write suppression flags.
 # Reject any remaining source mutation via the unchanged final clean-tree gate.
-& $EditorCmd $Project -unattended -nop4 -nullrhi -NOINI -nowrite '-ExecCmds=Automation RunTests TSTSS; Quit' $ExportArgument -log 2>&1 |
+# Exclude AndroidFileServer only in this Win64 QA session: its settings
+# initialization can generate a machine-specific token. Normal gameplay
+# and Editor/project plugin configuration remain unchanged.
+& $EditorCmd $Project -unattended -nop4 -nullrhi -NOINI -NOAUTOINIUPDATE -nowrite '-DisablePlugins=AndroidFileServer' '-ExecCmds=Automation RunTests TSTSS; Quit' $ExportArgument -log 2>&1 |
     Tee-Object (Join-Path $Evidence 'automation.log')
 if ($LASTEXITCODE -ne 0) { throw "Unreal automation command failed ($LASTEXITCODE)" }
 $ReportPath = Join-Path $Evidence 'AutomationReport/index.json'
