@@ -1,5 +1,8 @@
 # Native Windows verification
 
+> **2026-11-01 evidence update:** Historical lines below describing tests not yet executed refer to their original 2026-10-31 checkpoint. Later isolated Unreal 5.8.4 reviews ([#692](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/692) and [#697](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/697)) verified native Windows Editor compilation and 13/13 automation tests at their recorded exact heads. [#705](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/705) verifies a native blue ocean preview but **black-sky visual HOLD**. Do not extrapolate these receipts to new heads, release, finished gameplay or art acceptance. See [dependency/authority register](../Docs/UNREAL_DEPENDENCY_AND_AUTHORITY_REGISTER_2026-11-01.md).
+
+
 Run from PowerShell on a Windows machine with licensed Unreal Engine 5.8 installed:
 
 ```powershell
