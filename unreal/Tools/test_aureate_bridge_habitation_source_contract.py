@@ -27,7 +27,7 @@ def check_contract(header: str, source: str):
         "ForwardBridge->SetupAttachment(BridgeHabitationPivot);",
         'LivingQuartersEnvelope = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("LivingQuartersEnvelope"));',
         "LivingQuartersEnvelope->SetupAttachment(BridgeHabitationPivot);",
-        "LivingQuartersEnvelope->SetVisibility(false);",
+        "LivingQuartersEnvelope->SetVisibility(false); // No added default art or habitation geometry.",
         "BridgeHabitationPivot->SetRelativeLocation(FVector(0, 0, 50));",
         "ForwardBridge->SetRelativeLocation(FVector(0, 0, 80));",
         "ForwardBridge->SetRelativeLocation(FVector(240, 0, 95));",
