@@ -58,3 +58,16 @@ The Python audit explicitly refuses Orbiter, malformed side/fraction inputs and 
 Observed at exact source `60e744b9bf90d87c551ad8ca398454e9bf5c180b` in a new clean detached Windows source worktree: **7/7 engine-free contract tests PASS; 14/14 registered native test names PASS; 14/14 source inventory PASS; no tracked changes**. Further source-only mutation controls were committed after that snapshot; see the latest hosted CI result for their status. **Native C++ test is still NOT COMPILED or EXECUTED** because local resource limits are not met.
 
 This audit is source- and proxy-bound, with no art approval and no permission to enable Orbiter, merge drafts or describe the ship as flight-/water-/pressure-safe.
+
+## 2026-11-01 — Native six-route 252-pose assertions added (execution still pending)
+
+The prior 252-pose sweep existed **only** as engine-free Python arithmetic. A follow-on isolated source change adds the same six ordered ordinary-form routes to the real C++ test `TSTSS.Ship.HydrofoilStrutNativeReview` itself. It reuses one transient actor, prepares each starting ordinary form, begins each transition, and observes 20 intermediate sampling positions plus the completed endpoint. For **6 routes × 21 phases × 2 supports = 252 proposed runtime support observations**, the C++ assertions check:
+
+- Actual `UStaticMeshComponent` foil and strut visibility during transitions and in the final ordinary forms.
+- Moving foil center vs source-calibrated cubic-easing position (tolerance 0.2 cm).
+- Strut midpoint, length scale, and transformed local-X 100cm cube endpoints vs the temporary hull anchor and foil center (0.3cm endpoint tolerance).
+- Every transition completes to the requested ordinary form; Orbiter requests remain refused after every route.
+
+New Python source-contract mutation tests guard against accidentally removing or shortening the six-route native test, endpoint assertions, or repeated Orbiter hold. Source inventory continues to require this one named native test. **Neither the Python sweep nor the C++ source asserts collision clearance, structural support, aerodynamic/hydrodynamic validity, or visual fidelity.**
+
+**Resource state at the latest workstation check:** `neontic` online with *three existing* UnrealEditor processes (left untouched), available free physical memory **0.308 GiB**, available commit headroom **5.977 GiB**. The experimental read-only memory guard returned `BLOCK_INSUFFICIENT_BUILD_HEADROOM`, exit 1. No native build, Unreal automation or D3D12 render was launched. Prior native build was interrupted due to 0.16 GiB memory and does not validate this new test source. Do not weaken gates, close any active unrelated Editor, or claim `NATIVE_AUTOMATION=PASS` from source-only CI.
