@@ -72,6 +72,47 @@ jobs:
           python3 -m unittest discover -s unreal/Tools -p 'test_integrated_review_contract.py' -v
       - name: Verify native receipt retention and exact-source assertion (source-only)
         run: python3 -m unittest discover -s unreal/Tools -p 'test_native_evidence_safety.py' -v
+      - name: Parse native verifier using PowerShell 7 (no Unreal execution)
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $parseErrors = $null
+          $path = (Resolve-Path 'unreal/Tools/Verify-Unreal.ps1').Path
+          [System.Management.Automation.Language.Parser]::ParseFile($path, [ref]$tokens, [ref]$parseErrors) | Out-Null
+          if ($parseErrors.Count -gt 0) {
+            throw "PowerShell parser rejected native verifier: $($parseErrors -join '; ')"
+          }
+          Write-Output "PASS: native verifier PowerShell syntax (no engine launched)"
+      - name: Exercise native verifier wrong-engine and wrong-SHA holds (synthetic fixture)
+        shell: pwsh
+        run: |
+          $fakeRoot = Join-Path $env:RUNNER_TEMP ('tstss-fake-ue-' + [guid]::NewGuid().ToString('N'))
+          try {
+            New-Item -ItemType Directory -Path (Join-Path $fakeRoot 'Engine/Build/BatchFiles') -Force | Out-Null
+            New-Item -ItemType Directory -Path (Join-Path $fakeRoot 'Engine/Binaries/Win64') -Force | Out-Null
+            Set-Content -LiteralPath (Join-Path $fakeRoot 'Engine/Build/BatchFiles/Build.bat') -Value 'SYNTHETIC DO NOT EXECUTE'
+            Set-Content -LiteralPath (Join-Path $fakeRoot 'Engine/Binaries/Win64/UnrealEditor-Cmd.exe') -Value 'SYNTHETIC DO NOT EXECUTE'
+            $versionFile = Join-Path $fakeRoot 'Engine/Build/Build.version'
+            '{"MajorVersion":5,"MinorVersion":9,"PatchVersion":0}' | Set-Content -LiteralPath $versionFile
+            $expected = $false
+            try {
+              & ./unreal/Tools/Verify-Unreal.ps1 -EngineRoot $fakeRoot -ExpectedHead ('0' * 40)
+            } catch {
+              if ($_.Exception.Message -match 'Incorrect Unreal version:.*requires 5\.8\.4') { $expected = $true } else { throw }
+            }
+            if (-not $expected) { throw 'Wrong Unreal Engine version was not rejected before build' }
+            '{"MajorVersion":5,"MinorVersion":8,"PatchVersion":4}' | Set-Content -LiteralPath $versionFile
+            $expected = $false
+            try {
+              & ./unreal/Tools/Verify-Unreal.ps1 -EngineRoot $fakeRoot -ExpectedHead ('0' * 40)
+            } catch {
+              if ($_.Exception.Message -match 'Source HEAD differs from the explicitly requested review commit') { $expected = $true } else { throw }
+            }
+            if (-not $expected) { throw 'Incorrect exact SHA was not rejected before build' }
+            Write-Output "PASS: wrong-engine and wrong-SHA holds (synthetic files only; no UBT/UE)"
+          } finally {
+            if (Test-Path -LiteralPath $fakeRoot) { Remove-Item -LiteralPath $fakeRoot -Recurse -Force }
+          }
       - name: Reject detached Game startup false-positive and BufferReader crash logs
         run: python3 -m unittest discover -s unreal/Tools -p 'test_unreal_game_startup_log.py' -v
       - name: Compile and exercise actual DesignOnly C++ adapter (API doubles, not Unreal)
