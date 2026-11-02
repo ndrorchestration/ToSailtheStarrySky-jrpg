@@ -89,6 +89,37 @@ class ShipFormNamingTests(unittest.TestCase):
             self.assertIn('EAureateWakeForm::'+internal,native)
             self.assertIn('TEXT("'+display+'")',native)
 
+    def test_native_verifier_fail_closed_resource_and_provenance_contract(self):
+        source=ROOT/"Tools"/"Verify-StarbourneNames.ps1"
+        self.assertTrue(source.is_file())
+        contract=source.read_text(encoding="utf-8")
+        for requirement in (
+            "[switch]$PreflightOnly",
+            "6442450944",
+            "Get-CimInstance Win32_OperatingSystem",
+            "Get-CimInstance Win32_Process",
+            "UnrealEditor.exe",
+            "UnrealEditor-Cmd.exe",
+            "LiveCodingConsole.exe",
+            "UnrealBuildTool",
+            "Git-Identity",
+            "status --porcelain",
+            "exit 20",
+            "Check-UnrealHost.ps1",
+            "-NoLiveCoding",
+            "-NoHotReloadFromIDE",
+            "FormDisplayNames",
+            "AutomationReport",
+            "fullTestPath",
+            "verified.json",
+            "starbourne_gameplay_unlocked = $false",
+            "creator_model_approved = $false",
+        ):
+            self.assertIn(requirement,contract)
+        for forbidden in ("Stop-Process", "Remove-Item", "wing = true", "Install-Module",
+                          "Start-Process EpicGamesLauncher"):
+            self.assertNotIn(forbidden,contract)
+
     def test_no_new_gameplay_or_forced_form_change(self):
         self.assertNotIn("bAllowOrbiterPreview = true",self.header)
         self.assertNotIn("EAureateWakeForm::Starbourne",self.header)
