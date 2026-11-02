@@ -37,4 +37,7 @@ private:
     void QuickSave();
     void QuickLoad();
     void ShowObjectiveReview();
+    // PIE reviews never inherit another session's quicksave ownership.
+    UPROPERTY(Transient)
+    bool bPIEReviewQuickSlotOwned = false;
 };
