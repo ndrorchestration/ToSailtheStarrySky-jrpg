@@ -165,3 +165,20 @@ project files is authorized.
 ## Safe native map admission after Editor sessions are idle
 
 Read [native V2 Prelude map QA instructions](FIRST_WAKE_NATIVE_MAP_ADMISSION_2026-11-02.md) before executing `unreal/Tools/verify_pr713_native_prelude_map.py`. The source-only and Windows negative controls passed, but the first native map-check build attempt was **blocked by Live Coding**. The updated `Verify-Unreal.ps1` now refuses to compete with active Unreal/Live Coding processes **before** creating new evidence or starting UBT. Do **not** close someone else's Editor, disable Live Coding to force a pass, or infer P01–P13 from Python map inspection. Preserve the prior 25/25 exact-head receipt separately.
+
+
+## New source-locked Prelude Editor map launcher (2026-11-02)
+
+For the next independent native map/actor step, follow
+[the full map QA admission guide](FIRST_WAKE_NATIVE_MAP_ADMISSION_2026-11-02.md).
+`unreal/Tools/Invoke-NativePreludeMapQA.ps1` checks a named disposable
+worktree, exact HEAD, UE 5.8.4, unchanged map/config SHA-256,
+existing-save isolation, tracked read-only INIs, and **no active
+Unreal Editor/Live Coding sessions** before any execution.
+Run `-PreflightOnly` first (no side effects). A successful
+`Verify-Unreal.ps1 -SkipTests` at the **same exact HEAD** now creates
+`verified-build.json` only after a clean successful native build.
+Only then is the opt-in Python Editor map QA runnable via the launcher.
+The actual map/actor check is **NOT TESTED** at current integration
+head while other Editors remain active. Neither build-only nor map
+inspection can satisfy P01–P13 genuine PIE or ship-water physics.
