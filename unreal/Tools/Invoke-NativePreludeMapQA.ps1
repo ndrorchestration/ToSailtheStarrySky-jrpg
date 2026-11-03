@@ -88,16 +88,24 @@ $BuildApproved = $false
 foreach ($receipt in $BuildReceipts) {
     $headFile = Join-Path $receipt.FullName 'head.txt'
     $logFile = Join-Path $receipt.FullName 'build.log'
-    if ((Test-Path -LiteralPath $headFile) -and
-        (Test-Path -LiteralPath $logFile) -and
+    $verifiedBuild = Join-Path $receipt.FullName 'verified-build.json'
+    if ((Test-Path -LiteralPath $headFile -PathType Leaf) -and
+        (Test-Path -LiteralPath $logFile -PathType Leaf) -and
+        (Test-Path -LiteralPath $verifiedBuild -PathType Leaf) -and
         ((Get-Content -LiteralPath $headFile -Raw).Trim() -eq $Head)) {
-        # Check only that a run was issued; its success still requires the
-        # review operator to inspect Verify-Unreal's exit status/log.
-        $BuildApproved = $true
+        $ReceiptData = Get-Content -LiteralPath $verifiedBuild -Raw |
+            ConvertFrom-Json -ErrorAction Stop
+        if ($ReceiptData.status -eq 'WIN64_EDITOR_BUILD_PASS_CLEAN_SOURCE' -and
+            $ReceiptData.source_sha -eq $Head -and
+            $ReceiptData.unreal_version -eq '5.8.4' -and
+            $ReceiptData.native_automations -eq 'NOT_TESTED' -and
+            $ReceiptData.pie_player_input -eq 'NOT_TESTED') {
+            $BuildApproved = $true
+        }
     }
 }
 if (-not $BuildApproved) {
-    throw 'HOLD: exact-SHA build receipt files absent or inconsistent'
+    throw 'HOLD: no exact-SHA verified build-only success receipt from Verify-Unreal.ps1 -SkipTests'
 }
 $OutputRoot = Join-Path $ProjectDir 'Saved/NativePreludeMapQA'
 $BeforeReceipts = @{}
