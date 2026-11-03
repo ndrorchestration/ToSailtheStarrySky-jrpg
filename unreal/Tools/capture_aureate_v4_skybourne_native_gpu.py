@@ -6,6 +6,8 @@ approval, user Editor/PIE action or final-cinematic appearance implied.
 from pathlib import Path
 import hashlib
 import json
+import os
+import re
 import struct
 import traceback
 import unreal
@@ -16,7 +18,10 @@ MAP="/Game/TSTSS/Review/Scenes/AureateCinematicV4_Skybourne_Hero_20261103_FullEd
 MAP_FILE=PROJECT/"Content"/"TSTSS"/"Review"/"Scenes"/"AureateCinematicV4_Skybourne_Hero_20261103_FullEditor.umap"
 MAP_SHA="16bb93fb9bdd2a4e1559864df908122094fe8a641b4a1481f2935d64ba184c40"
 CAMERA="V4_NONCANONICAL_CAMERA_THREE_QUARTER"
-DIR=ROOT/"SkybourneV4NativeGPU_20261103"
+ATTEMPT=os.environ.get("TSTSS_V4_CAPTURE_ATTEMPT","")
+if not re.fullmatch(r"[a-z][a-z0-9_]{2,18}",ATTEMPT):
+    raise RuntimeError("Capture requires a unique validated attempt label")
+DIR=ROOT/("SkybourneV4NativeGPU_20261103_"+ATTEMPT)
 PNG=DIR/"Skybourne_V4_UE584_D3D11_ThreeQuarter_REVIEW.png"
 RECEIPT=DIR/"native_skybourne_gpu_capture_receipt.json"
 info={"state":"NOT_STARTED",
