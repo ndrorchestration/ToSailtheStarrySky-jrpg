@@ -121,6 +121,20 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Bridge Review")
     TObjectPtr<UStaticMeshComponent> LivingQuartersEnvelope;
 
+    /** REVIEW ONLY: named scene frames, without furnishings, collision or gameplay access. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Interior Review")
+    TObjectPtr<USceneComponent> BridgeHelmReviewAnchor;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Interior Review")
+    TObjectPtr<USceneComponent> QuartersDeckReviewAnchor;
+
+    /** Fixed-hull service and boarding anchors; neither asserts a walkable passage. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Interior Review")
+    TObjectPtr<USceneComponent> FixedEngineeringReviewAnchor;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Interior Review")
+    TObjectPtr<USceneComponent> FixedBoardingReviewAnchor;
+
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Preview")
     TArray<TObjectPtr<UStaticMeshComponent>> Wings;
 

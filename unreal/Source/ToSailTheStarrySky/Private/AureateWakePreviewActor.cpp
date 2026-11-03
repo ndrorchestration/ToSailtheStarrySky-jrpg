@@ -49,6 +49,23 @@ AAureateWakePreviewActor::AAureateWakePreviewActor()
     LivingQuartersEnvelope->SetRelativeScale3D(FVector(2.2, 1.15, .35));
     LivingQuartersEnvelope->SetVisibility(false); // No added default art or habitation geometry.
 
+    // These are attachment *frames*, not inhabited rooms or mechanical devices.
+    // Do not attach to the scaled mesh cubes: a child's world scale would inherit
+    // those placeholder dimensions and mislead downstream authored assets.
+    BridgeHelmReviewAnchor = CreateDefaultSubobject<USceneComponent>(TEXT("BridgeHelmReviewAnchor"));
+    BridgeHelmReviewAnchor->SetupAttachment(BridgeHabitationPivot);
+    BridgeHelmReviewAnchor->SetRelativeLocation(FVector(240, 0, 95));
+
+    QuartersDeckReviewAnchor = CreateDefaultSubobject<USceneComponent>(TEXT("QuartersDeckReviewAnchor"));
+    QuartersDeckReviewAnchor->SetupAttachment(BridgeHabitationPivot);
+    QuartersDeckReviewAnchor->SetRelativeLocation(FVector(0, 0, -25));
+
+    FixedEngineeringReviewAnchor = CreateDefaultSubobject<USceneComponent>(TEXT("FixedEngineeringReviewAnchor"));
+    FixedEngineeringReviewAnchor->SetupAttachment(VesselRoot);
+    FixedBoardingReviewAnchor = CreateDefaultSubobject<USceneComponent>(TEXT("FixedBoardingReviewAnchor"));
+    FixedBoardingReviewAnchor->SetupAttachment(VesselRoot);
+    // Fixed-hull anchor positions remain un-authored, at the root origin.
+
     // Exactly four persistent, independently articulated, dragonfly-derived wings.
     for (int32 Index = 0; Index < 4; ++Index)
     {
@@ -135,7 +152,9 @@ FQuat AAureateWakePreviewActor::HabitationReviewRotationForForm(EAureateWakeForm
 bool AAureateWakePreviewActor::RefreshCentralBridgeHabitationReview()
 {
     if (bTransitioning || CurrentForm == EAureateWakeForm::Orbiter ||
-        !BridgeHabitationPivot || !ForwardBridge || !LivingQuartersEnvelope)
+        !BridgeHabitationPivot || !ForwardBridge || !LivingQuartersEnvelope ||
+        !BridgeHelmReviewAnchor || !QuartersDeckReviewAnchor ||
+        !FixedEngineeringReviewAnchor || !FixedBoardingReviewAnchor)
     {
         return false;
     }
@@ -154,6 +173,7 @@ bool AAureateWakePreviewActor::RefreshCentralBridgeHabitationReview()
         // Real pressure seals, access corridors and vessel clearance are HOLD.
         BridgeHabitationPivot->SetRelativeLocation(FVector(0, 0, 50));
         ForwardBridge->SetRelativeLocation(FVector(0, 0, 80));
+        BridgeHelmReviewAnchor->SetRelativeLocation(FVector(0, 0, 80));
         LivingQuartersEnvelope->SetVisibility(true);
         BridgeHabitationPivot->SetRelativeRotation(HabitationReviewRotationForForm(CurrentForm));
     }
@@ -163,6 +183,7 @@ bool AAureateWakePreviewActor::RefreshCentralBridgeHabitationReview()
         BridgeHabitationPivot->SetRelativeLocation(FVector::ZeroVector);
         BridgeHabitationPivot->SetRelativeRotation(FQuat::Identity);
         ForwardBridge->SetRelativeLocation(FVector(240, 0, 95));
+        BridgeHelmReviewAnchor->SetRelativeLocation(FVector(240, 0, 95));
         LivingQuartersEnvelope->SetVisibility(false);
     }
     return true;

@@ -1,0 +1,325 @@
+{
+  "schema": "tstss.aureate-internals.review.v1",
+  "authority": "NONCANONICAL_UNREAL_ENGINEERING_REVIEW_NOT_PRODUCTION",
+  "source_branch_base": "fix/ue58-bridge-review-nonfinite-angle-guard-20261101",
+  "actor": "AAureateWakePreviewActor",
+  "display_forms": [
+    "Skybourne",
+    "Seabourne",
+    "Submersible",
+    "Starbourne"
+  ],
+  "serialized_forms": [
+    "Skyborne",
+    "Seaborne",
+    "Submersible",
+    "Orbiter"
+  ],
+  "review_permissions": {
+    "enabled_by_default": false,
+    "crew_walkable": false,
+    "life_support_operational": false,
+    "pressure_rated": false,
+    "rotating_coupler_operational": false,
+    "starbourne_unlocked": false,
+    "native_approval": false,
+    "creator_art_approved": false
+  },
+  "geometry": {
+    "quarters_proxy_extents_cm": [
+      220.0,
+      115.0,
+      35.0
+    ],
+    "minimum_review_headroom_cm": 180.0,
+    "habitation_verdict": "HOLD_NONHABITABLE_PROXY",
+    "dimensions_are_canon": false
+  },
+  "anchors": [
+    {
+      "zone": "bridge",
+      "component": "BridgeHelmReviewAnchor",
+      "parent": "BridgeHabitationPivot",
+      "crew_access_verified": false
+    },
+    {
+      "zone": "quarters",
+      "component": "QuartersDeckReviewAnchor",
+      "parent": "BridgeHabitationPivot",
+      "crew_access_verified": false
+    },
+    {
+      "zone": "engineering",
+      "component": "FixedEngineeringReviewAnchor",
+      "parent": "VesselRoot",
+      "crew_access_verified": false
+    },
+    {
+      "zone": "boarding",
+      "component": "FixedBoardingReviewAnchor",
+      "parent": "VesselRoot",
+      "crew_access_verified": false
+    }
+  ],
+  "interfaces": [
+    {
+      "from": "bridge",
+      "to": "quarters",
+      "type": "SHARED_ROTATING_PIVOT",
+      "status": "ATTACHMENT_ONLY_NO_CREW_ACCESS"
+    },
+    {
+      "from": "quarters",
+      "to": "engineering",
+      "type": "ROTATING_TO_FIXED_COUPLER",
+      "status": "HOLD_SEAL_AND_WALKWAY_UNVERIFIED"
+    },
+    {
+      "from": "engineering",
+      "to": "boarding",
+      "type": "FIXED_HULL_SERVICE_ROUTE",
+      "status": "HOLD_WALKWAY_UNVERIFIED"
+    }
+  ],
+  "systems": [
+    {
+      "id": "helm_controls",
+      "zone": "bridge",
+      "depends_on": [
+        "power_bus"
+      ],
+      "review_state": "DESIGN_ONLY",
+      "gameplay_enabled": false,
+      "description": "Pilot helm, crew controls and flight status"
+    },
+    {
+      "id": "navigation_star_charts",
+      "zone": "bridge",
+      "depends_on": [
+        "helm_controls",
+        "power_bus"
+      ],
+      "review_state": "DESIGN_ONLY",
+      "gameplay_enabled": false,
+      "description": "Navigation charts, auroral plotting and route planning"
+    },
+    {
+      "id": "comms_and_sensors",
+      "zone": "bridge",
+      "depends_on": [
+        "power_bus"
+      ],
+      "review_state": "DESIGN_ONLY",
+      "gameplay_enabled": false,
+      "description": "Communications and external environment awareness"
+    },
+    {
+      "id": "bridge_instruments",
+      "zone": "bridge",
+      "depends_on": [
+        "helm_controls"
+      ],
+      "review_state": "DESIGN_ONLY",
+      "gameplay_enabled": false,
+      "description": "Readouts and instrument panels"
+    },
+    {
+      "id": "crew_berths",
+      "zone": "quarters",
+      "depends_on": [],
+      "review_state": "DESIGN_ONLY",
+      "gameplay_enabled": false,
+      "description": "Reversible crew sleeping spaces, capacity unverified"
+    },
+    {
+      "id": "galley_common_space",
+      "zone": "quarters",
+      "depends_on": [
+        "water_recovery"
+      ],
+      "review_state": "DESIGN_ONLY",
+      "gameplay_enabled": false,
+      "description": "Cooking, meal and shared social space"
+    },
+    {
+      "id": "sanitation_water",
+      "zone": "quarters",
+      "depends_on": [
+        "water_recovery"
+      ],
+      "review_state": "DESIGN_ONLY",
+      "gameplay_enabled": false,
+      "description": "Waste/sanitation fixtures"
+    },
+    {
+      "id": "child_safe_space",
+      "zone": "quarters",
+      "depends_on": [
+        "crew_berths"
+      ],
+      "review_state": "DESIGN_ONLY",
+      "gameplay_enabled": false,
+      "description": "Space safe for Talen, not designed or approved"
+    },
+    {
+      "id": "cabin_atmosphere",
+      "zone": "quarters",
+      "depends_on": [
+        "air_recirculation"
+      ],
+      "review_state": "DESIGN_ONLY",
+      "gameplay_enabled": false,
+      "description": "Distribution of breathable cabin atmosphere"
+    },
+    {
+      "id": "crew_emergency_supplies",
+      "zone": "quarters",
+      "depends_on": [],
+      "review_state": "DESIGN_ONLY",
+      "gameplay_enabled": false,
+      "description": "First aid and emergency stores"
+    },
+    {
+      "id": "power_bus",
+      "zone": "engineering",
+      "depends_on": [],
+      "review_state": "DESIGN_ONLY",
+      "gameplay_enabled": false,
+      "description": "Switching and monitored low-voltage power distribution"
+    },
+    {
+      "id": "harmonic_levitation_engine",
+      "zone": "engineering",
+      "depends_on": [
+        "power_bus"
+      ],
+      "review_state": "DESIGN_ONLY",
+      "gameplay_enabled": false,
+      "description": "First Wake levitation-engine service and diagnostics; no combat magic"
+    },
+    {
+      "id": "four_wing_actuators",
+      "zone": "engineering",
+      "depends_on": [
+        "power_bus"
+      ],
+      "review_state": "DESIGN_ONLY",
+      "gameplay_enabled": false,
+      "description": "Four mechanical wing-control pathways"
+    },
+    {
+      "id": "two_hydrofoil_drives",
+      "zone": "engineering",
+      "depends_on": [
+        "power_bus"
+      ],
+      "review_state": "DESIGN_ONLY",
+      "gameplay_enabled": false,
+      "description": "Two Seabourne hydrofoil deployments and their supports"
+    },
+    {
+      "id": "submersible_ballast",
+      "zone": "engineering",
+      "depends_on": [
+        "power_bus"
+      ],
+      "review_state": "DESIGN_ONLY",
+      "gameplay_enabled": false,
+      "description": "Proposed ballast and submerged stability controls"
+    },
+    {
+      "id": "pressure_integrity",
+      "zone": "engineering",
+      "depends_on": [],
+      "review_state": "DESIGN_ONLY",
+      "gameplay_enabled": false,
+      "description": "Hull/bridge pressure, penetration and emergency-seal monitoring"
+    },
+    {
+      "id": "air_recirculation",
+      "zone": "engineering",
+      "depends_on": [
+        "power_bus",
+        "pressure_integrity"
+      ],
+      "review_state": "DESIGN_ONLY",
+      "gameplay_enabled": false,
+      "description": "Breathable air service; NOT operational"
+    },
+    {
+      "id": "water_recovery",
+      "zone": "engineering",
+      "depends_on": [
+        "power_bus"
+      ],
+      "review_state": "DESIGN_ONLY",
+      "gameplay_enabled": false,
+      "description": "Reclaimed/fresh water transfer and safety"
+    },
+    {
+      "id": "thermal_management",
+      "zone": "engineering",
+      "depends_on": [
+        "power_bus"
+      ],
+      "review_state": "DESIGN_ONLY",
+      "gameplay_enabled": false,
+      "description": "Heat removal for crew and machinery"
+    },
+    {
+      "id": "fire_detection",
+      "zone": "engineering",
+      "depends_on": [
+        "power_bus"
+      ],
+      "review_state": "DESIGN_ONLY",
+      "gameplay_enabled": false,
+      "description": "Isolation and detection, no suppression implementation"
+    },
+    {
+      "id": "maintenance_access",
+      "zone": "engineering",
+      "depends_on": [],
+      "review_state": "DESIGN_ONLY",
+      "gameplay_enabled": false,
+      "description": "Service clearances for engine, hydrofoils and wing roots"
+    },
+    {
+      "id": "starbourne_sail_system",
+      "zone": "engineering",
+      "depends_on": [
+        "power_bus"
+      ],
+      "review_state": "DESIGN_ONLY",
+      "gameplay_enabled": false,
+      "description": "Future radial metamaterial solar/light-sail systems; LOCKED"
+    },
+    {
+      "id": "boarding_interface",
+      "zone": "boarding",
+      "depends_on": [],
+      "review_state": "DESIGN_ONLY",
+      "gameplay_enabled": false,
+      "description": "Boarding/foredeck interface without approved hatch geometry"
+    },
+    {
+      "id": "emergency_egress",
+      "zone": "boarding",
+      "depends_on": [
+        "boarding_interface"
+      ],
+      "review_state": "DESIGN_ONLY",
+      "gameplay_enabled": false,
+      "description": "Emergency exit paths; MUST be verified physically"
+    }
+  ],
+  "acceptance": {
+    "native_unreal_build": "NOT_TESTED_AT_THIS_HEAD",
+    "native_automation": "NOT_TESTED_AT_THIS_HEAD",
+    "walkable_crew_route": "NOT_TESTED",
+    "motion_swept_clearance": "NOT_TESTED",
+    "evacuation_and_child_safety": "NOT_TESTED",
+    "approved_interior_art": "NOT_APPROVED",
+    "release": "NOT_AUTHORIZED"
+  }
+}
