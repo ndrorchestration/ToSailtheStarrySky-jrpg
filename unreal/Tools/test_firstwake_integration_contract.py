@@ -13,6 +13,7 @@ TEST = ROOT / "Source/ToSailTheStarrySky/Private/Tests/TSTSSFirstWakeInteraction
 MILESTONE = ROOT / "Source/ToSailTheStarrySky/Private/TSTSSMilestoneActor.cpp"
 WATER = ROOT / "Source/ToSailTheStarrySky/Private/TSTSSWaterLandingGate.cpp"
 STATE = ROOT / "Source/ToSailTheStarrySky/Public/TSTSSFirstWakeState.h"
+OBJECTIVES = ROOT / "Source/ToSailTheStarrySky/Private/TSTSSFirstWakeState.cpp"
 VERIFIER = ROOT / "Tools/Verify-Unreal.ps1"
 
 TEST_MARKERS = (
@@ -39,6 +40,22 @@ TEST_MARKERS = (
     'Snapshot->IsStructurallyValid()',
     'Restored->Restore(Snapshot->bFirstWakeStarted',
     'New game reset returns to Prelude',
+    'Opening objective prompts Ender toward flyer',
+    'Flyer changes objective to Captain Ionia',
+    'Rejected flyer keeps Ionia objective',
+    'Ionia hiring changes objective to ship boarding',
+    'Boarding prompts lift inspection',
+    'Lift check prompts pressure inspection',
+    'Duplicate lift preserves pressure objective',
+    'Pressure check prompts reserve inspection',
+    'Three inspections prompt engineering signoff',
+    'Engineering signoff prompts launch',
+    'Launch objective remains in Prelude flight',
+    'Sea contact prompts landing stabilization',
+    'Splashdown objective prompts empty reserve investigation',
+    'Reserve inspection prompts berth recovery',
+    'Recovered story has final review objective',
+    'Reset restores first objective',
     'World->DestroyWorld(false)',
 )
 ACTOR_MARKERS = (
@@ -57,12 +74,28 @@ STORY_MARKERS = (
     'return bStarted && static_cast<uint8>(CurrentBeat) >=',
     'static_cast<uint8>(ETSTSSFirstWakeBeat::FlotationConfirmed);',
 )
+OBJECTIVE_MARKERS = (
+    'return TEXT("Find Ionia\'s flyer");',
+    'return TEXT("Speak with Captain Ionia");',
+    'return TEXT("Board the Aureate Wake");',
+    'return TEXT("Inspect the levitation lift");',
+    'return TEXT("Inspect the pressure systems");',
+    'return TEXT("Inspect the reserve systems");',
+    'return TEXT("Complete engineering signoff");',
+    'return TEXT("Prepare for the First Wake launch");',
+    'return TEXT("Navigate the First Wake flight");',
+    'return TEXT("Stabilize the water landing");',
+    'return TEXT("Investigate the empty reserves");',
+    'return TEXT("Return to berth");',
+    'return TEXT("First Wake review sequence complete");',
+)
 
 def contract(sources):
     misses = []
     for key, required in (
         ("test", TEST_MARKERS), ("actor", ACTOR_MARKERS),
         ("water", WATER_MARKERS), ("story", STORY_MARKERS),
+        ("objectives", OBJECTIVE_MARKERS),
     ):
         for marker in required:
             if marker not in sources[key]:
@@ -84,7 +117,7 @@ class FirstWakeContractTests(unittest.TestCase):
             key: path.read_text(encoding="utf-8")
             for key, path in {
                 "test": TEST, "actor": MILESTONE, "water": WATER,
-                "story": STATE, "verify": VERIFIER,
+                "story": STATE, "objectives": OBJECTIVES, "verify": VERIFIER,
             }.items()
         }
 
@@ -123,6 +156,21 @@ class FirstWakeContractTests(unittest.TestCase):
         mutated["test"] = mutated["test"].replace(
             "Generic interaction cannot manufacture flotation",
             "Generic interaction can forge flotation", 1)
+        self.assertTrue(contract(mutated))
+
+    def test_removed_first_wake_objective_assertion_fails(self):
+        mutated = dict(self.sources)
+        mutated["test"] = mutated["test"].replace(
+            "Sea contact prompts landing stabilization", "Objective not tested", 1
+        )
+        self.assertTrue(contract(mutated))
+
+    def test_changed_objective_timing_fails(self):
+        mutated = dict(self.sources)
+        mutated["objectives"] = mutated["objectives"].replace(
+            'return TEXT("Stabilize the water landing");',
+            'return TEXT("Investigate the empty reserves");', 1
+        )
         self.assertTrue(contract(mutated))
 
     def test_native_report_inventory_negative_control(self):
