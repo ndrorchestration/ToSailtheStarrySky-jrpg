@@ -154,3 +154,24 @@ The **committed V2 `.umap` is unchanged**. This does not prove that
 P02/P03 work with actual player movement, E camera traces, terrain
 collision, occlusion or dynamic actors. Those specific interactive
 cases remain NOT TESTED until recorded in real Editor PIE.
+
+## November 3 — real-world position and marker scale admission prerequisite
+
+The separate, read-only native Editor map checker now requires that
+the **actual loaded milestone actor transforms**, spawn and traversal
+floor agree (within 1 cm) with the authored Prelude blockout. It
+checks actual marker proxy scales to prevent a larger collision target
+from invalidating the claimed starting distance, measured floor
+coverage for seven marker footprints and an initial nearest horizontal
+flyer edge beyond 300 cm. This is a prerequisite for interpreting
+P02/P03 movement/reach scenarios, not a substitute for the actual
+E interaction, player-centered reach, occlusion/camera direction,
+collision and UI acceptance criteria.
+
+Source-side verification on Windows: 31/31 actual-checker behavior
+cases, 8/8 admission checks and 37/37 synthetic native report
+fixtures PASS at code SHA
+`127667c48045f06f82f23d98faafe35eca3df6a3`.
+**Actual Editor map inspection and P01–P13 keyboard PIE remain NOT
+TESTED** while other Unreal Editor/Live Coding sessions are active.
+No committed map, SaveGame, art or engine dependency was changed.
