@@ -64,6 +64,12 @@ jobs:
           python3 -m unittest discover -s unreal/ArtSource/Characters -p test_ender_v5_geometric_pairs.py -v
           python3 unreal/ArtSource/Characters/verify_ender_v5_geometric_pairs.py
 
+      - name: Check isolated V5 eye-authoring and face-repeatability scripts compile (engine-free)
+        run: |
+          python3 -m py_compile unreal/ArtSource/Characters/native_ender_v5_green_iris_mh4_study.py
+          python3 -m py_compile unreal/ArtSource/Characters/verify_native_ender_v5_green_iris.py
+          python3 -m py_compile unreal/ArtSource/Characters/verify_native_ender_v5_face_repeatability.py
+
       - name: Regenerate source assets and confirm exact bytes
         env:
           TSTSS_CAST_OUTPUT: unreal/ArtSource/Characters/Candidates
