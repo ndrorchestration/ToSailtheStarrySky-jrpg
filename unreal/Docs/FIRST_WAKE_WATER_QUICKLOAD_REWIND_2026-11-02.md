@@ -21,3 +21,23 @@ In a separately authorized disposable UE 5.8.4 checkout at the exact candidate h
 A separate native fixture must use disposable story-only saves to restore both an earlier `Launched` snapshot and a `SeaContact` snapshot while the hull remains immersed. Verify contact reacquisition and two fresh stable seconds after each restore, dry/fast/interrupted-contact cases, actual save results, unchanged player-save hashes, and clean tracked source. Do not use genuine player saves. Native UHT/build, automation, real quickload/overlap behavior, and physical seawater acceptance remain **NOT TESTED for this change** in the Linux sandbox.
 
 No merge, release, packaged-runtime, cinematic-art, or Chapter 1 completion approval is implied.
+
+## Connected Windows MSVC source review — 2026-11-02
+
+A separate, disposable Windows checkout at exact PR #717 head
+`fc746719f7ccfee213e5dfb21dfdc632ae43158b` adds a narrow MSVC
+fallback to `check_water_landing_rewind_compiled.py` (review-only child branch
+`review/ue58-firstwake-water-msvc-20261102`). Using the installed VS 2022
+Build Tools developer environment, `python -B
+unreal/Tools/check_water_landing_rewind_compiled.py --self-test` compiled and
+executed the production state/gate C++ and repository water-test bodies:
+**310 assertions PASS**. The deliberately removed restore-generation guard
+compiled and failed the exact expected same-beat regression assertion.
+`python -B -m unittest discover -s unreal/Tools -p 'test_*.py'`
+completed **123 tests PASS**; `git diff --check` passed.
+
+This adds Windows source-level portability evidence only. The host's existing
+Unreal Editor sessions were left running and no full native build, UHT,
+automation suite, physical water behavior, PIE quickload, or player-save file
+was exercised. The original #717 candidate remains draft/unmerged, and
+no prior native result transfers to this child branch.
