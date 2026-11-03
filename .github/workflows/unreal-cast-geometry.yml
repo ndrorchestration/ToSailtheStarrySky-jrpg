@@ -106,6 +106,8 @@ jobs:
           python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/RenderTargetPipeline/native_rt_ender_v5_goggles01.py
           python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/RenderTargetPipeline/verify_native_rt_v5_goggles.py
           python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/RenderTargetPipeline/make_rt_preview_mobile.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/RenderTargetPipeline/native_rt_ender_v5_goggles_exposure_minus2.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/RenderTargetPipeline/compare_rt_exposure_minus2.py
 
       - name: Regenerate source assets and confirm exact bytes
         env:
