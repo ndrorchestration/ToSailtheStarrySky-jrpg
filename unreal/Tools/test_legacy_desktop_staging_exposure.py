@@ -112,7 +112,7 @@ def check_boundary(
         "BINARY CONTENT AND TRANSITIVE RUNTIME EXPOSURE NOT VERIFIED",
         "SOURCE-ONLY STAGING PLAN INSPECTED",
         "SECURITY HOLD",
-        "no direct literal imports",
+        "zero direct literal imports",
         "No downloaded archived release binary",
         "No live legacy game or uninstaller was run",
     ):
@@ -134,7 +134,7 @@ class LegacyDesktopStagingExposureTests(unittest.TestCase):
             for p in (ROOT / "modules").rglob("*") if p.is_file()
         )
         cls.app_texts = {
-            str(p): p.read_text(encoding="utf-8")
+            p.relative_to(ROOT).as_posix(): p.read_text(encoding="utf-8")
             for p in [*(ROOT / x for x in SOURCE_FILES), *(ROOT / x for x in cls.modules)]
             if p.suffix in (".js", ".cjs", ".mjs", ".html", ".css", ".json")
         }
