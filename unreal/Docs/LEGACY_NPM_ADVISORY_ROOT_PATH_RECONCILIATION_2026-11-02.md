@@ -1,6 +1,6 @@
 # Legacy npm advisory and root-dependency mapping — 2026-11-02
 
-**Status: READ-ONLY SECURITY TRIAGE, NOT REMEDIATION OR SHIPPING CLEARENCE.** Review-only child of [draft #725](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/725), which follows #723 and #711. This note does not modify any dependency or establish that a vulnerable package appears in any distributed application. The [historical NSIS security hold #293](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/issues/293) remains active.
+**Status: READ-ONLY SECURITY TRIAGE, NOT REMEDIATION OR SHIPPING CLEARANCE.** Review-only child of [draft #725](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/725), which follows #723 and #711. This note does not modify any dependency or establish that a vulnerable package appears in any distributed application. The [historical NSIS security hold #293](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/issues/293) remains active.
 
 ## Evidence provenance and source boundary
 
