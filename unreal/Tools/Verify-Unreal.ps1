@@ -119,6 +119,7 @@ $RequiredTests = @(
     'TSTSS.FirstWake.ReviewObjectivesAreReadOnly',
     'TSTSS.Combat.EncounterCompletion',
     'TSTSS.FirstWake.RequiresOrderedMilestones',
+    'TSTSS.FirstWake.InteractionToSplashdown',
     'TSTSS.FirstWake.WaterLandingRequiresMeasuredStability',
     'TSTSS.FirstWake.WaterLandingRestore',
     'TSTSS.FirstWake.WaterLandingNegativePaths',
