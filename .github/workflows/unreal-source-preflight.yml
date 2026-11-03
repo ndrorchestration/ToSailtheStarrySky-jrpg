@@ -150,3 +150,5 @@ jobs:
         run: python3 -m unittest discover -s unreal/Tools -p 'test_unreal_game_startup_log.py' -v
       - name: Compile and exercise actual DesignOnly C++ adapter (API doubles, not Unreal)
         run: python3 unreal/Tools/check_combat_design_only_compiled.py
+      - name: First Wake interaction-to-Splashdown authority contract (source only)
+        run: python3 unreal/Tools/test_firstwake_integration_contract.py
