@@ -2,6 +2,12 @@
 
 **November 3, 2026; Unreal Engine 5.8.4.** All results belong to isolated V4 preview work, not gameplay, SaveGame, released actor, creator-approved art or protected-main merge.
 
+## 2026-11-03 follow-up: named Python automation capture controller (SOURCE ONLY)
+
+A separate reversible review branch, `review/ue58-aureate-v4-registered-gpu-evidence-20261103`, adds `unreal/Tools/run_aureate_v4_registered_gpu_capture.py` and eight engine-free regression scenarios. The new runner uses a temporary sibling UE project descriptor (so the original `.uproject` is untouched), enables only bundled editor Python automation for that attempt, stages a uniquely named `Content/Python/test_*.py` in the disposable sandbox, runs the specific `Editor.Python` test, and requires a matching per-test Automation JSON success PLUS a native receipt/PNG hash and dimensions. Original V4 map SHA, RAM/disk/concurrency/timeout watchdogs and unchanged temporary staging safeguards remain mandatory. No third-party dependency is installed.
+
+**Status: source implementation/preflight only, NOT a verified native GPU execution.** The 8/8 fixture tests passed in an isolated local Python mock layout before push; hosted exact-head CI must be checked separately. The test path registration and actual screenshot task await native UE 5.8.4. Valid PNG evidence would still require independent pixel-content/exposure/atmosphere checks and creator visual acceptance. Do not mark RCV-01 through RCV-09 done or transfer an old image to this head.
+
 ## Four-map read-only native audit — PASS
 
 Previously saved V4 review maps were loaded read-only in a single Unreal Editor NullRHI session. Their file SHA-256 digests were checked before and after loading. No actors were moved or saved.
