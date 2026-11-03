@@ -161,3 +161,7 @@ requires its own exact-head evidence. On a fresh *separate* worktree,
 test source-protected INIs or another proven non-writing Unreal invocation,
 and re-run full checks. No auto-reset or deletion of existing modified
 project files is authorized.
+
+## Safe native map admission after Editor sessions are idle
+
+Read [native V2 Prelude map QA instructions](FIRST_WAKE_NATIVE_MAP_ADMISSION_2026-11-02.md) before executing `unreal/Tools/verify_pr713_native_prelude_map.py`. The source-only and Windows negative controls passed, but the first native map-check build attempt was **blocked by Live Coding**. The updated `Verify-Unreal.ps1` now refuses to compete with active Unreal/Live Coding processes **before** creating new evidence or starting UBT. Do **not** close someone else's Editor, disable Live Coding to force a pass, or infer P01–P13 from Python map inspection. Preserve the prior 25/25 exact-head receipt separately.
