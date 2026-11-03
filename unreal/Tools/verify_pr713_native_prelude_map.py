@@ -122,6 +122,13 @@ def verify_world_geometry(stop_actors: dict, player_start, floor) -> dict:
         if entry is None:
             raise RuntimeError("HOLD: unexpected Editor milestone label " + label)
         matches(xyz(actor, label), (entry.x, entry.y, 90.0), label)
+        # The 37.5 cm horizontal half-width used in the reach check is
+        # valid only for the 100 cm BasicShapes cube at 0.75 actor scale.
+        marker_scale = actor.get_actor_scale3d()
+        actual_scale = (float(marker_scale.x), float(marker_scale.y), float(marker_scale.z))
+        if not all(math.isfinite(v) and v > 0 for v in actual_scale):
+            raise RuntimeError("HOLD: nonfinite or invalid native marker scale: " + label)
+        matches(actual_scale, (0.75, 0.75, 1.6), "MarkerScale_" + label)
 
     start = xyz(player_start, "PlayerStart")
     matches(start, layout.PLAYER_SPAWN, "PlayerStart")
