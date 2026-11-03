@@ -75,6 +75,14 @@ jobs:
           python3 -m py_compile unreal/ArtSource/Characters/native_ender_v5_transient_preview_probe.py
           python3 -m py_compile unreal/ArtSource/Characters/native_ender_v5_transient_preview_capture.py
 
+      - name: Verify three native V5 closeup camera labels and anti-promotion controls (engine-free)
+        run: |
+          python3 -m unittest discover -s unreal/ArtSource/Characters/ReviewEvidence/2026-11-03/EnderV5FaceCloseups -p test_capture_contract.py -v
+          python3 -m py_compile unreal/ArtSource/Characters/ReviewEvidence/2026-11-03/EnderV5FaceCloseups/capture_profile_plus_x.py
+          python3 -m py_compile unreal/ArtSource/Characters/ReviewEvidence/2026-11-03/EnderV5FaceCloseups/capture_front_plus_y.py
+          python3 -m py_compile unreal/ArtSource/Characters/ReviewEvidence/2026-11-03/EnderV5FaceCloseups/capture_threequarter_plus_x_plus_y.py
+          python3 -m py_compile unreal/ArtSource/Characters/ReviewEvidence/2026-11-03/EnderV5FaceCloseups/build_native_three_angle_contact_sheet.py
+
       - name: Regenerate source assets and confirm exact bytes
         env:
           TSTSS_CAST_OUTPUT: unreal/ArtSource/Characters/Candidates
