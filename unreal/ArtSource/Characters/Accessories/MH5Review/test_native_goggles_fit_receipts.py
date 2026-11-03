@@ -126,5 +126,22 @@ class MH5FitEvidence(unittest.TestCase):
         inputs[3]["map_sha256_after"]="unverified"
         with self.assertRaises(ValueError):verify_claims(*inputs)
 
+    def test_failed_native_gpu_screenshot_not_promoted(self):
+        receipt=load("native_visual_combined01.json")
+        self.assertEqual(receipt["status"],"TIMED_OUT")
+        self.assertEqual(receipt["captures"],[])
+        self.assertEqual(receipt["source_goggles_sha256"],
+                         "76eb9696e2abf719bcfd3d467313e46136f5d92cc36cd6b3845ae447a272c1ae")
+        self.assertEqual(receipt["asset_sha256_after"],SHA_META)
+        self.assertEqual(receipt["map_sha256_after"],SHA_MAP)
+        self.assertEqual(receipt["goggles_glb_sha256_after"],SHA_GOGGLES)
+        self.assertFalse(receipt["actual_head_fit_verified"])
+        self.assertFalse(receipt["head_mesh_collision_verified"])
+        self.assertFalse(receipt["goggles_material_visual_approval"])
+        self.assertFalse(receipt["visual_likeness_approved"])
+        self.assertFalse(receipt["production_canon_promoted"])
+        self.assertFalse(receipt["asset_saved"])
+        self.assertFalse(receipt["level_saved"])
+
 if __name__=="__main__":
     unittest.main()
