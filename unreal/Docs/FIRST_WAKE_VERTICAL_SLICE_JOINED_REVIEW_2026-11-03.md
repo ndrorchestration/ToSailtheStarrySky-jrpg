@@ -58,6 +58,10 @@ The native V2 map checker and launcher used to refuse any checkout except the or
 
 The additional worktree is **not evidence of native Editor runtime by itself**. The joined checkout's preflight must show the exact SHA and correct pinned map. Require a real UE5.8.4 build-only receipt before calling the native map launcher, and a separately verified 26/26 native automation result before claiming complete source-to-engine compatibility. The original seven-stop map is only a traversable Prelude; launch, hull buoyancy, Splashdown, post-landing and cinematic art remain independent HOLD gates. See [native map admission execution and provenance](FIRST_WAKE_NATIVE_MAP_ADMISSION_2026-11-02.md).
 
+## Source-staged next gameplay experiment (separate greybox map)
+
+To begin closing the actual launch/physical landing/playability gap (rather than only extending unit tests), this draft now includes `build_first_wake_splashdown_greybox.py` and its [noncanonical stage protocol](FIRST_WAKE_SPLASHDOWN_GREYBOX_STAGE_2026-11-03.md). The **planned** isolated new map adds launch, empty-reserve and return-to-berth E interaction markers to immutable V2, and opt-in `ATSTSSWaterContactAdapter` with an off-dock simulated cube hull and tagged overlap water volume. It does **not** silently award Splashdown or expose new magic, alter the V2 `.umap`, replace any approved Aureate Wake model, recruit Lyra or unlock Starbourne. A concrete test executes the authoring method using **fake Editor API doubles** and checks that the old map bytes are preserved, the new target-only save is requested, lab actors are configured, and no SaveGame is touched. Real Editor asset creation and physics still **NOT RUN**.
+
 ## Outstanding hard gates
 
 | Gate | Status |

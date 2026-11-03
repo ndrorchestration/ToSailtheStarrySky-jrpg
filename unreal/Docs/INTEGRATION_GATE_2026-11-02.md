@@ -342,3 +342,14 @@ build/rendering for the changed HUD and all P01–P13 PIE
 scenarios remain unverified.** The older actual 25/25 native
 automation run belongs to its own exact prior SHA, not the
 current HUD source. Do not merge/promote based on portable checks.
+
+
+## November 3 — joined PR #735 handoff and opt-in Splashdown greybox source
+
+The separate [joined First Wake review draft #735](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/735) combines the Prelude/engineering state, nonshipping objective HUD, no-stale-contact water rewind/restart logic, actual physical water-adapter C++, and a 26-name native automation registry. Previous **exact-SHA source tests are not native gameplay acceptance**. See [joined-head evidence ledger](FIRST_WAKE_VERTICAL_SLICE_JOINED_REVIEW_2026-11-03.md) rather than promoting older PR #713's 25-test receipt.
+
+The original PR713 V2 native map-admission tools now have a **second narrowly named disposable PR735 native QA worktree**. This is an authorization for *safe future inspection*, not a successful engine run. [Read-only/native handoff](FIRST_WAKE_NATIVE_MAP_ADMISSION_2026-11-02.md) continues to require exact source/map hashes, protected tracked INI, no SaveGames, a genuine prior build-only receipt and an idle Editor.
+
+Separately, the new [First Wake Splashdown greybox stage](FIRST_WAKE_SPLASHDOWN_GREYBOX_STAGE_2026-11-03.md) is a **source-only opt-in authoring plan** for a brand-new map: it retains V2's seven stops, adds review-only launch/empty-reserve/return-to-berth markers and a separate physics-cube/water-volume lab. Its own isolated checkout and native Editor authoring have **not been executed**. This prototype cannot establish an Aureate Wake cinematic, genuine ship handling, P01–P13 PIE, character art, package quality, or Chapter 1 release.
+
+All historical pass receipts remain pinned to their actual tested source. No cross-project dependency changes, canonical asset promotion, protected-main merge, premature Lyra recruitment or Starbourne unlock.

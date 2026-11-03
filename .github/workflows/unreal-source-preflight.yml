@@ -67,6 +67,10 @@ jobs:
         run: python3 unreal/Tools/check_water_landing_rewind_compiled.py --self-test
       - name: Compile actual physical water adapter Tick and reject spoofed contact (API doubles, not UE physics)
         run: python3 unreal/Tools/check_first_wake_physical_adapter_compiled.py --self-test
+      - name: Guard opt-in First Wake launch/water/recovery greybox authoring (source-only, no new map)
+        run: |
+          python3 unreal/Tools/build_first_wake_splashdown_greybox.py --validate
+          python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_splashdown_greybox.py' -v
       - name: Compile actual persistent Prelude HUD C++ in development and shipping modes (API stand-ins)
         run: python3 unreal/Tools/check_first_wake_review_hud_compiled.py
       - name: Check review-only HUD GameMode wiring and absence of new plugin dependencies

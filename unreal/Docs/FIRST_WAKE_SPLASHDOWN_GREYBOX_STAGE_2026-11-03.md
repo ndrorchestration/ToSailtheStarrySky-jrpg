@@ -1,0 +1,25 @@
+# First Wake launch → water → recovery greybox V1 (source-staged, not yet playable)
+
+**Status (2026-11-03): SOURCE-ONLY AUTHORING PLAN — NO UNREAL MAP GENERATED, RENDERED OR PIE TESTED.** Scope: optional isolated integration experiment, not the approved Aureate Wake ship, cinematic assets, First Wake vertical-slice acceptance, or Starbourne access.
+
+## Why this source artifact exists
+
+The committed V2 review level has seven walkable Prelude/engineering stops and a visual-only ocean. The actual runtime story and water C++ can progress through Launched → SeaContact → FlotationConfirmed → empty reserves → return to berth, but there is no authored **joined** level binding those parts for real player-in-Editor verification. Adding more state tests alone cannot close that gap.
+
+`unreal/Tools/build_first_wake_splashdown_greybox.py` is a narrowly scoped, opt-in Unreal Editor Python authoring script that **plans** a *new*, separate `/Game/TSTSS/Review/FirstWake_LaunchWaterGreybox_V1` level. It loads existing immutable V2 without overwriting it; adds three physically walkable, state-gated markers at X 1580 (launch), 1990 (empty reserve), 2370 (return to berth); and stages a detached physically simulated BasicShapes cube hull with a tagged, bounded `TSTSSWaterVolume` collision volume away from the dock. Prototype buoyancy is opt-in on this isolated actor only, not globally enabled. It uses the current native `ATSTSSWaterContactAdapter` auto-binding and C++ water gate, **not a scripted false Splashdown or Blueprint gate bypass**.
+
+This is *not* a real ship: the hull is a prototype cube floating away from Ender's walkway. If its simulated stability happens to advance the story after launch, that validates only synthetic greybox integration **after** the real UE collision/velocity traces have been recorded. It is not evidence of ship operation, an onboard protagonist, water-surface correctness, artistic approval, wave simulation or player usability.
+
+## Source validation now available
+
+Run `python unreal/Tools/build_first_wake_splashdown_greybox.py --validate` and `python -m unittest discover -s unreal/Tools -p test_first_wake_splashdown_greybox.py -v`. The plan requires ordered markers within the original floor, a finite hull initially above the bounding-volume surface, and the off-dock placement of the lab. Tests reject invalid geometry, wrong or dirty disposable roots, unsafe SaveGame presence, overwrite of an existing map and invalid Git HEAD. These are **offline** checks. Source preflight runs them without invoking Unreal.
+
+## Native authoring and acceptance gate
+
+1. First complete a clean, exact-head UE5.8.4 Win64 Editor build and **26 actual native automation** results for joined PR #735 in a fresh disposable checkout. The source-only script cannot replace those receipts; do not terminate other Editor/Live Coding sessions to obtain them.
+2. Only with an idle Editor, create a *different* detached worktree `C:\TSTSS_FirstWakeSplashdownSandbox_20261103` at the verified exact commit. Confirm V2 map SHA-256 `4c96f1fb28fe4af91b879977e473c20de32bd933f741a5384bb8403a00254b80`; no existing `.sav` files; clean source and no existing output map. Protect **only this disposable checkout's** tracked `DefaultEngine.ini` and `DefaultInput.ini` from UE overwrites.
+3. Set `TSTSS_GREYBOX_EXPECTED_HEAD` to the full 40-character checked-out SHA *in the same process environment that launches Unreal*. Invoke `build_in_unreal()` through this disposable project's Unreal Editor Python bridge. The builder refuses any other checkout name, missing/unmatched SHA, dirty tree, altered V2 bytes, existing output map, or player saves. Do not try it in the user's regular project or any previous native-evidence worktree.
+4. Capture the separate new `.umap` and *exclusive* ignored `Saved/SplashdownGreyboxV1/staging_receipt.json`. Preserve any error or partial asset locally and investigate it: do not erase failed evidence, overwrite maps or promote an unverified staging receipt to a PIE PASS. Recheck original map/config SHA-256 and Git state.
+5. In a separate recorded clean PIE session, test real pawn walking and marker visibility/300 cm reach, E/J inputs, all three engineering inspections and launch, the physics hull's **actual overlap below the bounded water surface**, vertical speed, two uninterrupted calm seconds and rejection of a false overlap/fast impact. Verify Chapter 1 starts only after physical flotation; test post-landing reserve/berth markers and F5/F9 with *disposable review-created* slots. Inspect a genuine native rendered frame, not a generated illustration. Distinguish any automated proxy contact from authentic player boarding or cinematic sequence.
+
+**Hard holds:** no V2 map mutation, no real user saves, no new dependency installations, no main merge/release, no approved art promotion, no automatic early Lyra recruitment, no Starbourne unlock. Native map authoring, physics, PIE P01–P13, ship cinematography and packaged runtime all remain **NOT TESTED** until their own actual receipts.
