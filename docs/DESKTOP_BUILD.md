@@ -1,4 +1,30 @@
-# Aetherwake Windows desktop build
+# Aetherwake Windows desktop build — RETIRED / SECURITY HOLD
+
+> **DO NOT BUILD, DOWNLOAD, INSTALL, EXECUTE, RESTORE, WHITELIST OR
+> REDISTRIBUTE THE HISTORICAL NW.js/NSIS INSTALLER OR UNINSTALLER.**
+> This guide documents a **historical** Aetherwake desktop path, not an
+> active player download, build, packaging, or release procedure.
+> [Security issue #293](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/issues/293)
+> records a real Windows Defender detection against a QA NSIS uninstaller;
+> the security classification remains unresolved. No installer is cleared.
+> The project's active forward development target is **Unreal Engine 5.8**;
+> the original NW.js/JS material is preserved only as historical context.
+>
+> The GitHub legacy desktop publisher is intentionally disabled, and the
+> local `scripts/build-windows-release.ps1` refuses before invoking any
+> build or installer. **Important limitation:** the historical direct
+> `npm run package:windows` script still exists in `package.json`;
+> this direct CLI is **not protected by those two wrapper guards** and
+> MUST NOT be executed. The source-only retirement checks do not certify
+> complete repository-wide containment. Remediation requires a separate
+> explicitly reviewed, fail-closed CLI gate and historical dependency
+> compatibility/security review.
+>
+> Everything below this warning is **archival 2026-09/10 evidence and
+> procedure, superseded by the October 19–28 security hold**. Past
+> PASS statuses and artifact names are **not current release authorization**.
+> No commands, links or installer steps below should be followed.
+
 
 Aetherwake retains its HTTP-served browser path for development and automated smoke testing. The supported player-facing path is a packaged NW.js desktop build.
 
