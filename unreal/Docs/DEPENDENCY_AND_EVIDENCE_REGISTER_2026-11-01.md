@@ -67,6 +67,29 @@ protected branches, expose host tokens, promote review art, claim chapter
 playability, or unlock Starbourne/Orbiter. Only scoped review documentation,
 CI source checks and exact-head evidence can advance here.
 
+## Follow-up, November 2: real read-only security audit and Python plugin descriptor
+
+See [legacy npm security and UE Python plugin scope audit](LEGACY_NPM_SECURITY_AND_UE_PYTHON_PLUGIN_SCOPE_2026-11-02.md)
+in the separately stacked draft. At the exact parent #711 source head
+`4e4a40aed34c0ff6789ce4a69ca757f75139fee2`, a complete live
+`npm audit --package-lock-only` reported **32 legacy package-level
+vulnerability findings** (3 critical / 15 high / 14 moderate), affecting
+**direct** `nwjs` and `nw-builder` dependency chains. It did **not**
+inspect Unreal C++ or establish shipped legacy-game reachability, and the
+previously reported 18 GitHub alert-banner findings are not the same
+metric. npm's suggested major-version downgrades are **NOT authorized
+remediations**. Historical release/security HOLD remains in place.
+
+Installed UE 5.8.4 `PythonScriptPlugin.uplugin` declares
+`PythonScriptPluginPreload` as **Runtime** and
+`PythonScriptPlugin` as **UncookedOnly**, with
+`EnabledByDefault=false`. Thus the project-enabled
+`PythonScriptPlugin` on #708/#711 must **not** be asserted entirely
+Editor-only or shipping-safe solely from source declarations. No
+project plugin state or version has been changed; packaged Game/Editor
+plugin behavior remains unverified. Baseline choice requires explicit
+integration and native/package testing before approval.
+
 ## Dependency baseline: what the repository really declares
 
 | Domain | Current declaration | Role and disposition |
