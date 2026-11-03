@@ -89,6 +89,14 @@ jobs:
           python3 -m py_compile unreal/ArtSource/Characters/Accessories/native_import_goggles_v1.py
           python3 -m py_compile unreal/ArtSource/Characters/Accessories/native_visual_goggles01.py
 
+      - name: Check MH5 goggles 3D axes, fit receipt boundaries and negative controls (engine-free)
+        run: |
+          python3 -m unittest discover -s unreal/ArtSource/Characters/Accessories/MH5Review -p test_native_goggles_fit_receipts.py -v
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/native_import_goggles_to_MH5.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/native_goggles_axis_search.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/native_goggles_spatial01_negative_control.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/native_goggles_spatial02.py
+
       - name: Regenerate source assets and confirm exact bytes
         env:
           TSTSS_CAST_OUTPUT: unreal/ArtSource/Characters/Candidates
