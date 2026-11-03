@@ -221,11 +221,17 @@ def compile_and_run(compiler: str, source: str) -> subprocess.CompletedProcess[s
         cpp = root / "water_landing.cpp"
         binary = root / "water_landing"
         cpp.write_text(source, encoding="utf-8")
+        if Path(compiler).name.lower() == "cl.exe":
+            binary = root / "water_landing.exe"
+            command = [compiler, "/nologo", "/std:c++17", "/EHsc", str(cpp),
+                       "/Fo:" + str(root / "water_landing.obj"),
+                       "/Fe:" + str(binary)]
+        else:
+            command = [compiler, "-std=c++17", "-O0", "-Wall", "-Wextra", "-Werror",
+                       # Unreal's required RunTest signature has an unused Parameters arg.
+                       "-Wno-unused-parameter", "-pedantic", str(cpp), "-o", str(binary)]
         compiled = subprocess.run(
-            [compiler, "-std=c++17", "-O0", "-Wall", "-Wextra", "-Werror",
-             # Unreal's required RunTest signature has an unused Parameters arg.
-             "-Wno-unused-parameter", "-pedantic", str(cpp), "-o", str(binary)],
-            check=False, capture_output=True, text=True, timeout=45,
+            command, check=False, capture_output=True, text=True, timeout=45,
         )
         if compiled.returncode:
             raise RuntimeError("Portable water landing compile failed: "
@@ -242,6 +248,8 @@ def main() -> int:
     args = parser.parse_args()
     compiler = next((exe for name in ("g++", "clang++", "c++")
                      if (exe := shutil.which(name))), None)
+    if compiler is None:
+        compiler = shutil.which("cl")
     if compiler is None:
         raise RuntimeError("C++17 compiler required; cannot claim a portable behavioral pass")
     gate = GATE_SOURCE.read_text(encoding="utf-8")
