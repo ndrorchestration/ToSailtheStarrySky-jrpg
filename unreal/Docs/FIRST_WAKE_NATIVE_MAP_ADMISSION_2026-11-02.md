@@ -117,3 +117,51 @@ unexamined files, or change plugin/build dependencies to force a pass.
   does **not** run or pass P01–P13 PIE keyboard/visual cases; those remain
   separately NOT TESTED. Never alter Live Coding or terminate someone
   else's Editor to unblock a review.
+
+
+## 2026-11-02 continuation — safe, repeatable native commandlet launcher
+
+**Preferred source-locked execution path** is the opt-in
+`unreal/Tools/Invoke-NativePreludeMapQA.ps1` PowerShell launcher, rather
+than manually guessing the project/Editor commandline. In a *pre-existing*,
+isolated `C:\TSTSS_PR713_NativeMapQA_20261102` checkout pinned to its
+full current SHA, use:
+
+```powershell
+$Review = "C:\TSTSS_PR713_NativeMapQA_20261102"
+$Commit = (git -C $Review rev-parse HEAD).Trim()
+$VersionedUE = "C:\Program Files\Epic Games\UE_5.8"
+& "$Review\unreal\Tools\Invoke-NativePreludeMapQA.ps1" -EngineRoot $VersionedUE -ExpectedHead $Commit -PreflightOnly
+& "$Review\unreal\Tools\Verify-Unreal.ps1" -EngineRoot $VersionedUE -ExpectedHead $Commit -SkipTests
+& "$Review\unreal\Tools\Invoke-NativePreludeMapQA.ps1" -EngineRoot $VersionedUE -ExpectedHead $Commit
+```
+
+Only execute the second/third command **after** the first admits a
+voluntarily idle workstation. Neither command may run while another
+`UnrealEditor`, `UnrealEditor-Cmd`, or `LiveCodingConsole` process
+is active. Do not terminate the user's character-preview or other
+Editor work. The displayed `-PreflightOnly` mode creates no output
+receipt, launches no Editor and does not certify gameplay.
+
+The build-only script now emits an **exclusive**
+`Saved/MigrationEvidence/<SHA>-<timestamp>-<nonce>/verified-build.json`
+**only after** UBT succeeds and Git HEAD plus a clean worktree pass
+post-build. The map launcher requires that exact-SHA
+`WIN64_EDITOR_BUILD_PASS_CLEAN_SOURCE` receipt; an empty/stale
+`build.log` is explicitly insufficient. The launcher rechecks
+source/map/config hashes, an empty SaveGames test directory, read-only
+tracked default INI files, engine patch **5.8.4** and idle Editor
+processes. Its actual Editor commandlet must produce a **new** exclusive
+JSON report plus the `TSTSS_NATIVE_PRELUDE_MAP_QA_PASS` sentinel,
+with source SHA, seven actors and **PIE NOT TESTED**; false/duplicate
+results fail closed. Each invocation preserves a separate ignored
+private log under `Saved/NativePreludeMapQA/LauncherReceipts/`.
+
+**Current evidence status:** This launcher has source/PowerShell
+syntax and preflight negative controls only; no valid native map
+inspection has yet completed. In the last authorized Windows check
+other Unreal and Live Coding sessions were active. Native 25/25
+belongs to earlier exact tested SHA
+`52e13aedaa8bda900cece849b54eae570179c838`.
+A future positive map-admission check still **does not** establish
+P01–P13 genuine keyboard PIE, physical splashdown or approved art.
