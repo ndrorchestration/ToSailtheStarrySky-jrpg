@@ -172,14 +172,15 @@ if ($NewReceipts.Count -ne 1) {
 }
 $Payload = Get-Content -LiteralPath $NewReceipts[0].FullName -Raw -ErrorAction Stop |
     ConvertFrom-Json -ErrorAction Stop
-if ($Payload.status -ne 'NATIVE_EDITOR_MAP_AND_REAL_ACTORS_PASS_NOT_PIE' -or
-    $Payload.source_sha -ne $Head -or $Payload.native_milestone_actor_count -ne 7 -or
-    $Payload.map_sha256 -ne $MapExpected -or
-    $Payload.actual_pie_player_input_tested -ne $false -or
-    $Payload.actual_savegame_disk_roundtrip_tested -ne $false -or
-    $Payload.chapter_one_act_one -ne $false -or
-    $Payload.render_or_water_physics_approved -ne $false) {
-    throw 'HOLD: native map-QA receipt incomplete, contradicted or claiming unsupported PIE/gameplay acceptance'
+# The production validator is replayed against many incomplete/contradictory
+# report shapes in CI and Windows; status/count alone must never grant PASS.
+. (Join-Path $PSScriptRoot 'Assert-NativePreludeMapReceipt.ps1')
+$Validated = Assert-TSTSSNativePreludeMapReceipt -Report $Payload -ExpectedHead $Head -ExpectedMapSha $MapExpected
+if ($Validated.Status -cne 'NATIVE_EDITOR_MAP_RECEIPT_SCHEMA_ACCEPTED_NOT_PIE' -or
+    $Validated.P01_P13 -cne 'NOT_TESTED' -or
+    $Validated.WaterPhysics -cne 'NOT_AUTHORIZED' -or
+    $Validated.Release -cne 'NOT_AUTHORIZED') {
+    throw 'HOLD: native map-QA receipt validator did not return bounded read-only admission'
 }
 if ((Get-TSTSSSha256 -Path $MapPath) -ne $MapBefore) {
     throw 'HOLD: Unreal modified the tracked Prelude review map'
