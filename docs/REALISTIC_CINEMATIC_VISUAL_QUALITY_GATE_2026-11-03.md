@@ -45,7 +45,7 @@ For **each** reviewed scene or asset: record repository, branch/commit SHA; Unre
 - [Aureate ordinary modes PR #656](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/656): native D3D12 Seaborne/Submersible previews are **pre-strut**; post-strut foil placement **UNVERIFIED**; placeholder hull/dome/sky; Starbourne gate remains closed.
 - [Ender cast lookdev PR #643](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/643): four-angle calibrated native D3D11 captures reported for earlier review07 source; current-head native rerender and reference-accurate sculpt/rig/face/hair, grip, materials, gameplay integration and creator acceptance remain **OPEN**. Character hair reference conflict requires creator resolution.
 - [Atmospheric-sky draft #705](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/705) has a reported black-sky visual hold, not a validated atmospheric solution; independently validate exact-head state.
-- Previous [visual benchmark scene](../../docs/VISUAL_BENCHMARK_SCENE.md) and [world/ship visual direction](../../docs/WORLD_SHIP_VISUAL_DIRECTION.md) define earlier art ambitions, not current Unreal acceptance or approved final proportions.
+- Previous [visual benchmark scene](VISUAL_BENCHMARK_SCENE.md) and [world/ship visual direction](WORLD_SHIP_VISUAL_DIRECTION.md) define earlier art ambitions, not current Unreal acceptance or approved final proportions.
 
 ## Fastest safe milestone / recurring loop
 
