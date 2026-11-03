@@ -122,5 +122,6 @@ bool UTSTSSFirstWakeState::Restore(bool bWasStarted, ETSTSSFirstWakeBeat SavedBe
     bStarted = bWasStarted;
     CurrentBeat = SavedBeat;
     InspectionMask = SavedInspectionMask;
+    ++RestoreGeneration;
     return true;
 }

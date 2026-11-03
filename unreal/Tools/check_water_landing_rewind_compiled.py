@@ -24,10 +24,15 @@ STATE_SOURCE = MODULE / "Private/TSTSSFirstWakeState.cpp"
 GATE_SOURCE = MODULE / "Private/TSTSSWaterLandingGate.cpp"
 TEST_SOURCE = MODULE / "Private/Tests/TSTSSWaterLandingRestoreTests.cpp"
 FAILURE = "WATER_LANDING_BEHAVIOR_FAILURE: "
-REWIND_ASSERTION = "Rewind immediately reacquires SeaContact"
-REWIND_GUARD = re.compile(
-    r"    if \(bContactRecorded && Story->GetCurrentBeat\(\) == "
-    r"ETSTSSFirstWakeBeat::Launched\)\s*\{\s*Reset\(\);\s*\}"
+RESTORE_ASSERTION = "Same-beat restore cannot inherit pre-load settling time"
+RESTORE_GENERATION_GUARD = re.compile(
+    r"    const uint64 RestoreGeneration = Story->GetRestoreGeneration\(\);\s*"
+    r"    if \(!bHasObservedRestoreGeneration \|\|\s*"
+    r"        ObservedRestoreGeneration != RestoreGeneration\)\s*\{\s*"
+    r"        StableContactSeconds = 0\.f;\s*"
+    r"        bContactRecorded = false;\s*"
+    r"        ObservedRestoreGeneration = RestoreGeneration;\s*"
+    r"        bHasObservedRestoreGeneration = true;\s*\}"
 )
 
 PREFIX = r"""
@@ -44,6 +49,7 @@ PREFIX = r"""
 #define WITH_DEV_AUTOMATION_TESTS 1
 using uint8 = std::uint8_t;
 using int32 = std::int32_t;
+using uint64 = std::uint64_t;
 using FString = std::string;
 struct UObject { virtual ~UObject() = default; };
 template <typename T> bool IsValid(const T* value) { return value != nullptr; }
@@ -232,7 +238,7 @@ def compile_and_run(compiler: str, source: str) -> subprocess.CompletedProcess[s
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--self-test", action="store_true",
-                        help="also compile without the rewind fix and require a behavioral failure")
+                        help="also compile without the restore-generation guard and require a behavioral failure")
     args = parser.parse_args()
     compiler = next((exe for name in ("g++", "clang++", "c++")
                      if (exe := shutil.which(name))), None)
@@ -245,17 +251,17 @@ def main() -> int:
                            + actual.stdout + actual.stderr)
     print(actual.stdout.strip())
     if args.self_test:
-        mutated, count = REWIND_GUARD.subn("", gate)
+        mutated, count = RESTORE_GENERATION_GUARD.subn("", gate)
         if count != 1:
-            raise RuntimeError("Rewind mutation target is missing or duplicated")
+            raise RuntimeError("Restore-generation mutation target is missing or duplicated")
         # compile_and_run raises on compilation failure: only a running binary's
         # specific regression assertion can satisfy this negative control.
         negative = compile_and_run(compiler, portable_source(mutated))
-        expected = FAILURE + REWIND_ASSERTION
+        expected = FAILURE + RESTORE_ASSERTION
         if negative.returncode != 2 or negative.stderr.strip() != expected:
-            raise RuntimeError("Mutation did not fail the expected rewind assertion: "
+            raise RuntimeError("Mutation did not fail the expected same-beat restore assertion: "
                                + negative.stdout + negative.stderr)
-        print("PASS: rewind guard removal compiled and was rejected by behavioral assertion")
+        print("PASS: restore-generation guard removal compiled and was rejected by same-beat restore assertion")
         print("  " + negative.stderr.strip())
     print("Source-extracted portable C++ only; no filesystem saves; "
           "Unreal native/UHT/PIE verification remains pending.")

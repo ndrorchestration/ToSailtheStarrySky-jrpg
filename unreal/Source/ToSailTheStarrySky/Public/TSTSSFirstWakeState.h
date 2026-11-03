@@ -67,6 +67,9 @@ public:
     UFUNCTION(BlueprintPure, Category="TSTSS|First Wake")
     uint8 GetInspectionMask() const { return InspectionMask; }
 
+    // Runtime-only signal for systems that cache evidence across in-place restores.
+    uint64 GetRestoreGeneration() const { return RestoreGeneration; }
+
     UFUNCTION(BlueprintCallable, Category="TSTSS|First Wake")
     void Reset();
 
@@ -87,4 +90,7 @@ private:
 
     UPROPERTY(VisibleAnywhere, Category="TSTSS|First Wake")
     uint8 InspectionMask = 0;
+
+    UPROPERTY(Transient)
+    uint64 RestoreGeneration = 0;
 };
