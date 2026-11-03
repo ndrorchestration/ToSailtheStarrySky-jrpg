@@ -35,7 +35,11 @@ const FLinearColor FLinearColor::White(1.f, 1.f, 1.f, 1.f);
 struct UCanvas { float ClipX = 1280.f; float ClipY = 720.f; };
 struct UTSTSSFirstWakeState {
     FString Objective = "Find Ionia's flyer";
+    unsigned Mask = 0;
+    bool ChapterOne = false;
     FString GetReviewObjectiveText() const { return Objective; }
+    unsigned GetInspectionMask() const { return Mask; }
+    bool IsChapterOneActOne() const { return ChapterOne; }
 };
 struct APawn { virtual ~APawn() = default; };
 struct ATSTSSExplorerCharacter : APawn {
@@ -62,6 +66,7 @@ struct TextDraw {
     float x, y;
 };
 struct RectDraw {
+    FLinearColor color;
     float x, y, w, h;
 };
 struct AHUD {
@@ -71,8 +76,8 @@ struct AHUD {
     std::vector<RectDraw> rects;
     virtual ~AHUD() = default;
     virtual void DrawHUD() {}
-    void DrawRect(FLinearColor, float x, float y, float w, float h) {
-        rects.push_back({x, y, w, h});
+    void DrawRect(FLinearColor color, float x, float y, float w, float h) {
+        rects.push_back({color, x, y, w, h});
     }
     void DrawText(const FString& t, FLinearColor, float x, float y,
                   void*, float) {
@@ -141,28 +146,51 @@ int main() {
         expect(hud.text.empty(), "short view should hide rather than clip");
         canvas.ClipY = 720.f;
         hud.DrawHUD();
-        expect(hud.rects.size() == 1 && hud.text.size() == 4,
-               "valid Prelude must draw one panel with four review-only cues");
+        expect(hud.rects.size() == 4 && hud.text.size() == 5,
+               "valid Prelude must draw one panel, three inspection lamps and five cues");
         expect(hud.text[0].value.find("PRELUDE REVIEW") != FString::npos,
                "persistent overlay must identify review provenance");
         expect(hud.text[1].value == "Find Ionia's flyer",
                "HUD must read live objective from state");
-        expect(hud.text[2].value.find("E: interact") != FString::npos &&
-               hud.text[2].value.find("F5/F9") != FString::npos,
+        expect(hud.text[2].value.find("INSPECTIONS") != FString::npos,
+               "review HUD must identify three engineer systems");
+        expect(hud.text[3].value.find("E: interact") != FString::npos &&
+               hud.text[3].value.find("F5/F9") != FString::npos,
                "review controls must remain discoverable");
-        expect(hud.text[3].value.find("no launch") != FString::npos,
+        expect(hud.text[4].value.find("no launch") != FString::npos,
                "HUD must not imply launch, sea landing or chapter approval");
+        expect(hud.rects[1].color.g < 0.4f && hud.rects[2].color.g < 0.4f &&
+               hud.rects[3].color.g < 0.4f,
+               "uninspected engineering stations must be visibly incomplete");
         expect(hud.rects[0].x == 24.f && hud.rects[0].w <= 780.f,
                "HUD must stay within maximum authored width");
         state.Objective = "Board the Aureate Wake";
+        state.Mask = 0x03u;
         hud.DrawHUD();
         expect(hud.text.back().value.find("no launch") != FString::npos &&
-               hud.text[hud.text.size() - 3].value == "Board the Aureate Wake",
+               hud.text[hud.text.size() - 4].value == "Board the Aureate Wake",
                "next frame must reflect current state without cached objective");
+        expect(hud.rects[5].color.g > 0.8f && hud.rects[6].color.g > 0.8f &&
+               hud.rects[7].color.g < 0.4f,
+               "inspection lamps must reflect the current, uncached story mask");
+        state.Mask = 0x07u;
+        hud.DrawHUD();
+        expect(hud.rects[9].color.g > 0.8f &&
+               hud.rects[10].color.g > 0.8f &&
+               hud.rects[11].color.g > 0.8f,
+               "all three engineering systems must illuminate after inspection");
         canvas.ClipX = 500.f;
         hud.DrawHUD();
-        expect(hud.rects.back().w == 452.f,
+        expect(hud.rects[hud.rects.size()-4].w == 452.f,
                "review panel must adapt to a smaller valid viewport");
+        expect(hud.text[hud.text.size()-2].value.find("E interact") != FString::npos &&
+               hud.text.back().value.find("no sea landing") != FString::npos,
+               "compact layout must use shortened controls and review disclaimer");
+        const auto beforeChapter = hud.text.size();
+        state.ChapterOne = true;
+        hud.DrawHUD();
+        expect(hud.text.size() == beforeChapter,
+               "Prelude review HUD must disappear after real Chapter 1 boundary");
 #endif
         std::cout << "PASS: " << checks <<
             " portable C++ real DrawHUD behavior checks (UE/PIE NOT TESTED)\n";
@@ -196,7 +224,13 @@ def extract(source: str) -> str:
                     "DrawRect(",
                     "DrawText(",
                     "PanelWidth < 440.f",
-                    "Canvas->ClipY < 160.f",
+                    "Canvas->ClipY < 170.f",
+                    "State->IsChapterOneActOne()",
+                    "State->GetInspectionMask()",
+                    "bCompact",
+                    "InspectionMask & 0x01u",
+                    "InspectionMask & 0x02u",
+                    "InspectionMask & 0x04u",
                 ):
                     if token not in body:
                         raise ValueError("Actual HUD lost safety feature: " + token)
