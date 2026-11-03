@@ -25,6 +25,9 @@ $Valid = [ordered]@{
     real_actor_ordered_story_acceptance = $true
     wrong_order_and_duplicate_interactions_rejected = $true
     objective_text_reflected_and_correct = $true
+    world_layout_matches_authoring_plan = $true
+    all_marker_footprints_on_floor = $true
+    first_marker_initially_out_of_interaction_reach = $true
     chapter_one_act_one = $false
     actual_pie_player_input_tested = $false
     actual_savegame_disk_roundtrip_tested = $false
@@ -36,7 +39,8 @@ $Valid = [ordered]@{
         source_handlers_verified = $true
         player_keyboard_input_executed = $false
     }
-    spawn_to_flyer_actor_origin_cm = 200.0
+    spawn_to_flyer_actor_origin_cm = 581.38
+    spawn_to_flyer_nearest_xy_edge_cm = 542.5
     stop_locations_world_cm = $locations
 }
 function Copy-Receipt {
@@ -96,6 +100,16 @@ $x = Copy-Receipt; $x.wrong_order_and_duplicate_interactions_rejected = $false
 MustReject 'invalid-milestone-rejected-status' $x 'wrong_order_and_duplicate_interactions_rejected'
 $x = Copy-Receipt; $x.objective_text_reflected_and_correct = $false
 MustReject 'objective-not-verified' $x 'objective_text_reflected_and_correct'
+$x = Copy-Receipt; $x.world_layout_matches_authoring_plan = $false
+MustReject 'wrong-world-transform' $x 'world_layout_matches_authoring_plan'
+$x = Copy-Receipt; $x.all_marker_footprints_on_floor = $false
+MustReject 'marker-off-floor' $x 'all_marker_footprints_on_floor'
+$x = Copy-Receipt; $x.first_marker_initially_out_of_interaction_reach = $false
+MustReject 'flyer-early-interact' $x 'first_marker_initially_out_of_interaction_reach'
+$x = Copy-Receipt; $x.spawn_to_flyer_nearest_xy_edge_cm = 299.0
+MustReject 'flyer-in-interaction-reach' $x 'safe initial interaction reach'
+$x = Copy-Receipt; $x.spawn_to_flyer_nearest_xy_edge_cm = '542.5'
+MustReject 'flyer-distance-as-string' $x 'not numeric'
 $x = Copy-Receipt; $x.chapter_one_act_one = $true
 MustReject 'false-chapter-one-pass' $x 'chapter_one_act_one'
 $x = Copy-Receipt; $x.actual_pie_player_input_tested = $true

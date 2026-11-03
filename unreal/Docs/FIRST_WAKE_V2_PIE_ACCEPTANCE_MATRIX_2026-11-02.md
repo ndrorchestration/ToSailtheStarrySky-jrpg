@@ -140,3 +140,105 @@ This is a **native report observed**, not a verified clean end-to-end
 pass and not a P01–P13 gameplay run. A fresh isolated test must
 prevent config-file writes without changing the commit or weakening
 the final custody gate. The original dirty worktree is retained.
+
+## November 3 — source-level geometry for P02/P03, not PIE proof
+
+Source authoring now rejects a flyer initially inside Ender's 300 cm
+reach, an off-floor spawn, any marker footprint leaving the traversal
+floor, invalid floor height or nonfinite dimensions. At the committed
+plan's positions, the **closest horizontal flyer marker edge** is
+**542.5 cm** from spawn, and all seven marker footprints fall on the
+same continuous review floor. **13/13 source-only geometry negatives
+and positives passed on Windows** (with 10/10 earlier authoring tests).
+The **committed V2 `.umap` is unchanged**. This does not prove that
+P02/P03 work with actual player movement, E camera traces, terrain
+collision, occlusion or dynamic actors. Those specific interactive
+cases remain NOT TESTED until recorded in real Editor PIE.
+
+## November 3 — real-world position and marker scale admission prerequisite
+
+The separate, read-only native Editor map checker now requires that
+the **actual loaded milestone actor transforms**, spawn and traversal
+floor agree (within 1 cm) with the authored Prelude blockout. It
+checks actual marker proxy scales to prevent a larger collision target
+from invalidating the claimed starting distance, measured floor
+coverage for seven marker footprints and an initial nearest horizontal
+flyer edge beyond 300 cm. This is a prerequisite for interpreting
+P02/P03 movement/reach scenarios, not a substitute for the actual
+E interaction, player-centered reach, occlusion/camera direction,
+collision and UI acceptance criteria.
+
+Source-side verification on Windows: 31/31 actual-checker behavior
+cases, 8/8 admission checks and 37/37 synthetic native report
+fixtures PASS at code SHA
+`127667c48045f06f82f23d98faafe35eca3df6a3`.
+**Actual Editor map inspection and P01–P13 keyboard PIE remain NOT
+TESTED** while other Unreal Editor/Live Coding sessions are active.
+No committed map, SaveGame, art or engine dependency was changed.
+
+
+## November 3 — read-only persistent objective HUD review acceptance
+
+A new **non-shipping, review-only** C++ `ATSTSSFirstWakeReviewHUD`
+is selected by `ATSTSSGameMode` in non-shipping builds. It draws a
+bounded translucent first-person-screen overlay (not in-world art),
+the active `GetReviewObjectiveText()` from Ender's own
+`UTSTSSFirstWakeState`, W/A/S/D/E/J/F5/F9 review controls, and an
+explicit noncanonical Prelude disclaimer. It does not cache or
+advance story state, inspect/save a player slot, alter combat,
+recruit anyone, or unlock launch/sea contact/Splashdown.
+
+The HUD uses the **existing Engine AHUD/Canvas APIs**; no UMG,
+Slate, plugin or module dependency was added. It rejects very small
+viewports rather than knowingly drawing a clipped panel and is
+disabled in `UE_BUILD_SHIPPING` builds. Legacy transient debug
+messages and J read-only recall remain available.
+
+**Source proof, not in-engine proof:** At implementation revision
+`4eaaa4246f86c4f5f81f406bb61e0f74c7f4709e`, GitHub
+Unreal source preflight compiled and ran the **actual C++
+`DrawHUD()` method** against controlled API stand-ins in both
+non-shipping and shipping modes; all cases passed. The associated
+five source-integration checks passed on Windows with clean Git
+state. Installed UE5.8.4 header signatures were checked for
+`DrawText`, `DrawRect`, fonts, Canvas clipping and GameMode's
+HUDClass. **A native Unreal Editor build / PIE rendering of this
+new HUD has NOT BEEN RUN** while unrelated Editor/Live Coding
+sessions are active.
+
+Add to **P01/P06/P09/P12** the observation that a persistent
+objective matches the J cue after opening, ordered milestones,
+story quickload and blocked premature Splashdown. Verify visual
+contrast, readability and overlap at **1280×720 and 500 px wide**
+as part of *actual PIE*, not from portable stand-ins.
+The HUD does not convert any P01–P13 result from NOT TESTED
+into PASS.
+
+## November 3 — responsive engineering inspection HUD review
+
+The non-shipping C++ `ATSTSSFirstWakeReviewHUD` now provides
+three read-only Lift, Pressure and Reserve inspection indicators
+directly from `UTSTSSFirstWakeState::GetInspectionMask()`.
+An incomplete inspection appears muted and a completed inspection
+uses a brighter indicator. A narrower review viewport uses shorter
+control copy and disclaimer without adding a HUD plugin or changing
+canonical art. If the player's existing state reports Chapter 1
+Act 1, the **Prelude** overlay stops drawing rather than pretending
+the Chapter 1 UI is implemented.
+
+**Executed source evidence at `1f983d0c202ea0e52c5fd01725b3c436f4584bfa`:**
+the hosted Unreal preflight extracted and compiled the **actual**
+`DrawHUD()` method with C++ API doubles in development and shipping
+modes. It verified a fresh 0/3 mask, a live 2/3 update and a 3/3
+update, narrow viewport copy, absent/invalid state denial, Chapter
+1 suppression and absence of the overlay in shipping. The **6/6
+Windows HUD contract tests** also passed at the same exact SHA with
+a clean tracked worktree.
+
+**Still required in actual PIE:** verify all three indicator states
+by inspecting stations in different orders, confirm the displayed
+objective agrees with J and F9, test on at least 1280×720 and
+500-pixel-wide review viewports for clipping/contrast, then confirm
+the overlay does not misrepresent Splashdown as implemented. The
+portable C++ checks cannot establish real UE font metrics, rendering,
+line-of-sight, movement, keyboard input or the P01–P13 results.

@@ -27,6 +27,13 @@
 - Windows VS2022 `vcvars64.bat` source-extracted **production water C++ behavior**: **310 assertions PASS**; deliberate removal of restore-generation guard compiles but fails the designated same-beat test. This is not an Unreal build or physical water test.
 - The authorized device had `UnrealEditor.exe` and `LiveCodingConsole.exe` active during inspection. No competing native UBT, Editor automation or map commandlet was launched; neither application was stopped.
 
+## 2026-11-03 continuation — join newer objective HUD without native claim
+
+- The parent draft #713 advanced beyond the original integration baseline. Its exact fetched head for this reconciliation was `2ee5d4e08e89aff1b66a44af419913c8b005d29a`. This isolated branch integrates that parent history; the only textual conflict was in `.github/workflows/unreal-source-preflight.yml`, resolved by preserving **both** the water-rewind harness and the newly added objective-HUD source/harness checks.
+- The review-only `ATSTSSFirstWakeReviewHUD` now comes from the parent: objective text and Lift/Pressure/Reserve lamp states refresh from live story state; limited viewport layouts are covered by source tests. The HUD hides after the Chapter 1 boundary and under shipping builds. This is an implementation/source-harness claim, **not** a visual Unreal/PIE acceptance claim.
+- The HUD's source-extracted C++ compiler runner gained a reversible Windows MSVC `cl.exe` fallback (with separate temporary `.obj`/`.exe` paths), preserving the GCC/Clang route on hosted CI. Invoked through VS2022 `vcvars64.bat` on `neontic`, the actual `DrawHUD` method passed **21 non-shipping and 1 shipping portable assertions** using API stand-ins, without launching Unreal or touching project saves. This does not prove actual game rendering.
+- The integrated source-only Python suite passed **205/205** tests on the merged working tree before adding the runner fallback; final post-merge committed SHA source checks must be reread independently. The previous 26 required native names remain registered, NOT engine-executed.
+
 ## Outstanding hard gates
 
 | Gate | Status |

@@ -78,7 +78,10 @@ function Assert-TSTSSNativePreludeMapReceipt {
         'actual_reflected_game_mode_pawn_present',
         'real_actor_ordered_story_acceptance',
         'wrong_order_and_duplicate_interactions_rejected',
-        'objective_text_reflected_and_correct'
+        'objective_text_reflected_and_correct',
+        'world_layout_matches_authoring_plan',
+        'all_marker_footprints_on_floor',
+        'first_marker_initially_out_of_interaction_reach'
     )) { Require-Boolean $Report $field $true }
     foreach ($field in @(
         'chapter_one_act_one',
@@ -97,6 +100,10 @@ function Assert-TSTSSNativePreludeMapReceipt {
     $spawnDistance = Require-Finite (Require-Field $Report 'spawn_to_flyer_actor_origin_cm') 'spawn_to_flyer_actor_origin_cm'
     if ($spawnDistance -le 0) {
         throw 'HOLD: map receipt spawn/flyer actor locations collapsed'
+    }
+    $edgeDistance = Require-Finite (Require-Field $Report 'spawn_to_flyer_nearest_xy_edge_cm') 'spawn_to_flyer_nearest_xy_edge_cm'
+    if ($edgeDistance -le 300 -or $edgeDistance -ge $spawnDistance) {
+        throw 'HOLD: map receipt first marker does not establish safe initial interaction reach'
     }
 
     $coordinates = Require-Field $Report 'stop_locations_world_cm'

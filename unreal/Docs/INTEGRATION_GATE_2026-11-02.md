@@ -294,3 +294,51 @@ This is source/fixture evidence, **not** a real Unreal level inspection.
 The live Editor/Live Coding sessions remain an independent idle-workstation
 blocker for the commandlet. Genuine P01–P13 PIE and Splashdown remain held.
 See [native map admission handoff](FIRST_WAKE_NATIVE_MAP_ADMISSION_2026-11-02.md).
+
+
+## November 3 — persistent review objective HUD, no new dependencies
+
+The integrated First Wake review GameMode now selects a non-shipping
+`ATSTSSFirstWakeReviewHUD` whose `DrawHUD()` reads the current
+objective from Ender's `UTSTSSFirstWakeState` each frame and
+displays temporary Prelude controls/provenance. It has **no
+authoritative story state of its own** and no new UMG/Slate/plugin,
+SaveGame schema or engine version requirement. The render path is
+compiled out for shipping builds; the overlay declines to render
+on very small viewports rather than knowingly clip instructions.
+
+A GitHub source-preflight lane compiles the **actual production
+DrawHUD C++ method** using in-memory C++17 Engine API doubles
+in both development and shipping configurations and requires that
+the shipping path emit no review overlay. The UE header API
+signatures were also checked on the authorized workstation;
+five separate GameMode wiring / non-mutation integration tests
+passed there. This is **not native Unreal rendering evidence**.
+A real Win64 UE5.8.4 build and actual 1280×720/500 px PIE visual
+inspection, objective synchronization, keyboard focus and
+controller/accessibility review remain **NOT TESTED** at this
+code head. Original earlier 25/25 Unreal automation receipt
+remains source-pinned to its older head only. No art approval,
+Chapter 1 completion or production release is conferred.
+
+## November 3 — responsive source-derived engineering status on review HUD
+
+In draft integration PR #713, `ATSTSSFirstWakeReviewHUD::DrawHUD()`
+now derives both the current objective and the three station status
+indicators **fresh each draw** from `UTSTSSFirstWakeState`.
+The indicator bits are Lift `0x01`, Pressure `0x02`, Reserve
+`0x04`; no status is cached or written. Narrow viewports use
+compact guidance; the overlay refuses to appear for already-entered
+Chapter 1 story states and stays absent in shipping builds. This
+improves a real First Wake interaction review affordance without
+changing production UI, SaveGame schemas, dependency/plugin versions
+or canonical story events.
+
+At code SHA `1f983d0c202ea0e52c5fd01725b3c436f4584bfa`,
+the actual C++ function compiled against portable UE API stand-ins
+for both development/shipping and **6/6 Windows source integration
+tests passed**, with clean Git status. **Native UE 5.8.4
+build/rendering for the changed HUD and all P01–P13 PIE
+scenarios remain unverified.** The older actual 25/25 native
+automation run belongs to its own exact prior SHA, not the
+current HUD source. Do not merge/promote based on portable checks.
