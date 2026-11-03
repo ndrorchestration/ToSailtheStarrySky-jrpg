@@ -13,6 +13,7 @@ from types import SimpleNamespace
 from unittest import TestCase
 from unittest.mock import patch
 import sys
+import math
 
 import verify_pr713_native_prelude_map as qa
 
@@ -30,10 +31,11 @@ class Mesh:
 
 
 class Actor:
-    def __init__(self, label, mesh=None, pos=(0, 0, 0)):
+    def __init__(self, label, mesh=None, pos=(0, 0, 0), scale=(1, 1, 1)):
         self.label = label
         self.mesh = mesh
         self.pos = pos
+        self.scale = scale
 
     def get_actor_label(self):
         return self.label
@@ -43,6 +45,9 @@ class Actor:
 
     def get_actor_location(self):
         return SimpleNamespace(x=self.pos[0], y=self.pos[1], z=self.pos[2])
+
+    def get_actor_scale3d(self):
+        return SimpleNamespace(x=self.scale[0], y=self.scale[1], z=self.scale[2])
 
 
 class PlayerStart(Actor):
@@ -148,20 +153,24 @@ class FakeEditor:
         self.new_state = StoryState
         self.actors = []
         self.milestones = {}
+        authored = {stop.label: stop for stop in qa.layout.STOPS}
         for label, _, station in qa.STOP_SPECS:
             name = qa.LABEL_PREFIX + label
             item = Milestone(name, label, bool(station))
+            planned = authored[label]
+            item.pos = (planned.x, planned.y, 90.0)
             self.actors.append(item)
             self.milestones[label] = item
         self.actors.extend([
             PlayerStart(qa.LABEL_PREFIX + "PlayerStart_Ender_REVIEW_PROXY",
-                        pos=(0, 0, 0)),
+                        pos=qa.layout.PLAYER_SPAWN),
             Actor(qa.LABEL_PREFIX + "Harbor_TraversalFloor",
-                  mesh=Mesh("QueryAndPhysics")),
+                  mesh=Mesh("QueryAndPhysics"),
+                  pos=qa.layout.FLOOR_LOCATION,
+                  scale=qa.layout.FLOOR_SCALE),
             Actor(qa.LABEL_PREFIX + "Ocean_VISUAL_ONLY_NO_BUOYANCY",
                   mesh=Mesh("NoCollision", "NoCollision")),
         ])
-        self.milestones["FlyerDiscovery"].pos = (200, 0, 0)
 
     def actor(self, suffix):
         return next(a for a in self.actors
@@ -229,7 +238,11 @@ class RealMapCheckerBehaviorTests(TestCase):
         self.assertEqual(report["native_milestone_actor_count"], 7)
         self.assertEqual(report["engineering_inspection_mask"], 7)
         self.assertTrue(report["real_actor_ordered_story_acceptance"])
-        self.assertEqual(report["spawn_to_flyer_actor_origin_cm"], 200.0)
+        self.assertEqual(report["spawn_to_flyer_actor_origin_cm"], round(math.hypot(580, 40), 2))
+        self.assertEqual(report["spawn_to_flyer_nearest_xy_edge_cm"], 542.5)
+        self.assertTrue(report["world_layout_matches_authoring_plan"])
+        self.assertTrue(report["all_marker_footprints_on_floor"])
+        self.assertTrue(report["first_marker_initially_out_of_interaction_reach"])
         for field in ("actual_pie_player_input_tested",
                       "actual_savegame_disk_roundtrip_tested",
                       "native_collision_line_trace_tested",
@@ -237,6 +250,30 @@ class RealMapCheckerBehaviorTests(TestCase):
                       "character_or_ship_art_approved",
                       "chapter_one_act_one"):
             self.assertFalse(report[field], field)
+
+    def test_moved_ionia_marker_refused(self):
+        self.fake.milestones["IoniaHiring"].pos = (-1000.0, 0.0, 90.0)
+        self.must_fail("transform differs from authored Prelude plan: IoniaHiring")
+
+    def test_marker_wrong_z_height_refused(self):
+        self.fake.milestones["PressureStation"].pos = (225.0, 0.0, 180.0)
+        self.must_fail("transform differs from authored Prelude plan: PressureStation")
+
+    def test_moved_player_start_refused(self):
+        self.fake.actor("PlayerStart_Ender_REVIEW_PROXY").pos = (-2500.0, 0.0, 130.0)
+        self.must_fail("transform differs from authored Prelude plan: PlayerStart")
+
+    def test_moved_floor_refused(self):
+        self.fake.actor("Harbor_TraversalFloor").pos = (-400.0, 0.0, -100.0)
+        self.must_fail("transform differs from authored Prelude plan: TraversalFloor")
+
+    def test_floor_scale_shrink_refused(self):
+        self.fake.actor("Harbor_TraversalFloor").scale = (25.0, 14.0, 2.0)
+        self.must_fail("transform differs from authored Prelude plan: TraversalFloorScale")
+
+    def test_nonfinite_marker_location_refused(self):
+        self.fake.milestones["LiftStation"].pos = (-250.0, math.inf, 90.0)
+        self.must_fail("nonfinite Editor actor location: LiftStation")
 
     def test_wrong_engine_patch_refused(self):
         self.fake.version = "5.8.5"
