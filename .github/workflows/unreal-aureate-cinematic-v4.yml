@@ -27,6 +27,8 @@ on:
       - 'unreal/Tools/run_aureate_v4_skybourne_gpu_capture.py'
       - 'unreal/Tools/run_aureate_v4_registered_gpu_capture.py'
       - 'unreal/Tests/test_aureate_v4_registered_gpu_source.py'
+      - 'unreal/Tests/test_aureate_v4_png_pixel_integrity.py'
+      - 'unreal/Tools/verify_aureate_v4_png_pixels.py'
       - 'unreal/Tests/test_aureate_v4_full_editor_skybourne_source.py'
       - 'unreal/Docs/AUREATE_V4_NATIVE_SKYBOURNE_SCENE_EVIDENCE_2026_11_03.md'
       - 'unreal/Tests/test_aureate_v4_review_scene_plan.py'
@@ -63,6 +65,7 @@ jobs:
           python -m unittest discover -s unreal/Tests -p 'test_aureate_v4_full_editor_actor_probe_source.py' -v
           python -m unittest discover -s unreal/Tests -p 'test_aureate_v4_full_editor_skybourne_source.py' -v
           python -m unittest discover -s unreal/Tests -p 'test_aureate_v4_registered_gpu_source.py' -v
+          python -m unittest discover -s unreal/Tests -p 'test_aureate_v4_png_pixel_integrity.py' -v
           python -m unittest discover -s unreal/Tests -p 'test_aureate_v4_three_form_stage_source.py' -v
           python -m unittest discover -s unreal/Tests -p 'test_aureate_v4_four_native_map_audit_source.py' -v
           python -m unittest discover -s unreal/Tests -p 'test_aureate_v4_coupled_habitation_math.py' -v
