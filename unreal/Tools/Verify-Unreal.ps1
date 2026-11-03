@@ -41,6 +41,13 @@ if ($ExpectedHead -ne '' -and $GitHead -ne $ExpectedHead) {
 $WorkingTree = @(git -C (Join-Path $PSScriptRoot '../..') status --porcelain)
 if ($LASTEXITCODE -ne 0) { throw 'Unable to inspect working tree' }
 if ($WorkingTree.Count -gt 0) { throw 'Working tree has uncommitted changes; evidence cannot be bound to HEAD' }
+# Do not compete with an active Editor/Live Coding session in this Windows
+# review lane. This also prevents wasteful multi-minute UBT failures.
+# Name-only checks: never collect or disclose Editor command-line credentials.
+$ActiveNativeProcesses = @(Get-Process -Name 'UnrealEditor','UnrealEditor-Cmd','LiveCodingConsole' -ErrorAction SilentlyContinue)
+if ($ActiveNativeProcesses.Count -gt 0) {
+    throw 'Active Unreal Editor or Live Coding process detected; leave existing sessions untouched and run native verification only after the machine is idle'
+}
 # Every verification attempt receives a fresh, non-overwriting receipt folder.
 # Keep previous success AND failure logs for head-specific review and debugging.
 $RunId = ('{0}-{1}-{2}' -f $GitHead.Substring(0, 12),
