@@ -159,6 +159,7 @@ class FakeEditor:
             item = Milestone(name, label, bool(station))
             planned = authored[label]
             item.pos = (planned.x, planned.y, 90.0)
+            item.scale = (0.75, 0.75, 1.6)
             self.actors.append(item)
             self.milestones[label] = item
         self.actors.extend([
@@ -254,6 +255,14 @@ class RealMapCheckerBehaviorTests(TestCase):
     def test_moved_ionia_marker_refused(self):
         self.fake.milestones["IoniaHiring"].pos = (-1000.0, 0.0, 90.0)
         self.must_fail("transform differs from authored Prelude plan: IoniaHiring")
+
+    def test_oversized_marker_reach_footprint_refused(self):
+        self.fake.milestones["FlyerDiscovery"].scale = (6.0, 6.0, 1.6)
+        self.must_fail("transform differs from authored Prelude plan: MarkerScale_FlyerDiscovery")
+
+    def test_invalid_native_marker_scale_refused(self):
+        self.fake.milestones["LiftStation"].scale = (math.nan, 0.75, 1.6)
+        self.must_fail("nonfinite or invalid native marker scale: LiftStation")
 
     def test_marker_wrong_z_height_refused(self):
         self.fake.milestones["PressureStation"].pos = (225.0, 0.0, 180.0)
