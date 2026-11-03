@@ -253,3 +253,42 @@ but insufficient condition for navigation, line-of-sight,
 camera aiming, collision and P01–P13 input-based PIE acceptance.
 The real Editor map test remains separately held while other
 Unreal Editor/Live Coding sessions are active.
+
+## November 3 — actual Editor transforms and marker scales gate
+
+The opt-in native `verify_pr713_native_prelude_map.py` now cross-checks
+the **real Editor world transforms** against the source-controlled
+`build_first_wake_prelude_interaction.py` layout, not merely whether
+the expected actors exist. It requires the seven actual C++
+milestone proxies at their authored XYZ positions, the authored player
+spawn, physical traversal floor position and XYZ scale, and that
+every marker footprint is contained within the measured floor.
+It also verifies the actual 0.75 × 0.75 × 1.6 actor scale for each
+BasicShapes cube marker: without that check, assuming a 37.5 cm
+half-width could falsely certify a scaled-up marker as beyond reach.
+All coordinates and scales must be finite; tolerance is at most 1 cm
+for serialized actor transforms. The first marker's actual nearest
+horizontal edge must be more than 300 cm from spawn.
+
+The actual native report now includes
+`world_layout_matches_authoring_plan=true`,
+`all_marker_footprints_on_floor=true`,
+`first_marker_initially_out_of_interaction_reach=true` and the
+measured nearest-edge distance. The production
+`Assert-NativePreludeMapReceipt.ps1` requires these fields and
+rejects an edge-distance result at or below 300 cm or an inconsistent
+distance. This does **not** validate camera visibility raycasts,
+dynamic obstacles, actual movement or player E key input.
+
+At source `127667c48045f06f82f23d98faafe35eca3df6a3`, the
+connected Windows workstation ran the **actual Python checker function
+against stand-ins**: **31/31 behavior scenarios PASS**, including
+displaced Ionia/player, misplaced floor, altered marker Z, enlarged
+proxy, invalid floor scale and nonfinite positions/scales. The
+source-admission checks passed **8/8**, and the *real* PowerShell
+receipt validator passed **37 synthetic report fixtures**
+(1 accepted complete and 36 invalid rejected).
+Git remained clean. These checks used **no actual Unreal map load**;
+the genuine commandlet is still blocked by active Editor and Live
+Coding sessions. P01–P13 PIE and native 25/25 at the latest revision
+are **not claimed**.
