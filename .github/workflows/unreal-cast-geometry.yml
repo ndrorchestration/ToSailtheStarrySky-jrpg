@@ -34,6 +34,11 @@ jobs:
         run: |
           python3 -m unittest discover -s unreal/ArtSource/Characters -p 'test_ender_comparison_*.py' -v
           python3 -m py_compile unreal/ArtSource/Characters/capture_ender_comparison_native.py
+      - name: Verify Ender V3 derived head/hair geometry, native receipt guards (engine-free)
+        run: |
+          python3 -m unittest discover -s unreal/ArtSource/Characters -p test_ender_fidelity_v3.py -v
+          python3 -m unittest discover -s unreal/ArtSource/Characters -p test_ender_v3_native_captures.py -v
+          python3 -m py_compile unreal/ArtSource/Characters/intake_ender_fidelity_v3.py unreal/ArtSource/Characters/capture_ender_fidelity_v3_native.py
       - name: Regenerate source assets and confirm exact bytes
         env:
           TSTSS_CAST_OUTPUT: unreal/ArtSource/Characters/Candidates

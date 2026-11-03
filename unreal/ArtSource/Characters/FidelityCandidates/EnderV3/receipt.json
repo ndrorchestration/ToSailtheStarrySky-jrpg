@@ -1,0 +1,73 @@
+{
+  "status": "NONCANONICAL_UNRIGGED_HEAD_LANDMARK_V3_STUDY",
+  "name": "Ender",
+  "version": "ender_head_landmark_v3",
+  "source": {
+    "file": "Ender_ender_head_landmark_v3.glb",
+    "sha256": "0fb1b6e8de8d84ce751ce8bbb97b7ca78174e077acf64f60e127bd0ddb90c2de",
+    "bytes": 371188,
+    "mesh_parts": 182,
+    "mesh_count": 1,
+    "material_sections": 36,
+    "materials": 48
+  },
+  "pinned_predecessors": {
+    "Candidates/Ender.glb": "d516f68b49301cd04ae17c58eeeb2ca318b5f9b6a42f300be773fb62a7a3d6f2",
+    "FidelityCandidates/EnderV1/Ender_ender_face_hair_v1.glb": "3fc37924bb457dfe3b62877ca8709efb693a1c1c73251cf6f5dcfbe012babd38",
+    "FidelityCandidates/EnderV2/Ender_ender_fidelity_v2.glb": "e36f2f1daedbeefa53c54b92732e6b3498e4ea176c6f74f9f101e935a6b42bf8"
+  },
+  "normal_fix_counts": {
+    "V3 face sculpt orbital cheek chin planes": 4,
+    "V3 swept front lock 19": 2,
+    "V3 swept front lock 23": 1
+  },
+  "head_landmarks_source_m": {
+    "left_eye_center": [
+      -0.047,
+      1.514,
+      0.117
+    ],
+    "right_eye_center": [
+      0.047,
+      1.514,
+      0.117
+    ],
+    "nose_tip": [
+      0,
+      1.479,
+      0.138
+    ],
+    "mouth_center": [
+      0,
+      1.443,
+      0.118
+    ],
+    "chin_center": [
+      0,
+      1.376,
+      0.068
+    ],
+    "left_cheek_anchor": [
+      -0.077,
+      1.478,
+      0.07
+    ],
+    "right_cheek_anchor": [
+      0.077,
+      1.478,
+      0.07
+    ]
+  },
+  "reference_space_measured_from_approved_image": false,
+  "hair_color_state": "TEMPORARY GREEN; reference copper/auburn versus green NOT RESOLVED",
+  "height_order_canon": "Reson > Aepex > Ender > Ionia > Lyra",
+  "source_baseline_untouched": true,
+  "full_body_v2_remaining_design_preserved": true,
+  "approved_art_replaced": false,
+  "production_pawn_changed": false,
+  "skin_or_rigged": false,
+  "creator_approval": false,
+  "art_approval": false,
+  "gameplay_ready": false,
+  "next_gate": "native import and matched head-turnaround visual comparison"
+}
