@@ -77,6 +77,16 @@ class LandmarkAtlasSafetyTests(unittest.TestCase):
                             and not row["image_pixel_x"]
                             and not row["image_pixel_y"] for row in rows))
 
+    def test_exact_native_windows_bytes_survive_linux_git_checkout(self):
+        attributes=(DATA/".gitattributes").read_text(encoding="utf-8")
+        self.assertIn("native_landmark_index.json -text",attributes)
+        self.assertIn("TechnicalAtlas/v5_landmark_index_unmapped.csv -text",attributes)
+        manifest=json.loads((ART/"atlas_manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(hashlib.sha256(NATIVE.read_bytes()).hexdigest(),
+                         manifest["native_data_sha256"])
+        self.assertEqual(hashlib.sha256((ART/"v5_landmark_index_unmapped.csv").read_bytes()).hexdigest(),
+                         manifest["csv_sha256"])
+
     def test_no_mutation_or_auto_approval_in_native_probe(self):
         script=(HERE/"capture_ender_v5_native_landmarks.py").read_text(encoding="utf-8")
         self.assertIn("Refuse overwrite",script)

@@ -1,0 +1,4 @@
+# Native Windows evidence files are byte-for-byte provenance artifacts.
+# Do not normalize their CRLF data. GitHub CI checks original native hashes.
+native_landmark_index.json -text whitespace=cr-at-eol
+TechnicalAtlas/v5_landmark_index_unmapped.csv -text whitespace=cr-at-eol

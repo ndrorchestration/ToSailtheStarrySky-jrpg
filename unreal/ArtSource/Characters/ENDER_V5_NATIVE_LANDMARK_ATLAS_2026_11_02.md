@@ -37,6 +37,10 @@ All 79 *indices* are verified. **No native index has been authoritatively labele
 - **NO changes** to the default MetaHuman face; no facial pose edits, no gameplay integration, no creator art approval, no saved game map or source release.
 - The image on this branch is a **Python/Pillow technical diagram**, not output of Unreal's D3D11 viewport. It intentionally contains no approved artwork and no private user likeness data.
 
+### Cross-platform Git SHA-256 byte-custody correction
+
+GitHub's first Linux engine-free workflow correctly detected that Git had normalized CRLF to LF for the raw Windows native JSON/CSV evidence, changing bytes and invalidating the original native SHA-256 in the atlas manifest. The failure was a **source evidence byte mismatch**, not a failed Unreal mesh or geometric coordinate test. Added a narrowly scoped \`ReviewEvidence/.../EnderV5LandmarkAtlas/.gitattributes\` to mark exactly the 79-point JSON and unmapped CSV as \`-text\`, then staged them with \`git add --renormalize\`. Verified that indexed Git blobs now exactly match the actual native Windows files' SHA-256 values, and added a regression test to catch any future line-ending drift. No numerical coordinates, artwork or source engine assets changed.
+
 ## Acceptance and next minimum reversible art step
 
 Current **PASS**: source custody, real 79 indexed native API landmarks, independent proof, technical coordinate plots and unmapped review worksheet. **HOLD**: anatomical semantic index labels, source reference pixel coordinates, perspective/camera matching, naturalistic eye/eyelid sculpt, skin/groom materials, rig/animation, gameplay and owner acceptance.
