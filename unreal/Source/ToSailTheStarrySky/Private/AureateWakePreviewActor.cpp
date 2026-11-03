@@ -5,6 +5,7 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Materials/MaterialInterface.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Math/RotationMatrix.h"
 
 namespace
 {
@@ -55,6 +56,17 @@ AAureateWakePreviewActor::AAureateWakePreviewActor()
         SetupPreviewMesh(Foil, Shape);
         Hydrofoils.Add(Foil);
     }
+    // Structural struts stay invisible until a reviewed mesh and authored pose are both selected.
+    for (int32 Index = 0; Index < 4; ++Index)
+    {
+        const FName Name(*FString::Printf(TEXT("WingRootSupport_%d"), Index + 1));
+        UStaticMeshComponent* Support = CreateDefaultSubobject<UStaticMeshComponent>(Name);
+        Support->SetupAttachment(VesselRoot);
+        Support->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        Support->SetCastShadow(true);
+        Support->SetVisibility(false);
+        WingRootSupports.Add(Support);
+    }
     SnapToForm(EAureateWakeForm::Skyborne);
 }
 
@@ -63,6 +75,7 @@ void AAureateWakePreviewActor::BeginPlay()
     Super::BeginPlay();
     RefreshWingMeshes();
     RefreshWingMaterials();
+    RefreshRootSupports();
 }
 
 void AAureateWakePreviewActor::RefreshWingMeshes()
@@ -89,6 +102,48 @@ void AAureateWakePreviewActor::RefreshWingMeshes()
     if (!bTransitioning)
     {
         SnapToForm(CurrentForm); // Recompose the same preview form without story events.
+    }
+    RefreshRootSupports();
+}
+
+void AAureateWakePreviewActor::RefreshRootSupports()
+{
+    const bool bVisible = bUseRootPivotedWingPose && AuthoredWingMesh &&
+        AuthoredRootSupportMesh && CurrentForm != EAureateWakeForm::Orbiter;
+    for (UStaticMeshComponent* Support : WingRootSupports)
+    {
+        if (!Support) continue;
+        Support->SetStaticMesh(bVisible ? AuthoredRootSupportMesh.Get() : nullptr);
+        Support->SetVisibility(bVisible);
+    }
+    UpdateRootSupportTransforms();
+}
+
+void AAureateWakePreviewActor::UpdateRootSupportTransforms()
+{
+    // The authored 100-cm +X strut starts at the hull flank and extends to
+    // the moving wing-root location. It is purely a visual telescoping member.
+    if (!bUseRootPivotedWingPose || !AuthoredWingMesh ||
+        WingRootSupports.Num() != 4 || Wings.Num() != 4) return;
+    for (int32 Index = 0; Index < 4; ++Index)
+    {
+        UStaticMeshComponent* Support = WingRootSupports[Index];
+        UStaticMeshComponent* Wing = Wings[Index];
+        if (!Support || !Wing) continue;
+        const float Side = (Index % 2 == 0) ? -1.f : 1.f;
+        const FVector Root = Wing->GetRelativeLocation();
+        const FVector HullAnchor(Root.X, Side * 73.f, 18.f);
+        const FVector Link = Root - HullAnchor;
+        const float Length = Link.Size();
+        if (!FMath::IsFinite(Length) || Length < 1.f)
+        {
+            Support->SetVisibility(false);
+            continue;
+        }
+        // No shared actor/physics state; strut follows the existing wing root.
+        const FQuat Direction = FRotationMatrix::MakeFromX(Link).ToQuat();
+        Support->SetRelativeTransform(FTransform(Direction, HullAnchor,
+            FVector(Length / 100.f, 1.f, 1.f)));
     }
 }
 
@@ -244,6 +299,7 @@ void AAureateWakePreviewActor::SnapToForm(EAureateWakeForm Form)
     {
         if (Dynamic) Dynamic->SetScalarParameterValue(TEXT("OrbiterSailBlend"), OrbiterSailBlend);
     }
+    UpdateRootSupportTransforms();
     CurrentForm = Form;
     TargetForm = Form;
     bTransitioning = false;
@@ -311,6 +367,7 @@ void AAureateWakePreviewActor::Tick(float DeltaSeconds)
     {
         Hydrofoils[Index]->SetRelativeTransform(Interpolate(StartFoilTransforms[Index], TargetFoilTransforms[Index], Smooth));
     }
+    UpdateRootSupportTransforms();
     if (T >= 1.f)
     {
         SnapToForm(TargetForm);

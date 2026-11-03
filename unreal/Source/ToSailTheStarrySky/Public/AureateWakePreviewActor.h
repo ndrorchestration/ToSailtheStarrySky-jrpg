@@ -65,6 +65,17 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Visuals")
     bool bUseRootPivotedWingPose = false;
 
+    /** Optional 100-cm +X authored strut. One rigid visual link per wing, review only. */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Visuals")
+    TObjectPtr<UStaticMesh> AuthoredRootSupportMesh;
+
+    /** Reconcile strut geometry without changing ship state, buoyancy or wing count. */
+    UFUNCTION(BlueprintCallable, Category="Aureate Wake|Visuals")
+    void RefreshRootSupports();
+
+    UFUNCTION(BlueprintPure, Category="Aureate Wake|Preview")
+    int32 GetRootSupportCount() const { return WingRootSupports.Num(); }
+
     UFUNCTION(BlueprintCallable, Category="Aureate Wake|Visuals")
     void RefreshWingMeshes();
 
@@ -86,6 +97,10 @@ protected:
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Preview")
     TArray<TObjectPtr<UStaticMeshComponent>> Wings;
+
+    /** Four independent hull-to-root telescope visuals; never counted as wings. */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Preview")
+    TArray<TObjectPtr<UStaticMeshComponent>> WingRootSupports;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Preview")
     TArray<TObjectPtr<UStaticMeshComponent>> Hydrofoils;
@@ -116,4 +131,5 @@ private:
     static FTransform FoilPose(EAureateWakeForm Form, int32 FoilIndex);
     static FTransform Interpolate(const FTransform& Start, const FTransform& End, float Alpha);
     void SnapToForm(EAureateWakeForm Form);
+    void UpdateRootSupportTransforms();
 };
