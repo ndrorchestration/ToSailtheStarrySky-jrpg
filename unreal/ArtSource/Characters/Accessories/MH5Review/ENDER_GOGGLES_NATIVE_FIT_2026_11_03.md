@@ -30,6 +30,20 @@ All reviewed primary evidence is checked into `Accessories/MH5Review/Evidence/`:
 
 The corresponding `native_import_goggles_to_MH5.py`, `native_goggles_axis_search.py`, `native_goggles_spatial01_negative_control.py`, and `native_goggles_spatial02.py` scripts are source-controlled and fail-closed on project and input hashes. The `test_native_goggles_fit_receipts.py` engine-free regression rejects wrong rotation, rewritten negative controls, altered source hashes, and any false claim that placement, face fit, GPU render, game rig or canonical art was approved. **All native executions exited; no source character, green-eye base, review map or playable project was edited or promoted.** The only new saved Unreal assets are detached goggles review files inside `MH5`.
 
+## Combined native V5 + goggles GPU screenshot attempt — TIMEOUT, not a PASS
+
+A single further bounded D3D11 live-Editor capture was attempted in `MH5`, using the **confirmed corrected rotation [Pitch,Yaw,Roll]=[90,180,0]**, the **provisional above-brow location [0,9.5,171.5] cm**, and a frontal (+Y) native CameraActor. The script placed the *real imported goggles StaticMesh* into the scene with the *real transient MetaHuman Face/Body preview actor*. Before requesting the image, Unreal checked goggles bounds against 18.21768 × 15.35 × 6.1 cm and kept all source assets loaded with exact hashes.
+
+The screenshot task was requested and the bounded tick runner eventually recorded **`TIMED_OUT`** with **zero PNG captures**. No combined face-and-goggles screenshot exists. The only terminated process was the disposable `MH5` render Editor; the earlier user Editor was not terminated. After the timeout, fresh checks confirmed:
+
+- MetaHuman UAsset SHA-256 unchanged: `2bb581a27aee55b0352f52227a3afe2c6d01a529b63c8dc661cbe8f4edbb2e3d`.
+- Review map SHA-256 unchanged: `025539f8717c6215a17dc8acff24ec7bd39b3d43129de4069a9418b3d8da3a2a`.
+- Original goggles GLB SHA-256 unchanged: `76eb9696e2abf719bcfd3d467313e46136f5d92cc36cd6b3845ae447a272c1ae`.
+- `Saved/CharacterLookdev/GogglesFitV1/native_visual_combined01/capture_receipt.json` contains the terminal `TIMED_OUT` and `captures=[]`; a mirrored engine-native receipt is checked in as `Evidence/native_visual_combined01.json`.
+- The capture source is saved as `native_goggles_combined_capture01.py`. A new negative test rejects reporting any resulting screenshot or character-fitting approval based on this failed run. No scene or V5/goggles source asset was saved, and no game art promoted.
+
+**Rendering remains the outstanding separate gate.** Do not spend additional source or ArtQA credit on repeated attempts with the same screenshot pipeline without first diagnosing the suspended GPU screenshot task, Windows UI/session permissions, or D3D11 editor capture behavior. A fallback could be a separate RenderTarget export or an authorized Editor viewport capture, clearly distinguishing its proof strength from a HighResShot. These alternatives have **not** been tested in this milestone.
+
 ## Visual approval and next 3D milestone
 
 Keep the first approved Ender faces authoritative, and the later ship-deck group image secondary. Hair-color disagreement remains unresolved. Core Data and Epic-account authentication prerequisites for the MetaHuman production rig remain blocked.
