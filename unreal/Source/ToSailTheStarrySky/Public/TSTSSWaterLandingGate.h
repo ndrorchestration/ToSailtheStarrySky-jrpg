@@ -15,7 +15,13 @@ public:
     bool Observe(float DeltaSeconds, bool bHullTouchesWater, float HullVerticalSpeedCms, UTSTSSFirstWakeState* Story);
 
     UFUNCTION(BlueprintCallable, Category="TSTSS|Water")
-    void Reset() { StableContactSeconds = 0.f; bContactRecorded = false; }
+    void Reset()
+    {
+        StableContactSeconds = 0.f;
+        bContactRecorded = false;
+        ObservedRestoreGeneration = 0;
+        bHasObservedRestoreGeneration = false;
+    }
 
     UFUNCTION(BlueprintPure, Category="TSTSS|Water")
     float GetStableContactSeconds() const { return StableContactSeconds; }
@@ -23,4 +29,6 @@ public:
 private:
     UPROPERTY() float StableContactSeconds = 0.f;
     UPROPERTY() bool bContactRecorded = false;
+    UPROPERTY(Transient) uint64 ObservedRestoreGeneration = 0;
+    UPROPERTY(Transient) bool bHasObservedRestoreGeneration = false;
 };
