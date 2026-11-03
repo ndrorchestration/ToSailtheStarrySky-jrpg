@@ -244,3 +244,19 @@ investigate; do not publish token-bearing defaults.
 ## Native Editor map-admission subgate (separate from 25 named automations)
 
 The dedicated [native Prelude map and actor gate](FIRST_WAKE_NATIVE_MAP_ADMISSION_2026-11-02.md) now verifies a real loaded level, reflected milestone C++ actors, collision declarations and ordered read-only objectives using the Editor Python commandlet. Its hosted source checks and **8 Windows safety tests** passed, but the attempted native build at `a06f203902fcb1594e1b55e43d1ec9f27d9ed583` was **blocked** by active Unreal Live Coding. The new review script correctly refuses concurrent Editor activity before building, confirmed on Windows at `cfb88a9edf582b57ca95db1f731b68d79da3a22c`. The native **map/actor test has NOT RUN**, P01–P13 genuine PIE remains NOT TESTED, and previous 25/25 evidence belongs solely to its earlier exact SHA.
+
+
+## Separate source-locked native map/actor acceptance gate (2026-11-02)
+
+An opt-in [real Editor map verification lane](FIRST_WAKE_NATIVE_MAP_ADMISSION_2026-11-02.md)
+now uses `Invoke-NativePreludeMapQA.ps1` with an explicit SHA,
+`-PreflightOnly`, an exact-source successful `Verify-Unreal.ps1
+-SkipTests` receipt (`verified-build.json`), and actual native
+Python Editor map inspection. This prevents a log-only, unbuilt or
+dirty checkout from being treated as playable evidence; it also refuses
+to launch while another Unreal Editor or Live Coding session is active.
+Hosted tests parse the actual PowerShell script and exercise negative
+source mutations. **Real map loading is still NOT TESTED**; the
+previously passed 25 native automations belong to their exact earlier
+commit. P01–P13 PIE, water physics, Splashdown, character rendering,
+ship production art and merge/release remain distinct held gates.
