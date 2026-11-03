@@ -273,3 +273,22 @@ It is **source behavior verification**, not native Editor or player PIE
 proof. The real map load remains blocked by concurrent Live Coding;
 no other Editor process was stopped. Refer to the
 [native map admission guide](FIRST_WAKE_NATIVE_MAP_ADMISSION_2026-11-02.md).
+
+## Bounded native map-report validation — November 3
+
+The integrated native map runner now requires an independent production
+PowerShell validator, `Assert-NativePreludeMapReceipt.ps1`, to
+approve every report field. A matching status and actor count alone
+**cannot** pass. Its 32 synthetic positive/negative cases and the
+14 launcher source-safety tests passed on Windows at source
+`afac6d0eddaa9aa01a391d466d76557666fe6a9a`.
+Hosted source preflight likewise succeeded, including six PowerShell
+syntax checks. The validator checks exact source/map hashes, Unreal
+version, all seven actor locations, objective and collision proofs,
+input source mappings, distinct inspection bits, and explicit denials of
+PIE, disk saves, water physics, art and Chapter 1 approval.
+
+This is source/fixture evidence, **not** a real Unreal level inspection.
+The live Editor/Live Coding sessions remain an independent idle-workstation
+blocker for the commandlet. Genuine P01–P13 PIE and Splashdown remain held.
+See [native map admission handoff](FIRST_WAKE_NATIVE_MAP_ADMISSION_2026-11-02.md).
