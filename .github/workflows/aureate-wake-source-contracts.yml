@@ -21,5 +21,7 @@ jobs:
         run: python3 unreal/Tests/check_aureate_preview_source.py
       - name: Check physical landing versus visual authority
         run: python3 unreal/Tests/check_aureate_water_observer_source.py
+      - name: Exercise isolated C++ request logic (not Unreal)
+        run: python3 unreal/Tests/check_aureate_request_logic.py
       - name: Declare verification scope
-        run: echo "Static source checks only; no Unreal compile, runtime, physics, art acceptance or release."
+        run: echo "Source checks and isolated C++ method probe only; no Unreal compile, runtime, physics, art acceptance or release."

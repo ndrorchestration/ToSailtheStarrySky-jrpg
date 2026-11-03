@@ -218,7 +218,9 @@ bool AAureateWakePreviewActor::RequestForm(EAureateWakeForm RequestedForm)
     {
         StartFoilTransforms.Add(Hydrofoils[Index]->GetRelativeTransform());
         TargetFoilTransforms.Add(FoilPose(RequestedForm, Index));
-        Hydrofoils[Index]->SetVisibility(true);
+        // Keep deployment/retraction visible only on routes involving the sea form.
+        Hydrofoils[Index]->SetVisibility(CurrentForm == EAureateWakeForm::Seaborne ||
+            RequestedForm == EAureateWakeForm::Seaborne);
     }
     bTransitioning = true;
     return true;
