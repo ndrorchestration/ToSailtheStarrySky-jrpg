@@ -1,0 +1,84 @@
+{
+  "status": "V4_UNRIGGED_NONCANONICAL_FACIAL_TOPOLOGY_STUDY",
+  "source": {
+    "file": "Ender_ender_anatomy_v4.glb",
+    "sha256": "ac36e1d23044ca79d5a954dc8cb85cff8461117c026674ed77fe2e482acaca0b",
+    "bytes": 436292,
+    "mesh_parts": 178,
+    "mesh_count": 1,
+    "material_sections": 36,
+    "materials": 56
+  },
+  "version": "ender_anatomy_v4",
+  "name": "Ender",
+  "pinned_predecessors": {
+    "Candidates/Ender.glb": "d516f68b49301cd04ae17c58eeeb2ca318b5f9b6a42f300be773fb62a7a3d6f2",
+    "FidelityCandidates/EnderV1/Ender_ender_face_hair_v1.glb": "3fc37924bb457dfe3b62877ca8709efb693a1c1c73251cf6f5dcfbe012babd38",
+    "FidelityCandidates/EnderV2/Ender_ender_fidelity_v2.glb": "e36f2f1daedbeefa53c54b92732e6b3498e4ea176c6f74f9f101e935a6b42bf8",
+    "FidelityCandidates/EnderV3/Ender_ender_head_landmark_v3.glb": "0fb1b6e8de8d84ce751ce8bbb97b7ca78174e077acf64f60e127bd0ddb90c2de"
+  },
+  "source_baseline_untouched": true,
+  "normal_fix_counts": {
+    "V3 swept front lock 19": 2,
+    "V3 swept front lock 23": 1
+  },
+  "model_space_landmarks_m": {
+    "left_orbit": [
+      -0.046,
+      1.519,
+      0.095
+    ],
+    "right_orbit": [
+      0.046,
+      1.519,
+      0.095
+    ],
+    "nose_bridge": [
+      0,
+      1.526,
+      0.113
+    ],
+    "nose_tip": [
+      0,
+      1.48,
+      0.127
+    ],
+    "mouth_midline": [
+      0,
+      1.442,
+      0.117
+    ],
+    "chin": [
+      0,
+      1.388,
+      0.087
+    ],
+    "left_ear_anchor": [
+      -0.117,
+      1.502,
+      0.014
+    ],
+    "right_ear_anchor": [
+      0.117,
+      1.502,
+      0.014
+    ]
+  },
+  "reference_space_measured_from_approved_image": false,
+  "approved_references": "2026-10-30 core cast and separate historical Ender solarpunk sheet; contrasting artistic styles",
+  "unresolved_hair_color": "dark/green cast variant versus auburn/brown solarpunk sheet; HOLD",
+  "height_order_canon": "Reson > Aepex > Ender > Ionia > Lyra",
+  "author_approved_likeness": false,
+  "cinematic_quality": false,
+  "approved_art_replaced": false,
+  "v3_replaced": false,
+  "skinned": false,
+  "rigged": false,
+  "animation_ready": false,
+  "production_game_asset": false,
+  "native_import_verified": false,
+  "native_render_verified": false,
+  "art_approval": false,
+  "topology_intent": "closed mesh with radial longitudinal rings; not production animation retopology",
+  "next_gate": "Unreal 5.8.4 isolated native import and close-up visual acceptance"
+}
