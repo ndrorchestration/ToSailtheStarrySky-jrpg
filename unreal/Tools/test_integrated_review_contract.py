@@ -36,8 +36,14 @@ class IntegratedSourceGateTests(unittest.TestCase):
         result = gate.verify()
         self.assertEqual(result["result"], "COMPOSED_SOURCE_DECLARATIONS_PASS")
         self.assertEqual(result["native_automation_25"], "NOT_TESTED")
+        self.assertEqual(result["native_automation_26"], "NOT_TESTED")
         self.assertEqual(result["pie_cases_13"], "NOT_TESTED")
         self.assertFalse(result["merges_or_releases_authorized"])
+
+    def test_integration_cannot_omit_26th_native_automation(self):
+        self.args[8] = self.args[8].replace(
+            "'TSTSS.FirstWake.InteractionToSplashdown'", "", 1)
+        self.fail_if("26-name native automation registry")
 
     def test_legacy_engine_instruction_cannot_be_repromoted(self):
         self.args[1] = self.args[1].replace("Current forward-engine authority", "Old")
