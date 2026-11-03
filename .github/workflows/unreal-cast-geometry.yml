@@ -54,6 +54,11 @@ jobs:
           python3 -m unittest discover -s unreal/ArtSource/Characters -p test_ender_v5_native_landmark_atlas.py -v
           python3 -m py_compile unreal/ArtSource/Characters/capture_ender_v5_native_landmarks.py unreal/ArtSource/Characters/verify_ender_v5_native_landmark_atlas.py unreal/ArtSource/Characters/render_ender_v5_native_landmark_atlas.py
 
+      - name: Enforce creator-first Ender V5 face authority and reject false mapping (engine-free)
+        run: |
+          python3 -m unittest discover -s unreal/ArtSource/Characters -p test_ender_v5_reference_priority.py -v
+          python3 unreal/ArtSource/Characters/verify_ender_v5_reference_priority.py
+
       - name: Regenerate source assets and confirm exact bytes
         env:
           TSTSS_CAST_OUTPUT: unreal/ArtSource/Characters/Candidates
