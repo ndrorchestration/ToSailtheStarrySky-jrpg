@@ -41,11 +41,13 @@ def check_launcher(source: str, build_source: str) -> None:
         "UnrealEditor-Cmd.exe",
         "'-run=pythonscript'",
         "TSTSS_NATIVE_PRELUDE_MAP_QA_PASS",
-        "NATIVE_EDITOR_MAP_AND_REAL_ACTORS_PASS_NOT_PIE",
+        "Assert-NativePreludeMapReceipt.ps1",
+        "Assert-TSTSSNativePreludeMapReceipt -Report $Payload",
+        "NATIVE_EDITOR_MAP_RECEIPT_SCHEMA_ACCEPTED_NOT_PIE",
         "exactly one fresh, non-overwriting map-QA report",
-        "actual_pie_player_input_tested",
-        "chapter_one_act_one",
-        "render_or_water_physics_approved",
+        "P01_P13 -cne 'NOT_TESTED'",
+        "WaterPhysics -cne 'NOT_AUTHORIZED'",
+        "Release -cne 'NOT_AUTHORIZED'",
         "NativePreludeMapQA",
         "LauncherReceipts",
         "NATIVE_EDITOR_MAP_ACTORS_PASS_NOT_PIE",
@@ -133,6 +135,23 @@ class LauncherContractTests(unittest.TestCase):
             self.launcher.replace("PIE_P01_P13=NOT_TESTED", "PIE_P01_P13=PASS"),
             "PIE_P01_P13=NOT_TESTED",
         )
+
+    def test_independent_report_schema_gate_cannot_be_removed(self):
+        self.check_failed(
+            self.launcher.replace("Assert-TSTSSNativePreludeMapReceipt -Report $Payload",
+                                  "Write-Host 'assume all seven passed'"),
+            "Assert-TSTSSNativePreludeMapReceipt",
+        )
+
+    def test_schema_validator_and_fixture_runner_are_wired(self):
+        validator = (ROOT / "Tools/Assert-NativePreludeMapReceipt.ps1").read_text(encoding="utf-8")
+        fixtures = (ROOT / "Tools/Test-NativePreludeMapReceiptFixtures.ps1").read_text(encoding="utf-8")
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+        self.assertIn("function Assert-TSTSSNativePreludeMapReceipt", validator)
+        self.assertIn("actual_reflected_game_mode_pawn_present", validator)
+        self.assertIn("character_or_ship_art_approved", validator)
+        self.assertIn("UNSAFE_MAP_REPORT_ACCEPTED", fixtures)
+        self.assertIn("Test-NativePreludeMapReceiptFixtures.ps1", workflow)
 
     def test_no_force_kill_reviewer_editor(self):
         self.check_failed(self.launcher + "\nStop-Process -Name UnrealEditor -Force\n",
