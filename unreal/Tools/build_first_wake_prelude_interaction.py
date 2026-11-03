@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
@@ -59,6 +60,70 @@ OCEAN_SCALE = (95.0, 75.0, 1.0)
 PLAYER_SPAWN = (-2780.0, 0.0, 130.0)
 REVIEW_CAMERA = (-2650.0, -1800.0, 720.0)
 REVIEW_CAMERA_YAW = 25.0
+# Source-only reviewer geometry. UE BasicShapes Cube is 100 cm wide before
+# the explicit milestone scale of (.75,.75,1.6). This cannot prove PIE hits.
+REVIEW_MARKER_HALF_WIDTH_CM = 37.5
+REVIEW_INTERACTION_REACH_CM = 300.0
+
+
+def validate_spatial_review_plan() -> dict:
+    """Validate a continuous floor footprint and honest first E-range.
+
+    Only authoring-world XY plan geometry; not native UE collision, LOS,
+    camera occlusion, navigation meshes, dynamic obstacles or PIE movement.
+    """
+    values = (
+        *PLAYER_SPAWN, *FLOOR_LOCATION, *FLOOR_SCALE,
+        REVIEW_MARKER_HALF_WIDTH_CM, REVIEW_INTERACTION_REACH_CM,
+        *(coordinate for stop in STOPS for coordinate in (stop.x, stop.y)),
+    )
+    if not all(math.isfinite(float(v)) for v in values):
+        raise ValueError("Nonfinite Prelude path or collision dimensions")
+    if any(s <= 0 for s in FLOOR_SCALE):
+        raise ValueError("Review floor dimensions must be positive")
+    if REVIEW_INTERACTION_REACH_CM <= 0 or REVIEW_MARKER_HALF_WIDTH_CM <= 0:
+        raise ValueError("Review marker width and interaction distance must be positive")
+
+    # The blockout traversal floor is a scaled 100cm BasicShapes cube.
+    floor_min_x = FLOOR_LOCATION[0] - FLOOR_SCALE[0] * 50
+    floor_max_x = FLOOR_LOCATION[0] + FLOOR_SCALE[0] * 50
+    floor_min_y = FLOOR_LOCATION[1] - FLOOR_SCALE[1] * 50
+    floor_max_y = FLOOR_LOCATION[1] + FLOOR_SCALE[1] * 50
+    floor_top_z = FLOOR_LOCATION[2] + FLOOR_SCALE[2] * 50
+    if abs(floor_top_z) > 5:
+        raise ValueError("Review traversal floor top has drifted from height zero")
+
+    # The initial pawn and the full marker footprints must fit on the
+    # continuous floor. AABB coverage is necessary, not sufficient for PIE.
+    x, y, z = PLAYER_SPAWN
+    if not (floor_min_x < x < floor_max_x and floor_min_y < y < floor_max_y):
+        raise ValueError("First Wake player start is outside traversal floor")
+    if z < floor_top_z:
+        raise ValueError("Review player start is below the floor collision top")
+    for stop in STOPS:
+        if not (floor_min_x < stop.x - REVIEW_MARKER_HALF_WIDTH_CM and
+                stop.x + REVIEW_MARKER_HALF_WIDTH_CM < floor_max_x and
+                floor_min_y < stop.y - REVIEW_MARKER_HALF_WIDTH_CM and
+                stop.y + REVIEW_MARKER_HALF_WIDTH_CM < floor_max_y):
+            raise ValueError("Review interaction marker outside traversal floor: " + stop.label)
+
+    # Spawn must be far enough away that the flyer cannot be activated
+    # immediately from the starting pawn position even at its nearest edge.
+    first = STOPS[0]
+    nearest_x = max(abs(first.x - x) - REVIEW_MARKER_HALF_WIDTH_CM, 0.0)
+    nearest_y = max(abs(first.y - y) - REVIEW_MARKER_HALF_WIDTH_CM, 0.0)
+    spawn_to_flyer_nearest_edge = math.hypot(nearest_x, nearest_y)
+    if spawn_to_flyer_nearest_edge <= REVIEW_INTERACTION_REACH_CM:
+        raise ValueError("Flyer review marker is already within 300cm of player spawn")
+
+    return {
+        "floor_x_cm": [floor_min_x, floor_max_x],
+        "floor_y_cm": [floor_min_y, floor_max_y],
+        "floor_top_z_cm": floor_top_z,
+        "spawn_to_flyer_nearest_xy_edge_cm": round(spawn_to_flyer_nearest_edge, 2),
+        "all_seven_marker_footprints_on_floor": True,
+        "native_visibility_or_pie_tested": False,
+    }
 
 
 def validate_plan() -> dict:
@@ -82,13 +147,13 @@ def validate_plan() -> dict:
         raise ValueError("Interaction path must be ordered and traversable")
     if STOPS[0].x - PLAYER_SPAWN[0] < 250:
         raise ValueError("Player spawn must precede flyer interaction")
-    if FLOOR_LOCATION[2] + FLOOR_SCALE[2] * 50.0 > 5:
-        raise ValueError("Review floor would obstruct the player")
+    geometry = validate_spatial_review_plan()
     return {
         "status": "REVIEW_ONLY_TRAVERSABLE_PRELUDE_NO_GAMEPLAY_PROOF",
         "map": REVIEW_MAP,
         "stops": [asdict(s) for s in STOPS],
         "player_start_cm": PLAYER_SPAWN,
+        "authoring_geometry_only": geometry,
         "floor_location_cm": FLOOR_LOCATION,
         "floor_scale": FLOOR_SCALE,
         "ocean_is_visual_only": True,
