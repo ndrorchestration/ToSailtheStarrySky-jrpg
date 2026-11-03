@@ -17,9 +17,33 @@ bool FTSTSSWaterLandingRestoreTest::RunTest(const FString& Parameters)
     for (int32 Index=0; Index<9; ++Index) Gate->Observe(0.1f, true, 0.f, Story);
     TestFalse(TEXT("Loss of overlap resets stability"), Gate->Observe(0.1f, false, 0.f, Story));
     TestEqual(TEXT("No premature flotation"), Story->GetCurrentBeat(), ETSTSSFirstWakeBeat::SeaContact);
-    for (int32 Index=0; Index<21; ++Index) Gate->Observe(0.1f, true, 0.f, Story);
+
+    // Accumulate old-timeline evidence, then quickload into the SAME Story and
+    // Gate while hull overlap remains true. No caller-side Gate->Reset().
+    // Quarter-second samples make the two-second boundary exact.
+    for (int32 Index = 0; Index < 6; ++Index)
+        TestFalse(TEXT("Old timeline has not settled yet"), Gate->Observe(0.25f, true, 0.f, Story));
+    TestEqual(TEXT("Old timeline accumulated stability"), Gate->GetStableContactSeconds(), 1.5f);
+    TestFalse(TEXT("Incomplete engineering snapshot is rejected"),
+        Story->Restore(true, ETSTSSFirstWakeBeat::Launched, 0x03));
+    TestEqual(TEXT("Failed restore preserves contact"), Story->GetCurrentBeat(), ETSTSSFirstWakeBeat::SeaContact);
+    TestEqual(TEXT("Failed restore preserves accumulated stability"), Gate->GetStableContactSeconds(), 1.5f);
+    if (!TestTrue(TEXT("Rewind existing story to Launched"),
+        Story->Restore(true, ETSTSSFirstWakeBeat::Launched, 0x07))) return false;
+
+    TestFalse(TEXT("First post-rewind sample cannot confirm flotation"),
+        Gate->Observe(0.25f, true, 0.f, Story));
+    TestEqual(TEXT("Rewind immediately reacquires SeaContact"),
+        Story->GetCurrentBeat(), ETSTSSFirstWakeBeat::SeaContact);
+    TestEqual(TEXT("Rewind discards all old stable duration"), Gate->GetStableContactSeconds(), 0.25f);
+    for (int32 Index = 0; Index < 6; ++Index)
+        TestFalse(TEXT("Insufficient fresh stability cannot complete"), Gate->Observe(0.25f, true, 0.f, Story));
+    TestEqual(TEXT("Only fresh samples count toward stability"), Gate->GetStableContactSeconds(), 1.75f);
+    TestEqual(TEXT("Still SeaContact before two fresh seconds"), Story->GetCurrentBeat(), ETSTSSFirstWakeBeat::SeaContact);
+    TestTrue(TEXT("Two fresh stable seconds confirm flotation"), Gate->Observe(0.25f, true, 0.f, Story));
     TestEqual(TEXT("Restored contact can eventually confirm flotation"),
         Story->GetCurrentBeat(), ETSTSSFirstWakeBeat::FlotationConfirmed);
+    TestEqual(TEXT("Completion uses exactly two fresh seconds"), Gate->GetStableContactSeconds(), 2.f);
     return true;
 }
 

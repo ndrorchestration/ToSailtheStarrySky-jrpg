@@ -23,6 +23,13 @@ bool UTSTSSWaterLandingGate::Observe(float DeltaSeconds, bool bHullTouchesWater,
         Reset();
         return false;
     }
+    // Quickload restores the same Story object in place. If it rewinds to
+    // Launched, discard contact/settling evidence from the previous timeline
+    // before using this new physical sample to reacquire SeaContact.
+    if (bContactRecorded && Story->GetCurrentBeat() == ETSTSSFirstWakeBeat::Launched)
+    {
+        Reset();
+    }
     // A restored save may already have recorded SeaContact. Reacquire contact
     // without replaying a milestone; never skip ahead from another story beat.
     if (!bContactRecorded)
