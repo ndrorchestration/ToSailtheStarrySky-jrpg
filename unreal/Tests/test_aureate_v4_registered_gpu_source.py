@@ -4,12 +4,15 @@ import hashlib
 import importlib.util
 from pathlib import Path
 import struct
+import sys
 import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 TOOLS = ROOT / 'Tools'
 RUNNER = TOOLS / 'run_aureate_v4_registered_gpu_capture.py'
+sys.path.insert(0, str(TOOLS))
+from test_aureate_v4_png_pixel_integrity import synthetic_png
 
 
 def load_runner():
@@ -25,7 +28,7 @@ class RegisteredGPUCaptureTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.png = Path(self.temp.name) / 'capture.png'
-        raw = b'\x89PNG\r\n\x1a\n' + b'\x00' * 8 + struct.pack('>II', 1280, 720) + b'x' * 4500
+        raw = synthetic_png()
         self.png.write_bytes(raw)
         self.test_name = 'Editor.Python.AureateV4Gpu_a01.test_aureate_v4_skybourne_a01'
         self.report = {'succeeded': 1, 'failed': 0, 'notRun': 0,
@@ -43,7 +46,8 @@ class RegisteredGPUCaptureTests(unittest.TestCase):
 
     def test_pass_stays_pixel_qa_pending_and_not_art_acceptance(self):
         self.assertEqual(self.verify()['dimensions'], [1280, 720])
-        self.assertNotIn('art_approved', self.verify())
+        self.assertIn('pixel_integrity', self.verify())
+        self.assertFalse(self.verify()['pixel_integrity']['art_approved'])
 
     def test_missing_exact_registered_test_fails(self):
         self.report['tests'][0]['fullTestPath'] = 'Editor.Python.Different.Test'
