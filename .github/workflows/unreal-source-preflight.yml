@@ -22,3 +22,5 @@ jobs:
         run: python3 unreal/Tools/test_automation_registry.py
       - name: Compare expected and registered Unreal tests
         run: python3 unreal/Tools/check_automation_registry.py
+      - name: First Wake interaction-to-Splashdown authority contract (source only)
+        run: python3 unreal/Tools/test_firstwake_integration_contract.py
