@@ -168,7 +168,9 @@ def compile_and_run(tmp: Path, name: str) -> subprocess.CompletedProcess[str]:
     executable = tmp / (name + (".exe" if os.name == "nt" else ""))
     source = tmp / "rank_host.cpp"
     command = compiler_command(tmp, executable, source)
-    build = subprocess.run(command, capture_output=True, text=True, check=False)
+    # Keep MSVC's default .obj outputs in the disposable temporary folder,
+    # never as untracked artifacts in the checked-out repository.
+    build = subprocess.run(command, cwd=tmp, capture_output=True, text=True, check=False)
     if build.returncode != 0:
         raise RuntimeError(f"C++ compile FAILED ({name}):\n{build.stdout}\n{build.stderr}")
     return subprocess.run([str(executable)], capture_output=True, text=True, check=False)
