@@ -73,3 +73,13 @@ checkout. Do not create a synthetic sea-contact marker to manufacture
 Splashdown: actual contact and stable flotation require separate native
 physics evidence. Any success must include source SHA, logs, evidence
 and unmodified original map/save files. Do not merge based on this README.
+
+
+**Editor map-admission safety:** The [native Prelude V2 map review gate](Docs/FIRST_WAKE_NATIVE_MAP_ADMISSION_2026-11-02.md)
+now has an exact-source Windows PowerShell launcher,
+`Tools/Invoke-NativePreludeMapQA.ps1`, requiring an idle Editor,
+UE5.8.4, clean/disposable worktree and a **verified-build.json**
+receipt from a real clean build-only run. It has source-level safety
+checks but **no accepted real Editor map receipt yet**. Actual
+P01–P13 PIE remains not tested. Do not conflate this with the earlier
+native 25/25 automation receipt.
