@@ -165,3 +165,31 @@ belongs to earlier exact tested SHA
 `52e13aedaa8bda900cece849b54eae570179c838`.
 A future positive map-admission check still **does not** establish
 P01–P13 genuine keyboard PIE, physical splashdown or approved art.
+
+## 2026-11-03 — Actual Python map-checker behavior exercised (not native)
+
+The exact `check_native()` implementation in
+`unreal/Tools/verify_pr713_native_prelude_map.py` now has an independent
+`test_pr713_native_prelude_behavior.py` suite with **23 positive and
+fail-closed tests**. The suite runs the actual Python inspection function
+unchanged against disposable Editor API and in-memory actor/state doubles.
+It checks the valid seven-milestone story/inspection sequence and deliberately
+rejects incorrect Unreal patch, map load, subsystem, duplicate/extra/missing
+actors, station tags, absent collision, invalid floor/ocean profiles,
+missing player spawn, wrong native explorer pawn, skipped Ionia/story beats,
+premature/duplicate engineering signoff, wrong objective and a false
+Splashdown/Chapter 1 flag.
+
+At commit `2a9c03a5588ff4290211d9d315fe367690821a19` these 23 cases
+**passed on the authorized Windows checkout**, with a clean Git working tree.
+Four hosted GitHub workflows, including the same behavioral test step,
+also **completed SUCCESS**. The tests do not import/run Unreal's real
+Python bridge, load a real `.umap`, simulate a player, render images
+or prove native editor collision/PIE interaction.
+
+**Native hold:** two Editor/Live Coding processes were still active at
+the last workstation check, so the real `UnrealEditor-Cmd` map checker
+was intentionally not launched. The 25/25 true native automation PASS
+remains pinned to the earlier exact tested SHA
+`52e13aedaa8bda900cece849b54eae570179c838`.
+A new native map report and P01–P13 gameplay evidence are still required.
