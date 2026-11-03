@@ -1,0 +1,36 @@
+{
+  "crc_errors": 0,
+  "goggles_rendered": false,
+  "metahuman_rendered": false,
+  "original_bytes": 52684,
+  "original_file": "C:\\Users\\Admin\\work\\TSTSS-Cast643-UEImport-Sandbox-20261101\\Saved\\CharacterLookdev\\RenderTargetDiagnostic01\\scene_capture_cube.png",
+  "original_sha256": "02c72dc7feaa55c627f3519e699704245ec1938a3c5920b0403baed784cb615e",
+  "pillow_verify": true,
+  "pixel_data_modified": false,
+  "pixel_rgb_center": [
+    255,
+    255,
+    255
+  ],
+  "pixel_rgb_corner": [
+    7,
+    9,
+    12
+  ],
+  "png_ihdr_width_height": [
+    320,
+    180
+  ],
+  "rgb_mean": [
+    201.28,
+    199.3,
+    197.18
+  ],
+  "sanitized_bytes": 38320,
+  "sanitized_file": "C:\\Users\\Admin\\work\\TSTSS-Cast643-UEImport-Sandbox-20261101\\Saved\\CharacterLookdev\\RenderTargetDiagnostic01\\scene_capture_cube_validated.png",
+  "sanitized_sha256": "97510be7bb71cac1e06c0d2654fff3a02f8d71433e091c219870651751772c7f",
+  "source_art_altered": false,
+  "status": "PNG_CORE_VALID_AND_TRAILING_BYTES_REMOVED",
+  "trailing_bytes_removed": 14364,
+  "trailing_contains_png_signature": false
+}
