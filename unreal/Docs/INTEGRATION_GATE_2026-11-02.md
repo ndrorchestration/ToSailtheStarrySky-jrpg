@@ -318,3 +318,25 @@ controller/accessibility review remain **NOT TESTED** at this
 code head. Original earlier 25/25 Unreal automation receipt
 remains source-pinned to its older head only. No art approval,
 Chapter 1 completion or production release is conferred.
+
+## November 3 — responsive source-derived engineering status on review HUD
+
+In draft integration PR #713, `ATSTSSFirstWakeReviewHUD::DrawHUD()`
+now derives both the current objective and the three station status
+indicators **fresh each draw** from `UTSTSSFirstWakeState`.
+The indicator bits are Lift `0x01`, Pressure `0x02`, Reserve
+`0x04`; no status is cached or written. Narrow viewports use
+compact guidance; the overlay refuses to appear for already-entered
+Chapter 1 story states and stays absent in shipping builds. This
+improves a real First Wake interaction review affordance without
+changing production UI, SaveGame schemas, dependency/plugin versions
+or canonical story events.
+
+At code SHA `1f983d0c202ea0e52c5fd01725b3c436f4584bfa`,
+the actual C++ function compiled against portable UE API stand-ins
+for both development/shipping and **6/6 Windows source integration
+tests passed**, with clean Git status. **Native UE 5.8.4
+build/rendering for the changed HUD and all P01–P13 PIE
+scenarios remain unverified.** The older actual 25/25 native
+automation run belongs to its own exact prior SHA, not the
+current HUD source. Do not merge/promote based on portable checks.
