@@ -34,3 +34,12 @@ The test registers in `unreal/Tools/Verify-Unreal.ps1` so a future real native J
 ## Next review slice
 
 Only when the workstation's RAM/commit headroom is sufficient, no competing Editor/build conflicts exist, and a clean *exact-head* checkout is available, run the UE 5.8.4 Win64 Editor build and named native automation with a unique JSON evidence directory. Separately build an isolated playable dock-to-Aureate Wake greybox, wire Ender interactions and actual water overlap, then check input, camera, state/scene, full-float boundary and save restoration in PIE. No gameplay promotion until those separate proofs exist.
+
+
+## Parallel integration relationship: PR #713 (discovered 2026-11-03)
+
+[Draft PR #713](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/713) already owns a broader **seven-actor V2 Prelude review map**, source-locked Editor map admission, a 23-case executable in-memory map-checker behavior suite and a staged PIE matrix P01–P13. It is on a **different unmerged branch lineage**, and its previous **25/25 native automation** success is bound to source `52e13aedaa8bda900cece849b54eae570179c838`, not this PR or its newer map-checker head.
+
+**This PR #730 is intentionally narrower and nonduplicative:** it specifically exercises native C++ milestone actor calls, first-flight state, synthetic physical water-gate observations, Chapter 1 derived state and in-memory save restoration *within one proposed automation test*. It **does not** replace PR #713's map admission/PIE path or the fuller 25-test registry. Its foundation branch has 13 required native tests, including this new one; this is **not** a claim that the current integrated project has only 13 tests.
+
+**Integration handoff:** do not merge or retarget across stacks automatically. In a later explicitly reviewed isolated integration branch, reconcile the single `TSTSS.FirstWake.InteractionToSplashdown` native source and its required `Verify-Unreal.ps1` entry against #713's exact-head 25-name registry, carry over one engine-free contract check, rebuild and obtain one genuine exact-head full native JSON report. Only then consider real V2 Prelude map PIE plus measured water overlap and approved art.
