@@ -1,5 +1,8 @@
 # Aureate Wake — Cinematic Detail V4 (review-only, November 3, 2026)
 
+**Native status supersession — November 3:** Genuine UE 5.8.4 NullRHI import and five StaticMesh/four-material-slot readbacks **PASSED** with exit 0, 0 errors, 0 warnings in the isolated sandbox. The separate four-form native scene staging attempt **FAILED at its first actor spawn**, with zero completed maps and no new render. This supersedes older pre-import descriptions below; see AUREATE_CINEMATIC_V4_NATIVE_IMPORT_EVIDENCE_2026_11_03.md. No production art promotion, game actor integration, or Starbourne story unlock.
+
+
 **Authority:** Creator-approved original four-form illustration (PNG SHA-256 03e3d500d8998a1377502f5ea28da79cf3eaf3854ece833d7ac25b4e0b268e13) remains the visual source. This procedural V4 pack is **NONCANONICAL review-only**. Actual material fidelity, native UE import, cinematography and creator model signoff remain NOT ESTABLISHED.
 
 ## Lineage and authority
@@ -33,7 +36,7 @@ From repository root:
 
 Never overwrite a changed output file or import into an occupied Unreal destination. Candidate GLBs generated outside the repository; none promoted to production.
 
-## Smallest native UE 5.8.4 admission (NOT YET VERIFIED)
+## Native UE 5.8.4 admission sequence (import PASS, staging and rendering HOLD)
 
 1. Create a NEW disposable Unreal project named AureateCinematicV4Sandbox. Its project description must contain AUREATE_CINEMATIC_V4_REVIEW_ONLY and EngineAssociation must be 5.8 or 5.8.4. Enable built-in Python Editor / Interchange; no installs or live game project access.
 2. In this isolated project only, run import_aureate_cinematic_v4_review.py with --source-dir and --import-review. Exactly five preflighted StaticMeshes must be imported to /Game/TSTSS/Review/ShipArt/CinematicV4 without replacing prior assets. This stage does NOT save maps, mutate actors or trigger form transitions. If a partial import fails, discard the disposable project; native writes are not transactional.

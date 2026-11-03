@@ -5,6 +5,11 @@ on:
       - 'unreal/ArtSource/ShipReview/build_aureate_cinematic_v4.py'
       - 'unreal/Tools/import_aureate_cinematic_v4_review.py'
       - 'unreal/Tests/test_aureate_cinematic_v4.py'
+      - 'unreal/Tools/bootstrap_aureate_cinematic_v4_sandbox.py'
+      - 'unreal/Tools/native_aureate_cinematic_v4_import_entry.py'
+      - 'unreal/Tools/run_aureate_cinematic_v4_native_import.py'
+      - 'unreal/Tests/test_aureate_cinematic_v4_native_guard_source.py'
+      - 'unreal/Docs/AUREATE_CINEMATIC_V4_NATIVE_IMPORT_EVIDENCE_2026_11_03.md'
       - 'unreal/Tests/test_import_aureate_cinematic_v4.py'
       - 'unreal/Docs/AUREATE_CINEMATIC_DETAIL_V4_2026-11-03.md'
       - '.github/workflows/unreal-aureate-cinematic-v4.yml'
@@ -23,6 +28,7 @@ jobs:
         run: |
           python -m unittest discover -s unreal/Tests -p 'test_aureate_cinematic_v4.py' -v
           python -m unittest discover -s unreal/Tests -p 'test_import_aureate_cinematic_v4.py' -v
+          python -m unittest discover -s unreal/Tests -p 'test_aureate_cinematic_v4_native_guard_source.py' -v
       - name: Deterministically build verify and preflight candidates
         shell: bash
         run: |
