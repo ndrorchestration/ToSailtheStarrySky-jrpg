@@ -34,6 +34,16 @@
 - The HUD's source-extracted C++ compiler runner gained a reversible Windows MSVC `cl.exe` fallback (with separate temporary `.obj`/`.exe` paths), preserving the GCC/Clang route on hosted CI. Invoked through VS2022 `vcvars64.bat` on `neontic`, the actual `DrawHUD` method passed **21 non-shipping and 1 shipping portable assertions** using API stand-ins, without launching Unreal or touching project saves. This does not prove actual game rendering.
 - The integrated source-only Python suite passed **205/205** tests on the merged working tree before adding the runner fallback; final post-merge committed SHA source checks must be reread independently. The previous 26 required native names remain registered, NOT engine-executed.
 
+## 2026-11-03 physical water-adapter review continuation
+
+The authorized UE 5.8.4 Windows machine still has a separate active Unreal Editor/Live Coding session. A real `Verify-Unreal.ps1 -SkipTests` preflight against exact previous branch SHA `19192d00af765dd4e12febb73f2873d299ce69d5` **correctly refused native compilation before creating evidence**; ignored evidence directories stayed 0 before and after, and the tracked worktree was clean. It would be misleading to claim 26/26 native execution.
+
+To advance the *real water source handoff* without interfering with that session, this review adds `unreal/Tools/check_first_wake_physical_adapter_compiled.py`. It extracts **the actual production `ATSTSSWaterContactAdapter::Tick` C++ method**, compiles it against narrow actor/hull/water API doubles, and exercises 13 behavior assertions on the authorized Windows VS2022 MSVC toolchain. Assertions cover a simulated-physics hull requirement, water actor tagging, lower-bound waterline geometry, real overlap forwarding, actual sampled vertical velocity, NaN and invalid-draft denial, default-off vs opt-in provisional buoyancy force, and player-story rebinding. **13 checks PASS**.
+
+Three deliberately unsafe code mutations **compiled but failed at the intended behavioral assertions**: removing `Hull->IsSimulatingPhysics()`, removing the water-volume tag, and removing the true hull-bottom-below-surface requirement. This test now runs in hosted Unreal source preflight. It does **not** simulate UE physics, create a water volume, save an Editor map, run PIE, measure two real seconds of immersion, or grant Splashdown. The existing adapter is still not shown as successfully placed/configured in a traversable real level.
+
+**Next physical scene acceptance:** in a separate, disposable Unreal map, place a properly collidable simulated hull and bounded tagged water volume, verify the hull really overlaps below the surface, sample `GetPhysicsLinearVelocity().Z`, measure continuous low-speed contact against the unchanged two-second gate, and capture no-contact/fast-impact/occlusion/quickload negatives. Keep cinematic hull art and chapter unlock independent from this greybox proof.
+
 ## Outstanding hard gates
 
 | Gate | Status |

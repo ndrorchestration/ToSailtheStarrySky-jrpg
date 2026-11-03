@@ -65,6 +65,8 @@ jobs:
         run: python3 unreal/Tools/check_first_wake_save_guard_compiled.py --self-test
       - name: Compile actual water landing state and reject stale contact after quickload (not native physics)
         run: python3 unreal/Tools/check_water_landing_rewind_compiled.py --self-test
+      - name: Compile actual physical water adapter Tick and reject spoofed contact (API doubles, not UE physics)
+        run: python3 unreal/Tools/check_first_wake_physical_adapter_compiled.py --self-test
       - name: Compile actual persistent Prelude HUD C++ in development and shipping modes (API stand-ins)
         run: python3 unreal/Tools/check_first_wake_review_hud_compiled.py
       - name: Check review-only HUD GameMode wiring and absence of new plugin dependencies
