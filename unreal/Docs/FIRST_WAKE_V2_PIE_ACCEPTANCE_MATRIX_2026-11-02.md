@@ -175,3 +175,41 @@ fixtures PASS at code SHA
 **Actual Editor map inspection and P01–P13 keyboard PIE remain NOT
 TESTED** while other Unreal Editor/Live Coding sessions are active.
 No committed map, SaveGame, art or engine dependency was changed.
+
+
+## November 3 — read-only persistent objective HUD review acceptance
+
+A new **non-shipping, review-only** C++ `ATSTSSFirstWakeReviewHUD`
+is selected by `ATSTSSGameMode` in non-shipping builds. It draws a
+bounded translucent first-person-screen overlay (not in-world art),
+the active `GetReviewObjectiveText()` from Ender's own
+`UTSTSSFirstWakeState`, W/A/S/D/E/J/F5/F9 review controls, and an
+explicit noncanonical Prelude disclaimer. It does not cache or
+advance story state, inspect/save a player slot, alter combat,
+recruit anyone, or unlock launch/sea contact/Splashdown.
+
+The HUD uses the **existing Engine AHUD/Canvas APIs**; no UMG,
+Slate, plugin or module dependency was added. It rejects very small
+viewports rather than knowingly drawing a clipped panel and is
+disabled in `UE_BUILD_SHIPPING` builds. Legacy transient debug
+messages and J read-only recall remain available.
+
+**Source proof, not in-engine proof:** At implementation revision
+`4eaaa4246f86c4f5f81f406bb61e0f74c7f4709e`, GitHub
+Unreal source preflight compiled and ran the **actual C++
+`DrawHUD()` method** against controlled API stand-ins in both
+non-shipping and shipping modes; all cases passed. The associated
+five source-integration checks passed on Windows with clean Git
+state. Installed UE5.8.4 header signatures were checked for
+`DrawText`, `DrawRect`, fonts, Canvas clipping and GameMode's
+HUDClass. **A native Unreal Editor build / PIE rendering of this
+new HUD has NOT BEEN RUN** while unrelated Editor/Live Coding
+sessions are active.
+
+Add to **P01/P06/P09/P12** the observation that a persistent
+objective matches the J cue after opening, ordered milestones,
+story quickload and blocked premature Splashdown. Verify visual
+contrast, readability and overlap at **1280×720 and 500 px wide**
+as part of *actual PIE*, not from portable stand-ins.
+The HUD does not convert any P01–P13 result from NOT TESTED
+into PASS.
