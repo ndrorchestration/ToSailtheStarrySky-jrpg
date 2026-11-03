@@ -70,6 +70,11 @@ jobs:
           python3 -m py_compile unreal/ArtSource/Characters/verify_native_ender_v5_green_iris.py
           python3 -m py_compile unreal/ArtSource/Characters/verify_native_ender_v5_face_repeatability.py
 
+      - name: Compile bounded native V5 skeletal preview and GPU screenshot scripts (engine-free)
+        run: |
+          python3 -m py_compile unreal/ArtSource/Characters/native_ender_v5_transient_preview_probe.py
+          python3 -m py_compile unreal/ArtSource/Characters/native_ender_v5_transient_preview_capture.py
+
       - name: Regenerate source assets and confirm exact bytes
         env:
           TSTSS_CAST_OUTPUT: unreal/ArtSource/Characters/Candidates
