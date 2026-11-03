@@ -26,6 +26,8 @@ def check_script(script: str) -> None:
         "ExpectedHead must be a full 40-character Git commit SHA",
         "actual=$GitHead expected=$ExpectedHead",
         "Working tree has uncommitted changes",
+        "Get-Process -Name 'UnrealEditor','UnrealEditor-Cmd','LiveCodingConsole'",
+        "Active Unreal Editor or Live Coding process detected",
         "[DateTime]::UtcNow.ToString('yyyyMMddTHHmmssfffZ')",
         "[guid]::NewGuid().ToString('N').Substring(0, 8)",
         "$Evidence = Join-Path $EvidenceRoot $RunId",
@@ -87,6 +89,18 @@ class NativeEvidenceSafetyTests(unittest.TestCase):
     def test_refuse_wrong_engine_patch_only_review_584(self):
         altered = self.code.replace("this review requires 5.8.4", "accept all versions")
         self.reject(altered, "this review requires 5.8.4")
+
+    def test_active_editor_cannot_be_ignored(self):
+        altered = self.code.replace(
+            "Get-Process -Name 'UnrealEditor','UnrealEditor-Cmd','LiveCodingConsole'",
+            "Get-Process -Name 'NotTheEditor'"
+        )
+        self.reject(altered, "Get-Process")
+
+    def test_live_coding_guard_is_before_any_review_evidence(self):
+        start = self.code.index("Get-Process -Name 'UnrealEditor'")
+        receipt = self.code.index("New-Item -Path $EvidenceRoot")
+        self.assertLess(start, receipt)
 
     def test_expected_sha_gate_is_required(self):
         altered = self.code.replace("[string]$ExpectedHead = ''", "")
