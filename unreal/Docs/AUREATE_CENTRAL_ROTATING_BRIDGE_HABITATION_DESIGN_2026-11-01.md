@@ -54,3 +54,7 @@ Prior exact-head wing/hull clearance receipts, screenshots and hydrofoil-strut t
 **Prior review status:** V2 root-support variant in draft #701 remains a noncanonical support-clearance experiment with attachment integrity HOLD. A future pivot prototype must not override that hold or inherit clearance evidence without rechecking the new moving bodies.
 
 Never merge, promote generated 3D art, unlock Starbourne or release publicly without user authorization.
+
+## 2026-11-03 interior attachment continuation
+
+The independent review-only interior system frames, 24-system backlog, nonhabitable quarters proxy gate and passageway holds are tracked in [AUREATE_INTERIOR_SYSTEMS_REVIEW_2026-11-03.md](AUREATE_INTERIOR_SYSTEMS_REVIEW_2026-11-03.md). This is not a change to creator canon, Starbourne authorization or the existing wing/hull clearance holds.

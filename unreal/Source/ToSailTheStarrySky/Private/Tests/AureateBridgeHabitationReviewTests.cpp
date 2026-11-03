@@ -26,6 +26,10 @@ bool FTSTSSAureateBridgeHabitationReviewTest::RunTest(const FString& Parameters)
     USceneComponent* Pivot = nullptr;
     UStaticMeshComponent* Bridge = nullptr;
     UStaticMeshComponent* Quarters = nullptr;
+    USceneComponent* HelmAnchor = nullptr;
+    USceneComponent* QuartersAnchor = nullptr;
+    USceneComponent* EngineeringAnchor = nullptr;
+    USceneComponent* BoardingAnchor = nullptr;
     TArray<USceneComponent*> Components;
     Ship->GetComponents<USceneComponent>(Components);
     for (USceneComponent* Component : Components)
@@ -34,6 +38,10 @@ bool FTSTSSAureateBridgeHabitationReviewTest::RunTest(const FString& Parameters)
         if (Component->GetFName() == FName(TEXT("BridgeHabitationPivot"))) Pivot = Component;
         if (Component->GetFName() == FName(TEXT("ForwardBridge"))) Bridge = Cast<UStaticMeshComponent>(Component);
         if (Component->GetFName() == FName(TEXT("LivingQuartersEnvelope"))) Quarters = Cast<UStaticMeshComponent>(Component);
+        if (Component->GetFName() == FName(TEXT("BridgeHelmReviewAnchor"))) HelmAnchor = Component;
+        if (Component->GetFName() == FName(TEXT("QuartersDeckReviewAnchor"))) QuartersAnchor = Component;
+        if (Component->GetFName() == FName(TEXT("FixedEngineeringReviewAnchor"))) EngineeringAnchor = Component;
+        if (Component->GetFName() == FName(TEXT("FixedBoardingReviewAnchor"))) BoardingAnchor = Component;
     }
     if (!TestNotNull(TEXT("Shared habitation pivot"), Pivot) ||
         !TestNotNull(TEXT("Recognizable dome proxy"), Bridge) ||
@@ -42,6 +50,24 @@ bool FTSTSSAureateBridgeHabitationReviewTest::RunTest(const FString& Parameters)
         ReviewWorld->DestroyWorld(false);
         return false;
     }
+
+    if (!TestNotNull(TEXT("Bridge/helm review anchor"), HelmAnchor) ||
+        !TestNotNull(TEXT("Quarters/deck review anchor"), QuartersAnchor) ||
+        !TestNotNull(TEXT("Engineering hull review anchor"), EngineeringAnchor) ||
+        !TestNotNull(TEXT("Boarding hull review anchor"), BoardingAnchor))
+    {
+        ReviewWorld->DestroyWorld(false);
+        return false;
+    }
+    TestTrue(TEXT("Helm and quarters anchors share the rotating frame"),
+        HelmAnchor->GetAttachParent() == Pivot && QuartersAnchor->GetAttachParent() == Pivot);
+    TestTrue(TEXT("Engineering and boarding anchors stay on fixed hull"),
+        EngineeringAnchor->GetAttachParent() == Ship->GetRootComponent() &&
+        BoardingAnchor->GetAttachParent() == Ship->GetRootComponent());
+    TestTrue(TEXT("Default helm anchor matches legacy bridge"),
+        HelmAnchor->GetRelativeLocation().Equals(FVector(240.f, 0.f, 95.f), .01f));
+    TestTrue(TEXT("Quarters anchor follows deck local offset"),
+        QuartersAnchor->GetRelativeLocation().Equals(FVector(0.f, 0.f, -25.f), .01f));
 
     TestFalse(TEXT("Bridge pivot disabled by default"), Ship->bPreviewCentralBridgeHabitation);
     TestTrue(TEXT("Original forward bridge pose preserved"),
@@ -66,6 +92,10 @@ bool FTSTSSAureateBridgeHabitationReviewTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Bridge moves above central quarters"),
         Bridge->GetRelativeLocation().Equals(FVector(0.f, 0.f, 80.f), .01f));
     TestTrue(TEXT("Quarters visible only when review opted in"), Quarters->IsVisible());
+    TestTrue(TEXT("Opt-in helm anchor follows dome center"),
+        HelmAnchor->GetRelativeLocation().Equals(Bridge->GetRelativeLocation(), .01f));
+    TestTrue(TEXT("Fixed engineering station is not carried by rotating pivot"),
+        EngineeringAnchor->GetAttachParent() == Ship->GetRootComponent());
 
     TestFalse(TEXT("Starbourne (internal Orbiter) is still story gated"),
         Ship->RequestForm(EAureateWakeForm::Orbiter));
@@ -195,6 +225,11 @@ bool FTSTSSAureateBridgeHabitationReviewTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Final legacy bridge pose restored"),
         Bridge->GetRelativeLocation().Equals(FVector(240.f,0.f,95.f),.01f));
     TestFalse(TEXT("Final quarters stand-in hidden"), Quarters->IsVisible());
+    TestTrue(TEXT("Opt-out restores helm anchor with original bridge"),
+        HelmAnchor->GetRelativeLocation().Equals(FVector(240.f, 0.f, 95.f), .01f));
+    TestTrue(TEXT("Opt-out preserves two independent fixed hull anchors"),
+        EngineeringAnchor->GetAttachParent() == Ship->GetRootComponent() &&
+        BoardingAnchor->GetAttachParent() == Ship->GetRootComponent());
 
     // A malformed inspector or Blueprint angle must not inject NaN/Inf
     // into either child's transform or consume the ship transition state.
