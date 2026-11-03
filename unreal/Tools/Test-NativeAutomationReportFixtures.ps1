@@ -1,13 +1,13 @@
 # Synthetic, isolated replay of the native automation JSON acceptance rules.
-# Uses the actual 25 names in Verify-Unreal.ps1, without launching Unreal.
+# Uses the actual 26 names in Verify-Unreal.ps1, without launching Unreal.
 $ErrorActionPreference = 'Stop'
 $ToolDir = $PSScriptRoot
 . (Join-Path $ToolDir 'Assert-NativeAutomationReport.ps1')
 $VerifierSource = Get-Content -LiteralPath (Join-Path $ToolDir 'Verify-Unreal.ps1') -Raw
 $NameMatches = [regex]::Matches($VerifierSource, "'(TSTSS\.[^']+)'")
 $Required = @($NameMatches | ForEach-Object { $_.Groups[1].Value })
-if ($Required.Count -ne 25 -or @($Required | Select-Object -Unique).Count -ne 25) {
-    throw "Synthetic test cannot identify exactly 25 unique native test names"
+if ($Required.Count -ne 26 -or @($Required | Select-Object -Unique).Count -ne 26) {
+    throw "Synthetic test cannot identify exactly 26 unique native test names"
 }
 $FixtureRoot = Join-Path ([IO.Path]::GetTempPath()) ("tstss-report-fixtures-" + [guid]::NewGuid().ToString('N'))
 $PassedCases = 0
@@ -35,7 +35,7 @@ try {
         return ($Data | ConvertTo-Json -Depth 10 | ConvertFrom-Json)
     }
     $Valid = [pscustomobject]@{
-        succeeded = 25
+        succeeded = 26
         failed = 0
         notRun = 0
         tests = @($Required | ForEach-Object {
@@ -45,7 +45,7 @@ try {
     Save-Report $Valid
     $Accepted = Assert-TSTSSNativeAutomationReport -ReportPath $ReportPath -RequiredTests $Required
     if ($Accepted.Status -ne 'REPORTED_NATIVE_AUTOMATIONS_SUCCESS' -or
-        $Accepted.ReportedSuccesses -ne 25 -or
+        $Accepted.ReportedSuccesses -ne 26 -or
         $Accepted.GameplayPIE -ne 'NOT_TESTED_BY_THIS_CHECK') {
         throw 'Valid synthetic report accepted with incorrect summary or PIE claim'
     }
@@ -53,7 +53,7 @@ try {
 
     $Fake = Clone-Report $Valid; $Fake.succeeded = 30
     MustReject 'inflated-summary' $Fake 'summary and per-test successes disagree'
-    $Fake = Clone-Report $Valid; $Fake.succeeded = '25'
+    $Fake = Clone-Report $Valid; $Fake.succeeded = '26'
     MustReject 'noninteger-summary' $Fake 'integer summary'
     $Fake = Clone-Report $Valid; $Fake.failed = 1
     MustReject 'failure-count' $Fake 'evidence incomplete'
@@ -78,12 +78,12 @@ try {
     $Fake = Clone-Report $Valid; $Fake.tests = 'aggregate-only fake'
     MustReject 'non-array-tests' $Fake 'aggregate-only PASS'
 
-    $BadRequired = @($Required[0..23])
+    $BadRequired = @($Required[0..24])
     $RequiredRejected = $false
     try {
         $null = Assert-TSTSSNativeAutomationReport -ReportPath $ReportPath -RequiredTests $BadRequired
     } catch {
-        if ($_.Exception.Message -notmatch 'exactly 25') { throw }
+        if ($_.Exception.Message -notmatch 'exactly 26') { throw }
         $RequiredRejected = $true
     }
     if (-not $RequiredRejected) { throw 'Shortened native test registry was accepted' }

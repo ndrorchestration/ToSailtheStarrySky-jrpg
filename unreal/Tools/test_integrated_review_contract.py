@@ -35,7 +35,7 @@ class IntegratedSourceGateTests(unittest.TestCase):
     def test_composed_source_passes_without_native_claim(self):
         result = gate.verify()
         self.assertEqual(result["result"], "COMPOSED_SOURCE_DECLARATIONS_PASS")
-        self.assertEqual(result["native_automation_25"], "NOT_TESTED")
+        self.assertEqual(result["native_automation_26"], "NOT_TESTED")
         self.assertEqual(result["pie_cases_13"], "NOT_TESTED")
         self.assertFalse(result["merges_or_releases_authorized"])
 
@@ -83,7 +83,13 @@ class IntegratedSourceGateTests(unittest.TestCase):
         self.args[8] = self.args[8].replace(
             "TSTSS.FirstWake.ReviewObjectivesAreReadOnly", "TSTSS.FirstWake.MISSING"
         )
-        self.fail_if("25th native automation")
+        self.fail_if("review-objectives native automation")
+
+    def test_joined_splashdown_native_name_cannot_disappear(self):
+        self.args[8] = self.args[8].replace(
+            "TSTSS.FirstWake.InteractionToSplashdown", "TSTSS.FirstWake.MISSING"
+        )
+        self.fail_if("26th interaction-to-Splashdown")
 
     def test_no_admitted_implicit_merge(self):
         self.args[6] = self.args[6].replace("#711", "#999")

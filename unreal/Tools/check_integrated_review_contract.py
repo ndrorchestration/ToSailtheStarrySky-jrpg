@@ -85,7 +85,9 @@ def check_consistency(authority: str, root_readme: str, rank: dict,
             "NATIVE_AUTOMATION_25=NOT_TESTED" in pie_protocol,
             "PIE acceptance protocol weakens native/release evidence")
     require("TSTSS.FirstWake.ReviewObjectivesAreReadOnly" in verifier,
-            "Expected 25th native automation was removed")
+            "Expected review-objectives native automation was removed")
+    require("TSTSS.FirstWake.InteractionToSplashdown" in verifier,
+            "Expected 26th interaction-to-Splashdown native automation was removed")
 
 
 def verify(root: Path = ROOT) -> dict:
@@ -113,7 +115,7 @@ def verify(root: Path = ROOT) -> dict:
     return {
         "result": "COMPOSED_SOURCE_DECLARATIONS_PASS",
         "unreal_native_build": "NOT_TESTED",
-        "native_automation_25": "NOT_TESTED",
+        "native_automation_26": "NOT_TESTED",
         "pie_cases_13": "NOT_TESTED",
         "merges_or_releases_authorized": False,
         "dependency_versions_changed": False,
