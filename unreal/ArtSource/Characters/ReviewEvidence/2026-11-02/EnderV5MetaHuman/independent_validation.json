@@ -1,0 +1,18 @@
+{
+  "artist_resemblance_reviewed": false,
+  "asset_bytes": 757405,
+  "asset_sha256": "7d648da499e5756d845faeed221ac4584e51516d1274b766db41d908e1fb17bd",
+  "creator_likeness_approved": false,
+  "face_landmarks_count": 79,
+  "game_project_modified": false,
+  "headless_native_asset_creation": true,
+  "low_memory_compilation_warning": true,
+  "map_sha256": "025539f8717c6215a17dc8acff24ec7bd39b3d43129de4069a9418b3d8da3a2a",
+  "metahuman_binary_copied_into_git": false,
+  "metahuman_optional_content_missing": true,
+  "native_python_face_landmark_access": true,
+  "next_gate": "Creator reference registered to MetaHuman facial landmark sheet and core content available, before sculpt/assembly",
+  "rig_or_animation_validated": false,
+  "skin_editing_disabled": true,
+  "status": "V5_NATIVE_METAHUMAN_AUTHORING_BASE_VERIFIED_ART_HOLD"
+}

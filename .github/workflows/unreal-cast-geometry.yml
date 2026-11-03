@@ -44,6 +44,11 @@ jobs:
           python3 -m unittest discover -s unreal/ArtSource/Characters -p test_ender_fidelity_v4.py -v
           python3 -m unittest discover -s unreal/ArtSource/Characters -p test_ender_v4_native_captures.py -v
           python3 -m py_compile unreal/ArtSource/Characters/intake_ender_fidelity_v4.py unreal/ArtSource/Characters/capture_ender_fidelity_v4_native.py
+      - name: Verify safe V5 MetaHuman authoring probe and anti-approval guards (engine-free)
+        run: |
+          python3 -m unittest discover -s unreal/ArtSource/Characters -p test_ender_v5_metahuman_probe.py -v
+          python3 -m py_compile unreal/ArtSource/Characters/probe_ender_v5_metahuman_native.py unreal/ArtSource/Characters/verify_ender_v5_metahuman_probe.py
+
       - name: Regenerate source assets and confirm exact bytes
         env:
           TSTSS_CAST_OUTPUT: unreal/ArtSource/Characters/Candidates
