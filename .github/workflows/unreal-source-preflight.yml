@@ -7,6 +7,7 @@ on:
       - 'unreal/Tools/**'
       - 'unreal/Docs/DEPENDENCY_AND_EVIDENCE_REGISTER_2026-11-01.md'
       - 'unreal/Docs/LEGACY_NPM_SECURITY_AND_UE_PYTHON_PLUGIN_SCOPE_2026-11-02.md'
+      - 'unreal/Docs/LEGACY_DESKTOP_STAGING_EXPOSURE_BOUNDARY_2026-11-02.md'
       - 'unreal/ToSailTheStarrySky.uproject'
       - 'package.json'
       - 'package-lock.json'
@@ -49,5 +50,7 @@ jobs:
           python3 -m unittest discover -s unreal/Tools -p 'test_dependency_register_reconciliation.py' -v
           python3 -m unittest discover -s unreal/Tools -p 'test_legacy_npm_audit_plugin_scope.py' -v
           python3 unreal/Tools/check_dependency_contract.py --repo .
+      - name: Verify bounded legacy desktop staging without package build or installer execution
+        run: python3 -m unittest discover -s unreal/Tools -p 'test_legacy_desktop_staging_exposure.py' -v
       - name: Compile and exercise actual DesignOnly C++ adapter (API doubles, not Unreal)
         run: python3 unreal/Tools/check_combat_design_only_compiled.py
