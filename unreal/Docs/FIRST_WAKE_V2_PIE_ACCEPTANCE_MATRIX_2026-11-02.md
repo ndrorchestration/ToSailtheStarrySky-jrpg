@@ -140,3 +140,17 @@ This is a **native report observed**, not a verified clean end-to-end
 pass and not a P01–P13 gameplay run. A fresh isolated test must
 prevent config-file writes without changing the commit or weakening
 the final custody gate. The original dirty worktree is retained.
+
+## November 3 — source-level geometry for P02/P03, not PIE proof
+
+Source authoring now rejects a flyer initially inside Ender's 300 cm
+reach, an off-floor spawn, any marker footprint leaving the traversal
+floor, invalid floor height or nonfinite dimensions. At the committed
+plan's positions, the **closest horizontal flyer marker edge** is
+**542.5 cm** from spawn, and all seven marker footprints fall on the
+same continuous review floor. **13/13 source-only geometry negatives
+and positives passed on Windows** (with 10/10 earlier authoring tests).
+The **committed V2 `.umap` is unchanged**. This does not prove that
+P02/P03 work with actual player movement, E camera traces, terrain
+collision, occlusion or dynamic actors. Those specific interactive
+cases remain NOT TESTED until recorded in real Editor PIE.
