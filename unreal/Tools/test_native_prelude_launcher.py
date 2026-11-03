@@ -18,7 +18,12 @@ def check_launcher(source: str, build_source: str) -> None:
         "TSTSS_PR713_NativeMapQA_20261102",
         "ExpectedHead must be a full 40-character Git SHA",
         "'Engine/Build/Build.version'",
-        "Get-FileHash -LiteralPath $MapPath -Algorithm SHA256",
+        "function Get-TSTSSSha256",
+        "[System.Security.Cryptography.SHA256]::Create()",
+        "[System.IO.File]::OpenRead($Path)",
+        "$FileStream.Dispose()",
+        "$Hasher.Dispose()",
+        "Get-TSTSSSha256 -Path $MapPath",
         "status --porcelain",
         "Saved/SaveGames",
         "HOLD: isolated review workspace contains SaveGame files",
@@ -90,6 +95,17 @@ class LauncherContractTests(unittest.TestCase):
 
     def test_current_scripts_hold_safe_boundaries(self):
         check_launcher(self.launcher, self.build)
+
+    def test_sha256_has_no_missing_windows_cmdlet_dependency(self):
+        self.assertNotIn("(Get-FileHash -LiteralPath", self.launcher)
+        self.assertIn("[System.Security.Cryptography.SHA256]::Create()", self.launcher)
+
+    def test_sha_hasher_mutation_rejected(self):
+        self.check_failed(
+            self.launcher.replace("[System.Security.Cryptography.SHA256]::Create()",
+                                  "[System.Security.Cryptography.MD5]::Create()"),
+            "SHA256",
+        )
 
     def test_no_active_editor_guard_mutation(self):
         self.check_failed(
