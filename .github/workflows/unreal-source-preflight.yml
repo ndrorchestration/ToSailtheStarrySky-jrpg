@@ -9,6 +9,7 @@ on:
       - 'unreal/Docs/LEGACY_NPM_SECURITY_AND_UE_PYTHON_PLUGIN_SCOPE_2026-11-02.md'
       - 'unreal/Docs/LEGACY_DESKTOP_STAGING_EXPOSURE_BOUNDARY_2026-11-02.md'
       - 'unreal/Docs/LEGACY_NPM_ADVISORY_ROOT_PATH_RECONCILIATION_2026-11-02.md'
+      - 'unreal/Docs/LEGACY_NWJS_WRAPPER_REMOVAL_SCRATCH_CANDIDATE_2026-11-02.md'
       - 'unreal/ToSailTheStarrySky.uproject'
       - 'package.json'
       - 'package-lock.json'
@@ -55,5 +56,7 @@ jobs:
         run: python3 -m unittest discover -s unreal/Tools -p 'test_legacy_desktop_staging_exposure.py' -v
       - name: Check dated npm advisory dependency root paths (source only)
         run: python3 -m unittest discover -s unreal/Tools -p 'test_legacy_npm_advisory_roots.py' -v
+      - name: Verify unused NWJS wrapper removal scratch model (source only, no npm)
+        run: python3 -m unittest discover -s unreal/Tools -p 'test_legacy_nwjs_removal_scratch_candidate.py' -v
       - name: Compile and exercise actual DesignOnly C++ adapter (API doubles, not Unreal)
         run: python3 unreal/Tools/check_combat_design_only_compiled.py
