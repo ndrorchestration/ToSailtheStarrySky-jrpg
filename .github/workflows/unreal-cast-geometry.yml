@@ -96,6 +96,7 @@ jobs:
           python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/native_goggles_axis_search.py
           python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/native_goggles_spatial01_negative_control.py
           python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/native_goggles_spatial02.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/native_goggles_combined_capture01.py
 
       - name: Regenerate source assets and confirm exact bytes
         env:
