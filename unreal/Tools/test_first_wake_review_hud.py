@@ -54,6 +54,15 @@ class ObjectiveHudContracts(unittest.TestCase):
         self.assertIn('no launch, water landing, or Chapter 1', self.hud)
         self.assertIn('PanelWidth < 440.f', self.hud)
 
+    def test_ongoing_engineering_progress_uses_live_readonly_inspection_mask(self):
+        self.assertIn('State->GetInspectionMask()', self.hud)
+        self.assertIn('State->IsChapterOneActOne()', self.hud)
+        for bit in ('0x01u', '0x02u', '0x04u'):
+            self.assertIn('InspectionMask & ' + bit, self.hud)
+        self.assertIn('const bool bCompact = PanelWidth < 640.f;', self.hud)
+        self.assertIn('Systems: Lift / Pressure / Reserve', self.hud)
+        self.assertIn('no sea landing or Chapter 1 approval', self.hud)
+
     def test_real_cplusplus_compiled_behavior_gate_is_in_ci(self):
         workflow = WORKFLOW.read_text(encoding="utf-8")
         self.assertIn('check_first_wake_review_hud_compiled.py', workflow)
