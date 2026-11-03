@@ -1,0 +1,139 @@
+{
+  "actual_mesh_intersection_proven": false,
+  "attachment_socket_approved": false,
+  "candidate_rotation_pitch_yaw_roll_deg": [
+    0,
+    180,
+    90
+  ],
+  "candidates": [
+    {
+      "actor_location_cm": [
+        0,
+        11.4,
+        164.5
+      ],
+      "actor_world_bounds_center_cm": [
+        0,
+        11.4,
+        170.235
+      ],
+      "actor_world_bounds_extents_cm": [
+        3.05,
+        9.10884,
+        7.675
+      ],
+      "label": "at_eye_height_hypothesis",
+      "meaning": "PROVISIONAL_BROAD_PHASE_BOUNDS_NOT_FACIAL_FIT",
+      "no_collisions_or_head_fit_established": true,
+      "outer_envelope_forward_depth_cm": 18.21768,
+      "outer_envelope_vertical_height_cm": 15.35,
+      "outer_envelope_width_cm": 6.1,
+      "source_landmark_inside_AABB_count": 4,
+      "source_landmark_inside_AABB_indices": [
+        7,
+        24,
+        60,
+        77
+      ],
+      "source_landmark_within_1cm_of_AABB_count": 9,
+      "world_bounds_max_cm": [
+        3.05,
+        20.50884,
+        177.91
+      ],
+      "world_bounds_min_cm": [
+        -3.05,
+        2.29116,
+        162.56
+      ]
+    },
+    {
+      "actor_location_cm": [
+        0,
+        9.5,
+        171.5
+      ],
+      "actor_world_bounds_center_cm": [
+        0,
+        9.5,
+        177.235
+      ],
+      "actor_world_bounds_extents_cm": [
+        3.05,
+        9.10884,
+        7.675
+      ],
+      "label": "above_brow_hypothesis",
+      "meaning": "PROVISIONAL_BROAD_PHASE_BOUNDS_NOT_FACIAL_FIT",
+      "no_collisions_or_head_fit_established": true,
+      "outer_envelope_forward_depth_cm": 18.21768,
+      "outer_envelope_vertical_height_cm": 15.35,
+      "outer_envelope_width_cm": 6.1,
+      "source_landmark_inside_AABB_count": 1,
+      "source_landmark_inside_AABB_indices": [
+        60
+      ],
+      "source_landmark_within_1cm_of_AABB_count": 1,
+      "world_bounds_max_cm": [
+        3.05,
+        18.60884,
+        184.91
+      ],
+      "world_bounds_min_cm": [
+        -3.05,
+        0.39116,
+        169.56
+      ]
+    }
+  ],
+  "character": "Ender",
+  "character_asset_saved": false,
+  "engine": "5.8.4-58902052+++UE5+Release-5.8",
+  "error": "Traceback (most recent call last):\n  File \"C:/Users/Admin/work/TSTSS-V5-FaceAuthorityReview-20261103/mh5_goggles_spatial_review.py\", line 137, in <module>\n    check(abs(sizes[\"outer_envelope_width_cm\"]-18.21768)<0.2,\"X width\")\n  File \"C:/Users/Admin/work/TSTSS-V5-FaceAuthorityReview-20261103/mh5_goggles_spatial_review.py\", line 28, in check\n    if not cond:raise RuntimeError(\"FAIL_CLOSED \"+msg)\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: FAIL_CLOSED X width\n",
+  "face_component_bounds": {
+    "body": {
+      "error": "bounds field unavailable"
+    },
+    "face": {
+      "error": "bounds field unavailable"
+    }
+  },
+  "face_component_class": "DebugSkelMeshComponent",
+  "fit_approved": false,
+  "goggles_mesh": "/Game/ArtLookdev/Characters/EnderV5MetaHumanStudy/Accessories/GogglesCandidateV1/Ender_goggles_noncanonical/StaticMeshes/Ender_goggles_noncanonical.Ender_goggles_noncanonical",
+  "image_pixel_to_native_indices_verified": false,
+  "kind": "BOUNDED_NATIVE_AABB_FIT_EXPLORATION",
+  "level_saved": false,
+  "map_sha256_after": "025539f8717c6215a17dc8acff24ec7bd39b3d43129de4069a9418b3d8da3a2a",
+  "mesh_local_max_cm": [
+    9.10884,
+    3.05,
+    1.94
+  ],
+  "mesh_local_min_cm": [
+    -9.10884,
+    -3.05,
+    -13.41
+  ],
+  "meta_preview_origin_cm": [
+    0,
+    0,
+    0
+  ],
+  "meta_sha256_after": "2bb581a27aee55b0352f52227a3afe2c6d01a529b63c8dc661cbe8f4edbb2e3d",
+  "native_gpu_fitting_screenshot": false,
+  "native_points_anatomically_named": false,
+  "native_preview_class": "MetaHumanDefaultEditorPipelineActor",
+  "native_skeletal_components": [
+    "Face",
+    "Body"
+  ],
+  "production_or_canon_promoted": false,
+  "rigged_game_character": false,
+  "source_79_index_json_sha256": "9abcca28c03b21c13a5a1f35bc5b2126393debbc63c494e268c6df18d74eafed",
+  "source_goggles_glb_sha256": "76eb9696e2abf719bcfd3d467313e46136f5d92cc36cd6b3845ae447a272c1ae",
+  "source_map_sha256": "025539f8717c6215a17dc8acff24ec7bd39b3d43129de4069a9418b3d8da3a2a",
+  "source_metahuman_sha256": "2bb581a27aee55b0352f52227a3afe2c6d01a529b63c8dc661cbe8f4edbb2e3d",
+  "status": "SPATIAL_REVIEW_FAILED"
+}
