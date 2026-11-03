@@ -76,9 +76,9 @@ class LegacyNpmSecurityScopeTests(unittest.TestCase):
         # Git on Windows may materialize CRLF while Linux Actions checks out LF.
         # Validate the canonical LF content AND the appropriate platform
         # working-tree byte receipt; never weaken the audited dependency graph.
-        normalized = raw.replace(b"\\r\\n", b"\\n")
+        normalized = raw.replace(bytes((13, 10)), bytes((10,)))
         self.assertEqual(hashlib.sha256(normalized).hexdigest(), LOCK_SHA_LF)
-        raw_expected = LOCK_SHA_WINDOWS if b"\\r\\n" in raw else LOCK_SHA_LF
+        raw_expected = LOCK_SHA_WINDOWS if bytes((13, 10)) in raw else LOCK_SHA_LF
         self.assertEqual(hashlib.sha256(raw).hexdigest(), raw_expected)
         self.assertEqual(self.package["devDependencies"], self.lock["packages"][""]["devDependencies"])
         self.assertTrue(self.package["private"])
