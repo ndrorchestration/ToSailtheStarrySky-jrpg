@@ -63,6 +63,10 @@ jobs:
         run: python3 unreal/Tools/check_first_wake_pie_save_compiled.py --self-test
       - name: Compile real SaveFirstWake C++ and reject overwrite of party or unreadable saves
         run: python3 unreal/Tools/check_first_wake_save_guard_compiled.py --self-test
+      - name: Compile actual persistent Prelude HUD C++ in development and shipping modes (API stand-ins)
+        run: python3 unreal/Tools/check_first_wake_review_hud_compiled.py
+      - name: Check review-only HUD GameMode wiring and absence of new plugin dependencies
+        run: python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_review_hud.py' -v
       - name: Verify Unreal and legacy declarations agree with draft branch dependency policy
         run: |
           python3 unreal/Tools/check_first_wake_dependency_contract.py
