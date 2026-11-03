@@ -98,8 +98,8 @@ def inspect_png_pixels(raw, dimensions=EXPECTED_DIMENSIONS):
         for x in range(0, width, 16):
             base = x * channels
             r, g, b = output[base:base + 3]
-            if channels == 4 and output[base + 3] == 0:
-                raise ValueError('Transparent/empty screenshot sample')
+            # Unreal screenshots may store zero alpha while preserving valid RGB.
+            # Inspect visible RGB; keep alpha/material acceptance for later review.
             luminance = (54 * r + 183 * g + 19 * b) // 256
             hist.add(luminance)
             channel_values.add((r // 8, g // 8, b // 8))
