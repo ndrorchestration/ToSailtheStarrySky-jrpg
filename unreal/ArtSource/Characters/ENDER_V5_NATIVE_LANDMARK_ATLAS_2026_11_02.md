@@ -22,6 +22,14 @@ The source-controlled `ender_v5_reference_priority.json` and `verify_ender_v5_re
 
 This is a *pre-sculpt governance/readiness increment only*. The earlier-face instruction does not resolve auburn/copper versus green hair, 2D-to-3D semantic correspondence, missing optional MetaHuman Core Data, materials, skin, rig, gameplay or owner final likeness approval. Any supervised A/B face edit requires an artist-confirmed primary source and four reviewed feature-to-native-index correspondences first. See [character art issue #649](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/issues/649) for the hold.
 
+## November 3 native 79-index geometric symmetry crosswalk — REVIEW ONLY
+
+A strict read of the **existing untouched Unreal 5.8.4 native 79-landmark coordinates** (raw JSON SHA-256 `9abcca28c03b21c13a5a1f35bc5b2126393debbc63c494e268c6df18d74eafed`) identified **32 mutually nearest ±X mirrored point pairs** and **15 near-X-centerline points**. The centerline tolerance is `|X| ≤ 0.08 cm`; each symmetric pair is reciprocal, unique, and has mirror residual at most `0.15 cm` in model-space XYZ. The largest observed mirror residual is `0.13009 cm`. The resulting `TechnicalAtlas/v5_native_geometric_pairs.json` contains **index pairs only**, model-space side labels, residuals and an explicit `TECHNICAL_PAIRING_VERIFIED_SEMANTIC_MAPPING_HOLD` status. The original 79-index dataset and its unmapped human-review CSV are unchanged.
+
+An independent source-hash-bound verifier, `verify_ender_v5_geometric_pairs.py`, and adversarial regression `test_ender_v5_geometric_pairs.py` now reject invalid source hashes, duplicated/nonfinite/perturbed indices, altered centerline or pairing reports, and any false claim that eye/nose/chin indices or an approved face sculpt have been established. This crosswalk helps an artist narrow bilateral-versus-midline inspection in a **future** native point-selection review; a paired ±X geometry point need **not** be an eye point, and central-plane points need **not** be nose/chin. **No exact anatomical names, private artwork pixels, approved 2D–3D correspondence, face edits, textures, rig, animation or gameplay promotion are asserted.**
+
+Next reversible step is to capture or review **actual annotated 79-index point positions overlaid on a genuine native MetaHuman face viewport**, determine four anatomical correspondences with camera and source-art evidence, and ask for artist confirmation before any face fitting. Maintain first-approved-face precedence and hair-color HOLD.
+
 ## Exact native Windows Unreal 5.8.4 proof
 
 Authorized `neontic`, new disposable `C:\MH2\CastAllSandbox`, **NullRHI / no renderer**. A newly isolated local `.uproject` enabled `MetaHumanCharacter` only in that clone; no install, downloaded content, other software changes, saved game maps or production assets.
