@@ -1,0 +1,35 @@
+name: Unreal Swept-Clearance Verifier Source Guard
+
+on:
+  push:
+    branches:
+      - feat/skybourne-swept-clearance-verifier
+    paths:
+      - "unreal/ArtSource/ShipReview/aureate_swept_clearance.py"
+      - "unreal/ArtSource/ShipReview/aureate_swept_clearance_example_SYNTHETIC.json"
+      - "unreal/Tests/test_aureate_swept_clearance.py"
+      - ".github/workflows/unreal-swept-clearance-source.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Syntax and behavioural tests
+        run: |
+          python -m py_compile unreal/ArtSource/ShipReview/aureate_swept_clearance.py unreal/Tests/test_aureate_swept_clearance.py
+          python -m unittest discover -s unreal/Tests -p "test_aureate_swept_clearance.py" -v
+      - name: Synthetic example verifies through the CLI
+        run: python unreal/ArtSource/ShipReview/aureate_swept_clearance.py unreal/ArtSource/ShipReview/aureate_swept_clearance_example_SYNTHETIC.json > /dev/null
+      - name: Check source patch whitespace
+        run: git diff --check HEAD~1 HEAD
