@@ -1,0 +1,35 @@
+name: Unreal Aureate Wake cinematic V4 source integrity
+on:
+  pull_request:
+    paths:
+      - 'unreal/ArtSource/ShipReview/build_aureate_cinematic_v4.py'
+      - 'unreal/Tools/import_aureate_cinematic_v4_review.py'
+      - 'unreal/Tests/test_aureate_cinematic_v4.py'
+      - 'unreal/Tests/test_import_aureate_cinematic_v4.py'
+      - 'unreal/Docs/AUREATE_CINEMATIC_DETAIL_V4_2026-11-03.md'
+      - '.github/workflows/unreal-aureate-cinematic-v4.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify all V4 source contracts without installing any dependency
+        run: |
+          python -m unittest discover -s unreal/Tests -p 'test_aureate_cinematic_v4.py' -v
+          python -m unittest discover -s unreal/Tests -p 'test_import_aureate_cinematic_v4.py' -v
+      - name: Deterministically build verify and preflight candidates
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/aureate-cinematic-v4"
+          python unreal/ArtSource/ShipReview/build_aureate_cinematic_v4.py --output-dir "$RUNNER_TEMP/aureate-cinematic-v4" --build > "$RUNNER_TEMP/v4-build-receipt.json"
+          python unreal/ArtSource/ShipReview/build_aureate_cinematic_v4.py --output-dir "$RUNNER_TEMP/aureate-cinematic-v4" --verify > "$RUNNER_TEMP/v4-verify-receipt.json"
+          cmp "$RUNNER_TEMP/v4-build-receipt.json" "$RUNNER_TEMP/v4-verify-receipt.json"
+          python unreal/Tools/import_aureate_cinematic_v4_review.py --source-dir "$RUNNER_TEMP/aureate-cinematic-v4" --check
+          echo "SOURCE_ONLY_NOT_NATIVE_UNREAL_NOT_CINEMATIC_APPROVAL"
