@@ -6,6 +6,7 @@ were copied from #657/#711 without importing their unrelated Git ancestors.
 """
 from __future__ import annotations
 import json
+import re
 from pathlib import Path
 
 from check_first_wake_dependency_contract import check_snapshot, read_inputs
@@ -85,7 +86,16 @@ def check_consistency(authority: str, root_readme: str, rank: dict,
             "NATIVE_AUTOMATION_25=NOT_TESTED" in pie_protocol,
             "PIE acceptance protocol weakens native/release evidence")
     require("TSTSS.FirstWake.ReviewObjectivesAreReadOnly" in verifier,
-            "Expected 25th native automation was removed")
+            "Previously established native objective automation was removed")
+    # This integration draft adds exactly one new actor-to-water native test
+    # to the prior 25-name registry. Old native receipts stay SHA-scoped;
+    # neither the source list nor this checker can assert a runtime PASS.
+    block = re.search(r"\$RequiredTests\s*=\s*@\((.*?)\)", verifier, re.S)
+    require(block is not None, "Native automation registry unavailable")
+    required_names = re.findall(r"'(TSTSS\.[^']+)'", block.group(1))
+    require(len(required_names) == 26 and len(set(required_names)) == 26 and
+            "TSTSS.FirstWake.InteractionToSplashdown" in required_names,
+            "Integrated 26-name native automation registry missing or duplicated")
 
 
 def verify(root: Path = ROOT) -> dict:
@@ -113,7 +123,8 @@ def verify(root: Path = ROOT) -> dict:
     return {
         "result": "COMPOSED_SOURCE_DECLARATIONS_PASS",
         "unreal_native_build": "NOT_TESTED",
-        "native_automation_25": "NOT_TESTED",
+        "native_automation_25": "NOT_TESTED",  # Historical document gate (unchanged)
+        "native_automation_26": "NOT_TESTED",  # Current proposed integration
         "pie_cases_13": "NOT_TESTED",
         "merges_or_releases_authorized": False,
         "dependency_versions_changed": False,
