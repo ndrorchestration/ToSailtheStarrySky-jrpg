@@ -260,3 +260,16 @@ source mutations. **Real map loading is still NOT TESTED**; the
 previously passed 25 native automations belong to their exact earlier
 commit. P01–P13 PIE, water physics, Splashdown, character rendering,
 ship production art and merge/release remain distinct held gates.
+
+## Real map-checker behavior regression suite — November 3
+
+`test_pr713_native_prelude_behavior.py` calls the exact read-only
+`check_native()` function with deterministic in-memory Editor stand-ins.
+All 23 valid/invalid scenarios passed on Windows and hosted CI at SHA
+`2a9c03a5588ff4290211d9d315fe367690821a19`. The suite catches
+incorrect milestone ordering, missing/misconfigured real-world actor
+contracts, false visual water collision and premature Chapter 1 claims.
+It is **source behavior verification**, not native Editor or player PIE
+proof. The real map load remains blocked by concurrent Live Coding;
+no other Editor process was stopped. Refer to the
+[native map admission guide](FIRST_WAKE_NATIVE_MAP_ADMISSION_2026-11-02.md).
