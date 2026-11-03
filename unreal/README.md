@@ -1,5 +1,8 @@
 # Unreal Engine 5.8 migration — experimental source track
 
+**Latest four-mode Unreal V4 review status (November 3):** All four noncanonical 3D review scenes were genuinely saved in disposable UE5.8.4 full Editor NullRHI work. Skybourne 18 actors, Seabourne 20, Submersible 15, private static Starbourne 14 — all four maps independently SHA-256 verified after completion, with four persistent wing identities, one shared hull/quarters/bridge proxy, and four camera roles per map. [Native four-map proof](Docs/AUREATE_V4_ALL_FOUR_NATIVE_REVIEW_MAPS_2026_11_03.md). GPU cinematography remains blocked by memory/visual QA (no V4 PNG, min 6.5 GiB free for GPU); these are not finished approved cinema/engineering assets and Starbourne remains locked to players. The active game and user's Editor were not changed.
+
+
 **November 3 native Skybourne update (supersedes prior V4 staging hold):** The full Unreal 5.8.4 Editor method successfully spawned one real pilot actor and saved its verified test level; it then staged a separate **18-actor Skybourne** V4 review level with a shared hull/quarters/bridge proxy, four persistent wing identities, actual imported V4 trim/filigree and four fixed cameras. This is a genuine saved native Unreal map, NOT a GPU render or approved model. D3D11 capture has **no valid PNG**: first precheck mislabeled the wing identities (now fixed), then a later run hit the RAM watchdog. The GPU-only threshold is now **6.5 GiB free RAM**, while NullRHI stage remains at 4.2 GiB. See [exact native Skybourne receipts](Docs/AUREATE_V4_NATIVE_SKYBOURNE_SCENE_EVIDENCE_2026_11_03.md). Protected main, user Editor, all gameplay/save logic, dependency versions and Starbourne player gate are untouched.
 
 

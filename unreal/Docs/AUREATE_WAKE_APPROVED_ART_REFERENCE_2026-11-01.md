@@ -94,3 +94,7 @@ Draft [Aureate Cinematic V4 #732](https://github.com/ndrorchestration/ToSailtheS
 ## November 3 — Native Skybourne V4 assembly acceptance boundary
 
 The new [Skybourne native scene evidence](AUREATE_V4_NATIVE_SKYBOURNE_SCENE_EVIDENCE_2026_11_03.md) establishes one actually saved Unreal 5.8.4 *review* map with shared-hull/dome/quarters blockouts, four wing identities and imported V4 lace. It does **not** establish a faithful rendered version of this approved source art: the D3D11 PNG is pending and the review proxy bridge is not the final geodesic glass assembly. Maintain the original approved image authority. Starbourne private development remains authorized but the player story gate remains locked.
+
+## November 3 — Four Unreal V4 review layouts are not approved final models
+
+[Four-mode Unreal native layout evidence](AUREATE_V4_ALL_FOUR_NATIVE_REVIEW_MAPS_2026_11_03.md) now records four real saved UE5.8.4 scene maps. These remain provisional hull/dome/quarters/wings/foils/light/sail assemblies, not faithful D3D11 renders of the original approved art. The approved PNG stays unchanged and continues to control aesthetic choices and geometric proportions. No physical proof of central rotating quarters or playable Starbourne is implied.

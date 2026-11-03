@@ -9,6 +9,10 @@ on:
       - 'unreal/Tools/run_aureate_v4_full_editor_actor_probe.py'
       - 'unreal/Tools/author_aureate_v4_review_scene_plan.py'
       - 'unreal/Tools/aureate_v4_full_editor_skybourne_stage.py'
+      - 'unreal/Tools/aureate_v4_full_editor_three_form_stage.py'
+      - 'unreal/Tools/run_aureate_v4_three_form_full_editor_stage.py'
+      - 'unreal/Tests/test_aureate_v4_three_form_stage_source.py'
+      - 'unreal/Docs/AUREATE_V4_ALL_FOUR_NATIVE_REVIEW_MAPS_2026_11_03.md'
       - 'unreal/Tools/run_aureate_v4_full_editor_skybourne_stage.py'
       - 'unreal/Tools/capture_aureate_v4_skybourne_native_gpu.py'
       - 'unreal/Tools/run_aureate_v4_skybourne_gpu_capture.py'
@@ -47,6 +51,7 @@ jobs:
           python -m unittest discover -s unreal/Tests -p 'test_aureate_v4_review_scene_plan.py' -v
           python -m unittest discover -s unreal/Tests -p 'test_aureate_v4_full_editor_actor_probe_source.py' -v
           python -m unittest discover -s unreal/Tests -p 'test_aureate_v4_full_editor_skybourne_source.py' -v
+          python -m unittest discover -s unreal/Tests -p 'test_aureate_v4_three_form_stage_source.py' -v
       - name: Deterministically build verify and preflight candidates
         shell: bash
         run: |

@@ -1,4 +1,6 @@
 # Aureate Wake V4 — cross-track dependency and acceleration register
+**Critical-path status update:** All **four** Unreal 5.8.4 review maps now exist and have independently verified .umap SHA-256s, with 67 review actors in total across four noncanonical layouts. Three-form follow-up used **one** full Editor NullRHI session rather than three competing engine startups. See [four-form native evidence](AUREATE_V4_ALL_FOUR_NATIVE_REVIEW_MAPS_2026_11_03.md). The next gated milestone is actual single-frame D3D11 Skybourne QA only after >=6.5 GiB free RAM; no rendered V4 screenshot exists, and artist/physical-game acceptance remains unverified.
+
 **Latest proven critical-path advance:** Full Editor one-actor pilot PASS and native **18-actor Skybourne** map save PASS at UE5.8.4. Fixed four identity labels, original approved image still authoritative. Native GPU screenshot is HOLD; a D3D11 startup with ~5.53 GiB free triggered a memory watchdog. **GPU minimum raised to 6.5 GiB**, with 1.5 GiB low-memory process stop; ordinary NullRHI stage remains 4.2 GiB. See [Skybourne native evidence](AUREATE_V4_NATIVE_SKYBOURNE_SCENE_EVIDENCE_2026_11_03.md) for exact map checksum. The older actor-pilot RAM HOLD in the historical baseline was resolved by the later pilot run, not by lowering any threshold.
 
 

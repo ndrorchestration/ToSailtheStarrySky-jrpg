@@ -1,4 +1,6 @@
 # Aureate Wake V4 — Native Skybourne pilot and hero scene
+**Separate subsequent sibling work:** The same isolated Unreal5.8.4 sandbox now contains **three additional saved noncanonical review maps**: Seabourne (20 actors), Submersible (15), and private static Starbourne (14), in addition to this genuine Skybourne (18). Exact checked hashes and level boundaries are in [all-four evidence](AUREATE_V4_ALL_FOUR_NATIVE_REVIEW_MAPS_2026_11_03.md). No V4 GPU screenshot has been captured; no Starbourne player unlock or production scene promotion.
+
 
 **Date:** November 3, 2026. **Scope:** one noncanonical ship in isolated Unreal 5.8.4 development sandboxes, not the playable game. This supersedes the old headless actor-spawning blocker only for the full Editor execution method. No review art promotion or Starbourne player access.
 
