@@ -2,6 +2,7 @@
 #include "TSTSSExplorerCharacter.h"
 #include "TSTSSFirstWakeState.h"
 #include "Engine/Engine.h"
+#include "Engine/Canvas.h"
 #include "GameFramework/PlayerController.h"
 
 // Draw only in non-shipping review builds. The story state remains the
@@ -28,7 +29,7 @@ void ATSTSSFirstWakeReviewHUD::DrawHUD()
 
     const float Margin = 24.f;
     const float PanelWidth = FMath::Max(0.f, FMath::Min(780.f, Canvas->ClipX - Margin * 2.f));
-    if (PanelWidth < 240.f || Canvas->ClipY < 160.f)
+    if (PanelWidth < 440.f || Canvas->ClipY < 160.f)
     {
         return; // No illegible/offscreen overlay at very small sizes.
     }
@@ -40,7 +41,7 @@ void ATSTSSFirstWakeReviewHUD::DrawHUD()
     DrawText(State->GetReviewObjectiveText(),
              FLinearColor::White,
              Margin + 16.f, Margin + 38.f, GEngine->GetMediumFont(), 1.f);
-    DrawText(TEXT("WASD: move  |  Mouse: look  |  E: interact  |  J: objective  |  F5/F9: review save/load"),
+    DrawText(TEXT("WASD: move  |  E: interact  |  J: objective  |  F5/F9: review save/load"),
              FLinearColor(0.77f, 0.84f, 0.86f, 1.f),
              Margin + 16.f, Margin + 82.f, GEngine->GetSmallFont(), 0.9f);
     DrawText(TEXT("Review only: no launch, water landing, or Chapter 1 progression authorized"),
