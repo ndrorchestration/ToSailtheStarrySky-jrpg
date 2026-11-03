@@ -201,9 +201,16 @@ def compiled_run(compiler: str, methods: str) -> subprocess.CompletedProcess[str
         src = Path(tmp) / "f5f9.cpp"
         executable = Path(tmp) / "f5f9"
         src.write_text(PREFIX + methods + SUFFIX, encoding="utf-8")
+        if Path(compiler).name.lower() == "cl.exe":
+            executable = Path(tmp) / "f5f9.exe"
+            args = [compiler, "/nologo", "/std:c++17", "/EHsc",
+                    str(src), "/Fo:" + str(Path(tmp) / "f5f9.obj"),
+                    "/Fe:" + str(executable)]
+        else:
+            args = [compiler, "-std=c++17", "-O0", "-Wall", "-Wextra",
+                    "-Werror", "-pedantic", str(src), "-o", str(executable)]
         build = subprocess.run(
-            [compiler, "-std=c++17", "-O0", "-Wall", "-Wextra", "-Werror",
-             "-pedantic", str(src), "-o", str(executable)],
+            args,
             check=False, capture_output=True, text=True, timeout=45,
         )
         if build.returncode:
@@ -218,6 +225,8 @@ def main() -> int:
     args = parser.parse_args()
     compiler = next((binary for name in ("g++", "clang++", "c++")
                      if (binary := shutil.which(name))), None)
+    if compiler is None:
+        compiler = shutil.which("cl")
     if compiler is None:
         raise RuntimeError("C++17 compiler required for behavioral evidence")
     methods = extract_methods(CHARACTER.read_text(encoding="utf-8"))
