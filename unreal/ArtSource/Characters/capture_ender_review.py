@@ -23,7 +23,9 @@ RECEIPT_NAME = "ender_63dbfac_native_20261101.json"
 ACTOR_LABEL = "Ender_STATIC_CANDIDATE_NOT_CANON"
 # Viewpoint names are provisional, not verified anatomical directions.
 CAMERAS = ("front_plus_x", "side_plus_y", "rear_minus_x", "threequarter")
-RESOLUTION = (800, 600)
+# Current UE 5.8.4 D3D11 review viewport is 16:9; earlier 800x600
+# request produced an 800x450 PNG. The receiver checks exact native bytes.
+RESOLUTION = (800, 450)
 
 
 def require(condition, message):
@@ -204,6 +206,7 @@ def main_unreal():
         def __init__(self):
             self.index = 0
             self.task = None
+            self.request_in_flight = False
             self.frame = 0
             self.start = time.monotonic()
             self.completed_at = None
@@ -221,6 +224,10 @@ def main_unreal():
             unreal.log("TSTSS_ENDER_CAPTURE " + status + " " + str(receipt))
 
         def tick(self, delta):
+            # AutomationLibrary may re-enter a Slate callback during a capture
+            # request; without this guard, one camera was requested repeatedly.
+            if self.request_in_flight:
+                return
             try:
                 self.frame += 1
                 if time.monotonic() - self.start > 240:
@@ -231,9 +238,13 @@ def main_unreal():
                 if self.task is None:
                     name = CAMERAS[self.index]
                     filename = out / (name + ".png")
-                    self.task = unreal.AutomationLibrary.take_high_res_screenshot(
-                        RESOLUTION[0], RESOLUTION[1], str(filename),
-                        camera=cameras[name], delay=0.0, force_game_view=True)
+                    self.request_in_flight = True
+                    try:
+                        self.task = unreal.AutomationLibrary.take_high_res_screenshot(
+                            RESOLUTION[0], RESOLUTION[1], str(filename),
+                            camera=cameras[name], delay=0.0, force_game_view=True)
+                    finally:
+                        self.request_in_flight = False
                     require(self.task and self.task.is_valid_task(),
                             "Unreal screenshot task invalid: " + name)
                     self.completed_at = None
