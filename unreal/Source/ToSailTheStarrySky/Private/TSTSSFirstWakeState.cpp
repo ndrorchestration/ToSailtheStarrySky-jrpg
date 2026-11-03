@@ -107,6 +107,10 @@ void UTSTSSFirstWakeState::Reset()
     bStarted = false;
     CurrentBeat = ETSTSSFirstWakeBeat::FlyerDiscovered;
     InspectionMask = 0;
+    // A full story restart is also a timeline discontinuity. Invalidate
+    // cached hull contact/settling evidence even if the same state and gate
+    // instances survive the reset before the next adapter Tick.
+    ++RestoreGeneration;
 }
 
 bool UTSTSSFirstWakeState::Restore(bool bWasStarted, ETSTSSFirstWakeBeat SavedBeat, uint8 SavedInspectionMask)

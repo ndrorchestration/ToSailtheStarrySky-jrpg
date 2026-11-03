@@ -253,7 +253,8 @@ def main() -> int:
     if compiler is None:
         raise RuntimeError("C++17 compiler required; cannot claim a portable behavioral pass")
     gate = GATE_SOURCE.read_text(encoding="utf-8")
-    actual = compile_and_run(compiler, portable_source(gate))
+    full_source = portable_source(gate)
+    actual = compile_and_run(compiler, full_source)
     if actual.returncode:
         raise RuntimeError("Actual production C++ failed behavioral checks: "
                            + actual.stdout + actual.stderr)
@@ -271,6 +272,21 @@ def main() -> int:
                                + negative.stdout + negative.stderr)
         print("PASS: restore-generation guard removal compiled and was rejected by same-beat restore assertion")
         print("  " + negative.stderr.strip())
+        # A full Reset() is also a timeline discontinuity, even if the
+        # Story/Gate pair survives a complete new Prelude between ticks.
+        reset_increment = re.compile(
+            r"(void UTSTSSFirstWakeState::Reset\(\)\s*\{[^{}]*?)\+\+RestoreGeneration;"
+        )
+        reset_broken, count = reset_increment.subn(r"\1", full_source)
+        if count != 1:
+            raise RuntimeError("Reset-generation mutation target is missing or duplicated")
+        reset_negative = compile_and_run(compiler, reset_broken)
+        reset_expected = FAILURE + "Full Reset invalidates cached contact generation"
+        if reset_negative.returncode != 2 or reset_negative.stderr.strip() != reset_expected:
+            raise RuntimeError("Reset generation mutation did not fail its intended assertion: "
+                               + reset_negative.stdout + reset_negative.stderr)
+        print("PASS: removing Reset generation increment compiled and failed full-restart assertion")
+        print("  " + reset_negative.stderr.strip())
     print("Source-extracted portable C++ only; no filesystem saves; "
           "Unreal native/UHT/PIE verification remains pending.")
     return 0

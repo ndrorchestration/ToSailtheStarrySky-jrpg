@@ -44,6 +44,14 @@ Three deliberately unsafe code mutations **compiled but failed at the intended b
 
 **Next physical scene acceptance:** in a separate, disposable Unreal map, place a properly collidable simulated hull and bounded tagged water volume, verify the hull really overlaps below the surface, sample `GetPhysicsLinearVelocity().Z`, measure continuous low-speed contact against the unchanged two-second gate, and capture no-contact/fast-impact/occlusion/quickload negatives. Keep cinematic hull art and chapter unlock independent from this greybox proof.
 
+## 2026-11-03 full restart water-evidence fix (draft only)
+
+A separate **actual production source defect** was identified in the joined First Wake code. `UTSTSSFirstWakeState::Restore()` advanced the transient `RestoreGeneration` used by `UTSTSSWaterLandingGate` to discard stale settling/sea-contact evidence, but `UTSTSSFirstWakeState::Reset()` did **not**. When a same-object Story/Gate pair was fully reset and progressed through a fresh Prelude before the adapter's next tick, the old gate could retain `bContactRecorded` and the prior stable-contact timer. It could then fail to reacquire actual `SeaContact` on the new launch or count stale duration.
+
+**Small reversible fix:** `Reset()` now increments the *existing transient* `RestoreGeneration`. No saved game schema or gameplay beat enum changed. The existing native water restore automation test now exercises the real old-contact -> full Reset -> flyer/Ionia/boarding/three inspections/signoff/launch -> new contact sequence **without calling `Gate->Reset()`**. It requires the new timeline to genuinely reacquire `SeaContact` and to accumulate a full **two fresh stable seconds** before flotation.
+
+In this isolated review patch, Windows MSVC successfully compiled the **actual state/gate C++ and two existing repository automation test bodies** against API doubles: **341 assertions PASS**, up from 310 in the prior baseline. Two separate deliberately unsafe mutations compiled and **failed at their specific behavior assertions**: removing the same-beat Restore-generation guard, or removing Reset's new generation increment. This remains **portable C++ evidence, not a native Unreal build/PIE/water simulation**. Existing 26 registered native test names are unchanged.
+
 ## Outstanding hard gates
 
 | Gate | Status |

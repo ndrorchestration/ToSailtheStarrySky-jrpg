@@ -83,6 +83,57 @@ bool FTSTSSWaterLandingRestoreTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Restored contact can eventually confirm flotation"),
         Story->GetCurrentBeat(), ETSTSSFirstWakeBeat::FlotationConfirmed);
     TestEqual(TEXT("Completion uses exactly two fresh seconds"), Gate->GetStableContactSeconds(), 2.f);
+
+    // A full Reset() may be followed by a complete new Prelude before the
+    // water adapter observes another frame. Prior SeaContact/settling state
+    // must never leak into this new timeline in the same Story and Gate.
+    UTSTSSFirstWakeState* RestartedStory = NewObject<UTSTSSFirstWakeState>();
+    UTSTSSWaterLandingGate* RestartedGate = NewObject<UTSTSSWaterLandingGate>();
+    if (!TestTrue(TEXT("Seed old SeaContact before full restart"),
+        RestartedStory->Restore(true, ETSTSSFirstWakeBeat::SeaContact, 0x07))) return false;
+    for (int32 Index = 0; Index < 6; ++Index)
+        TestFalse(TEXT("Old restart timeline not yet floating"),
+            RestartedGate->Observe(0.25f, true, 0.f, RestartedStory));
+    TestEqual(TEXT("Old restart timeline accumulated 1.5 seconds"),
+        RestartedGate->GetStableContactSeconds(), 1.5f);
+    const uint64 GenerationBeforeReset = RestartedStory->GetRestoreGeneration();
+    RestartedStory->Reset();
+    TestEqual(TEXT("Full Reset invalidates cached contact generation"),
+        RestartedStory->GetRestoreGeneration(), GenerationBeforeReset + 1);
+    TestFalse(TEXT("Restart clears started flag"), RestartedStory->HasStarted());
+    TestEqual(TEXT("Restart clears inspection mask"), RestartedStory->GetInspectionMask(), uint8(0));
+
+    TestTrue(TEXT("Restart discovers flyer"),
+        RestartedStory->AdvanceTo(ETSTSSFirstWakeBeat::FlyerDiscovered));
+    TestTrue(TEXT("Restart hires Ionia"),
+        RestartedStory->AdvanceTo(ETSTSSFirstWakeBeat::IoniaHired));
+    TestTrue(TEXT("Restart boards Aureate Wake"),
+        RestartedStory->AdvanceTo(ETSTSSFirstWakeBeat::BoardedAureateWake));
+    TestTrue(TEXT("Restart inspects lift"),
+        RestartedStory->InspectStation(ETSTSSInspectionStation::Lift));
+    TestTrue(TEXT("Restart inspects pressure"),
+        RestartedStory->InspectStation(ETSTSSInspectionStation::Pressure));
+    TestTrue(TEXT("Restart inspects reserve"),
+        RestartedStory->InspectStation(ETSTSSInspectionStation::Reserve));
+    TestTrue(TEXT("Restart signs off engineering"),
+        RestartedStory->AdvanceTo(ETSTSSFirstWakeBeat::EngineeringChecked));
+    TestTrue(TEXT("Restart launches only after engineering"),
+        RestartedStory->AdvanceTo(ETSTSSFirstWakeBeat::Launched));
+    TestFalse(TEXT("First post-reset contact cannot complete flotation"),
+        RestartedGate->Observe(0.25f, true, 0.f, RestartedStory));
+    TestEqual(TEXT("New timeline genuinely reacquires SeaContact"),
+        RestartedStory->GetCurrentBeat(), ETSTSSFirstWakeBeat::SeaContact);
+    TestEqual(TEXT("New timeline counts only 0.25 second"),
+        RestartedGate->GetStableContactSeconds(), 0.25f);
+    for (int32 Index = 0; Index < 6; ++Index)
+        TestFalse(TEXT("New timeline has insufficient stable duration"),
+            RestartedGate->Observe(0.25f, true, 0.f, RestartedStory));
+    TestEqual(TEXT("New timeline has precisely 1.75 seconds"),
+        RestartedGate->GetStableContactSeconds(), 1.75f);
+    TestTrue(TEXT("New timeline requires two clean stable seconds"),
+        RestartedGate->Observe(0.25f, true, 0.f, RestartedStory));
+    TestEqual(TEXT("Full restart eventually confirms fresh flotation"),
+        RestartedStory->GetCurrentBeat(), ETSTSSFirstWakeBeat::FlotationConfirmed);
     return true;
 }
 

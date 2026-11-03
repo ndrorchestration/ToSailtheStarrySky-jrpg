@@ -67,7 +67,8 @@ public:
     UFUNCTION(BlueprintPure, Category="TSTSS|First Wake")
     uint8 GetInspectionMask() const { return InspectionMask; }
 
-    // Runtime-only signal for systems that cache evidence across in-place restores.
+    // Runtime-only timeline generation for cache invalidation after both
+    // Restore() and full Reset(). It is not part of the saved game schema.
     uint64 GetRestoreGeneration() const { return RestoreGeneration; }
 
     UFUNCTION(BlueprintCallable, Category="TSTSS|First Wake")
