@@ -30,6 +30,7 @@ _THIS_TOOL_DIR = str(Path(__file__).resolve().parent)
 if _THIS_TOOL_DIR not in sys.path:
     sys.path.insert(0, _THIS_TOOL_DIR)
 import verify_first_wake_v2_independent as reference
+import build_first_wake_prelude_interaction as layout
 
 EXPECTED_PARENT = "TSTSS_PR713_NativeMapQA_20261102"
 MAP_PACKAGE = reference.MAP_PACKAGE
@@ -93,6 +94,78 @@ def check_source(project: Path, expected: str) -> dict:
     }
 
 
+
+def verify_world_geometry(stop_actors: dict, player_start, floor) -> dict:
+    """Check actual Editor actor transforms against the authored V2 route.
+
+    This checks world transforms only, not physical walking, visibility raycasts,
+    player input or dynamic collision. Tolerate <=1 cm serialization drift.
+    """
+    plan = layout.validate_plan()
+    authored = {entry.label: entry for entry in layout.STOPS}
+    if len(stop_actors) != 7 or len(authored) != 7:
+        raise RuntimeError("HOLD: map/authoring milestone geometry counts differ")
+
+    def xyz(actor, label: str) -> tuple[float, float, float]:
+        v = actor.get_actor_location()
+        coords = (float(v.x), float(v.y), float(v.z))
+        if not all(math.isfinite(a) for a in coords):
+            raise RuntimeError("HOLD: nonfinite Editor actor location: " + label)
+        return coords
+
+    def matches(actual, expected, label: str) -> None:
+        if any(abs(a - float(b)) > 1.0 for a, b in zip(actual, expected)):
+            raise RuntimeError("HOLD: Editor actor transform differs from authored Prelude plan: " + label)
+
+    for label, actor in stop_actors.items():
+        entry = authored.get(label)
+        if entry is None:
+            raise RuntimeError("HOLD: unexpected Editor milestone label " + label)
+        matches(xyz(actor, label), (entry.x, entry.y, 90.0), label)
+
+    start = xyz(player_start, "PlayerStart")
+    matches(start, layout.PLAYER_SPAWN, "PlayerStart")
+    floor_location = xyz(floor, "TraversalFloor")
+    matches(floor_location, layout.FLOOR_LOCATION, "TraversalFloor")
+    scale = floor.get_actor_scale3d()
+    floor_scale = (float(scale.x), float(scale.y), float(scale.z))
+    if not all(math.isfinite(a) and a > 0 for a in floor_scale):
+        raise RuntimeError("HOLD: invalid actual Editor traversal floor scale")
+    matches(floor_scale, layout.FLOOR_SCALE, "TraversalFloorScale")
+
+    # Also require the *actual* transform bounds, not merely the constants,
+    # to enclose each marker and the PlayerStart at its XY location.
+    xmin = floor_location[0] - floor_scale[0] * 50
+    xmax = floor_location[0] + floor_scale[0] * 50
+    ymin = floor_location[1] - floor_scale[1] * 50
+    ymax = floor_location[1] + floor_scale[1] * 50
+    top = floor_location[2] + floor_scale[2] * 50
+    if abs(top) > 5 or not (xmin < start[0] < xmax and ymin < start[1] < ymax):
+        raise RuntimeError("HOLD: actual Editor floor does not contain player spawn")
+    for label, actor in stop_actors.items():
+        x, y, _ = xyz(actor, label)
+        half = layout.REVIEW_MARKER_HALF_WIDTH_CM
+        if not (xmin < x - half and x + half < xmax and
+                ymin < y - half and y + half < ymax):
+            raise RuntimeError("HOLD: Editor milestone footprint leaves review floor: " + label)
+
+    flyer = xyz(stop_actors["FlyerDiscovery"], "FlyerDiscovery")
+    nearest_xy = math.hypot(
+        max(abs(start[0] - flyer[0]) - layout.REVIEW_MARKER_HALF_WIDTH_CM, 0),
+        max(abs(start[1] - flyer[1]) - layout.REVIEW_MARKER_HALF_WIDTH_CM, 0),
+    )
+    if nearest_xy <= layout.REVIEW_INTERACTION_REACH_CM:
+        raise RuntimeError("HOLD: actual flyer marker begins within player interaction reach")
+    if plan["authoring_geometry_only"]["native_visibility_or_pie_tested"]:
+        raise RuntimeError("HOLD: authored plan falsely claims native movement or visibility")
+    return {
+        "world_layout_matches_authoring_plan": True,
+        "all_marker_footprints_on_floor": True,
+        "first_marker_initially_out_of_interaction_reach": True,
+        "spawn_to_flyer_nearest_xy_edge_cm": round(nearest_xy, 2),
+    }
+
+
 def check_native(project: Path, initial: dict) -> dict:
     import unreal
     engine = str(unreal.SystemLibrary.get_engine_version())
@@ -146,6 +219,8 @@ def check_native(project: Path, initial: dict) -> dict:
         raise RuntimeError("HOLD: decorative ocean has unwanted collision")
     if str(sea_mesh.get_collision_profile_name()).lower() != "nocollision":
         raise RuntimeError("HOLD: visual-only ocean not using NoCollision profile")
+
+    geometry = verify_world_geometry(stop_actors, player_start, floor)
 
     mode = unreal.get_default_object(unreal.TSTSSGameMode)
     pawn = mode.get_editor_property("default_pawn_class")
@@ -205,6 +280,7 @@ def check_native(project: Path, initial: dict) -> dict:
         "engineering_inspection_mask": 7,
         "spawn_to_flyer_actor_origin_cm": round(distance_cm, 2),
         "stop_locations_world_cm": positions,
+        **geometry,
         "chapter_one_act_one": False,
         "actual_pie_player_input_tested": False,
         "actual_savegame_disk_roundtrip_tested": False,
