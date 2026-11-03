@@ -1,0 +1,89 @@
+# First Wake V2 native Editor map-admission review — November 2, 2026
+
+**Status: REVIEW ONLY, not P01–P13 Play In Editor acceptance.**
+
+## Why this gate exists
+
+PR [#713](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/713)
+already has exact-head UE5.8.4 Win64 Editor build and 25/25 native automation
+verification at `52e13aedaa8bda900cece849b54eae570179c838`.
+Those tests do **not** load the real V2 Prelude level as an editor map,
+confirm every placed collision target, or exercise a player's WASD/mouse/E/J/F5/F9
+input path.
+
+The narrowly separate `unreal/Tools/verify_pr713_native_prelude_map.py`
+inspects the **actual UE Editor loaded world** and **actual reflected C++
+actor methods** without using a fabricated keyboard/PIE transcript.
+
+## Source custody and execution
+
+Use **only** a fresh isolated, detached Windows checkout named
+`C:\TSTSS_PR713_NativeMapQA_20261102`, pinned to the exact PR head under
+inspection. Do not run this script in the user's real project, personal
+save directory, main branch, or another live Editor session.
+
+This script requires the environment variable
+`TSTSS_REVIEW_EXPECTED_HEAD` to contain the entire 40-character SHA
+matching Git HEAD; it checks a clean tree and the SHA-256 of the tracked
+V2 `.umap`, refuses potentially present normal/PIE SaveGame files, and
+checks all tracked map/config hashes and Git HEAD again after inspection.
+It writes one exclusive receipt under **ignored**
+`unreal/Saved/NativePreludeMapQA/`. No existing receipt is overwritten.
+
+On an already compiled Unreal 5.8.4 Editor environment, from PowerShell,
+adjusting paths to the explicitly named disposable checkout:
+
+```powershell
+$Review = "C:\TSTSS_PR713_NativeMapQA_20261102"
+$env:TSTSS_REVIEW_EXPECTED_HEAD = (git -C $Review rev-parse HEAD).Trim()
+$Editor = "C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor-Cmd.exe"
+$Project = Join-Path $Review "unreal\ToSailTheStarrySky.uproject"
+$Script = Join-Path $Review "unreal\Tools\verify_pr713_native_prelude_map.py"
+& $Editor $Project "-run=pythonscript" "-script=$Script" -unattended -nop4 -nullrhi -log
+```
+
+The script is an Editor Python **commandlet**, not a runnable in-game Python
+controller. The project must already have `PythonScriptPlugin` available.
+Use a dedicated private log and verify a real
+`TSTSS_NATIVE_PRELUDE_MAP_QA_PASS` sentinel, JSON receipt and zero process
+exit; if any is absent, **HOLD**. Do not weaken guards to accommodate a
+different checkout or engine patch. Startup may change tracked INI files:
+in the disposable review checkout only, protecting the two tracked
+`DefaultEngine.ini` and `DefaultInput.ini` from writes is an approved
+experiment. Retain failed logs and avoid publishing generated Android File
+Server tokens. No dependency installation/upgrade is authorized.
+
+## Bounded checks
+
+The script verifies actual level load, seven distinct C++
+`ATSTSSMilestoneActor` instances and their visible collision components,
+actual review spawn/floor/no-collision ocean, GameMode's native explorer
+pawn class, native read-only initial objective, rejected out-of-order Ionia
+and engineering signoff, ordered flyer → Ionia → boarding, duplicate
+inspection rejection, all three independent engineering bits, successful
+signoff and no false Chapter 1 Act 1 transition. It records actor origin
+coordinates and spawn-to-flyer distance **for later geometry QA**, not as
+proof that a player can see or click a marker. The script has **no calls
+to save map/content, create/delete disk SaveGame slots, inject gameplay
+input, activate Play In Editor or enter the shipping runtime**.
+
+A positive result establishes `NATIVE_EDITOR_MAP_AND_REAL_ACTORS_PASS_NOT_PIE`,
+not the P01–P13 human input matrix. In particular it does not establish
+camera line traces/occlusion, actual 300 cm reach, E/J feedback rendering,
+F5/F9 story persistence in PIE, stale-session isolation, sea-contact
+or flotation physics, Lyra onboarding, visual quality, art acceptance,
+installer security, a release or permission to unlock Starbourne.
+
+The existing strict [P01–P13 review matrix](FIRST_WAKE_V2_PIE_ACCEPTANCE_MATRIX_2026-11-02.md)
+remains **NOT TESTED** until genuine in-Editor player interaction is
+observed and recorded. A source-only GitHub preflight for
+`test_pr713_native_prelude_map.py` verifies this script's admission
+guards and negative controls; those tests do not load the Unreal level.
+
+## Failure handling
+
+If the commandlet cannot load the level, a Python reflection API is
+missing, the state transition fails, or the source/map/config hashes
+change, retain the original log and checkout for review. Do not promote
+partial or synthetic results to native gameplay acceptance, reset
+unexamined files, or change plugin/build dependencies to force a pass.
