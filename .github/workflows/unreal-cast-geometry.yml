@@ -59,6 +59,11 @@ jobs:
           python3 -m unittest discover -s unreal/ArtSource/Characters -p test_ender_v5_reference_priority.py -v
           python3 unreal/ArtSource/Characters/verify_ender_v5_reference_priority.py
 
+      - name: Verify private Ender V5 facial candidate input guards with synthetic images (engine-free)
+        run: |
+          python3 -m unittest discover -s unreal/ArtSource/Characters -p test_ender_v5_private_face_candidates.py -v
+          python3 -m py_compile unreal/ArtSource/Characters/verify_ender_v5_private_face_candidates.py
+
       - name: Regenerate source assets and confirm exact bytes
         env:
           TSTSS_CAST_OUTPUT: unreal/ArtSource/Characters/Candidates
