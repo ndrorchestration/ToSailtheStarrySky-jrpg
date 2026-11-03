@@ -103,5 +103,28 @@ class RenderTargetEvidenceQA(unittest.TestCase):
         x[0]["status"]="SUCCESS"
         with self.assertRaises(ValueError):validate_record(*x)
 
+    def test_minus2_ev_native_capture_did_not_change_pixels(self):
+        baseline=load("v5_goggles_native_rt_capture.json")
+        adjusted=load("v5_goggles_minus2_capture.json")
+        comparison=load("v5_goggles_minus2_identical_pixels.json")
+        self.assertEqual(adjusted["status"],
+            "NATIVE_V5_GOGGLES_RENDER_TARGET_PNG_CORE_PASS_VISUAL_UNREVIEWED")
+        self.assertEqual(adjusted["exposure_bias_ev"],-2.0)
+        self.assertEqual(adjusted["source_meta_sha256"],baseline["source_meta_sha256"])
+        self.assertEqual(adjusted["source_map_sha256"],baseline["source_map_sha256"])
+        self.assertEqual(adjusted["source_goggles_sha256"],baseline["source_goggles_sha256"])
+        self.assertEqual(adjusted["captures"][0]["sha256_png_core"],
+            baseline["captures"][0]["sha256_png_core"])
+        self.assertEqual(comparison["status"],
+            "EXPOSURE_MINUS2_RENDER_IDENTICAL_PIXELS_TO_BASELINE")
+        self.assertTrue(comparison["same_png_core_bytes"])
+        self.assertTrue(comparison["same_rgb_pixels"])
+        self.assertEqual(comparison["baseline_core_sha256"],
+            comparison["minus2_core_sha256"])
+        self.assertFalse(comparison["visual_quality_approved"])
+        self.assertFalse(comparison["any_sculpt_or_material_asset_changed"])
+        self.assertFalse(comparison["goggles_fit_verified"])
+        self.assertFalse(comparison["canonical"])
+
 if __name__=="__main__":
     unittest.main()
