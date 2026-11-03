@@ -16,10 +16,17 @@ assert(packageJson.window && packageJson.window.resizable === true,
   'desktop package window must remain resizable');
 assert(packageJson.window.min_width === 960 && packageJson.window.min_height === 640,
   'desktop package minimum window must preserve the logical 960x640 game surface');
-assert(typeof packageJson.scripts['package:windows'] === 'string',
-  'Windows packaging script is missing');
-assert(packageJson.devDependencies && packageJson.devDependencies['nw-builder'],
-  'nw-builder dependency is missing');
+// This historical source contract must NOT force retention of a dangerous
+// direct package:windows entrypoint or deprecated nw-builder dependency.
+// Their presence is audit evidence, not a requirement for future code.
+assert(packageJson.private === true,
+  'historical npm desktop manifest must remain private');
+const directPackageCommands = Object.keys(packageJson.scripts || {})
+  .filter(name => /^package:windows(?:$|:)/.test(name));
+if (directPackageCommands.length) {
+  console.log('LEGACY_DIRECT_NPM_PACKAGE_COMMAND=UNGUARDED_SECURITY_HOLD: ' +
+    directPackageCommands.join(', '));
+}
 
 const stageScript = fs.readFileSync(
   path.join(__dirname, '..', 'scripts', 'stage-memories-desktop.js'),
@@ -31,63 +38,39 @@ assert(stageScript.includes("'icon.ico'"),
   'production desktop runtime must stage a Windows ICO asset');
 assert(stageScript.includes('version: rootPackage.version'),
   'production desktop manifest must carry the project version for Windows metadata');
-assert(packageJson.scripts['package:windows'].includes('--app.icon=.desktop-runtime/www/icon.ico'),
-  'Windows packaging must pass the staged ICO through nw-builder app icon metadata');
+// Preserve the source stage icon without requiring the archived CLI to be callable.
 assert(stageScript.includes("path.join(stage, 'package.json')"),
   'production desktop manifest must live at the launcher root');
 assert(stageScript.includes("path.join(stage, 'www')"),
   'production game payload must live under www');
-assert(packageJson.scripts['package:windows'].includes('.desktop-runtime'),
-  'Windows packaging must consume only the staged production runtime');
+// Script-defined stage boundaries are tested above and in dedicated Python checks.
 
 const workflow = fs.readFileSync(
   path.join(__dirname, '..', '.github', 'workflows', 'desktop-package.yml'),
   'utf8'
 );
 
-assert(!workflow.includes('actions/upload-artifact@v4'),
-  'release-critical path must not depend on GitHub Actions artifact storage');
-assert(!workflow.includes('actions/download-artifact@v4'),
-  'release-critical path must not depend on GitHub Actions artifact transfer');
-assert(workflow.includes('npm ci'),
-  'desktop workflow must use the lockfile');
-assert(workflow.includes('npm run test:desktop-package'),
-  'desktop workflow must run the packaging contract before building');
-assert(workflow.includes('npm run package:windows'),
-  'desktop workflow must build the Windows NW.js package');
-assert(workflow.includes('Get-ChildItem -LiteralPath $dist -Filter "Aetherwake.exe" -File -Recurse'),
-  'desktop workflow must locate the emitted executable at any supported package depth');
-assert(workflow.includes('makensis'),
-  'desktop workflow must compile a conventional NSIS installer');
-assert(workflow.includes('RequestExecutionLevel user'),
-  'player installer must not require administrator elevation');
-assert(workflow.includes('InstallDir "$LOCALAPPDATA'),
-  'player installer must default to a per-user location');
-assert(workflow.includes('Aetherwake-Setup.exe'),
-  'desktop workflow must preserve the Windows installer');
-assert(workflow.includes('Aetherwake-Windows.zip'),
-  'desktop workflow must preserve the portable ZIP fallback');
-assert(workflow.includes('SHA256SUMS.txt'),
-  'desktop workflow must publish artifact hashes');
-assert(workflow.includes('verify-windows:'),
-  'desktop workflow must have a Windows build-and-verification job');
-assert(workflow.includes('runs-on: windows-2022'),
-  'Windows verification must use a pinned runner image');
-assert(workflow.includes('Install and launch exact candidate'),
-  'desktop workflow must install-smoke the exact candidate installer');
-assert(workflow.includes('AETHERWAKE_DESKTOP_SMOKE_MARKER'),
-  'desktop workflow must require an application-level readiness marker');
-assert(workflow.includes('DESKTOP_RENDER_READINESS=PASS'),
-  'desktop workflow must require live rendered-frame readiness before publication');
-assert(workflow.includes('Verify portable package layout'),
-  'desktop workflow must verify the portable package shape');
-
-assert(workflow.includes('Publish verified Windows release'),
-  'desktop workflow must publish only after build and Windows verification in the same job');
-assert(workflow.includes('target_commitish: ${{ github.sha }}'),
-  'desktop publication must bind the release tag/target to the exact workflow source SHA');
-assert(workflow.indexOf('Install and launch exact candidate') < workflow.indexOf('Publish verified Windows release'),
-  'publication must occur after exact-candidate install/launch verification');
+// The October security hold superseded the former live desktop publisher.
+// Validate the *retired* workflow, not requirements for a forbidden release.
+const activeWorkflow = workflow.split(/\r?\n/)
+  .filter(line => !/^\s*#/.test(line)).join('\n');
+assert(workflow.includes('# SECURITY HOLD'),
+  'retired desktop workflow must retain its explicit security hold');
+assert(workflow.includes('name: Legacy NW.js Windows release — BLOCKED'),
+  'historical desktop publisher must remain explicitly disabled');
+assert(/^\s*workflow_dispatch:\s*$/m.test(activeWorkflow),
+  'manual workflow entrypoint must remain an explicit denial path');
+assert(!/^\s*(?:push|tags):/m.test(activeWorkflow),
+  'retired publisher must not have push/tag triggers');
+assert(/permissions:\s*\n\s*contents:\s*read/.test(activeWorkflow) &&
+       !/\bcontents:\s*write\b/.test(activeWorkflow),
+  'retired publisher must not regain a writable repository token');
+assert(/Refuse manual execution[\s\S]*?exit 1/.test(activeWorkflow),
+  'manual legacy workflow invocation must fail closed');
+assert(!/softprops\/action-gh-release|gh\s+release\s+create|npm\s+ci|npm\s+run\s+package:windows|makensis|Start-Process|choco\s+install\s+nsis/i.test(activeWorkflow),
+  'retired publisher must contain no installer, build, or release actions');
+assert(!/uses:\s*(?:actions\/checkout|actions\/setup-node)/i.test(activeWorkflow),
+  'manual denial workflow must not execute setup actions');
 
 const readme = fs.readFileSync(path.join(__dirname, '..', 'README.md'), 'utf8');
 const desktopGuide = fs.readFileSync(
@@ -98,16 +81,29 @@ const localReleaseScript = fs.readFileSync(
   path.join(__dirname, '..', 'scripts', 'build-windows-release.ps1'),
   'utf8'
 );
-assert(readme.includes('Aetherwake-Setup.exe'),
-  'README must advertise the standard installer');
-assert(readme.includes('Aetherwake-Windows.zip'),
-  'README must advertise the portable fallback');
-assert(!readme.includes('Aetherwake-OneClick.exe'),
-  'README must not advertise superseded self-extracting artifacts');
+// Historical artifact labels may be retained, but an archived document must
+// explicitly forbid using its outdated installer/download instructions.
+assert(desktopGuide.startsWith('# Aetherwake Windows desktop build — RETIRED / SECURITY HOLD'),
+  'historical player build guide must start with the current security hold');
+assert(desktopGuide.includes('security classification remains unresolved') &&
+       desktopGuide.includes('MUST NOT be executed') &&
+       desktopGuide.includes('Everything below this warning is'),
+  'old download/build instructions must be clearly superseded');
 assert(desktopGuide.includes('Aetherwake-Setup.exe'),
-  'desktop guide must advertise the standard installer');
+  'historical guide must retain its original installer provenance');
 assert(!desktopGuide.includes('Aetherwake-OneClick.exe'),
-  'desktop guide must not advertise superseded self-extracting artifacts');
+  'historical guide must not advertise obsolete SFX installers');
+assert(!readme.includes('Aetherwake-OneClick.exe'),
+  'legacy README must not advertise obsolete SFX installers');
+// The archived local builder must reject execution BEFORE npm, NSIS or a game.
+// These are source string checks; this test does not run any installer.
+const activeLocal = localReleaseScript.split(/\r?\n/)
+  .filter(line => !/^\s*#/.test(line)).join('\n');
+const holdAt = activeLocal.indexOf('throw "SECURITY_HOLD_293:');
+const firstLegacyAction = activeLocal.search(/\b(?:npm ci|npm run package:windows|makensis|Start-Process)\b/i);
+assert(/^\s*\$ErrorActionPreference\s*=\s*"Stop"\s*\nthrow "SECURITY_HOLD_293:/m.test(activeLocal) &&
+       holdAt >= 0 && firstLegacyAction > holdAt,
+  'historical local builder must refuse before package or installer execution');
 assert(localReleaseScript.includes('Get-ChildItem -LiteralPath $dist -Filter "Aetherwake.exe" -File -Recurse'),
   'local Windows release fallback must locate direct or nested nw-builder output');
 assert(localReleaseScript.includes('LOCAL_WINDOWS_RELEASE=PASS'),
@@ -121,7 +117,7 @@ assert(localReleaseScript.includes('AETHERWAKE_DESKTOP_SMOKE_MARKER'),
 assert(localReleaseScript.includes('DESKTOP_RENDER_READINESS=PASS'),
   'local Windows release fallback must verify a rendered first frame');
 
-console.log('Aetherwake desktop package contract: PASS');
+console.log('Aetherwake archived desktop source layout and security hold: PASS (no build)');
 
 const runtimeSource = fs.readFileSync(path.join(__dirname, '..', 'tosailthestarrysky.js'), 'utf8');
 assert(runtimeSource.includes('function writeDesktopSmokeMarkerOnce()'),

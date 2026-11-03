@@ -10,6 +10,9 @@ on:
       - 'unreal/Docs/LEGACY_DESKTOP_STAGING_EXPOSURE_BOUNDARY_2026-11-02.md'
       - 'unreal/Docs/LEGACY_NPM_ADVISORY_ROOT_PATH_RECONCILIATION_2026-11-02.md'
       - 'unreal/Docs/LEGACY_NWJS_WRAPPER_REMOVAL_SCRATCH_CANDIDATE_2026-11-02.md'
+      - 'docs/DESKTOP_BUILD.md'
+      - 'tests/desktop-package-contract.test.js'
+      - 'unreal/Docs/LEGACY_DESKTOP_RETIREMENT_CHECKS_2026-11-03.md'
       - 'unreal/ToSailTheStarrySky.uproject'
       - 'package.json'
       - 'package-lock.json'
@@ -58,5 +61,9 @@ jobs:
         run: python3 -m unittest discover -s unreal/Tools -p 'test_legacy_npm_advisory_roots.py' -v
       - name: Verify unused NWJS wrapper removal scratch model (source only, no npm)
         run: python3 -m unittest discover -s unreal/Tools -p 'test_legacy_nwjs_removal_scratch_candidate.py' -v
+      - name: Verify archived desktop source contract and fail-closed legacy publisher (no binary build)
+        run: |
+          node tests/desktop-package-contract.test.js
+          node scripts/verify-legacy-release-hold.mjs
       - name: Compile and exercise actual DesignOnly C++ adapter (API doubles, not Unreal)
         run: python3 unreal/Tools/check_combat_design_only_compiled.py
