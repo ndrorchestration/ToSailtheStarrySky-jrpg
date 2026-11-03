@@ -73,6 +73,18 @@ if ($SkipTests) {
     if ($LASTEXITCODE -ne 0 -or $BuildTree.Count -gt 0) {
         throw 'Working tree changed during build; build-only evidence rejected'
     }
+    # A build-only receipt is generated only AFTER the real UBT process returned
+    # success and exact SHA / clean source custody checks completed.
+    # No automation or PIE pass is implied by this evidence.
+    $BuildOnlyReceipt = [ordered]@{
+        status = 'WIN64_EDITOR_BUILD_PASS_CLEAN_SOURCE'
+        source_sha = $GitHead
+        unreal_version = '5.8.4'
+        native_automations = 'NOT_TESTED'
+        pie_player_input = 'NOT_TESTED'
+    }
+    $BuildOnlyReceipt | ConvertTo-Json -Depth 3 |
+        Set-Content -LiteralPath (Join-Path $Evidence 'verified-build.json') -Encoding UTF8
     Write-Host "Editor build completed at $GitHead; automation tests deliberately skipped. No automation PASS is claimed."
     exit 0
 }
