@@ -193,3 +193,39 @@ was intentionally not launched. The 25/25 true native automation PASS
 remains pinned to the earlier exact tested SHA
 `52e13aedaa8bda900cece849b54eae570179c838`.
 A new native map report and P01–P13 gameplay evidence are still required.
+
+## November 3, 2026 — full map receipt consistency gate
+
+The actual `Invoke-NativePreludeMapQA.ps1` commandlet launcher now
+calls `unreal/Tools/Assert-NativePreludeMapReceipt.ps1` to reject
+**incomplete, inconsistent or overclaimed native Editor JSON**, rather
+than relying on a `PASS` status and seven-actor count. The validator
+requires matching full exact-source SHA and committed map SHA-256,
+installed UE5.8.4, seven named actor coordinate triplets, finite
+positive spawn-to-flyer origin separation, all confirmed Editor/collision,
+default pawn, Ionia-first progression, inspection and objective flags,
+the three-bit engineering mask, and all nine declared source input
+mappings/handlers. Unsupported gameplay assertions—real PIE keyboard
+input, disk SaveGame roundtrip, genuine collision line trace, water
+physics, character/ship art and Chapter 1 entry—must explicitly be
+**false**. Each missing field, type mismatch, duplicate/missing actor
+coordinate or contradictory success flag is an automatic **HOLD**.
+
+The same production PowerShell function was executed on the Windows
+review workstation against **32 synthetic cases**, including **31
+rejected invalid/misleading receipts** and one accepted fully formed
+receipt; the associated **14 launcher source-safety tests passed**.
+Hosted GitHub source preflight, which includes both tests and parsing
+the six PowerShell verification scripts, also **passed** at source
+`afac6d0eddaa9aa01a391d466d76557666fe6a9a`.
+This is proof of the *admission logic only*; no real UE map JSON,
+player PIE or rendering was generated. The legitimate prior native
+25/25 automation result remains bound to its distinct older exact SHA
+`52e13aedaa8bda900cece849b54eae570179c838`.
+
+The source files `Assert-NativePreludeMapReceipt.ps1` and
+`Test-NativePreludeMapReceiptFixtures.ps1` introduce **no engine,
+toolchain, Python package, plugin or SaveGame dependency**. The
+existing Editor/Live Coding idle guard remains a required prerequisite
+for actual native map inspection. The review worktree and all player
+save files stay untouched by these synthetic fixtures.
