@@ -89,7 +89,7 @@ class IntegratedSourceGateTests(unittest.TestCase):
         self.args[8] = self.args[8].replace(
             "TSTSS.FirstWake.ReviewObjectivesAreReadOnly", "TSTSS.FirstWake.MISSING"
         )
-        self.fail_if("25th native automation")
+        self.fail_if("Previously established native objective automation")
 
     def test_no_admitted_implicit_merge(self):
         self.args[6] = self.args[6].replace("#711", "#999")
