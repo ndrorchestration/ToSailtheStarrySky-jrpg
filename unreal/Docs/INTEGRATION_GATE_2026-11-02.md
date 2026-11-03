@@ -292,3 +292,29 @@ This is source/fixture evidence, **not** a real Unreal level inspection.
 The live Editor/Live Coding sessions remain an independent idle-workstation
 blocker for the commandlet. Genuine P01–P13 PIE and Splashdown remain held.
 See [native map admission handoff](FIRST_WAKE_NATIVE_MAP_ADMISSION_2026-11-02.md).
+
+
+## November 3 — persistent review objective HUD, no new dependencies
+
+The integrated First Wake review GameMode now selects a non-shipping
+`ATSTSSFirstWakeReviewHUD` whose `DrawHUD()` reads the current
+objective from Ender's `UTSTSSFirstWakeState` each frame and
+displays temporary Prelude controls/provenance. It has **no
+authoritative story state of its own** and no new UMG/Slate/plugin,
+SaveGame schema or engine version requirement. The render path is
+compiled out for shipping builds; the overlay declines to render
+on very small viewports rather than knowingly clip instructions.
+
+A GitHub source-preflight lane compiles the **actual production
+DrawHUD C++ method** using in-memory C++17 Engine API doubles
+in both development and shipping configurations and requires that
+the shipping path emit no review overlay. The UE header API
+signatures were also checked on the authorized workstation;
+five separate GameMode wiring / non-mutation integration tests
+passed there. This is **not native Unreal rendering evidence**.
+A real Win64 UE5.8.4 build and actual 1280×720/500 px PIE visual
+inspection, objective synchronization, keyboard focus and
+controller/accessibility review remain **NOT TESTED** at this
+code head. Original earlier 25/25 Unreal automation receipt
+remains source-pinned to its older head only. No art approval,
+Chapter 1 completion or production release is conferred.
