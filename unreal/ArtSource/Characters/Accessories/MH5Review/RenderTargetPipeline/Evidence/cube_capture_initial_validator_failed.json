@@ -1,0 +1,21 @@
+{
+  "assets_saved": false,
+  "character_render_claim": false,
+  "engine": "5.8.4-58902052+++UE5+Release-5.8",
+  "error": "Traceback (most recent call last):\n  File \"C:/Users/Admin/work/TSTSS-V5-FaceAuthorityReview-20261103/native_render_target_cube_diag01.py\", line 122, in tick\n    try:details=validate_png(PNG)\n                ^^^^^^^^^^^^^^^^^\n  File \"C:/Users/Admin/work/TSTSS-V5-FaceAuthorityReview-20261103/native_render_target_cube_diag01.py\", line 35, in validate_png\n    require(done and n==len(data) and images>0 and wh==SIZE,\"PNG missing/invalid dimensions\")\n  File \"C:/Users/Admin/work/TSTSS-V5-FaceAuthorityReview-20261103/native_render_target_cube_diag01.py\", line 19, in require\n    if not x:raise RuntimeError(\"FAIL_CLOSED \"+m)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: FAIL_CLOSED PNG missing/invalid dimensions\n",
+  "file": [],
+  "image_size": [
+    320,
+    180
+  ],
+  "kind": "LIGHTWEIGHT_CUBE_NOT_METAHUMAN",
+  "map_saved": false,
+  "method": "SceneCaptureComponent2D + transient TextureRenderTarget2D + RenderingLibrary.export_render_target",
+  "native_capture_scene_called": true,
+  "native_export_called": true,
+  "render_target_export_success": false,
+  "source": "Unreal Engine 5.8.4 native D3D11",
+  "source_project": "C:\\Users\\Admin\\work\\TSTSS-Cast643-UEImport-Sandbox-20261101",
+  "status": "DIAGNOSTIC_FAILED",
+  "user_game_changed": false
+}
