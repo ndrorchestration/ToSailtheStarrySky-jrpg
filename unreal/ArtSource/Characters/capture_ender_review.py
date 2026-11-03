@@ -8,6 +8,7 @@ Run without Unreal: python capture_ender_review.py --self-test
 """
 import hashlib
 import json
+import os
 import re
 import struct
 import sys
@@ -22,9 +23,7 @@ LEVEL_PATH = "/Game/EnderReviewScene_63dbfac"
 RECEIPT_NAME = "ender_63dbfac_native_20261101.json"
 ACTOR_LABEL = "Ender_STATIC_CANDIDATE_NOT_CANON"
 # Viewpoint names are provisional, not verified anatomical directions.
-CAMERAS = ("front_plus_x", "side_plus_y", "rear_minus_x", "threequarter")
-# Current UE 5.8.4 D3D11 review viewport is 16:9; earlier 800x600
-# request produced an 800x450 PNG. The receiver checks exact native bytes.
+CAMERAS = ("front_plus_y", "profile_plus_x", "rear_minus_y", "threequarter_front")
 RESOLUTION = (800, 450)
 
 
@@ -186,15 +185,52 @@ def main_unreal():
     cameras = {a.get_actor_label().removeprefix("ReviewCamera_"): a
                for a in actors if isinstance(a, unreal.CameraActor) and
                a.get_actor_label().startswith("ReviewCamera_")}
-    require(set(cameras) == set(CAMERAS), "Unexpected camera labels or count")
+    legacy = {"front_plus_y": "side_plus_y", "profile_plus_x": "front_plus_x",
+              "rear_minus_y": "rear_minus_x", "threequarter_front": "threequarter"}
+    require(set(cameras) == set(legacy.values()), "Unexpected legacy camera labels")
+    locations = {"front_plus_y": unreal.Vector(0.0, 320.0, 110.0),
+                 "profile_plus_x": unreal.Vector(320.0, 0.0, 110.0),
+                 "rear_minus_y": unreal.Vector(0.0, -320.0, 110.0),
+                 "threequarter_front": unreal.Vector(235.0, 235.0, 120.0)}
+    mapped = {}
+    for view in CAMERAS:
+        camera = cameras[legacy[view]]
+        position = locations[view]
+        camera.set_actor_location(position, False, False)
+        camera.set_actor_rotation(unreal.MathLibrary.find_look_at_rotation(
+            position, unreal.Vector(0.0, 0.0, 95.0)), False)
+        mapped[view] = camera
+    cameras = mapped
+    unreal.log("TSTSS_ANATOMICAL_VIEW_REMAP_PREVIEW_ONLY front=+Y rear=-Y profile=+X")
+    # Review-only, unsaved calibrated fill. Intensity chosen from actual native
+    # single-angle tests; not cinematic lighting, not a game material approval.
+    # These are new light actors in the isolated sandbox level ONLY.
+    editor_actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
+    for index, (position, intensity) in enumerate((
+            (unreal.Vector(210.0, 170.0, 190.0), 300.0),
+            (unreal.Vector(-200.0, 100.0, 150.0), 125.0),
+            (unreal.Vector(0.0, -200.0, 180.0), 125.0))):
+        light = editor_actors.spawn_actor_from_class(unreal.PointLight, position)
+        require(light is not None, "Neutral review fill light spawn failed")
+        light.set_actor_label("Ender643ReviewTransientFill" + str(index))
+        light_component = light.get_component_by_class(unreal.PointLightComponent)
+        require(light_component is not None, "Missing PointLightComponent")
+        light_component.set_editor_property("intensity", intensity)
+        light_component.set_editor_property("attenuation_radius", 1200.0)
+    unreal.log("TSTSS_REVIEW_LIGHTS_READY 3 transient unsaved fill lights")
 
-    out = root / "Saved" / "CharacterLookdev" / "NativeCaptures" / "ender643_review01"
+    session = valid_session(os.environ.get("TSTSS_CAST_CAPTURE_SESSION", "ender643_review08_repro"))
+    require(session.startswith("ender643_review"), "Only Ender review sessions allowed")
+    out = root / "Saved" / "CharacterLookdev" / "NativeCaptures" / session
     require(not out.exists(), "Capture destination already exists; never overwrite")
     out.mkdir(parents=True)
     result = {"kind": "STATIC_LOOKDEV_NATIVE_CAPTURE", "status": "IN_PROGRESS",
               "source_sha256": SOURCE_SHA, "imported_bounds_cm": xyz,
               "engine": unreal.SystemLibrary.get_engine_version(),
               "level": LEVEL_PATH, "mesh": MESH_PATH, "views": [],
+              "camera_coordinate_contract": {"front_plus_y": "+Y", "profile_plus_x": "+X",
+                                            "rear_minus_y": "-Y", "threequarter_front": "+X,+Y"},
+              "transient_preview_light_intensity": [300.0,125.0,125.0],
               "visual_acceptance": "NOT_ESTABLISHED", "render_quality": "UNREVIEWED"}
     receipt = out / "capture_receipt.json"
 
@@ -224,13 +260,11 @@ def main_unreal():
             unreal.log("TSTSS_ENDER_CAPTURE " + status + " " + str(receipt))
 
         def tick(self, delta):
-            # AutomationLibrary may re-enter a Slate callback during a capture
-            # request; without this guard, one camera was requested repeatedly.
             if self.request_in_flight:
                 return
             try:
                 self.frame += 1
-                if time.monotonic() - self.start > 240:
+                if time.monotonic() - self.start > 100:
                     self.close("TIMED_OUT")
                     return
                 if self.frame < 10:
@@ -238,6 +272,8 @@ def main_unreal():
                 if self.task is None:
                     name = CAMERAS[self.index]
                     filename = out / (name + ".png")
+                    # UE may invoke Slate callbacks recursively during a
+                    # screenshot request; avoid scheduling duplicate tasks.
                     self.request_in_flight = True
                     try:
                         self.task = unreal.AutomationLibrary.take_high_res_screenshot(
