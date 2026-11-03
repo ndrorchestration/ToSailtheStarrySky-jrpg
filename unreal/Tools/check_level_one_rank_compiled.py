@@ -140,11 +140,20 @@ def compiler_command(tmp: Path, executable: Path, source: Path) -> list[str]:
         if cl:
             return [cl, *flags]
         if VCVARS.is_file():
+            # On Windows, subprocess list2cmdline can double-escape quoted
+            # multi-command strings passed directly to cmd /c. Write a tiny
+            # disposable batch file instead, with no persistent VS changes.
             quoted = " ".join('"' + flag + '"' if " " in flag else flag for flag in flags)
-            return [
-                "cmd.exe", "/d", "/c",
-                f'call "{VCVARS}" >nul && cl {quoted}'
-            ]
+            runner = tmp / "compile_with_msvc.cmd"
+            runner.write_text(
+                "@echo off\n"
+                + f'call "{VCVARS}" >nul\n'
+                + "if errorlevel 1 exit /b 5\n"
+                + f"cl {quoted}\n"
+                + "exit /b %ERRORLEVEL%\n",
+                encoding="utf-8",
+            )
+            return ["cmd.exe", "/d", "/c", str(runner)]
         raise RuntimeError("MSVC cl.exe and vcvars64.bat unavailable")
     compiler = shutil.which("g++") or shutil.which("clang++")
     if not compiler:
