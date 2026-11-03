@@ -81,6 +81,9 @@ jobs:
         run: python3 -m unittest discover -s unreal/Tools -p 'test_pr713_native_prelude_behavior.py' -v
       - name: Gate native Editor map commandlet launcher and build-only receipt admission
         run: python3 -m unittest discover -s unreal/Tools -p 'test_native_prelude_launcher.py' -v
+      - name: Test real native map report validator against contradictory synthetic receipts
+        shell: pwsh
+        run: ./unreal/Tools/Test-NativePreludeMapReceiptFixtures.ps1
       - name: Reconcile authority and both dependency baselines without native claims
         run: |
           python3 unreal/Tools/check_integrated_review_contract.py
@@ -96,7 +99,9 @@ jobs:
             'unreal/Tools/Verify-Unreal.ps1',
             'unreal/Tools/Assert-NativeAutomationReport.ps1',
             'unreal/Tools/Test-NativeAutomationReportFixtures.ps1',
-            'unreal/Tools/Invoke-NativePreludeMapQA.ps1'
+            'unreal/Tools/Invoke-NativePreludeMapQA.ps1',
+            'unreal/Tools/Assert-NativePreludeMapReceipt.ps1',
+            'unreal/Tools/Test-NativePreludeMapReceiptFixtures.ps1'
           )) {
             $path = (Resolve-Path $file).Path
             $parseErrors = $null
@@ -105,7 +110,7 @@ jobs:
               throw "PowerShell parser rejected ${file}: $($parseErrors -join '; ')"
             }
           }
-          Write-Output "PASS: 4 PowerShell verification scripts parse (no engine launched)"
+          Write-Output "PASS: 6 PowerShell verification scripts parse (no engine launched)"
       - name: Exercise actual native report validator with positive and negative PowerShell fixtures
         shell: pwsh
         run: ./unreal/Tools/Test-NativeAutomationReportFixtures.ps1
