@@ -240,3 +240,7 @@ other modifications. The native report must again contain 25
 unique successful tests and a pristine tracked tree *after* execution.
 If read-only config prevents native execution, mark BLOCKED and
 investigate; do not publish token-bearing defaults.
+
+## Native Editor map-admission subgate (separate from 25 named automations)
+
+The dedicated [native Prelude map and actor gate](FIRST_WAKE_NATIVE_MAP_ADMISSION_2026-11-02.md) now verifies a real loaded level, reflected milestone C++ actors, collision declarations and ordered read-only objectives using the Editor Python commandlet. Its hosted source checks and **8 Windows safety tests** passed, but the attempted native build at `a06f203902fcb1594e1b55e43d1ec9f27d9ed583` was **blocked** by active Unreal Live Coding. The new review script correctly refuses concurrent Editor activity before building, confirmed on Windows at `cfb88a9edf582b57ca95db1f731b68d79da3a22c`. The native **map/actor test has NOT RUN**, P01–P13 genuine PIE remains NOT TESTED, and previous 25/25 evidence belongs solely to its earlier exact SHA.
