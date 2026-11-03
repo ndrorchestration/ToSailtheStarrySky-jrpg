@@ -23,6 +23,12 @@ import sys
 from datetime import datetime, timezone
 from uuid import uuid4
 
+# Editor Python commandlets can differ from ordinary Python in sys.path setup.
+# Import the exact sibling source-only constants, never a globally installed
+# module with the same name from another project's workspace.
+_THIS_TOOL_DIR = str(Path(__file__).resolve().parent)
+if _THIS_TOOL_DIR not in sys.path:
+    sys.path.insert(0, _THIS_TOOL_DIR)
 import verify_first_wake_v2_independent as reference
 
 EXPECTED_PARENT = "TSTSS_PR713_NativeMapQA_20261102"
