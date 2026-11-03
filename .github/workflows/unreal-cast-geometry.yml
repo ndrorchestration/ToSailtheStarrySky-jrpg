@@ -98,6 +98,15 @@ jobs:
           python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/native_goggles_spatial02.py
           python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/native_goggles_combined_capture01.py
 
+      - name: Check native RenderTarget evidence and keep art acceptance locked (engine-free)
+        run: |
+          python3 -m unittest discover -s unreal/ArtSource/Characters/Accessories/MH5Review/RenderTargetPipeline -p test_native_rt_receipts.py -v
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/RenderTargetPipeline/native_render_target_cube_diag01.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/RenderTargetPipeline/native_rt_png_postcheck.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/RenderTargetPipeline/native_rt_ender_v5_goggles01.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/RenderTargetPipeline/verify_native_rt_v5_goggles.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/RenderTargetPipeline/make_rt_preview_mobile.py
+
       - name: Regenerate source assets and confirm exact bytes
         env:
           TSTSS_CAST_OUTPUT: unreal/ArtSource/Characters/Candidates
