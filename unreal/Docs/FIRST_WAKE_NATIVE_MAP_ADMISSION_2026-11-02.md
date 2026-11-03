@@ -229,3 +229,27 @@ toolchain, Python package, plugin or SaveGame dependency**. The
 existing Editor/Live Coding idle guard remains a required prerequisite
 for actual native map inspection. The review worktree and all player
 save files stay untouched by these synthetic fixtures.
+
+## November 3, 2026 — source-only authored route/floor coverage
+
+The existing `build_first_wake_prelude_interaction.py` **source authoring
+plan**, which created the already committed map, now also validates that
+the player spawn and seven 75 cm wide interaction markers lie entirely
+inside the continuous BasicShapes review floor footprint. The floor
+must have positive dimensions, finite coordinates and a level top.
+The first flyer must not already be within the pawn's **300 cm**
+interaction reach at the starting location. Current source geometry:
+floor X **−3750 to +2550 cm**, floor Y **−700 to +700 cm** and
+nearest spawn-to-flyer marker horizontal edge **542.5 cm**.
+The output explicitly labels this as **authoring geometry only**.
+
+At source `efa5e508d7e081c03ec211643f4722261b82201b`, the
+Windows checkout passed **13/13 new spatial checks**, including
+out-of-floor, nonfinite, early-interaction and malformed floor
+negatives, plus **10/10 existing Prelude authoring tests**.
+Unreal source preflight also passed at that SHA. The committed `.umap`
+was **not rebuilt or modified**; this source geometry is a necessary
+but insufficient condition for navigation, line-of-sight,
+camera aiming, collision and P01–P13 input-based PIE acceptance.
+The real Editor map test remains separately held while other
+Unreal Editor/Live Coding sessions are active.
