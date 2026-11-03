@@ -19,7 +19,8 @@ LOCK = ROOT / "package-lock.json"
 PACKAGE = ROOT / "package.json"
 WORKFLOW = ROOT / ".github/workflows/unreal-source-preflight.yml"
 
-LOCK_SHA = "cbd32a793748f2aa7f6e538057ca4e38113ec229ce98a0854b312e386dd005f6"
+LOCK_SHA_WINDOWS = "cbd32a793748f2aa7f6e538057ca4e38113ec229ce98a0854b312e386dd005f6"
+LOCK_SHA_LF = "f9aecbddb8453d868627023bac06700df6082c0000fbf98876ec94dd482ffdce"
 PARENT_HEAD = "4e4a40aed34c0ff6789ce4a69ca757f75139fee2"
 RISK_COUNTS = ("32", "3 critical", "15 high", "14 moderate")
 
@@ -28,7 +29,8 @@ def check_document_claims(text: str) -> bool:
     must_retain = (
         "READ-ONLY EVIDENCE / REMEDIATION HOLD",
         PARENT_HEAD,
-        LOCK_SHA,
+        LOCK_SHA_WINDOWS,
+        LOCK_SHA_LF,
         "nwjs@0.0.15",
         "nw-builder@4.2.1",
         "Do not run `npm audit fix` automatically.",
@@ -70,7 +72,14 @@ class LegacyNpmSecurityScopeTests(unittest.TestCase):
         self.assertEqual(self.text.count("# Legacy npm security triage"), 1)
 
     def test_source_lock_is_exact_audited_version_not_changed(self):
-        self.assertEqual(hashlib.sha256(LOCK.read_bytes()).hexdigest(), LOCK_SHA)
+        raw = LOCK.read_bytes()
+        # Git on Windows may materialize CRLF while Linux Actions checks out LF.
+        # Validate the canonical LF content AND the appropriate platform
+        # working-tree byte receipt; never weaken the audited dependency graph.
+        normalized = raw.replace(b"\\r\\n", b"\\n")
+        self.assertEqual(hashlib.sha256(normalized).hexdigest(), LOCK_SHA_LF)
+        raw_expected = LOCK_SHA_WINDOWS if b"\\r\\n" in raw else LOCK_SHA_LF
+        self.assertEqual(hashlib.sha256(raw).hexdigest(), raw_expected)
         self.assertEqual(self.package["devDependencies"], self.lock["packages"][""]["devDependencies"])
         self.assertTrue(self.package["private"])
         self.assertEqual(self.lock["lockfileVersion"], 3)
