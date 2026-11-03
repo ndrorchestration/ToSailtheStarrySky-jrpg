@@ -77,6 +77,8 @@ jobs:
         run: python3 -m unittest discover -s unreal/Tools -p 'test_transversal_documentation_authority.py' -v
       - name: Gate source-locked native Prelude map QA before separate UE execution
         run: python3 -m unittest discover -s unreal/Tools -p 'test_pr713_native_prelude_map.py' -v
+      - name: Exercise real Prelude map checker logic against fake Editor world (not native)
+        run: python3 -m unittest discover -s unreal/Tools -p 'test_pr713_native_prelude_behavior.py' -v
       - name: Gate native Editor map commandlet launcher and build-only receipt admission
         run: python3 -m unittest discover -s unreal/Tools -p 'test_native_prelude_launcher.py' -v
       - name: Reconcile authority and both dependency baselines without native claims
