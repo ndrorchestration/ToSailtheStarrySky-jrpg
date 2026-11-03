@@ -5,6 +5,28 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 
+# Some authorized Windows PowerShell 5.1 sessions do not resolve Get-FileHash.
+# Use the standard .NET SHA256 stream instead; never copy/save the file bytes.
+function Get-TSTSSSha256 {
+    param([Parameter(Mandatory=$true)][string]$Path)
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        throw "HOLD: source custody file missing: $Path"
+    }
+    $FileStream = [System.IO.File]::OpenRead($Path)
+    try {
+        $Hasher = [System.Security.Cryptography.SHA256]::Create()
+        try {
+            return [System.BitConverter]::ToString(
+                $Hasher.ComputeHash($FileStream)
+            ).Replace('-', '').ToLowerInvariant()
+        } finally {
+            $Hasher.Dispose()
+        }
+    } finally {
+        $FileStream.Dispose()
+    }
+}
+
 # The operator authorizes only the independent PR713 map-QA worktree.
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 if ((Split-Path $RepoRoot -Leaf) -ne 'TSTSS_PR713_NativeMapQA_20261102') {
@@ -43,7 +65,7 @@ $BeforeTree = @(git -C $RepoRoot status --porcelain)
 if ($LASTEXITCODE -ne 0 -or $BeforeTree.Count -gt 0) {
     throw 'HOLD: tracked or untracked project changes before native map review'
 }
-$MapBefore = (Get-FileHash -LiteralPath $MapPath -Algorithm SHA256).Hash.ToLowerInvariant()
+$MapBefore = (Get-TSTSSSha256 -Path $MapPath)
 if ($MapBefore -ne $MapExpected) {
     throw 'HOLD: tracked V2 Prelude map digest mismatch'
 }
@@ -55,7 +77,7 @@ foreach ($name in @('DefaultEngine.ini', 'DefaultInput.ini')) {
     if (-not $item.IsReadOnly) {
         throw "HOLD: disposable project $name must be write-protected before Editor execution"
     }
-    $ConfigHashes[$name] = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash
+    $ConfigHashes[$name] = (Get-TSTSSSha256 -Path $path)
 }
 $SaveDir = Join-Path $ProjectDir 'Saved/SaveGames'
 if (Test-Path -LiteralPath $SaveDir) {
@@ -159,11 +181,11 @@ if ($Payload.status -ne 'NATIVE_EDITOR_MAP_AND_REAL_ACTORS_PASS_NOT_PIE' -or
     $Payload.render_or_water_physics_approved -ne $false) {
     throw 'HOLD: native map-QA receipt incomplete, contradicted or claiming unsupported PIE/gameplay acceptance'
 }
-if ((Get-FileHash -LiteralPath $MapPath -Algorithm SHA256).Hash.ToLowerInvariant() -ne $MapBefore) {
+if ((Get-TSTSSSha256 -Path $MapPath) -ne $MapBefore) {
     throw 'HOLD: Unreal modified the tracked Prelude review map'
 }
 foreach ($name in $ConfigHashes.Keys) {
-    $hash = (Get-FileHash -LiteralPath (Join-Path $ProjectDir ('Config/' + $name)) -Algorithm SHA256).Hash
+    $hash = (Get-TSTSSSha256 -Path (Join-Path $ProjectDir ('Config/' + $name)))
     if ($hash -ne $ConfigHashes[$name]) {
         throw 'HOLD: Unreal modified tracked input or engine default configuration'
     }
@@ -173,5 +195,5 @@ if (((& git -C $RepoRoot rev-parse HEAD).Trim() -ne $Head) -or
     throw 'HOLD: exact source HEAD or working-tree custody changed during real Editor map QA'
 }
 Write-Output "NATIVE_EDITOR_MAP_ACTORS_PASS_NOT_PIE HEAD=$Head"
-Write-Output "NATIVE_EDITOR_MAP_REPORT_SHA256=$((Get-FileHash -LiteralPath $NewReceipts[0].FullName -Algorithm SHA256).Hash)"
+Write-Output "NATIVE_EDITOR_MAP_REPORT_SHA256=$((Get-TSTSSSha256 -Path $NewReceipts[0].FullName))"
 Write-Output "PIE_P01_P13=NOT_TESTED"
