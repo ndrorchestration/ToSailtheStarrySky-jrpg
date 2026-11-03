@@ -52,6 +52,12 @@ A separate **actual production source defect** was identified in the joined Firs
 
 In this isolated review patch, Windows MSVC successfully compiled the **actual state/gate C++ and two existing repository automation test bodies** against API doubles: **341 assertions PASS**, up from 310 in the prior baseline. Two separate deliberately unsafe mutations compiled and **failed at their specific behavior assertions**: removing the same-beat Restore-generation guard, or removing Reset's new generation increment. This remains **portable C++ evidence, not a native Unreal build/PIE/water simulation**. Existing 26 registered native test names are unchanged.
 
+## Joined-head native map QA readiness — source-side lane opened
+
+The native V2 map checker and launcher used to refuse any checkout except the original PR #713 review root. This **blocked independent map admission of the joined PR #735 source SHA**, even after Editor/Live Coding became idle. The joined draft now whitelists the additional fixed detached-worktree name `TSTSS_PR735_NativeMapQA_20261103` in both the Python Editor verifier and its Windows PowerShell launcher; all other checkout names, wrong exact HEAD, dirty sources, unexpected map digest, pre-existing SaveGames, writable tracked INI, active Editor sessions and missing build-only receipts remain disallowed. Original PR713 root still works; no generalized name override.
+
+The additional worktree is **not evidence of native Editor runtime by itself**. The joined checkout's preflight must show the exact SHA and correct pinned map. Require a real UE5.8.4 build-only receipt before calling the native map launcher, and a separately verified 26/26 native automation result before claiming complete source-to-engine compatibility. The original seven-stop map is only a traversable Prelude; launch, hull buoyancy, Splashdown, post-landing and cinematic art remain independent HOLD gates. See [native map admission execution and provenance](FIRST_WAKE_NATIVE_MAP_ADMISSION_2026-11-02.md).
+
 ## Outstanding hard gates
 
 | Gate | Status |

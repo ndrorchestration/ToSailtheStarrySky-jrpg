@@ -292,3 +292,20 @@ Git remained clean. These checks used **no actual Unreal map load**;
 the genuine commandlet is still blocked by active Editor and Live
 Coding sessions. P01–P13 PIE and native 25/25 at the latest revision
 are **not claimed**.
+
+
+## November 3 — tightly scoped joined PR #735 map-QA lane (review only)
+
+The original PR #713 `TSTSS_PR713_NativeMapQA_20261102` directory remains supported and never changes its evidence. The **joined** First Wake vertical-slice draft #735 requires an independent exact-head map check; the initial launcher and Python bridge could not accept a separate worktree because they recognized only the legacy path. In the joined draft only, both now accept a **fixed two-name allowlist**: the original and `TSTSS_PR735_NativeMapQA_20261103`. Arbitrary checkouts, renamed copies, wrong SHA, dirty worktrees, unexpected map bytes, unprotected tracked default configs, existing SaveGames, active Editor/Live Coding, or absent prior **build-only** receipts still **HOLD**. Neither command relaxes a UE version requirement or transforms fake Python into native gameplay proof.
+
+**Opt-in native execution after Editor/Live Coding is closed through normal user workflow:** In a newly created *disposable* `C:\TSTSS_PR735_NativeMapQA_20261103` detached worktree pinned to an **explicit 40-character Git commit of #735**, set only the two isolated `unreal/Config/DefaultEngine.ini` and `DefaultInput.ini` files read-only (do not touch another checkout), ensure its `unreal/Saved/SaveGames` has no `.sav`, and run:
+
+```powershell
+$Review = 'C:\TSTSS_PR735_NativeMapQA_20261103'
+$Sha = (git -C $Review rev-parse HEAD).Trim()
+& "$Review\unreal\Tools\Verify-Unreal.ps1" -EngineRoot 'C:\Program Files\Epic Games\UE_5.8' -ExpectedHead $Sha -SkipTests
+& "$Review\unreal\Tools\Invoke-NativePreludeMapQA.ps1" -EngineRoot 'C:\Program Files\Epic Games\UE_5.8' -ExpectedHead $Sha -PreflightOnly
+& "$Review\unreal\Tools\Invoke-NativePreludeMapQA.ps1" -EngineRoot 'C:\Program Files\Epic Games\UE_5.8' -ExpectedHead $Sha
+```
+
+A real map receipt still requires actual Unreal Editor commandlet load, seven reflected milestone actors, source/map/config postflight, independent contradictory-receipt validator and unique ignored evidence. The build-only receipt is separate from the **26/26 real native automation** gate; run full `Verify-Unreal.ps1` without `-SkipTests` separately on the same exact clean head before claiming native test coverage. **PIE P01–P13, physical hull/water contact, rendered Splashdown, art acceptance and merge/release remain NOT TESTED/NOT AUTHORIZED.** Do not run the native commands against a running Editor or invent their results from this documentation.

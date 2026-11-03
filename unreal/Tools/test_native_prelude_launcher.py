@@ -16,6 +16,9 @@ WORKFLOW = ROOT.parent / ".github/workflows/unreal-source-preflight.yml"
 def check_launcher(source: str, build_source: str) -> None:
     for marker in (
         "TSTSS_PR713_NativeMapQA_20261102",
+        "TSTSS_PR735_NativeMapQA_20261103",
+        "$AllowedReviewRoots",
+        "-notin $AllowedReviewRoots",
         "ExpectedHead must be a full 40-character Git SHA",
         "'Engine/Build/Build.version'",
         "function Get-TSTSSSha256",
@@ -97,6 +100,13 @@ class LauncherContractTests(unittest.TestCase):
 
     def test_current_scripts_hold_safe_boundaries(self):
         check_launcher(self.launcher, self.build)
+
+    def test_joined_root_is_narrow_and_cannot_disable_root_check(self):
+        self.assertIn("-notin $AllowedReviewRoots", self.launcher)
+        self.assertIn("TSTSS_PR735_NativeMapQA_20261103", self.launcher)
+        self.check_failed(self.launcher.replace(
+            "TSTSS_PR735_NativeMapQA_20261103", "ANY_WORKTREE"),
+            "TSTSS_PR735_NativeMapQA_20261103")
 
     def test_sha256_has_no_missing_windows_cmdlet_dependency(self):
         self.assertNotIn("(Get-FileHash -LiteralPath", self.launcher)

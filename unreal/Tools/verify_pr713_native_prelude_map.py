@@ -33,6 +33,8 @@ import verify_first_wake_v2_independent as reference
 import build_first_wake_prelude_interaction as layout
 
 EXPECTED_PARENT = "TSTSS_PR713_NativeMapQA_20261102"
+JOINED_EXPECTED_PARENT = "TSTSS_PR735_NativeMapQA_20261103"
+ALLOWED_PARENTS = frozenset((EXPECTED_PARENT, JOINED_EXPECTED_PARENT))
 MAP_PACKAGE = reference.MAP_PACKAGE
 MAP_RELATIVE = reference.MAP_RELATIVE
 MAP_SHA256 = reference.MAP_SHA256
@@ -56,7 +58,7 @@ def git(root: Path, *args: str) -> str:
 
 def check_source(project: Path, expected: str) -> dict:
     root = project.parent
-    if project.name.lower() != "unreal" or root.name != EXPECTED_PARENT:
+    if project.name.lower() != "unreal" or root.name not in ALLOWED_PARENTS:
         raise RuntimeError("HOLD: not the explicitly named disposable PR713 map worktree")
     if not re.fullmatch("[a-fA-F0-9]{40}", expected):
         raise RuntimeError("HOLD: expected Git HEAD must be 40 hex characters")

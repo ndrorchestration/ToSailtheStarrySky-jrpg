@@ -27,10 +27,12 @@ function Get-TSTSSSha256 {
     }
 }
 
-# The operator authorizes only the independent PR713 map-QA worktree.
+# Only two explicitly named, disposable worktrees are authorized: the original
+# PR713 review and the joined PR735 lane. Do not accept arbitrary project paths.
+$AllowedReviewRoots = @('TSTSS_PR713_NativeMapQA_20261102', 'TSTSS_PR735_NativeMapQA_20261103')
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
-if ((Split-Path $RepoRoot -Leaf) -ne 'TSTSS_PR713_NativeMapQA_20261102') {
-    throw 'HOLD: not the named disposable PR713 native-map worktree'
+if ((Split-Path $RepoRoot -Leaf) -notin $AllowedReviewRoots) {
+    throw 'HOLD: not an explicitly named disposable PR713 or PR735 native-map worktree'
 }
 $ProjectDir = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $Project = Join-Path $ProjectDir 'ToSailTheStarrySky.uproject'

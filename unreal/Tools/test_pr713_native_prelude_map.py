@@ -63,6 +63,9 @@ class NativeMapSourceGateTests(unittest.TestCase):
 
     def test_expected_source_boundary_has_narrow_worktree_name(self):
         self.assertEqual(qa.EXPECTED_PARENT, "TSTSS_PR713_NativeMapQA_20261102")
+        self.assertEqual(qa.JOINED_EXPECTED_PARENT, "TSTSS_PR735_NativeMapQA_20261103")
+        self.assertEqual(qa.ALLOWED_PARENTS,
+                         {qa.EXPECTED_PARENT, qa.JOINED_EXPECTED_PARENT})
         self.assertEqual(qa.LABEL_PREFIX, "TSTSS_PRELUDE_REVIEW_")
 
     def test_bad_checkout_and_wrong_commit_fail_closed_before_ue(self):
@@ -75,6 +78,19 @@ class NativeMapSourceGateTests(unittest.TestCase):
             good.mkdir(parents=True)
             with self.assertRaisesRegex(RuntimeError, "40 hex"):
                 qa.check_source(good, "bad")
+
+    def test_joined_pr735_root_reaches_exact_sha_gate_not_source_io(self):
+        with tempfile.TemporaryDirectory() as directory:
+            joined = Path(directory) / qa.JOINED_EXPECTED_PARENT / "unreal"
+            joined.mkdir(parents=True)
+            # The second allowed root is not authorization to skip SHA checks.
+            with mock.patch.object(qa, "git", return_value="b" * 40):
+                with self.assertRaisesRegex(RuntimeError, "SHA does not match"):
+                    qa.check_source(joined, "a" * 40)
+            impostor = Path(directory) / (qa.JOINED_EXPECTED_PARENT + "_copy") / "unreal"
+            impostor.mkdir(parents=True)
+            with self.assertRaisesRegex(RuntimeError, "not the explicitly named"):
+                qa.check_source(impostor, "a" * 40)
 
     def test_dirty_worktree_refused_before_asset_io(self):
         with tempfile.TemporaryDirectory() as directory:
