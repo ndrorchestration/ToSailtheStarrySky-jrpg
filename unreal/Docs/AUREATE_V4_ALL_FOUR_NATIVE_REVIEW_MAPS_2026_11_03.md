@@ -1,4 +1,6 @@
 # Aureate Wake cinematic V4 — four genuine Unreal review maps
+**Independent same-day verification:** The four previously saved V4 review maps now PASSed a native read-only UE5.8.4 load/actor/identity/SHA audit. A NEW separate pilot proves bridge+quarters can rigidly share one rotating parent, with 17.5-degree provisional rotation and original pose restoration. It does not certify the real production gimbal, transform collision or final materials. [Exact audit/pivot evidence](AUREATE_V4_NATIVE_MAP_AUDIT_AND_HABITATION_PIVOT_2026_11_03.md). GPU V4 screenshot remains HOLD.
+
 
 **November 3, 2026.** Unreal 5.8.4-58902052+++UE5+Release-5.8. Review source draft PR #732. Four separate noncanonical, nonplayable static layout studies, not approved cinematic ship models and not a playable transformation system.
 

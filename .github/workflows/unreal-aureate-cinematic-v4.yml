@@ -10,6 +10,15 @@ on:
       - 'unreal/Tools/author_aureate_v4_review_scene_plan.py'
       - 'unreal/Tools/aureate_v4_full_editor_skybourne_stage.py'
       - 'unreal/Tools/aureate_v4_full_editor_three_form_stage.py'
+      - 'unreal/Tools/audit_aureate_v4_four_native_maps_readonly.py'
+      - 'unreal/Tools/run_aureate_v4_four_map_native_readonly_audit.py'
+      - 'unreal/Tools/aureate_v4_coupled_habitation_math.py'
+      - 'unreal/Tools/stage_aureate_v4_coupled_habitation_native_pilot.py'
+      - 'unreal/Tools/run_aureate_v4_coupled_habitation_native_pilot.py'
+      - 'unreal/Tests/test_aureate_v4_four_native_map_audit_source.py'
+      - 'unreal/Tests/test_aureate_v4_coupled_habitation_math.py'
+      - 'unreal/Tests/test_aureate_v4_coupled_habitation_native_source.py'
+      - 'unreal/Docs/AUREATE_V4_NATIVE_MAP_AUDIT_AND_HABITATION_PIVOT_2026_11_03.md'
       - 'unreal/Tools/run_aureate_v4_three_form_full_editor_stage.py'
       - 'unreal/Tests/test_aureate_v4_three_form_stage_source.py'
       - 'unreal/Docs/AUREATE_V4_ALL_FOUR_NATIVE_REVIEW_MAPS_2026_11_03.md'
@@ -52,6 +61,9 @@ jobs:
           python -m unittest discover -s unreal/Tests -p 'test_aureate_v4_full_editor_actor_probe_source.py' -v
           python -m unittest discover -s unreal/Tests -p 'test_aureate_v4_full_editor_skybourne_source.py' -v
           python -m unittest discover -s unreal/Tests -p 'test_aureate_v4_three_form_stage_source.py' -v
+          python -m unittest discover -s unreal/Tests -p 'test_aureate_v4_four_native_map_audit_source.py' -v
+          python -m unittest discover -s unreal/Tests -p 'test_aureate_v4_coupled_habitation_math.py' -v
+          python -m unittest discover -s unreal/Tests -p 'test_aureate_v4_coupled_habitation_native_source.py' -v
       - name: Deterministically build verify and preflight candidates
         shell: bash
         run: |

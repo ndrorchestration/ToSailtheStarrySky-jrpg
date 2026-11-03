@@ -98,3 +98,7 @@ The new [Skybourne native scene evidence](AUREATE_V4_NATIVE_SKYBOURNE_SCENE_EVID
 ## November 3 — Four Unreal V4 review layouts are not approved final models
 
 [Four-mode Unreal native layout evidence](AUREATE_V4_ALL_FOUR_NATIVE_REVIEW_MAPS_2026_11_03.md) now records four real saved UE5.8.4 scene maps. These remain provisional hull/dome/quarters/wings/foils/light/sail assemblies, not faithful D3D11 renders of the original approved art. The approved PNG stays unchanged and continues to control aesthetic choices and geometric proportions. No physical proof of central rotating quarters or playable Starbourne is implied.
+
+## November 3 — Central habitation coupling is feasible, not final art
+
+A separate native Unreal 5.8.4 review test has now attached the bridge and quarters proxies to one common pivot, rotated them temporarily through 17.5 degrees, verified rigid distance and restored the pose. The original approved visual proportions, actual geodesic construction, crew gravity, dynamic clearance and final art remain unverified; this mechanical proof does not supersede the approved reference artwork. The V4 GPU Skybourne image is still not available. See AUREATE_V4_NATIVE_MAP_AUDIT_AND_HABITATION_PIVOT_2026_11_03.md. Starbourne stays developer-only until story authorization.

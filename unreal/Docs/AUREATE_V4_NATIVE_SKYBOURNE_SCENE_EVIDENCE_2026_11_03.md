@@ -1,4 +1,6 @@
 # Aureate Wake V4 — Native Skybourne pilot and hero scene
+**Later same-day update:** New independent four-map read-only native audit PASS, and new native 4-actor bridge/quarters coupled pivot review PASS with original scene checksum intact. A D3D11 attempt that started with ~7.73 GiB RAM proved the bare script's latent screenshot was not executed; still no PNG. See [new evidence](AUREATE_V4_NATIVE_MAP_AUDIT_AND_HABITATION_PIVOT_2026_11_03.md). The original Skybourne lookdev remains noncanonical.
+
 **Separate subsequent sibling work:** The same isolated Unreal5.8.4 sandbox now contains **three additional saved noncanonical review maps**: Seabourne (20 actors), Submersible (15), and private static Starbourne (14), in addition to this genuine Skybourne (18). Exact checked hashes and level boundaries are in [all-four evidence](AUREATE_V4_ALL_FOUR_NATIVE_REVIEW_MAPS_2026_11_03.md). No V4 GPU screenshot has been captured; no Starbourne player unlock or production scene promotion.
 
 
