@@ -44,7 +44,7 @@ class RegisteredGPUCaptureTests(unittest.TestCase):
         return self.runner.validate_native(self.report, self.native, self.png,
                                            self.test_name, self.runner.MAP_SHA)
 
-    def test_pass_stays_pixel_qa_pending_and_not_art_acceptance(self):
+    def test_pixel_integrity_pass_stays_art_review_pending(self):
         self.assertEqual(self.verify()['dimensions'], [1280, 720])
         self.assertIn('pixel_integrity', self.verify())
         self.assertFalse(self.verify()['pixel_integrity']['art_approved'])
