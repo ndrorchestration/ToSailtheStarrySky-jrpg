@@ -24,7 +24,7 @@ class PreludeFootprintTests(unittest.TestCase):
         self.assertFalse(g["native_visibility_or_pie_tested"])
 
     def test_spawn_cannot_begin_on_flyer_within_300cm(self):
-        with patch.object(plan, "PLAYER_SPAWN", (-2400.0, 0.0, 130.0)):
+        with patch.object(plan, "PLAYER_SPAWN", (-2455.0, 0.0, 130.0)):
             with self.assertRaisesRegex(ValueError, "already within 300cm"):
                 plan.validate_plan()
 
@@ -35,7 +35,7 @@ class PreludeFootprintTests(unittest.TestCase):
 
     def test_marker_cannot_leave_x_extent(self):
         old = plan.STOPS
-        altered = tuple(replace(s, x=2500.0) if s.label == "EngineeringApproval" else s for s in old)
+        altered = tuple(replace(s, x=2530.0) if s.label == "EngineeringApproval" else s for s in old)
         with patch.object(plan, "STOPS", altered):
             with self.assertRaisesRegex(ValueError, "outside traversal floor"):
                 plan.validate_plan()
