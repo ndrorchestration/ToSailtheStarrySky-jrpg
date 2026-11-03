@@ -41,7 +41,14 @@ story/review gates.
   safety, reachability or compatibility.
 - **Exact lockfile SHA-256 before AND after:**
   `cbd32a793748f2aa7f6e538057ca4e38113ec229ce98a0854b312e386dd005f6`.
-  Repository `git status --porcelain` remained **empty**.
+  For cross-platform checks, Git's LF-normalized checkout bytes hash to
+  `f9aecbddb8453d868627023bac06700df6082c0000fbf98876ec94dd482ffdce`.
+  Windows Git's CRLF working-tree conversion **changes raw-byte hashes but
+  not the audited dependency declarations**; the raw Windows receipt and
+  LF-normalized canonical hash must be treated separately. This was
+  confirmed after a GitHub Linux runner first rejected an incorrectly
+  cross-platform raw-byte assertion. Repository `git status --porcelain`
+  remained **empty**.
   No package/lockfile was installed, upgraded, downgraded or modified;
   no package scripts executed; no publisher/release work was resumed.
 - Private, local-only evidence: raw complete npm JSON at
