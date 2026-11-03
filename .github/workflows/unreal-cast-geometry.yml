@@ -83,6 +83,12 @@ jobs:
           python3 -m py_compile unreal/ArtSource/Characters/ReviewEvidence/2026-11-03/EnderV5FaceCloseups/capture_threequarter_plus_x_plus_y.py
           python3 -m py_compile unreal/ArtSource/Characters/ReviewEvidence/2026-11-03/EnderV5FaceCloseups/build_native_three_angle_contact_sheet.py
 
+      - name: Verify original Ender goggles geometry and detached asset safety (engine-free)
+        run: |
+          python3 -m unittest discover -s unreal/ArtSource/Characters/Accessories -p test_ender_goggles.py -v
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/native_import_goggles_v1.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/native_visual_goggles01.py
+
       - name: Regenerate source assets and confirm exact bytes
         env:
           TSTSS_CAST_OUTPUT: unreal/ArtSource/Characters/Candidates
