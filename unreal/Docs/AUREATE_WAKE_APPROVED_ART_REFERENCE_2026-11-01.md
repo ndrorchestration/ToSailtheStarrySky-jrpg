@@ -84,3 +84,13 @@ A still-recognizable vessel, forward-facing bridge, **four equal-size radial tra
 ### Change-control rule
 
 This decision **supersedes provisional style in draft PR #664** wherever that provisional faceted graphite hull or isolated glass shell differs from the approved sheet. Keep that source-side candidate as an optional procedural learning asset if useful, but **do not promote it to final art**. The approved visual source must be evaluated independently of engineering correctness. No merges, releases, or automatic Orbiter access are authorized by the art approval.
+
+## November 3, 2026 — Starbourne private development clarification and V4 material intake
+
+The approved art remains the **visual source**, not automatic authorization for procedural V4 game meshes. Creator authorization now explicitly allows **internal Starbourne visual/mechanical work** (private four equal radial sails, experimental materials, engineering and Unreal rendering). The **player/story reveal, SaveGame progression and lunar route remain gate-locked**. Do not interpret the older word Orbiter/locked as a ban on private developer work, or as a player unlock.
+
+Draft [Aureate Cinematic V4 #732](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/732) imported five review GLBs as real UE 5.8.4 StaticMeshes with four material slots each. Its separate assembled-level attempt failed before actor creation and produced **no approved cinematic image**. See [native evidence](AUREATE_CINEMATIC_V4_NATIVE_IMPORT_EVIDENCE_2026_11_03.md) and [dependency plan](AUREATE_V4_DEPENDENCIES_AND_ACCELERATION_2026_11_03.md). Final proportions, glass, bridge+quarters pivot, water/shaders, continuous clearance and game art remain held.
+
+## November 3 — Native Skybourne V4 assembly acceptance boundary
+
+The new [Skybourne native scene evidence](AUREATE_V4_NATIVE_SKYBOURNE_SCENE_EVIDENCE_2026_11_03.md) establishes one actually saved Unreal 5.8.4 *review* map with shared-hull/dome/quarters blockouts, four wing identities and imported V4 lace. It does **not** establish a faithful rendered version of this approved source art: the D3D11 PNG is pending and the review proxy bridge is not the final geodesic glass assembly. Maintain the original approved image authority. Starbourne private development remains authorized but the player story gate remains locked.

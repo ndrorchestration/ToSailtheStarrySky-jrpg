@@ -1,4 +1,9 @@
 # Aureate Wake V4 native Unreal admission — November 3, 2026
+**New full Editor evidence supersession:** Previous headless actor-spawn HOLD remains accurate only for the headless method. The separate full Editor workflow has now created one verified pilot actor AND saved a genuine 18-actor Skybourne V4 scene, as described in [the new native receipt](AUREATE_V4_NATIVE_SKYBOURNE_SCENE_EVIDENCE_2026_11_03.md). No true V4 GPU screenshot was produced; attempts failed at precheck and later resource watchdog. Do not change this document's original import/failed-headless history.
+
+
+**Further same-day probe status:** A new, strictly isolated full-Editor one-actor test is source-prepared but was **NOT LAUNCHED**: the watchdog found available physical RAM below its 4.2 GiB minimum before any pilot folder or UE process was created. The user's existing Editor remained running. The earlier NullRHI native import PASS and headless scene-spawn HOLD below are unchanged. An offline deterministic four-form scene-plan source contract was generated/tested and does NOT establish a built UE map.
+
 
 **Outcome: NATIVE ASSET IMPORT PASS; ASSEMBLED SCENE / CINEMATIC RENDER HOLD.** Five procedural cinematic-detail GLBs are still NONCANONICAL. No verified visual fidelity or production-game integration is implied.
 

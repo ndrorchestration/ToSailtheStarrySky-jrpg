@@ -1,4 +1,9 @@
 # Aureate Wake — Cinematic Detail V4 (review-only, November 3, 2026)
+**Same-day second native update:** A genuine UE5.8.4 full Editor pilot and one-form Skybourne scene staging now **PASS**, after the earlier headless actor-spawn failure. The new review level contains 18 actors with four wing identities and four comparison cameras; its raw proof is [here](AUREATE_V4_NATIVE_SKYBOURNE_SCENE_EVIDENCE_2026_11_03.md). Native GPU capture remains **HOLD** (no PNG); memory observations caused a stricter 6.5 GiB free-RAM GPU gate. This does not approve the hull/bridge proportion or validate any physical transform.
+
+
+**Review pipeline follow-up (same day):** The new [dependency/acceleration register](AUREATE_V4_DEPENDENCIES_AND_ACCELERATION_2026_11_03.md) links V4 assets to the one-hull/four-wing source plan, independent bridge and foil tracks, UE Python Editor dependencies, native import and the stage hold. [Deterministic scene-plan builder](../Tools/author_aureate_v4_review_scene_plan.py) emits a non-mutating four-form JSON with common vessel identity and camera ROLES, not scene actors or PNGs. [Epic's full Editor Python method](https://dev.epicgames.com/documentation/unreal-engine/scripting-the-unreal-editor-using-python) is the next one-actor test route; a safety preflight refused launch because RAM headroom was below 4.2 GiB. No native full Editor actor pass or cinematic render is claimed.
+
 
 **Native status supersession — November 3:** Genuine UE 5.8.4 NullRHI import and five StaticMesh/four-material-slot readbacks **PASSED** with exit 0, 0 errors, 0 warnings in the isolated sandbox. The separate four-form native scene staging attempt **FAILED at its first actor spawn**, with zero completed maps and no new render. This supersedes older pre-import descriptions below; see AUREATE_CINEMATIC_V4_NATIVE_IMPORT_EVIDENCE_2026_11_03.md. No production art promotion, game actor integration, or Starbourne story unlock.
 

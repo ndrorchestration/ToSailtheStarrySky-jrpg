@@ -1,4 +1,9 @@
 # Native Windows verification
+**New full Editor Skybourne milestone:** [Native Skybourne exact evidence](../Docs/AUREATE_V4_NATIVE_SKYBOURNE_SCENE_EVIDENCE_2026_11_03.md) confirms 1-actor pilot and an 18-actor saved Skybourne review map. Use the guarded full Editor actor/staging runners for map creation, not the headless PythonScript commandlet. For D3D11 capture only, pass a UNIQUE attempt label and require >=6.5 GiB available RAM; never infer PNG success from an engine exit 0 alone. GPU image evidence is still held. These new scripts run solely in dedicated disposable sandbox projects and are not packaged-game requirements.
+
+
+**November 3 Aureate V4 review note:** Use [the V4 dependency/acceleration register](../Docs/AUREATE_V4_DEPENDENCIES_AND_ACCELERATION_2026_11_03.md) and [native receipt](../Docs/AUREATE_CINEMATIC_V4_NATIVE_IMPORT_EVIDENCE_2026_11_03.md), distinct from the old verification commands below. Pure stdlib asset and scene-plan tests run without Unreal. Native mesh imports are proven using a disposable UE 5.8.4 project; rendering and real actor assembly are not. The full-Editor pilot source uses the documented ExecutePythonScript startup method and refuses to run under its 4.2 GiB available RAM or 14 GiB free disk preflight thresholds. Do not downgrade to a headless commandlet and claim a successful scene spawn or modify a user Editor process to force results.
+
 
 Run from PowerShell on a Windows machine with licensed Unreal Engine 5.8 installed:
 
