@@ -16,10 +16,17 @@ assert(packageJson.window && packageJson.window.resizable === true,
   'desktop package window must remain resizable');
 assert(packageJson.window.min_width === 960 && packageJson.window.min_height === 640,
   'desktop package minimum window must preserve the logical 960x640 game surface');
-assert(typeof packageJson.scripts['package:windows'] === 'string',
-  'Windows packaging script is missing');
-assert(packageJson.devDependencies && packageJson.devDependencies['nw-builder'],
-  'nw-builder dependency is missing');
+// This historical source contract must NOT force retention of a dangerous
+// direct package:windows entrypoint or deprecated nw-builder dependency.
+// Their presence is audit evidence, not a requirement for future code.
+assert(packageJson.private === true,
+  'historical npm desktop manifest must remain private');
+const directPackageCommands = Object.keys(packageJson.scripts || {})
+  .filter(name => /^package:windows(?:$|:)/.test(name));
+if (directPackageCommands.length) {
+  console.log('LEGACY_DIRECT_NPM_PACKAGE_COMMAND=UNGUARDED_SECURITY_HOLD: ' +
+    directPackageCommands.join(', '));
+}
 
 const stageScript = fs.readFileSync(
   path.join(__dirname, '..', 'scripts', 'stage-memories-desktop.js'),
@@ -31,14 +38,12 @@ assert(stageScript.includes("'icon.ico'"),
   'production desktop runtime must stage a Windows ICO asset');
 assert(stageScript.includes('version: rootPackage.version'),
   'production desktop manifest must carry the project version for Windows metadata');
-assert(packageJson.scripts['package:windows'].includes('--app.icon=.desktop-runtime/www/icon.ico'),
-  'Windows packaging must pass the staged ICO through nw-builder app icon metadata');
+// Preserve the source stage icon without requiring the archived CLI to be callable.
 assert(stageScript.includes("path.join(stage, 'package.json')"),
   'production desktop manifest must live at the launcher root');
 assert(stageScript.includes("path.join(stage, 'www')"),
   'production game payload must live under www');
-assert(packageJson.scripts['package:windows'].includes('.desktop-runtime'),
-  'Windows packaging must consume only the staged production runtime');
+// Script-defined stage boundaries are tested above and in dedicated Python checks.
 
 const workflow = fs.readFileSync(
   path.join(__dirname, '..', '.github', 'workflows', 'desktop-package.yml'),
