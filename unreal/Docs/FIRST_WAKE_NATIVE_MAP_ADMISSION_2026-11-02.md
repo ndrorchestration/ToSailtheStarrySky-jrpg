@@ -87,3 +87,33 @@ missing, the state transition fails, or the source/map/config hashes
 change, retain the original log and checkout for review. Do not promote
 partial or synthetic results to native gameplay acceptance, reset
 unexamined files, or change plugin/build dependencies to force a pass.
+
+## 2026-11-02 native map admission status — safe execution blocked
+
+- Source-only native map verifier `verify_pr713_native_prelude_map.py` and its
+  **eight** source/admission tests passed on the actual Windows checkout
+  (review HEAD `a06f203902fcb1594e1b55e43d1ec9f27d9ed583`).
+- A subsequent native Win64 build attempt at that exact head was **BLOCKED
+  BY ACTIVE LIVE CODING**, before a real Editor map could be loaded. Other
+  Editor sessions were active, including a separate character-review task;
+  none was terminated or modified.
+- To avoid wasting system resources and interfering with parallel work,
+  `Verify-Unreal.ps1` now fails closed **before build or evidence creation**
+  when `UnrealEditor`, `UnrealEditor-Cmd`, or `LiveCodingConsole`
+  is running. At pinned `cfb88a9edf582b57ca95db1f731b68d79da3a22c`,
+  this check was actually invoked on Windows and correctly **refused**
+  execution: no additional receipt directory, tracked files unchanged.
+  Its **13 Windows source-safety tests** passed, and **four hosted
+  GitHub workflows** were SUCCESS at the same head.
+- The previously accepted **25/25 native Editor automation receipt at
+  `52e13aedaa8bda900cece849b54eae570179c838` remains valid for
+  that earlier exact source**, but cannot be transferred to the new
+  map-checker revision.
+- **Next evidence gate:** once the authorized workstation is idle, repeat
+  the Win64 5.8.4 build in the dedicated, source-clean PR713 map QA
+  checkout and then execute the Python Editor commandlet. Require
+  actual `TSTSS_NATIVE_PRELUDE_MAP_QA_PASS`, a unique local JSON receipt,
+  unchanged map/config SHA-256 and clean tracked tree. The script itself
+  does **not** run or pass P01–P13 PIE keyboard/visual cases; those remain
+  separately NOT TESTED. Never alter Live Coding or terminate someone
+  else's Editor to unblock a review.
