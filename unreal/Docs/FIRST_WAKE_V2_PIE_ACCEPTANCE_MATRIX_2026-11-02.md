@@ -213,3 +213,32 @@ contrast, readability and overlap at **1280×720 and 500 px wide**
 as part of *actual PIE*, not from portable stand-ins.
 The HUD does not convert any P01–P13 result from NOT TESTED
 into PASS.
+
+## November 3 — responsive engineering inspection HUD review
+
+The non-shipping C++ `ATSTSSFirstWakeReviewHUD` now provides
+three read-only Lift, Pressure and Reserve inspection indicators
+directly from `UTSTSSFirstWakeState::GetInspectionMask()`.
+An incomplete inspection appears muted and a completed inspection
+uses a brighter indicator. A narrower review viewport uses shorter
+control copy and disclaimer without adding a HUD plugin or changing
+canonical art. If the player's existing state reports Chapter 1
+Act 1, the **Prelude** overlay stops drawing rather than pretending
+the Chapter 1 UI is implemented.
+
+**Executed source evidence at `1f983d0c202ea0e52c5fd01725b3c436f4584bfa`:**
+the hosted Unreal preflight extracted and compiled the **actual**
+`DrawHUD()` method with C++ API doubles in development and shipping
+modes. It verified a fresh 0/3 mask, a live 2/3 update and a 3/3
+update, narrow viewport copy, absent/invalid state denial, Chapter
+1 suppression and absence of the overlay in shipping. The **6/6
+Windows HUD contract tests** also passed at the same exact SHA with
+a clean tracked worktree.
+
+**Still required in actual PIE:** verify all three indicator states
+by inspecting stations in different orders, confirm the displayed
+objective agrees with J and F9, test on at least 1280×720 and
+500-pixel-wide review viewports for clipping/contrast, then confirm
+the overlay does not misrepresent Splashdown as implemented. The
+portable C++ checks cannot establish real UE font metrics, rendering,
+line-of-sight, movement, keyboard input or the P01–P13 results.
