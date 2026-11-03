@@ -15,6 +15,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from verify_aureate_v4_png_pixels import inspect_png_pixels
 
 ROOT = Path('C:/tmp/TSTSS_AureateCinematicV4_Native_20261103')
 SANDBOX = ROOT / 'AureateCinematicV4Sandbox'
@@ -76,7 +77,8 @@ def validate_native(report, native_receipt, image, expected_test, expected_repor
     image_hash = hashlib.sha256(raw).hexdigest()
     if image_hash != native_receipt.get('png_sha256') or len(raw) != native_receipt.get('png_bytes'):
         raise ValueError('PNG bytes/hash differ from native receipt')
-    return {'png_sha256': image_hash, 'png_bytes': len(raw),
+    pixels = inspect_png_pixels(raw)
+    return {'png_sha256': image_hash, 'png_bytes': len(raw), 'pixel_integrity': pixels,
             'dimensions': [width, height], 'registered_test_path': expected_test}
 
 def main(argv=None):
@@ -175,7 +177,7 @@ def main(argv=None):
             native = json.loads(receipt.read_text(encoding='utf-8'))
             framework = json.loads((report_dir / 'index.json').read_text(encoding='utf-8'))
             report.update(validate_native(framework, native, png, test_path, sha(MAP_FILE)))
-            report['state'] = 'NATIVE_REGISTERED_TEST_AND_PNG_PASS_PIXEL_QA_PENDING'
+            report['state'] = 'NATIVE_REGISTERED_TEST_AND_PNG_PIXEL_INTEGRITY_PASS_VISUAL_REVIEW_PENDING'
     except Exception as exc:
         report['error'] = str(exc)
         if report['state'] == 'NOT_LAUNCHED':
@@ -193,7 +195,7 @@ def main(argv=None):
         report['ram_gib_postflight'] = round(free_ram(), 2)
         host_file.write_text(json.dumps(report, sort_keys=True, indent=2) + '\n', encoding='utf-8')
         print('AUREATE_V4_REGISTERED_GPU_RESULT', json.dumps(report, sort_keys=True), flush=True)
-    if report['state'] != 'NATIVE_REGISTERED_TEST_AND_PNG_PASS_PIXEL_QA_PENDING':
+    if report['state'] != 'NATIVE_REGISTERED_TEST_AND_PNG_PIXEL_INTEGRITY_PASS_VISUAL_REVIEW_PENDING':
         raise SystemExit(1)
 
 if __name__ == '__main__':
