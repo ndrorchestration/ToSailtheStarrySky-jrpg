@@ -63,6 +63,27 @@ class ObjectiveHudContracts(unittest.TestCase):
         self.assertIn('Systems: Lift / Pressure / Reserve', self.hud)
         self.assertIn('no sea landing or Chapter 1 approval', self.hud)
 
+    def test_readonly_camera_aim_prompt_never_authorizes_progress(self):
+        explorer = (ROOT / "Source/ToSailTheStarrySky/Private/TSTSSExplorerCharacter.cpp").read_text(encoding="utf-8")
+        header = (ROOT / "Source/ToSailTheStarrySky/Public/TSTSSExplorerCharacter.h").read_text(encoding="utf-8")
+        self.assertIn("GetFocusedReviewInteractionHint() const;", header)
+        self.assertIn("GetFocusedReviewInteractionHint()", self.hud)
+        self.assertIn("Canvas->ClipY >= 280.f", self.hud)
+        self.assertIn("FocusHint.IsEmpty()", self.hud)
+        focus = explorer.split("FString ATSTSSExplorerCharacter::GetFocusedReviewInteractionHint() const", 1)[1].split(
+            "void ATSTSSExplorerCharacter::ShowObjectiveReview()", 1
+        )[0]
+        self.assertIn("TSTSSInteractionReach::GetCameraTraceLength(", focus)
+        self.assertIn("TSTSSInteractionReach::IsInsidePlayerReach(", focus)
+        self.assertLess(focus.index("LineTraceSingleByChannel("), focus.index("IsInsidePlayerReach("))
+        self.assertIn("FirstWakeState->IsChapterOneActOne()", focus)
+        self.assertIn('#if !UE_BUILD_SHIPPING', focus)
+        self.assertIn("E: attempt engineering inspection", focus)
+        self.assertIn("E: attempt milestone interaction", focus)
+        for mutation in ("TryActivate(", "AdvanceTo(", "InspectStation(",
+                         "SaveFirstWake(", "LoadFirstWake(", "SaveProgress("):
+            self.assertNotIn(mutation, focus)
+
     def test_real_cplusplus_compiled_behavior_gate_is_in_ci(self):
         workflow = WORKFLOW.read_text(encoding="utf-8")
         self.assertIn('check_first_wake_review_hud_compiled.py', workflow)
