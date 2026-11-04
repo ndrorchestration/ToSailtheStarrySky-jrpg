@@ -114,6 +114,8 @@ $RequiredTests = @(
     'TSTSS.CombatIntegration.DataContractCannotAutoAuthorize',
     'TSTSS.CombatIntegration.ProgressiveRecruitmentPartySize',
     'TSTSS.CombatData.NonExecutableSkillReconciliation',
+    'TSTSS.Design.HybridCharacterJobs',
+    'TSTSS.Design.HybridJobTableReadback',
     'TSTSS.CombatIntegration.DesignOnlyTurnManagerDenial',
     'TSTSS.FirstWake.InteractionCameraBoomReach',
     'TSTSS.FirstWake.ReviewObjectivesAreReadOnly',
