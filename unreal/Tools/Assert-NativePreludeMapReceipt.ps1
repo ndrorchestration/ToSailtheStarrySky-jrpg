@@ -93,7 +93,7 @@ function Assert-TSTSSNativePreludeMapReceipt {
     )) { Require-Boolean $Report $field $false }
 
     $bindings = Require-Field $Report 'source_bindings'
-    Require-Integer $bindings 'config_mapping_count' 9
+    Require-Integer $bindings 'config_mapping_count' 10
     Require-Boolean $bindings 'source_handlers_verified' $true
     Require-Boolean $bindings 'player_keyboard_input_executed' $false
 
