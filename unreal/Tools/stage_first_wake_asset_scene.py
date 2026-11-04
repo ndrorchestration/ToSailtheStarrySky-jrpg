@@ -16,11 +16,11 @@ import unreal
 PROJECT = Path(unreal.Paths.project_dir()).resolve()
 ROOT = PROJECT.parent
 BASE_MAP = "/Game/TSTSS/Review/FirstWake_PreludeInteraction_V2"
-DEST_MAP = "/Game/TSTSS/Review/Scenes/FirstWake_AssetAssembly_20261104_REVIEW"
+DEST_MAP = "/Game/TSTSS/Review/Scenes/FirstWake_AssetAssembly_20261104_REVIEW_V2"
 BASE_FILE = PROJECT / "Content/TSTSS/Review/FirstWake_PreludeInteraction_V2.umap"
-DEST_FILE = PROJECT / "Content/TSTSS/Review/Scenes/FirstWake_AssetAssembly_20261104_REVIEW.umap"
+DEST_FILE = PROJECT / "Content/TSTSS/Review/Scenes/FirstWake_AssetAssembly_20261104_REVIEW_V2.umap"
 BASE_SHA = "4c96f1fb28fe4af91b879977e473c20de32bd933f741a5384bb8403a00254b80"
-RECEIPT = PROJECT / "Saved/AssetAssemblyEvidence/first_wake_asset_scene_native_20261104.json"
+RECEIPT = PROJECT / "Saved/AssetAssemblyEvidence/first_wake_asset_scene_native_v2_20261104.json"
 PREFIX = "TSTSS_ASSET_REVIEW_"
 STOPS = ("FlyerDiscovery", "IoniaHiring", "AureateBoarding",
          "LiftStation", "PressureStation", "ReserveStation", "EngineeringApproval")
@@ -92,12 +92,12 @@ try:
     library = unreal.EditorAssetLibrary
     must(library.does_asset_exist(BASE_MAP), "original Unreal World not registered")
     must(not library.does_asset_exist(DEST_MAP), "target World already registered")
-    must(bool(library.duplicate_asset(BASE_MAP, DEST_MAP)),
-         "Editor cannot duplicate original World into independent review map")
-
     levels = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
+    # One Unreal operation creates and opens the new map from the authored V2 template.
+    # Duplicating then loading in a single Python frame caused a world-GC fatal in v1.
+    must(bool(levels.new_level_from_template(DEST_MAP, BASE_MAP)),
+         "Editor cannot create and open new World from V2 template")
     actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
-    must(bool(levels.load_level(DEST_MAP)), "new duplicate World cannot load")
     before = list(actors.get_all_level_actors())
     names = [a.get_actor_label() for a in before]
     for stop in STOPS:
@@ -148,7 +148,8 @@ try:
     must(DEST_FILE.is_file() and DEST_FILE.stat().st_size > 1000,
          "new level file absent or too small")
 
-    must(bool(levels.load_level(DEST_MAP)), "saved World cannot reload")
+    # Do not reload the World while this Python frame still holds Actor references.
+    # Independent saved-package readback must run in a separate Editor process.
     reloaded = [a.get_actor_label() for a in actors.get_all_level_actors()]
     must(all(reloaded.count(name) == 1 for name in added),
          "native map readback lost one or more staged assets")
@@ -159,7 +160,7 @@ try:
          "project config changed during stage")
 
     report.update({
-        "status": "NATIVE_ASSET_WORLD_SAVED_AND_RELOADED_NOT_PIE",
+        "status": "NATIVE_ASSET_WORLD_SAVED_PENDING_INDEPENDENT_READBACK",
         "engine": unreal.SystemLibrary.get_engine_version(),
         "timestamp_utc": datetime.now(timezone.utc).isoformat(),
         "base_map_sha256": BASE_SHA,
@@ -171,12 +172,12 @@ try:
         "native_stage_count": len(added),
         "native_mesh_paths": ASSETS,
         "config_hashes_preserved": config_hashes,
-        "native_world_reload_successful": True,
+        "native_world_reload_successful": False,
         "original_map_modified": False,
     })
     RECEIPT.parent.mkdir(parents=True, exist_ok=True)
     RECEIPT.write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
-    unreal.log("TSTSS_FIRST_WAKE_ASSET_ASSEMBLY_NATIVE_SAVE_RELOAD_PASS " +
+    unreal.log("TSTSS_FIRST_WAKE_ASSET_ASSEMBLY_MAP_SAVED_PENDING_READBACK " +
                digest(DEST_FILE))
 except Exception:
     report["status"] = "ASSET_STAGE_HOLD"

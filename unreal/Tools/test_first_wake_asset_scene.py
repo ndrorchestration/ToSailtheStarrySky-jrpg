@@ -20,7 +20,7 @@ class AssetWorldSourceContracts(unittest.TestCase):
             "FirstWake_AssetAssembly_20261104_REVIEW",
             "FirstWake_PreludeInteraction_V2",
             "4c96f1fb28fe4af91b879977e473c20de32bd933f741a5384bb8403a00254b80",
-            "duplicate_asset(BASE_MAP, DEST_MAP)",
+            "new_level_from_template(DEST_MAP, BASE_MAP)",
             "not DEST_FILE.exists()",
             "not RECEIPT.exists()",
             "BASE_FILE.is_file() and digest(BASE_FILE) == BASE_SHA",
@@ -67,14 +67,14 @@ class AssetWorldSourceContracts(unittest.TestCase):
             self.assertNotIn(banned, self.src)
 
     def test_save_then_native_reload_before_pass(self):
-        self.assertLess(self.src.index("duplicate_asset(BASE_MAP, DEST_MAP)"),
+        self.assertLess(self.src.index("new_level_from_template(DEST_MAP, BASE_MAP)"),
                         self.src.index("levels.save_current_level()"))
         self.assertLess(self.src.index("levels.save_current_level()"),
-                        self.src.index("levels.load_level(DEST_MAP)), \"saved World cannot reload\""))
+                        self.src.index("reloaded = [a.get_actor_label() for a in actors.get_all_level_actors()]"))
         self.assertLess(self.src.index("native map readback lost one or more staged assets"),
-                        self.src.index('"status": "NATIVE_ASSET_WORLD_SAVED_AND_RELOADED_NOT_PIE"'))
+                        self.src.index('"status": "NATIVE_ASSET_WORLD_SAVED_PENDING_INDEPENDENT_READBACK"'))
         self.assertLess(self.src.index("digest(BASE_FILE) == BASE_SHA, \"original map changed during stage\""),
-                        self.src.index('"status": "NATIVE_ASSET_WORLD_SAVED_AND_RELOADED_NOT_PIE"'))
+                        self.src.index('"status": "NATIVE_ASSET_WORLD_SAVED_PENDING_INDEPENDENT_READBACK"'))
 
     def test_documented_acceptance_holds(self):
         doc = DOC.read_text(encoding="utf-8")

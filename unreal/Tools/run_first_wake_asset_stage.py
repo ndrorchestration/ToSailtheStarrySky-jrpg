@@ -20,9 +20,9 @@ UPROJECT = PROJECT / "ToSailTheStarrySky.uproject"
 EDITOR = Path("C:/Program Files/Epic Games/UE_5.8/Engine/Binaries/Win64/UnrealEditor.exe")
 SCRIPT = Path(__file__).with_name("stage_first_wake_asset_scene.py")
 OUTPUT = PROJECT / "Saved/AssetAssemblyEvidence"
-NATIVE = OUTPUT / "first_wake_asset_scene_native_20261104.json"
-HOST = OUTPUT / "host_asset_stage_20261104.json"
-LOG = OUTPUT / "first_wake_asset_stage_20261104.log"
+NATIVE = OUTPUT / "first_wake_asset_scene_native_v2_20261104.json"
+HOST = OUTPUT / "host_asset_stage_v2_20261104.json"
+LOG = OUTPUT / "first_wake_asset_stage_v2_20261104.log"
 BASE = PROJECT / "Content/TSTSS/Review/FirstWake_PreludeInteraction_V2.umap"
 EXPECTED_SHA = "4c96f1fb28fe4af91b879977e473c20de32bd933f741a5384bb8403a00254b80"
 
@@ -140,12 +140,12 @@ def main():
         if state["editor_exit_code"] != 0:
             raise RuntimeError("Full Unreal Editor failed: exit " + str(state["editor_exit_code"]))
         native = json.loads(NATIVE.read_text(encoding="utf-8"))
-        if native.get("status") != "NATIVE_ASSET_WORLD_SAVED_AND_RELOADED_NOT_PIE":
+        if native.get("status") != "NATIVE_ASSET_WORLD_SAVED_PENDING_INDEPENDENT_READBACK":
             raise RuntimeError("Native scene receipt absent or failed validation")
         log_text = LOG.read_text(encoding="utf-8", errors="replace")
-        if "TSTSS_FIRST_WAKE_ASSET_ASSEMBLY_NATIVE_SAVE_RELOAD_PASS" not in log_text:
+        if "TSTSS_FIRST_WAKE_ASSET_ASSEMBLY_MAP_SAVED_PENDING_READBACK" not in log_text:
             raise RuntimeError("Actual full Editor PASS sentinel absent")
-        state.update({"status": "NATIVE_ASSET_WORLD_SAVED_RELOADED_NOT_PIE",
+        state.update({"status": "NATIVE_ASSET_MAP_SAVED_PENDING_INDEPENDENT_READBACK",
                       "native_receipt_sha256": sha(NATIVE),
                       "new_map_sha256": native["new_map_sha256"],
                       "new_map_package": native["new_map_package"]})
@@ -167,7 +167,7 @@ def main():
         print("ASSET_NATIVE_RESULT", json.dumps({
             "status": state["status"], "head": state["source_head"],
             "exit": state.get("editor_exit_code"), "map": state.get("new_map_package")}), flush=True)
-    if state["status"] != "NATIVE_ASSET_WORLD_SAVED_RELOADED_NOT_PIE":
+    if state["status"] != "NATIVE_ASSET_MAP_SAVED_PENDING_INDEPENDENT_READBACK":
         raise RuntimeError("Native stage incomplete; see saved local evidence")
 
 

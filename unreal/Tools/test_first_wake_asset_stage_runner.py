@@ -35,7 +35,7 @@ class AssetStageRunnerTests(unittest.TestCase):
             "os.chmod(f, stat.S_IWRITE | stat.S_IREAD)",
             "config_shas_preserved", "base_map_sha_preserved",
             "source_head_preserved", "status", "NATIVE_ASSET_STAGE_HOLD",
-            "TSTSS_FIRST_WAKE_ASSET_ASSEMBLY_NATIVE_SAVE_RELOAD_PASS",
+            "TSTSS_FIRST_WAKE_ASSET_ASSEMBLY_MAP_SAVED_PENDING_READBACK",
         ):
             self.assertIn(token, self.source)
         self.assertNotIn("taskkill", self.source)
@@ -44,7 +44,7 @@ class AssetStageRunnerTests(unittest.TestCase):
     def test_nullrhi_not_pie_or_approval(self):
         for token in ('"-NullRHI"', '"pie_verified": False', '"gpu_rendered": False',
                       '"production_art_approved": False', '"starbourne_unlocked": False',
-                      '"NATIVE_ASSET_WORLD_SAVED_RELOADED_NOT_PIE"'):
+                      '"NATIVE_ASSET_MAP_SAVED_PENDING_INDEPENDENT_READBACK"'):
             self.assertIn(token, self.source)
 
 
