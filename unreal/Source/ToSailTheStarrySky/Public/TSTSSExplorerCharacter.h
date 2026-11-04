@@ -16,6 +16,10 @@ public:
     UTSTSSFirstWakeState* GetFirstWakeState() const { return FirstWakeState; }
     UFUNCTION(BlueprintCallable, Category="TSTSS|Interaction")
     void Interact();
+    // Non-shipping review-only, read-only cue for the same camera/reach
+    // constraints used by E. A cue never promises story authorization.
+    UFUNCTION(BlueprintPure, Category="TSTSS|First Wake|Review")
+    FString GetFocusedReviewInteractionHint() const;
     UFUNCTION(BlueprintCallable, Category="TSTSS|Save")
     bool SaveFirstWake(const FString& Slot);
     UFUNCTION(BlueprintCallable, Category="TSTSS|Save")
