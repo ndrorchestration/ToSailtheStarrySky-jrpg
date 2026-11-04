@@ -68,3 +68,16 @@ On connected workstation `neontic`, the preflight found the existing user `Unrea
 The existing user Editor and browser processes were observed, **not closed, terminated, trimmed or changed**. Do not silently free resources by terminating software, reduce thresholds, or run overlapping GPU attempts. When RAM is safely available, use the already prepared, uniquely named `Automation09` run once; check 6.5 GiB free RAM, 14 GiB disk, original map SHA and no competing commandlet *immediately before launch*, then verify the native test controller, PNG SHA/dimensions and actual pixel histogram. In particular, a camera-relative developer billboard is **not** an accepted physical sky, and #705 remains an independent atmosphere/black-sky HOLD.
 
 **Authority:** earlier native screenshot-generation successes remain PASS; realistic-cinematic quality remains HOLD; Starbourne player/story gate CLOSED; PR draft/unmerged and original four review maps untouched.
+
+### Independently rehashed original V4 maps, without Unreal launch
+
+A fresh direct Windows `certutil -hashfile ... SHA256` read of all four original disposable V4 `.umap` files returned the following **exact expected checksums** (all match the native four-map audit receipts):
+
+| Review map | Recomputed SHA-256 | Result |
+| --- | --- | --- |
+| Skybourne | `16bb93fb9bdd2a4e1559864df908122094fe8a641b4a1481f2935d64ba184c40` | PASS |
+| Seabourne | `b0b0587783197b2eff4a3e820fb49a52ac70edbbc9519a8cdbceee470edc955a` | PASS |
+| Submersible | `815e235aae6abef0e9a816bd8c9d01a13b4441bd81538763d2424e799e925f35` | PASS |
+| Starbourne, developer-only static | `953bb2aaca0db194bdd871229cdb13245c59ceab19cf0f8cbc44a802c01e0e00` | PASS |
+
+This is **file-integrity evidence only**; it does not re-run the Unreal four-map readback, prove GPU images from all four forms, approve art, or authorize a Starbourne player/story unlock. Automation09 remains **NOT LAUNCHED** until its resource gate passes.
