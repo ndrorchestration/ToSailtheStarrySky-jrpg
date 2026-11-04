@@ -60,6 +60,12 @@ class ReviewEnvelopeTests(unittest.TestCase):
             with self.assertRaisesRegex(study.EnvelopeAuditHold, "mismatched"):
                 study.glb_aabb(path, "0" * 64)
 
+    def test_one_pass_world_corner_iterators_keep_all_axes(self):
+        result = study.aabb((p for p in ((-2, 5, 0), (4, -3, 7))))
+        self.assertEqual(result, ((-2, -3, 0), (4, 5, 7)))
+        with self.assertRaisesRegex(study.EnvelopeAuditHold, "Empty"):
+            study.aabb(iter(()))
+
     def test_previously_unmeasured_at_rest_envelope_gap(self):
         data = study.calculate(BRIDGE, QUARTERS, WING)
         row = data["fore_wing_envelope_review"]["0.0"]
