@@ -45,3 +45,31 @@ V2 instead uses Unreal's `LevelEditorSubsystem.new_level_from_template()` to cre
 
 ### V2 preserved failed attempt and native map diagnosis
 V2 `new_level_from_template()` **did create an independent 24-actor native map** (`..._REVIEW_V2.umap`, SHA-256 `8c987699d7b069cae72b61acbb0a049dfb04219d6c8cb5933e948aa7e3ac540b`), and the full Editor exited 0. The source script correctly withheld PASS because its milestone filter counted both `TSTSS_PRELUDE_REVIEW_FlyerDiscovery` and `TSTSS_PRELUDE_REVIEW_SIGN_FlyerDiscovery` as matches (suffix collision). A separate native `UnrealEditor-Cmd` read-only diagnostic loaded that saved template map and observed **24 actors**, including the milestone and associated sign. No asset actors were added in V2. V2 host HOLD and log are preserved. V3 fixes actor selection by full exact label (`TSTSS_PRELUDE_REVIEW_<Stop>`) and creates a third, unique map and receipt without overwriting V1/V2 evidence.
+
+## V3 native asset assembly — verified local evidence (November 4, 2026)
+
+The V3 run at exact stage source HEAD be9bc0e42d3cdf4f52a5c6bc3bcc8273a0d7e94d completed using **Unreal Editor 5.8.4 / NullRHI** with process exit **0** and a saved 74,293-byte review map, /Game/TSTSS/Review/Scenes/FirstWake_AssetAssembly_20261104_REVIEW_V3. Its SHA-256 is 54b4e266683347fc950a56c8ac8691d99aaddb41d61e304ddf0f5b4d0730e2b5.
+
+The ignored native receipt is Saved/AssetAssemblyEvidence/first_wake_asset_scene_native_v3_20261104.json; the host receipt is host_asset_stage_v3_20261104.json. They record **10 newly staged noncanonical StaticMesh actors**, preserved original map and config digests, and no saved-map reload/PIE/GPU/Starbourne access during staging.
+
+### Separate native saved-map readback
+
+A **second UnrealEditor-Cmd 5.8.4 NullRHI process** loaded the exact saved V3 map, exited **0**, and produced Saved/AssetAssemblyEvidence/first_wake_asset_scene_readback_v3_20261104.json with status INDEPENDENT_NATIVE_SAVED_WORLD_READBACK_PASS_NOT_PIE.
+
+- **34 native actors:** 24 inherited First Wake actors plus 10 visual assets.
+- All **7 exact reflected TSTSSMilestoneActor** labels and one PlayerStart survived.
+- The 10 staged StaticMeshActors have independently verified expected native mesh paths and **collision disabled**: four authored wing leaves, V4 hull trim, bridge, quarters, an unfinished hull proxy, static Ionia and static EnderV2.
+- No Starbourne actor exists in the resulting map. Original and new saved map SHA-256s as well as both config hashes remained unchanged during readback.
+
+**Log-custody caveat:** The dedicated console redirect readback_asset_world_v3_native.log did **not** echo Unreal's logging sentinel, so the conservative initial PowerShell host check ended in **HOLD** despite successful process exit, valid 34-actor readback receipt and preserved SHA custody. The actual **Unreal project log** Saved/Logs/ToSailTheStarrySky.log does contain TSTSS_FIRST_WAKE_ASSET_MAP_INDEPENDENT_READBACK_PASS with matching map digest and actor counts. The console commandlet log separately confirms Python script executed successfully with 0 errors and 0 warnings. Keep this divergence on record; subsequent host verification must inspect both log channels.
+
+The reproducible script is unreal/Tools/verify_first_wake_asset_scene_native.py. Its successful native execution used a byte-identical working copy under ignored Saved/AssetAssemblyEvidence/verify_asset_world_v3_readonly_native.py. New source commits are **not** retroactive native evidence for their new HEAD.
+
+### Next observable integration gates
+
+1. Render the V3 map in GPU Unreal with the >=6.5 GiB graphics RAM gate. Capture actual pixels, check crew scale, lighting, wing/dome occlusion, horizon and composition against approved references.
+2. Perform a real **Play in Editor** walkthrough of the seven ordered First Wake interactions and test WASD/mouse, E, J, F5/F9 with disposable saves.
+3. Replace proxy visuals only after authored Ender skeletal rig, facial likeness/hair, costume, sealed goggles and staff-grip review; create Ionia dialogue presentation driven by existing milestones.
+4. Drive one encounter from real UI/controller with the existing class/equipment and combat foundation. Keep ship physics, Starbourne and save-schema changes separately gated.
+
+**Binary custody:** All imported native assets, saved .umap worlds, screenshots and original source references remain local/untracked in the isolated workstation. Source and documentation only are proposed for GitHub review. No protected-main merge or release; none of the lookdev art has been promoted to canon.

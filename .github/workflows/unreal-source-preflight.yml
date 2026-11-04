@@ -167,3 +167,4 @@ jobs:
         run: |
           python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_asset_scene.py' -v
           python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_asset_stage_runner.py' -v
+          python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_asset_native_readback.py' -v
