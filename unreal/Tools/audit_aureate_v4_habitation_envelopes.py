@@ -112,9 +112,14 @@ def rotate(p, yaw_deg=0.0, roll_deg=0.0):
 
 
 def aabb(corners):
+    # A generator can only be traversed once; keep the corner sample stable
+    # for BOTH min and max over each world axis.
+    points = tuple(corners)
+    if not points or any(len(p) != 3 or not all(math.isfinite(v) for v in p) for p in points):
+        raise EnvelopeAuditHold("Empty or invalid envelope sample")
     return (
-        tuple(min(p[i] for p in corners) for i in range(3)),
-        tuple(max(p[i] for p in corners) for i in range(3)),
+        tuple(min(p[i] for p in points) for i in range(3)),
+        tuple(max(p[i] for p in points) for i in range(3)),
     )
 
 
