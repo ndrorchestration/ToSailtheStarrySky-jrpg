@@ -36,7 +36,7 @@ if ((Split-Path $RepoRoot -Leaf) -notin $AllowedReviewRoots) {
 }
 $ProjectDir = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $Project = Join-Path $ProjectDir 'ToSailTheStarrySky.uproject'
-$Verifier = Join-Path $PSScriptRoot 'verify_pr713_native_prelude_map.py'
+$Verifier = Join-Path $PSScriptRoot 'run_native_prelude_map_qa.py'
 $EditorCmd = Join-Path $EngineRoot 'Engine/Binaries/Win64/UnrealEditor-Cmd.exe'
 $VersionPath = Join-Path $EngineRoot 'Engine/Build/Build.version'
 $MapPath = Join-Path $ProjectDir 'Content/TSTSS/Review/FirstWake_PreludeInteraction_V2.umap'
