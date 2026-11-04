@@ -2,6 +2,10 @@
 #include "Engine/DataTable.h"
 #include "UObject/UObjectGlobals.h"
 #include "TSTSSJobClassSystem.h"
+#include "TSTSSJobSelectionReviewWidget.h"
+#include "Blueprint/WidgetTree.h"
+#include "Components/TextBlock.h"
+#include "Components/VerticalBox.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTSTSSJobTableReadbackTest,
@@ -136,6 +140,28 @@ bool FTSTSSJobTableReadbackTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("DesignOnly unlocked Scholar cannot be selected"),
         Preview[1].bPrimaryReviewSelectable || Preview[1].bSecondaryReviewSelectable);
 
+    // Real transient UMG objects, no saved widget blueprint or world actor.
+    UWidgetTree* ReviewTree = NewObject<UWidgetTree>(GetTransientPackage());
+    if (!TestTrue(TEXT("real transient UMG tree built from denied jobs"),
+        UTSTSSJobSelectionReviewWidget::TryPopulateReviewTree(*ReviewTree, Preview)))
+    {
+        return false;
+    }
+    UVerticalBox* DeniedRoot = Cast<UVerticalBox>(ReviewTree->RootWidget);
+    if (!TestNotNull(TEXT("UMG root is a real vertical panel"), DeniedRoot))
+    {
+        return false;
+    }
+    TestEqual(TEXT("header plus two real job labels"), DeniedRoot->GetChildrenCount(), 3);
+    UTextBlock* DeniedGuard = Cast<UTextBlock>(DeniedRoot->GetChildAt(1));
+    if (!TestNotNull(TEXT("locked Guard is an actual text widget"), DeniedGuard))
+    {
+        return false;
+    }
+    TestFalse(TEXT("locked Guard UMG label is disabled"), DeniedGuard->GetIsEnabled());
+    TestTrue(TEXT("explicit locked text is readable without relying on color"),
+        DeniedGuard->GetText().ToString().Contains(TEXT("LOCKED: NOT ADMITTED")));
+
     // ReviewSelectable is only a disposable test-fixture status.
     FTSTSSJobDefinitionRow SelectableScholar = Definitions.FindChecked(FName(TEXT("ReviewScholar")));
     FTSTSSJobDefinitionRow SelectableGuard = Definitions.FindChecked(FName(TEXT("ReviewGuard")));
@@ -159,6 +185,36 @@ bool FTSTSSJobTableReadbackTest::RunTest(const FString& Parameters)
         Preview[1].bSecondaryReviewSelectable);
     TestTrue(TEXT("menu projection never grants learned skills"),
         Ender.LearnedSkillIds.IsEmpty());
+
+    // Changing the review fixture redraws real UMG labels, not gameplay.
+    TestTrue(TEXT("UMG redraw accepts explicitly admitted review fixture"),
+        UTSTSSJobSelectionReviewWidget::TryPopulateReviewTree(*ReviewTree, Preview));
+    UVerticalBox* AdmittedRoot = Cast<UVerticalBox>(ReviewTree->RootWidget);
+    if (!TestNotNull(TEXT("admitted UMG panel is present"), AdmittedRoot))
+    {
+        return false;
+    }
+    UTextBlock* EnabledGuard = Cast<UTextBlock>(AdmittedRoot->GetChildAt(1));
+    UTextBlock* EnabledScholar = Cast<UTextBlock>(AdmittedRoot->GetChildAt(2));
+    if (!TestNotNull(TEXT("Guard review label exists"), EnabledGuard)
+        || !TestNotNull(TEXT("Scholar review label exists"), EnabledScholar))
+    {
+        return false;
+    }
+    TestTrue(TEXT("admitted review Guard label is enabled"), EnabledGuard->GetIsEnabled());
+    TestTrue(TEXT("admitted Guard label names both review slots"),
+        EnabledGuard->GetText().ToString().Contains(TEXT("SECONDARY REVIEW")));
+    TestTrue(TEXT("admitted Scholar primary review label enabled"),
+        EnabledScholar->GetIsEnabled());
+    TestTrue(TEXT("scholar duplicate secondary visibly unavailable"),
+        EnabledScholar->GetText().ToString().Contains(TEXT("SECONDARY UNAVAILABLE")));
+    UWidget* SavedRoot = ReviewTree->RootWidget;
+    TArray<FTSTSSJobSelectionPreviewRow> InvalidRows = Preview;
+    InvalidRows[1].JobId = InvalidRows[0].JobId;
+    TestFalse(TEXT("duplicate UMG row IDs reject entire widget redraw"),
+        UTSTSSJobSelectionReviewWidget::TryPopulateReviewTree(*ReviewTree, InvalidRows));
+    TestTrue(TEXT("invalid UMG data leaves previously valid root intact"),
+        ReviewTree->RootWidget == SavedRoot);
 
     FTSTSSJobLoadoutState InvalidIdentity = Ender;
     InvalidIdentity.CharacterId = TEXT("UnknownSixth");
