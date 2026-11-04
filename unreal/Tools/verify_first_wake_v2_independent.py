@@ -35,7 +35,12 @@ EXPECTED_MAPPINGS = {
     ("Turn", "MouseX", "1.000000"),
     ("LookUp", "MouseY", "-1.000000"),
 }
-EXPECTED_ACTIONS = {"Interact": "E", "QuickSave": "F5", "QuickLoad": "F9"}
+EXPECTED_ACTIONS = {
+    "Interact": "E",
+    "QuickSave": "F5",           # Non-PIE Game world only
+    "PIEReviewQuickSave": "F6",  # Isolated Editor review; never binds F5
+    "QuickLoad": "F9",
+}
 
 
 def project_guard(project_directory: str) -> Path:
@@ -80,6 +85,21 @@ def inspect_input_source(project: Path) -> dict:
                         "TSTSSInteractionReach::IsInsidePlayerReach" in cpp)
     if "LineTraceSingleByChannel" not in cpp or not pawn_range_check:
         raise RuntimeError("Pawn interaction trace or world-distance gate absent")
+    # PIE explicitly binds a distinct F6 action; preserve normal Game F5.
+    # Checking mere declaration of two mappings would NOT prevent a hidden
+    # F5 binding inside PIE, so guard the actual world-type branch.
+    expected_pie = (
+        'if (InputWorld && InputWorld->WorldType == EWorldType::PIE)',
+        'BindAction(TEXT("PIEReviewQuickSave"), IE_Pressed',
+        'else if (InputWorld && InputWorld->WorldType == EWorldType::Game)',
+        'BindAction(TEXT("QuickSave"), IE_Pressed',
+    )
+    if not all(token in cpp for token in expected_pie):
+        raise RuntimeError("F6 PIE-only action / F5 Game-only binding missing")
+    if cpp.count('BindAction(TEXT("QuickSave"), IE_Pressed') != 1 or (
+            cpp.count('BindAction(TEXT("PIEReviewQuickSave"), IE_Pressed') != 1):
+        raise RuntimeError("Duplicate or missing QuickSave action binding")
+
     # Native input must isolate PIE saves from the normal player slot.
     for contract in (
         'SaveFirstWake(Slot)', 'LoadFirstWake(Slot)',
@@ -90,7 +110,7 @@ def inspect_input_source(project: Path) -> dict:
         'ShowFirstWakeReviewProtectedSlotWarning(true)',
     ):
         if contract not in cpp:
-            raise RuntimeError("F5/F9 review slot safety contract drift: " + contract)
+            raise RuntimeError("F6/F9 PIE review slot safety contract drift: " + contract)
     return {"config_mapping_count": len(EXPECTED_MAPPINGS) + len(EXPECTED_ACTIONS),
             "source_handlers_verified": True, "player_keyboard_input_executed": False}
 
