@@ -1,0 +1,110 @@
+{
+  "status": "STATIC_3D_SEALED_GOGGLES_V2_SOURCE_VALIDATED_NONCANONICAL",
+  "glb": "C:\\Users\\Admin\\work\\TSTSS-V5-FaceAuthorityReview-20261103\\V2_Sealed_Goggles_Output\\Ender_Sealed_Aviator_Goggles_V2_NONCANONICAL.glb",
+  "glb_sha256": "5b1b5c5ac0b1be754d9e19b3bd9cec293c819259d18b39e8ad8f56228d22b5cb",
+  "glb_bytes": 1412976,
+  "source_script_sha256": "735af292c3f69d093cc59815a0fdcc2757783b372c19bd4d469b69743fd07489",
+  "material_count": 11,
+  "material_names": [
+    "AgedBrass",
+    "BrushedGold",
+    "PatinatedBronze",
+    "DarkLeather",
+    "LeatherEdge",
+    "ElastomerSeal",
+    "EmeraldGlass",
+    "TurquoiseAccent",
+    "DarkIron",
+    "WaxedFabric",
+    "Stitching"
+  ],
+  "material_primitives": 11,
+  "triangle_count": 57288,
+  "vertices": 29792,
+  "bounds_min_m": [
+    -0.09600000083446503,
+    -0.14346012473106384,
+    -0.0340999998152256
+  ],
+  "bounds_max_m": [
+    0.09600000083446503,
+    0.048250000923871994,
+    0.04610000178217888
+  ],
+  "extents_cm": [
+    19.2,
+    19.171,
+    8.02
+  ],
+  "mesh_count": 1,
+  "rigged": false,
+  "metahuman_fitted": false,
+  "native_unreal_import_verified": false,
+  "native_unreal_render_verified": false,
+  "approved_as_canonical": false,
+  "design_differences_from_v1": [
+    "deep enclosed 5+cm eyecup barrels",
+    "continuous wide rear elastic headband",
+    "padded face seals",
+    "opaque side wind guards",
+    "convex genuine lens surfaces",
+    "no spectacle temple arms"
+  ],
+  "components_by_material": {
+    "AgedBrass": {
+      "parts": 40,
+      "vertices": 3192,
+      "triangles": 5912
+    },
+    "BrushedGold": {
+      "parts": 32,
+      "vertices": 3284,
+      "triangles": 6448
+    },
+    "PatinatedBronze": {
+      "parts": 10,
+      "vertices": 7692,
+      "triangles": 15376
+    },
+    "DarkLeather": {
+      "parts": 5,
+      "vertices": 1144,
+      "triangles": 1956
+    },
+    "LeatherEdge": {
+      "parts": 4,
+      "vertices": 1936,
+      "triangles": 3864
+    },
+    "ElastomerSeal": {
+      "parts": 4,
+      "vertices": 2720,
+      "triangles": 5120
+    },
+    "EmeraldGlass": {
+      "parts": 2,
+      "vertices": 4800,
+      "triangles": 9280
+    },
+    "TurquoiseAccent": {
+      "parts": 2,
+      "vertices": 1920,
+      "triangles": 3840
+    },
+    "DarkIron": {
+      "parts": 10,
+      "vertices": 148,
+      "triangles": 256
+    },
+    "WaxedFabric": {
+      "parts": 1,
+      "vertices": 304,
+      "triangles": 604
+    },
+    "Stitching": {
+      "parts": 168,
+      "vertices": 2652,
+      "triangles": 4632
+    }
+  }
+}
