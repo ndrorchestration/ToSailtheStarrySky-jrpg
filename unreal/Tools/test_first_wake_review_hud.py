@@ -41,11 +41,13 @@ class ObjectiveHudContracts(unittest.TestCase):
         self.assertIn('virtual void DrawHUD() override;', self.header)
         self.assertIn('UCLASS(NotBlueprintable)', self.header)
 
-    def test_stays_engine_only_without_umg_or_plugin_change(self):
+    def test_canvas_hud_stays_independent_of_class_umg(self):
         module = MODULE.read_text(encoding="utf-8")
         self.assertIn('"Engine", "InputCore"', module)
-        for dependency in ('"UMG"', '"Slate"', '"SlateCore"'):
+        for dependency in ('"Slate"', '"SlateCore"'):
             self.assertNotIn(dependency, module)
+        self.assertNotIn('Blueprint/UserWidget.h', self.hud)
+        self.assertNotIn('TSTSSJobSelectionReviewWidget', self.hud)
         self.assertIn('#include "Engine/Canvas.h"', self.hud)
 
     def test_review_ui_no_false_stage_or_shipping_claims(self):

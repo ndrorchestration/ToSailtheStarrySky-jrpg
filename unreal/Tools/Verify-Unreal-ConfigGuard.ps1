@@ -44,7 +44,7 @@ try {
         (Get-Item -LiteralPath $Guard.Path).IsReadOnly = $true
     }
     # The canonical verifier still checks exact HEAD, clean Git tree,
-    # native build, 25 required test identities and per-test JSON success.
+    # native build, 29 required test identities and per-test JSON success.
     & $Verifier -EngineRoot $EngineRoot
     $VerifyExit = $LASTEXITCODE
 }

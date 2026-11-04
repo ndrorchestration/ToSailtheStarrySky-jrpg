@@ -97,7 +97,7 @@ $ExportArgument = '-ReportExportPath=' + $ReportDirectory
 if ($LASTEXITCODE -ne 0) { throw "Unreal automation command failed ($LASTEXITCODE)" }
 $ReportPath = Join-Path $Evidence 'AutomationReport/index.json'
 if (-not (Test-Path $ReportPath)) { throw 'No automation JSON evidence; refusing to mark PASS' }
-# Keep the 26-name registry local; a separate read-only PowerShell function
+# Keep the 29-name registry local; a separate read-only PowerShell function
 # checks that JSON summary and distinct per-test paths genuinely agree.
 $RequiredTests = @(
     'TSTSS.Combat.TransactionalActions',

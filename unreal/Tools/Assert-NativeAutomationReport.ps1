@@ -7,8 +7,8 @@ function Assert-TSTSSNativeAutomationReport {
         [Parameter(Mandatory=$true)][string]$ReportPath,
         [Parameter(Mandatory=$true)][string[]]$RequiredTests
     )
-    if ($RequiredTests.Count -ne 26 -or @($RequiredTests | Select-Object -Unique).Count -ne 26) {
-        throw "Expected exactly 26 unique required native test names"
+    if ($RequiredTests.Count -ne 29 -or @($RequiredTests | Select-Object -Unique).Count -ne 29) {
+        throw "Expected exactly 29 unique required native test names"
     }
     if (-not (Test-Path -LiteralPath $ReportPath -PathType Leaf)) {
         throw "No automation JSON evidence; refusing to mark PASS"
