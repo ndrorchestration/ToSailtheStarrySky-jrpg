@@ -77,6 +77,9 @@ def inspect_png_pixels(raw, dimensions=EXPECTED_DIMENSIONS):
     channel_values = set()
     valid_samples = 0
     sample_count = 0
+    deep_black_samples = 0
+    clipped_bright_samples = 0
+    luma_sum = 0
     for row in range(height):
         offset = row * (stride + 1)
         filter_type = decoded[offset]
@@ -104,6 +107,11 @@ def inspect_png_pixels(raw, dimensions=EXPECTED_DIMENSIONS):
             hist.add(luminance)
             channel_values.add((r // 8, g // 8, b // 8))
             sample_count += 1
+            luma_sum += luminance
+            if luminance < 12:
+                deep_black_samples += 1
+            if luminance > 245:
+                clipped_bright_samples += 1
             if 4 < luminance < 250:
                 valid_samples += 1
     if not sample_count or len(hist) < 12 or max(hist) - min(hist) < 20:
@@ -114,5 +122,13 @@ def inspect_png_pixels(raw, dimensions=EXPECTED_DIMENSIONS):
             'sample_count': sample_count, 'distinct_luma_values': len(hist),
             'luma_min': min(hist), 'luma_max': max(hist),
             'visible_sample_fraction': round(valid_samples / sample_count, 5),
+            'deep_black_fraction_below_12': round(deep_black_samples / sample_count, 5),
+            'clipped_white_fraction_above_245': round(clipped_bright_samples / sample_count, 5),
+            'mean_sampled_luminance': round(luma_sum / sample_count, 3),
+            # Advisory, not technical failure: a black night/space backdrop may be intentional.
+            # For Skybourne's intended atmospheric hero shot, a dark majority requires
+            # explicit creator/visual-review disposition under RCV-05.
+            'atmosphere_review_flag': ('DARK_MAJORITY_REVIEW_REQUIRED'
+                 if deep_black_samples / sample_count >= 0.6 else 'NO_DARK_MAJORITY_FLAG'),
             'color_sample_buckets': len(channel_values),
             'art_approved': False, 'contrast_review_pending': True}
