@@ -1,0 +1,64 @@
+{
+  "status": "NATIVE_REAL_PNG_FIXED_ROI_COMPARISON_REVIEW_ONLY",
+  "method": "fixed rectangular RGB regions; no perceptual or physically based renderer validation",
+  "baseline": {
+    "goggles_roi": {
+      "mean_rgb": [
+        100.4000015258789,
+        99.69999694824219,
+        89.5999984741211
+      ],
+      "near_white_fraction": 0.07896,
+      "near_black_fraction": 0.46257,
+      "luminance_95th": 252.3
+    },
+    "face_roi": {
+      "mean_rgb": [
+        217.89999389648438,
+        217.8000030517578,
+        217.8000030517578
+      ],
+      "near_white_fraction": 0.72298,
+      "near_black_fraction": 0.11633,
+      "luminance_95th": 255
+    },
+    "file_sha256": "d31617394f29205c5dd5757d7c23e16663bffe0a0d3e0116c63db5223f01f5fc",
+    "size": [
+      480,
+      320
+    ]
+  },
+  "low_light": {
+    "goggles_roi": {
+      "mean_rgb": [
+        45.099998474121094,
+        45.5,
+        34.29999923706055
+      ],
+      "near_white_fraction": 0.00097,
+      "near_black_fraction": 0.66337,
+      "luminance_95th": 178.7
+    },
+    "face_roi": {
+      "mean_rgb": [
+        149.1999969482422,
+        148.39999389648438,
+        147.89999389648438
+      ],
+      "near_white_fraction": 0,
+      "near_black_fraction": 0.13571,
+      "luminance_95th": 207
+    },
+    "file_sha256": "3c546fd737a236f969b2cf98574d7acf4ed9290cc826101a51b870b2e6346fa8",
+    "size": [
+      480,
+      320
+    ]
+  },
+  "goggles_near_white_drop_percentage_points": 7.8,
+  "face_near_white_drop_percentage_points": 72.3,
+  "camera_assumed_same": true,
+  "human_artist_material_approval": false,
+  "goggles_fit_verified": false,
+  "metahuman_material_quality_approved": false
+}
