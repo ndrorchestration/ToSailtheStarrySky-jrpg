@@ -13,6 +13,9 @@ on:
       - 'unreal/Tools/audit_aureate_v4_four_native_maps_readonly.py'
       - 'unreal/Tools/run_aureate_v4_four_map_native_readonly_audit.py'
       - 'unreal/Tools/aureate_v4_coupled_habitation_math.py'
+      - 'unreal/Tools/audit_aureate_v4_habitation_envelopes.py'
+      - 'unreal/Tests/test_aureate_v4_habitation_clearance_envelopes.py'
+      - 'unreal/Docs/AUREATE_V4_HABITATION_WING_ENVELOPE_GATE_2026_11_04.md'
       - 'unreal/Tools/stage_aureate_v4_coupled_habitation_native_pilot.py'
       - 'unreal/Tools/run_aureate_v4_coupled_habitation_native_pilot.py'
       - 'unreal/Tests/test_aureate_v4_four_native_map_audit_source.py'
@@ -64,6 +67,7 @@ jobs:
           python -m unittest discover -s unreal/Tests -p 'test_aureate_v4_four_native_map_audit_source.py' -v
           python -m unittest discover -s unreal/Tests -p 'test_aureate_v4_coupled_habitation_math.py' -v
           python -m unittest discover -s unreal/Tests -p 'test_aureate_v4_coupled_habitation_native_source.py' -v
+          python -m unittest discover -s unreal/Tests -p 'test_aureate_v4_habitation_clearance_envelopes.py' -v
       - name: Deterministically build verify and preflight candidates
         shell: bash
         run: |
