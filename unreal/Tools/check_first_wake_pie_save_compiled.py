@@ -47,11 +47,23 @@ void ShowFirstWakeReviewSaveLoadStatus(bool isLoad, bool succeeded) {
     lastStatus = (isLoad ? 2 : 0) + (succeeded ? 1 : 0);
 }
 struct UTSTSSFirstWakeState {};
+namespace EKeys { static constexpr int LeftShift = 1; static constexpr int RightShift = 2; }
+struct APlayerController {
+    bool leftShift = false;
+    bool rightShift = false;
+    bool IsInputKeyDown(int key) const {
+        return key == EKeys::LeftShift ? leftShift : (key == EKeys::RightShift && rightShift);
+    }
+};
+template <typename T> T* Cast(APlayerController* p) { return static_cast<T*>(p); }
 void ShowFirstWakeReviewObjective(UTSTSSFirstWakeState*) {
     ++objectivesDisplayed;
 }
 struct ATSTSSExplorerCharacter {
     UWorld* world = nullptr;
+    APlayerController controller;
+    bool bHasController = true;
+    APlayerController* GetController() { return bHasController ? &controller : nullptr; }
     bool bPIEReviewQuickSlotOwned = false;
     bool bSaveSuccess = true;
     bool bLoadSuccess = true;
@@ -98,6 +110,30 @@ int main() {
         noSave.QuickLoad();
         check(noSave.loads == 0 && protectedLoadWarnings == 1,
               "Unowned PIE quickload was not refused");
+
+        ATSTSSExplorerCharacter shiftStopLeft;
+        shiftStopLeft.world = &pie;
+        shiftStopLeft.controller.leftShift = true;
+        shiftStopLeft.QuickSave();
+        check(shiftStopLeft.saves == 0 && !shiftStopLeft.bPIEReviewQuickSlotOwned &&
+                  !UGameplayStatics::DoesSaveGameExist(reviewSlot, 0),
+              "Shift+F5 Stop PIE unexpectedly created a quicksave");
+
+        ATSTSSExplorerCharacter shiftStopRight;
+        shiftStopRight.world = &pie;
+        shiftStopRight.controller.rightShift = true;
+        shiftStopRight.QuickSave();
+        check(shiftStopRight.saves == 0 &&
+                  !UGameplayStatics::DoesSaveGameExist(reviewSlot, 0),
+              "RightShift+F5 unexpectedly created a quicksave");
+
+        ATSTSSExplorerCharacter unpossessed;
+        unpossessed.world = &pie;
+        unpossessed.bHasController = false;
+        unpossessed.QuickSave();
+        check(unpossessed.saves == 0 &&
+                  !UGameplayStatics::DoesSaveGameExist(reviewSlot, 0),
+              "Unpossessed PIE character unexpectedly saved");
 
         UGameplayStatics::Slots[reviewSlot] = 777;
         ATSTSSExplorerCharacter oldSession;
@@ -189,7 +225,9 @@ def extract_methods(code: str) -> str:
     if not (start < load < end):
         raise ValueError("F5/F9 handler order changed")
     for token in ("EWorldType::PIE", "tstss_prelude_pie_quick",
-                  "bPIEReviewQuickSlotOwned",
+                  "bPIEReviewQuickSlotOwned", "GetController()",
+                  "PC->IsInputKeyDown(EKeys::LeftShift)",
+                  "PC->IsInputKeyDown(EKeys::RightShift)",
                   "UGameplayStatics::DoesSaveGameExist"):
         if token not in method_code:
             raise ValueError("PIE safety logic missing: " + token)
@@ -234,6 +272,15 @@ def main() -> int:
         if rejected.returncode == 0 or "HANDLER_BEHAVIOR_FAILURE" not in rejected.stderr:
             raise RuntimeError("Probe failed to reject intentionally unsafe PIE overwrite")
         print("PASS: unsafe pre-existing-slot overwrite mutation detected")
+        for pressed_modifier in ("EKeys::LeftShift", "EKeys::RightShift"):
+            anchor = f"PC->IsInputKeyDown({pressed_modifier})"
+            if methods.count(anchor) != 1:
+                raise RuntimeError("PIE Stop shortcut mutation anchor missing: " + anchor)
+            changed = methods.replace(anchor, "false", 1)
+            unsafe = compiled_run(compiler, changed)
+            if unsafe.returncode == 0 or "HANDLER_BEHAVIOR_FAILURE" not in unsafe.stderr:
+                raise RuntimeError("Shift+F5 safety mutation was not caught: " + anchor)
+            print(f"PASS: Shift+F5 save guard mutation rejected ({pressed_modifier})")
     print("Only exact C++ method bodies tested with stand-ins; Unreal Editor and PIE unverified.")
     return 0
 
