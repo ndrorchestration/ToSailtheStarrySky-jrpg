@@ -119,6 +119,14 @@ jobs:
           python3 -m py_compile unreal/ArtSource/Characters/Accessories/V2Sealed/native_rt_v2_lower_forehead_front.py
           python3 -m py_compile unreal/ArtSource/Characters/Accessories/V2Sealed/native_rt_v2_threequarter.py
 
+      - name: Verify V2 native low-light and rear-strap evidence without fit promotion (engine-free)
+        run: |
+          python3 -m unittest discover -s unreal/ArtSource/Characters/Accessories/V2Sealed/ReviewEvidence -p test_v2_lighting_rearside_receipts.py -v
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/V2Sealed/ReviewEvidence/native_rt_v2_rearside_lights_tenth05.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/V2Sealed/ReviewEvidence/build_v2_native_lighting_strap_montage.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/V2Sealed/ReviewEvidence/v2_native_exposure_metrics.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/V2Sealed/ReviewEvidence/inspect_v2_glb_material_inventory.py
+
       - name: Regenerate source assets and confirm exact bytes
         env:
           TSTSS_CAST_OUTPUT: unreal/ArtSource/Characters/Candidates
