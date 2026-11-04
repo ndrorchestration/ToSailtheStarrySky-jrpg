@@ -178,3 +178,8 @@ jobs:
             'unreal/Tools/Start-FirstWakeAssetReview.ps1', [ref]$tokens, [ref]$errors
           ) | Out-Null
           if ($errors.Count -gt 0) { throw "Asset review launcher PowerShell parse failed: $($errors -join '; ')" }
+
+      - name: Guard Ionia footing V4 independent map replay (source-only, no native/art claim)
+        run: |
+          python3 -m unittest discover -s unreal/Tools -p 'test_ionia_footing_v4_native_source.py' -v
+          python3 -m py_compile unreal/Tools/stage_firstwake_ionia_footing_v4.py unreal/Tools/verify_firstwake_ionia_footing_v4.py
