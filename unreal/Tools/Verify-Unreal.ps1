@@ -119,6 +119,7 @@ $RequiredTests = @(
     'TSTSS.CombatIntegration.DesignOnlyTurnManagerDenial',
     'TSTSS.FirstWake.InteractionCameraBoomReach',
     'TSTSS.FirstWake.ReviewObjectivesAreReadOnly',
+    'TSTSS.CombatIntegration.EnderGearSpellBattleReview',
     'TSTSS.Combat.EncounterCompletion',
     'TSTSS.FirstWake.RequiresOrderedMilestones',
     'TSTSS.FirstWake.InteractionToSplashdown',
