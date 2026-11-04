@@ -39,3 +39,12 @@ Five Lights and character ranks stay canon; test fixture numbers/jobs are not ne
 Source suite: 218/218 Python tests, 29 registered native identities, and 16/16 synthetic report fixtures passed during assembly. Native result must be read from the exact-head receipt; source tests alone prove neither PIE nor cinematic approval.
 
 Initial combined native verification at ca653c16b980583b689042665798b1433a55299d: UE 5.8.4 Editor build and strict native verifier PASS, exit 0. Final source housekeeping/doc head is verified separately; see its Saved/MigrationEvidence exact-head report.
+
+## First Wake review entrypoint
+`unreal/Tools/Start-FirstWakeReview.ps1 -EngineRoot "C:\Program Files\Epic Games\UE_5.8" -ExpectedHead <full-SHA>` performs preflight only. Add `-OpenEditor` to open the explicit V2 Prelude map with D3D11; click Play in Editor to use WASD/mouse, E interaction, J objective, F5/F9 story-only review save/load. This is an Editor review path, not a packaged game launcher.
+
+Requires current clean source, unchanged V2 map, exact-head 29-test native report, strict native map admission, no existing saves, no other Editor/Live Coding and sufficient RAM. It protects both tracked configs for the Editor lifetime and restores their writable attributes when the Editor closes; keep the launcher terminal running until then. Never save over the tracked map. Existing review saves cause refusal on subsequent launches rather than deletion or silent overwrite.
+
+The native map checker and its launcher now explicitly admit this named game-assembly checkout in addition to the two historical QA roots. Exact SHA, map digest, source cleanliness, save exclusion and every native receipt check remain required.
+
+The V2 map has seven interactive milestones ending at engineering signoff. Opening it is not evidence of launch, real water/Splashdown, combat UI or cinematic completion. Real human input and visual acceptance remain separate from commandlet map-actor verification.

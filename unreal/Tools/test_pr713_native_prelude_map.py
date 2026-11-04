@@ -65,7 +65,7 @@ class NativeMapSourceGateTests(unittest.TestCase):
         self.assertEqual(qa.EXPECTED_PARENT, "TSTSS_PR713_NativeMapQA_20261102")
         self.assertEqual(qa.JOINED_EXPECTED_PARENT, "TSTSS_PR735_NativeMapQA_20261103")
         self.assertEqual(qa.ALLOWED_PARENTS,
-                         {qa.EXPECTED_PARENT, qa.JOINED_EXPECTED_PARENT})
+                         {qa.EXPECTED_PARENT, qa.JOINED_EXPECTED_PARENT, qa.ASSEMBLY_EXPECTED_PARENT})
         self.assertEqual(qa.LABEL_PREFIX, "TSTSS_PRELUDE_REVIEW_")
 
     def test_bad_checkout_and_wrong_commit_fail_closed_before_ue(self):

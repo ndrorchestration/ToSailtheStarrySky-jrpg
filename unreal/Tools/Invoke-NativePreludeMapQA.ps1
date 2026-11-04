@@ -27,9 +27,9 @@ function Get-TSTSSSha256 {
     }
 }
 
-# Only two explicitly named, disposable worktrees are authorized: the original
-# PR713 review and the joined PR735 lane. Do not accept arbitrary project paths.
-$AllowedReviewRoots = @('TSTSS_PR713_NativeMapQA_20261102', 'TSTSS_PR735_NativeMapQA_20261103')
+# Only explicitly named, disposable worktrees are authorized: the original
+# PR713, joined PR735, and combined game assembly. No arbitrary project paths.
+$AllowedReviewRoots = @('TSTSS_PR713_NativeMapQA_20261102', 'TSTSS_PR735_NativeMapQA_20261103', 'TSTSS_GameAssembly_20261104')
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 if ((Split-Path $RepoRoot -Leaf) -notin $AllowedReviewRoots) {
     throw 'HOLD: not an explicitly named disposable PR713 or PR735 native-map worktree'
