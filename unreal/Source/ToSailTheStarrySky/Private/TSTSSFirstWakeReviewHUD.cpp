@@ -67,5 +67,22 @@ void ATSTSSFirstWakeReviewHUD::DrawHUD()
                       : TEXT("Review only: no launch, water landing, or Chapter 1 progression authorized"),
              FLinearColor(0.96f, 0.77f, 0.45f, 1.f),
              Margin + 16.f, Margin + 109.f, GEngine->GetSmallFont(), bCompact ? 0.72f : 0.75f);
+
+    // Context cue uses the same visibility trace and pawn-centered range as E.
+    // This is deliberately an "attempt", not a promise of story progression.
+    if (Canvas->ClipY >= 280.f)
+    {
+        const FString FocusHint = Explorer->GetFocusedReviewInteractionHint();
+        if (!FocusHint.IsEmpty())
+        {
+            const float HintWidth = FMath::Min(PanelWidth, 440.f);
+            const float HintX = (Canvas->ClipX - HintWidth) * 0.5f;
+            const float HintY = Canvas->ClipY - 64.f;
+            DrawRect(FLinearColor(0.012f, 0.024f, 0.035f, 0.86f),
+                     HintX, HintY, HintWidth, 42.f);
+            DrawText(FocusHint, FLinearColor::White,
+                     HintX + 16.f, HintY + 11.f, GEngine->GetSmallFont(), 0.95f);
+        }
+    }
 #endif
 }
