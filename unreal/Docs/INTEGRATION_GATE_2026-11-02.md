@@ -371,3 +371,36 @@ native Win64 UE5.8.4 build and real Prelude PIE screenshot/interaction
 matrix after the machine becomes voluntarily idle. No SaveGames,
 mainline actors, engine/plugin versions, approved art, or Starbourne
 permissions changed.
+
+
+## November 3 — contextual read-only E focus cue
+
+A reversible First Wake gameplay-review improvement adds the
+`ATSTSSExplorerCharacter::GetFocusedReviewInteractionHint() const`
+read-only function and a contextual bottom-screen prompt in
+`ATSTSSFirstWakeReviewHUD`. It shares the same camera visibility
+line trace and pawn-centered 300 cm interaction reach checks as
+`Interact()`, but has **no `TryActivate`, beat advancement,
+SaveGame, physics, combat or party mutation**. The label
+explicitly says **attempt** because a valid target may still be
+locked by story order. The HUD suppresses the focus cue for
+no target, out-of-reach targets, invalid state, tiny viewports,
+Chapter 1 story state and shipping builds.
+
+Source-only verified at `9cb62bd1f6329c1fd996c6dc51c1d570bc832fef`:
+actual extracted C++ focus method against controlled API doubles
+compiled and passed **14/14 development and 2/2 shipping checks
+under installed Windows MSVC 2022**; actual C++ `DrawHUD()`
+passed **24/24 development and 1/1 shipping**. **7/7 Windows
+wiring/mutation checks** passed with a clean isolated Git tree,
+and all **4/4 hosted workflows** completed SUCCESS. No new
+engine/plugin versions, module dependencies, approved art, map
+asset, player save or Starbourne access.
+
+**Native hold:** Two Editor/Live Coding processes remained active
+and approximately 3.9 GB RAM was free in the last initial
+workstation check. No further UE 5.8.4 Win64 Editor build,
+native map admission, live prompt rendering or P01–P13 PIE pass
+is established at this newer head. The historical 25/25 native
+automation receipt remains source-locked to
+`52e13aedaa8bda900cece849b54eae570179c838`.
