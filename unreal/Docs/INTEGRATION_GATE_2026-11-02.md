@@ -340,3 +340,34 @@ build/rendering for the changed HUD and all P01–P13 PIE
 scenarios remain unverified.** The older actual 25/25 native
 automation run belongs to its own exact prior SHA, not the
 current HUD source. Do not merge/promote based on portable checks.
+
+
+## November 3 — native Windows MSVC source validation of exact review HUD method
+
+The actual non-shipping `ATSTSSFirstWakeReviewHUD::DrawHUD()`
+C++ body, previously compiled against in-memory Unreal API doubles
+on Linux GitHub CI, has now also been compiled with **installed
+Windows MSVC 2022 Build Tools (14.44)** from the dedicated clean
+review checkout. `unreal/Tools/check_first_wake_review_hud_msvc.py`
+uses a temporary batch launcher to initialize `vcvars64.bat`
+without changing PATH or installing software.
+
+**Exact checked source: `64387804fb40cde97d20bb68e033ec57bf5cbfd2`.**
+It passed **21/21** development-build C++ behavior assertions
+(read-only live objective, 0/3 → 2/3 → 3/3 inspection status,
+compact layout, null guards, Chapter 1 suppression), and
+**1/1** shipping-build assertion (no debug HUD). Git worktree
+remained clean. The initial script attempt failed to quote the
+Visual Studio path correctly and was fixed before this success.
+This evidence is **actual MSVC compilation** of the extracted
+production method **against API stand-ins**, not an Unreal
+Engine native build or pixel-level visual review.
+
+The installed Unreal Editor and Live Coding processes were still
+active with about 3.9 GB free RAM, and the Editor window was
+minimized. An unobstructed, valid visual screenshot was not
+captured; none is asserted. Next higher gate is a source-locked
+native Win64 UE5.8.4 build and real Prelude PIE screenshot/interaction
+matrix after the machine becomes voluntarily idle. No SaveGames,
+mainline actors, engine/plugin versions, approved art, or Starbourne
+permissions changed.
