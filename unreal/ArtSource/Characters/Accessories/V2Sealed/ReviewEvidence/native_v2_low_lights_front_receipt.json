@@ -1,0 +1,59 @@
+{
+  "canonical": false,
+  "captures": [
+    {
+      "crc_pass": true,
+      "image_size": [
+        480,
+        320
+      ],
+      "png_core_bytes": 118180,
+      "raw_bytes": 157982,
+      "sha256_png_core": "6ef2842848c21207cd17859341b015169e91d8929ea5c9f96a10f3f9aa5efbb2",
+      "sha256_raw": "3c546fd737a236f969b2cf98574d7acf4ed9290cc826101a51b870b2e6346fa8",
+      "trailing_bytes_after_iend": 39802
+    }
+  ],
+  "engine": "5.8.4-58902052+++UE5+Release-5.8",
+  "face_likeness_approved": false,
+  "goggles_fit_approved": false,
+  "goggles_position_relative_to_v5_cm": [
+    0,
+    9.5,
+    168.5
+  ],
+  "goggles_rotation_pitch_yaw_roll_deg": [
+    90,
+    180,
+    0
+  ],
+  "goggles_sha256_after": "5b1b5c5ac0b1be754d9e19b3bd9cec293c819259d18b39e8ad8f56228d22b5cb",
+  "goggles_world_xyz_extent_cm": [
+    19.2,
+    19.17101,
+    8.02
+  ],
+  "kind": "NONCANONICAL_TRANSIENT_V5_WITH_SEALED_AVIATOR_GOGGLES_V2",
+  "map_sha256_after": "025539f8717c6215a17dc8acff24ec7bd39b3d43129de4069a9418b3d8da3a2a",
+  "materials_artist_approved": false,
+  "meta_sha256_after": "2bb581a27aee55b0352f52227a3afe2c6d01a529b63c8dc661cbe8f4edbb2e3d",
+  "metahuman_skeletal_preview_components": [
+    "Body",
+    "Face"
+  ],
+  "method": "SceneCapture2D -> RenderingLibrary.export_render_target",
+  "native_preview_class": "MetaHumanDefaultEditorPipelineActor",
+  "native_rt_export_called": true,
+  "native_rt_initial_capture_queued": true,
+  "no_face_sculpt": true,
+  "original_art": false,
+  "production_game_modified": false,
+  "real_head_collision_verified": false,
+  "review_map_saved": false,
+  "rigging_verified": false,
+  "source_assets_saved": false,
+  "source_goggles_sha256": "5b1b5c5ac0b1be754d9e19b3bd9cec293c819259d18b39e8ad8f56228d22b5cb",
+  "source_map_sha256": "025539f8717c6215a17dc8acff24ec7bd39b3d43129de4069a9418b3d8da3a2a",
+  "source_meta_sha256": "2bb581a27aee55b0352f52227a3afe2c6d01a529b63c8dc661cbe8f4edbb2e3d",
+  "status": "NATIVE_V2_TENTH_LIGHT_PNG_CORE_PASS_VISUAL_UNREVIEWED"
+}
