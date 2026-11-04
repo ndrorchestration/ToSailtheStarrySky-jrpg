@@ -1,0 +1,30 @@
+{
+  "status": "NATIVE_3_IMAGE_MONTAGE_VERIFIED_NONCANONICAL",
+  "sha256": "5819d9e1bf267ed5849d96088c845bae1f1f465282cd17357a28128581947d7c",
+  "output_bytes": 13276,
+  "original_pixel_data_modified": false,
+  "review_images_resized": true,
+  "materials_approved": false,
+  "fit_verified": false,
+  "game_assets_modified": false,
+  "sources": [
+    {
+      "folder": "RenderTargetV2LowerForehead02",
+      "filename": "ender_v5_sealed_aviator_goggles_v2_lower_front.png",
+      "native_raw_sha256": "d31617394f29205c5dd5757d7c23e16663bffe0a0d3e0116c63db5223f01f5fc",
+      "native_core_sha256": "dc9116e68a5404ebb4b377b78f443a902a5a4521734ad5533e94793e104fc709"
+    },
+    {
+      "folder": "RenderTargetV2LowerForehead04_LightsTenth",
+      "filename": "ender_v5_sealed_aviator_goggles_v2_lower_front.png",
+      "native_raw_sha256": "3c546fd737a236f969b2cf98574d7acf4ed9290cc826101a51b870b2e6346fa8",
+      "native_core_sha256": "6ef2842848c21207cd17859341b015169e91d8929ea5c9f96a10f3f9aa5efbb2"
+    },
+    {
+      "folder": "RenderTargetV2RearSide05_LightsTenth",
+      "filename": "ender_v5_sealed_goggles_v2_rearside.png",
+      "native_raw_sha256": "f48509c14a4493251c5d8996c1f1e41c284d1fc35cfdb03dade8ea62d8f3bf1b",
+      "native_core_sha256": "3876c933e281831417613a3ced8d24beb1527c593b28170efc4cd06d74fc7c60"
+    }
+  ]
+}
