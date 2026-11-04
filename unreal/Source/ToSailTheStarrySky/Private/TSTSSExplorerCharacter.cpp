@@ -178,6 +178,53 @@ void ATSTSSExplorerCharacter::Interact()
     }
 }
 
+
+FString ATSTSSExplorerCharacter::GetFocusedReviewInteractionHint() const
+{
+#if !UE_BUILD_SHIPPING
+    // Aimed-and-reachable feedback only: the same camera ray and pawn-centered
+    // 300cm reach logic used for E. Never calls TryActivate or mutates a save.
+    if (!FirstWakeState || !FollowCamera || !GetWorld() ||
+        FirstWakeState->IsChapterOneActOne())
+    {
+        return FString();
+    }
+    const FVector CameraLocation = FollowCamera->GetComponentLocation();
+    const FVector PawnLocation = GetActorLocation();
+    const float TraceLength =
+        TSTSSInteractionReach::GetCameraTraceLength(
+            CameraLocation, PawnLocation, InteractionDistance);
+    if (TraceLength <= 0.f)
+    {
+        return FString();
+    }
+
+    const FVector End = CameraLocation + FollowCamera->GetForwardVector() * TraceLength;
+    FHitResult Hit;
+    FCollisionQueryParams Query(SCENE_QUERY_STAT(TSTSSReviewFocus), false, this);
+    if (!GetWorld()->LineTraceSingleByChannel(
+            Hit, CameraLocation, End, ECC_Visibility, Query))
+    {
+        return FString();
+    }
+    const ATSTSSMilestoneActor* Milestone =
+        Cast<ATSTSSMilestoneActor>(Hit.GetActor());
+    if (!IsValid(Milestone) ||
+        !TSTSSInteractionReach::IsInsidePlayerReach(
+            PawnLocation, Hit.ImpactPoint, InteractionDistance))
+    {
+        return FString();
+    }
+    // "Attempt" is intentional: E may still be denied by the independent
+    // ordered-story/inspection gate. Do not report a successful interaction.
+    return Milestone->bIsInspectionStation
+        ? TEXT("E: attempt engineering inspection")
+        : TEXT("E: attempt milestone interaction");
+#else
+    return FString();
+#endif
+}
+
 void ATSTSSExplorerCharacter::ShowObjectiveReview()
 {
     // Read-only recall of the existing short-lived objective cue.
