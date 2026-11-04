@@ -68,6 +68,7 @@ $RequiredTests = @(
     'TSTSS.Design.HybridCharacterJobs',
     'TSTSS.Design.HybridJobTableReadback',
     'TSTSS.CombatIntegration.DesignOnlyTurnManagerDenial',
+    'TSTSS.CombatIntegration.EnderGearSpellBattleReview',
     'TSTSS.Combat.EncounterCompletion',
     'TSTSS.FirstWake.RequiresOrderedMilestones',
     'TSTSS.FirstWake.WaterLandingRequiresMeasuredStability',
