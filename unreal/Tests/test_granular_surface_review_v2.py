@@ -72,6 +72,13 @@ class GranularReviewSourceTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError,"failed"):
             self.m.require_compilation(["unexpected compile error"])
 
+    def test_mask_connects_with_documented_first_input_semantics(self):
+        # Epic UE5.8: empty target-input name chooses the first pin.
+        source=PATH.read_text(encoding="utf8")
+        self.assertIn('edit.connect_material_expressions(color,"",rgb,"")',source)
+        self.assertIn('edit.connect_material_expressions(color,"",rough,"")',source)
+        self.assertNotIn('edit.connect_material_expressions(color,"",rgb,"Input")',source)
+
     def test_no_fake_native_unreal_available_outside_editor(self):
         with self.assertRaisesRegex(RuntimeError,"Unreal Engine Editor"):
             self.m.build()

@@ -188,8 +188,10 @@ def create_surface(u, mode, name):
     feed(color,("UV","Mode","Tiling","Crust"))
     rgb=node("ComponentMask",r=True,g=True,b=True,a=False)
     rough=node("ComponentMask",r=False,g=False,b=False,a=True)
-    require_connection(edit.connect_material_expressions(color,"",rgb,"Input"),"color")
-    require_connection(edit.connect_material_expressions(color,"",rough,"Input"),"roughness")
+    # UE MaterialEditingLibrary treats an empty input name as the first pin.
+    # Do not assume a translated/variant ComponentMask pin is named 'Input'.
+    require_connection(edit.connect_material_expressions(color,"",rgb,""),"color")
+    require_connection(edit.connect_material_expressions(color,"",rough,""),"roughness")
     require_connection(
         edit.connect_material_property(rgb,"",u.MaterialProperty.MP_BASE_COLOR),
         "base color")
