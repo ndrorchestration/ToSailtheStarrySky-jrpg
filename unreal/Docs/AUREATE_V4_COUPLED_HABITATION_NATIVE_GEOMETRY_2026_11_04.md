@@ -1,4 +1,29 @@
 # Aureate Wake V4 — coupled geodesic bridge and curved quarters native lookdev
+## November 4 — two verified native bridge-camera diagnostics (LATEST)
+
+After the full-scene Automation13, two **additional** registered UE5.8.4 D3D11 `Editor.Python` tests captured new 1280×720 frames from the **same unchanged** noncanonical coupled-habitation Skybourne review map.
+
+| Evidence | Automation14: saved BRIDGE camera position | Automation15: transient camera-only reframe |
+| --- | --- | --- |
+| Real D3D11 native controller / engine exit | PASS / 0 | PASS / 0 |
+| PNG SHA-256 | `55d1ec97e77c563af2f31f8f53c6c1c88fbb6b7747e6aeff71047e138ad52d88` | `64c6a83fe2a8361b0585c2952073c98eb480d1691fbf7d7aba474031d8dff1fb` |
+| Near-black pixels | 2.2413% | 0.3994% |
+| Nearly white pixels | 0.9466% | 0.7029% |
+| Saved review-map SHA preserved | PASS | PASS |
+| Visual approval | **HOLD** | **HOLD** |
+
+Automation14 uses the original review map's named `V4_NONCANONICAL_CAMERA_BRIDGE` role. Its native image makes the brass triangular geodesic struts and cyan translucent shell legible, but **a large foreground leaf wing occludes much of the dome**. Automation15 uses the **same camera actor only transiently**, setting the unsaved review eye position to **(610, -20, 295) cm**, target **(185, 0, 130) cm**. This puts the dome closer to center but wings still crowd the left and right edges. **Neither composition is accepted as a cinematic bridge shot.** The filenames retain the inherited `ThreeQuarter_REVIEW.png` suffix; the **native receipt's `camera_label=V4_NONCANONICAL_CAMERA_BRIDGE` and temporary camera metadata are authoritative**.
+
+All 14/15 native and host receipts independently agree on PNG hashes, dimensions, successful named-controller execution, absence of production changes, Starbourne still locked, and source map SHA-256 unchanged at `14e896f532e898836c98d51b3acf33936faf7c43f907b0d0fa20f9cac4ca4362`. The 15 temporary camera was not saved to the map. Both tests created unique temporary skydome review materials in the **disposable sandbox only**; they did not promote materials to production or approve a real sky.
+
+Private original-pixel side-by-side:
+`C:\tmp\TSTSS_AureateCinematicV4_Native_20261103\SkybourneV4_BridgeViews_Default_vs_Temporary_PRIVATE_20261104.png`,
+SHA-256 `cd69cf53e4c048442313250160f2327318c2ec4accac2f3d2ea29e931bc14b4b`, with adjacent JSON provenance. The source pixels are unchanged except for side-by-side layout/title text.
+
+**Source provenance:** registered local scripts now copied to PR review source with their independent, non-overwriting attempt paths. The images and binary maps remain **private** on the workstation; these outputs were not generated from a clean exact-head GitHub checkout. Local V4 engine-free `unittest` group now **60/60 PASS** including 3 new camera/capture safety tests. Workflow results of this updated GitHub head must be checked separately; source CI cannot confer native visual approval.
+
+**Visual/engineering HOLD:** no crew-scale signoff, glass pressure validation, full wing-root vs dome swept clearance, physics, bridge/quarters docking collar clearance, actual #705 sky physical atmosphere, canonical pose, creator shot approval, production integration or Starbourne player unlock. The next targeted lookdev should test a camera not blocked by the authored fore wing and separately investigate wing root/dome interference; avoid unrestricted camera/pose changes and four-form GPU rollout.
+
 **Evidence date:** November 4, 2026. **Authority:** NONCANONICAL / DISPOSABLE UE5.8.4 SANDBOX / REVIEW-ONLY.
 **Parent review:** PR #732. **Important:** Native GLB binaries, .umap, PNG and receipts below were generated on the authorized Windows workstation. The native executions used these source files locally in a dirty review checkout and **are not exact-head clean-tree Unreal verification**; committing their source here enables independent future reproduction without promoting art.
 
