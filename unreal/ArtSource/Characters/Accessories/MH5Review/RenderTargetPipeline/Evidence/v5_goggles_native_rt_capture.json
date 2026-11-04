@@ -1,0 +1,59 @@
+{
+  "canonical": false,
+  "captures": [
+    {
+      "crc_pass": true,
+      "image_size": [
+        480,
+        320
+      ],
+      "png_core_bytes": 111305,
+      "raw_bytes": 112860,
+      "sha256_png_core": "212041ad0b39fc7eefc5f479bd3dae4427aa04ffcf4e497ec95283123407f808",
+      "sha256_raw": "6fa6d7ee088554b3af114e32b1df2ba5ecf65d88e52ac6a7983c57ff8f24d624",
+      "trailing_bytes_after_iend": 1555
+    }
+  ],
+  "engine": "5.8.4-58902052+++UE5+Release-5.8",
+  "face_likeness_approved": false,
+  "goggles_fit_approved": false,
+  "goggles_position_relative_to_v5_cm": [
+    0,
+    9.5,
+    171.5
+  ],
+  "goggles_rotation_pitch_yaw_roll_deg": [
+    90,
+    180,
+    0
+  ],
+  "goggles_sha256_after": "76eb9696e2abf719bcfd3d467313e46136f5d92cc36cd6b3845ae447a272c1ae",
+  "goggles_world_xyz_extent_cm": [
+    18.21768,
+    15.35,
+    6.1
+  ],
+  "kind": "NONCANONICAL_TRANSIENT_V5_AND_GOGGLES_RENDER_TARGET",
+  "map_sha256_after": "025539f8717c6215a17dc8acff24ec7bd39b3d43129de4069a9418b3d8da3a2a",
+  "materials_artist_approved": false,
+  "meta_sha256_after": "2bb581a27aee55b0352f52227a3afe2c6d01a529b63c8dc661cbe8f4edbb2e3d",
+  "metahuman_skeletal_preview_components": [
+    "Body",
+    "Face"
+  ],
+  "method": "SceneCapture2D -> RenderingLibrary.export_render_target",
+  "native_preview_class": "MetaHumanDefaultEditorPipelineActor",
+  "native_rt_export_called": true,
+  "native_rt_initial_capture_queued": true,
+  "no_face_sculpt": true,
+  "original_art": false,
+  "production_game_modified": false,
+  "real_head_collision_verified": false,
+  "review_map_saved": false,
+  "rigging_verified": false,
+  "source_assets_saved": false,
+  "source_goggles_sha256": "76eb9696e2abf719bcfd3d467313e46136f5d92cc36cd6b3845ae447a272c1ae",
+  "source_map_sha256": "025539f8717c6215a17dc8acff24ec7bd39b3d43129de4069a9418b3d8da3a2a",
+  "source_meta_sha256": "2bb581a27aee55b0352f52227a3afe2c6d01a529b63c8dc661cbe8f4edbb2e3d",
+  "status": "NATIVE_V5_GOGGLES_RENDER_TARGET_PNG_CORE_PASS_VISUAL_UNREVIEWED"
+}

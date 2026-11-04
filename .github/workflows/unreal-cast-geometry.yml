@@ -49,6 +49,84 @@ jobs:
           python3 -m unittest discover -s unreal/ArtSource/Characters -p test_ender_v5_metahuman_probe.py -v
           python3 -m py_compile unreal/ArtSource/Characters/probe_ender_v5_metahuman_native.py unreal/ArtSource/Characters/verify_ender_v5_metahuman_probe.py
 
+      - name: Verify Ender V5 native landmark-index evidence and rejection gates (engine-free)
+        run: |
+          python3 -m unittest discover -s unreal/ArtSource/Characters -p test_ender_v5_native_landmark_atlas.py -v
+          python3 -m py_compile unreal/ArtSource/Characters/capture_ender_v5_native_landmarks.py unreal/ArtSource/Characters/verify_ender_v5_native_landmark_atlas.py unreal/ArtSource/Characters/render_ender_v5_native_landmark_atlas.py
+
+      - name: Enforce creator-first Ender V5 face authority and reject false mapping (engine-free)
+        run: |
+          python3 -m unittest discover -s unreal/ArtSource/Characters -p test_ender_v5_reference_priority.py -v
+          python3 unreal/ArtSource/Characters/verify_ender_v5_reference_priority.py
+
+      - name: Verify native Ender V5 geometric mirror pairs without anatomical inference (engine-free)
+        run: |
+          python3 -m unittest discover -s unreal/ArtSource/Characters -p test_ender_v5_geometric_pairs.py -v
+          python3 unreal/ArtSource/Characters/verify_ender_v5_geometric_pairs.py
+
+      - name: Check isolated V5 eye-authoring and face-repeatability scripts compile (engine-free)
+        run: |
+          python3 -m py_compile unreal/ArtSource/Characters/native_ender_v5_green_iris_mh4_study.py
+          python3 -m py_compile unreal/ArtSource/Characters/verify_native_ender_v5_green_iris.py
+          python3 -m py_compile unreal/ArtSource/Characters/verify_native_ender_v5_face_repeatability.py
+
+      - name: Compile bounded native V5 skeletal preview and GPU screenshot scripts (engine-free)
+        run: |
+          python3 -m py_compile unreal/ArtSource/Characters/native_ender_v5_transient_preview_probe.py
+          python3 -m py_compile unreal/ArtSource/Characters/native_ender_v5_transient_preview_capture.py
+
+      - name: Verify three native V5 closeup camera labels and anti-promotion controls (engine-free)
+        run: |
+          python3 -m unittest discover -s unreal/ArtSource/Characters/ReviewEvidence/2026-11-03/EnderV5FaceCloseups -p test_capture_contract.py -v
+          python3 -m py_compile unreal/ArtSource/Characters/ReviewEvidence/2026-11-03/EnderV5FaceCloseups/capture_profile_plus_x.py
+          python3 -m py_compile unreal/ArtSource/Characters/ReviewEvidence/2026-11-03/EnderV5FaceCloseups/capture_front_plus_y.py
+          python3 -m py_compile unreal/ArtSource/Characters/ReviewEvidence/2026-11-03/EnderV5FaceCloseups/capture_threequarter_plus_x_plus_y.py
+          python3 -m py_compile unreal/ArtSource/Characters/ReviewEvidence/2026-11-03/EnderV5FaceCloseups/build_native_three_angle_contact_sheet.py
+
+      - name: Verify original Ender goggles geometry and detached asset safety (engine-free)
+        run: |
+          python3 -m unittest discover -s unreal/ArtSource/Characters/Accessories -p test_ender_goggles.py -v
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/native_import_goggles_v1.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/native_visual_goggles01.py
+
+      - name: Check MH5 goggles 3D axes, fit receipt boundaries and negative controls (engine-free)
+        run: |
+          python3 -m unittest discover -s unreal/ArtSource/Characters/Accessories/MH5Review -p test_native_goggles_fit_receipts.py -v
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/native_import_goggles_to_MH5.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/native_goggles_axis_search.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/native_goggles_spatial01_negative_control.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/native_goggles_spatial02.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/native_goggles_combined_capture01.py
+
+      - name: Check native RenderTarget evidence and keep art acceptance locked (engine-free)
+        run: |
+          python3 -m unittest discover -s unreal/ArtSource/Characters/Accessories/MH5Review/RenderTargetPipeline -p test_native_rt_receipts.py -v
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/RenderTargetPipeline/native_render_target_cube_diag01.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/RenderTargetPipeline/native_rt_png_postcheck.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/RenderTargetPipeline/native_rt_ender_v5_goggles01.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/RenderTargetPipeline/verify_native_rt_v5_goggles.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/RenderTargetPipeline/make_rt_preview_mobile.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/RenderTargetPipeline/native_rt_ender_v5_goggles_exposure_minus2.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/RenderTargetPipeline/compare_rt_exposure_minus2.py
+
+      - name: Verify V2 true sealed goggles native evidence and preserve artist hold (engine-free)
+        run: |
+          python3 -m unittest discover -s unreal/ArtSource/Characters/Accessories/V2Sealed -p test_native_v2_sealed_goggles_receipts.py -v
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/V2Sealed/ender_aviator_goggles_v2_generator.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/V2Sealed/native_import_ender_v2_goggles_to_MH5.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/V2Sealed/native_spatial_v2_to_MH5.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/V2Sealed/native_rt_v2_above_brow_front.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/V2Sealed/native_rt_v2_lower_forehead_front.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/V2Sealed/native_rt_v2_threequarter.py
+
+      - name: Verify V2 native low-light and rear-strap evidence without fit promotion (engine-free)
+        run: |
+          python3 -m unittest discover -s unreal/ArtSource/Characters/Accessories/V2Sealed/ReviewEvidence -p test_v2_lighting_rearside_receipts.py -v
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/V2Sealed/ReviewEvidence/native_rt_v2_rearside_lights_tenth05.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/V2Sealed/ReviewEvidence/build_v2_native_lighting_strap_montage.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/V2Sealed/ReviewEvidence/v2_native_exposure_metrics.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/V2Sealed/ReviewEvidence/inspect_v2_glb_material_inventory.py
+
       - name: Regenerate source assets and confirm exact bytes
         env:
           TSTSS_CAST_OUTPUT: unreal/ArtSource/Characters/Candidates

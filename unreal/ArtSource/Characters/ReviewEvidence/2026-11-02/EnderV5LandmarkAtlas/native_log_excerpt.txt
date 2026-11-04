@@ -1,0 +1,5 @@
+[2026.11.03-02.43.13:790][235]LogPython: TSTSS_ENDER_V5_LANDMARK_ATLAS_NATIVE_PASS 79 C:\MH2\CastAllSandbox\Saved\CharacterLookdev\EnderV5LandmarkAtlas\native_landmark_index.json
+[2026.11.03-02.43.13:806][235]LogPython: TSTSS_ENDER_V5_LANDMARK_AXIS_BOUNDS {"x": {"max_cm": 8.92267, "min_cm": -8.91523}, "y": {"max_cm": 14.1305, "min_cm": -7.56191}, "z": {"max_cm": 171.93613, "min_cm": 145.08646}}
+[2026.11.03-02.43.13:863][238]LogAutomationController: Display: Test Completed. Result={Success} Name={test_ender_v5_landmark_atlas_native} Path={Editor.Python.CastAllSandbox.test_ender_v5_landmark_atlas_native}
+[2026.11.03-02.43.13:891][239]LogAutomationCommandLine: Display: **** TEST COMPLETE. EXIT CODE: 0 ****
+[2026.11.03-02.43.13:865][238]LogAutomationController: Warning: LogMetaHumanCharacterEditor: MetaHuman Optional Content folder not found. MetaHuman Creator plugin initialized with limited features. [log]

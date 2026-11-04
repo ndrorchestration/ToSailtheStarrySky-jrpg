@@ -1,0 +1,12 @@
+{
+  "approved_likeness": false,
+  "native_automation_log_verified": true,
+  "native_landmark_snapshot_sha256": "9abcca28c03b21c13a5a1f35bc5b2126393debbc63c494e268c6df18d74eafed",
+  "points": 79,
+  "reference_map_sha256": "025539f8717c6215a17dc8acff24ec7bd39b3d43129de4069a9418b3d8da3a2a",
+  "source_binary_sha256": "7d648da499e5756d845faeed221ac4584e51516d1274b766db41d908e1fb17bd",
+  "status": "V5_NATIVE_INDEX_COORDINATES_VERIFIED_NOT_REFERENCE_MATCHED",
+  "x_span_cm": 17.838,
+  "y_span_cm": 21.692,
+  "z_span_cm": 26.85
+}

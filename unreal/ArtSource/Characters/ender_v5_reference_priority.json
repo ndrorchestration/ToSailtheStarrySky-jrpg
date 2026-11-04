@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "program": "To Sail the Starry Sky",
+  "character": "Ender",
+  "decision_date": "2026-11-03",
+  "creator_priority": "FIRST_APPROVED_FACES_PREFERRED",
+  "primary_source_selection": "REQUIRES_EXPLICIT_ARTIST_CONFIRMATION",
+  "earlier_face_reference_candidates": [
+    {
+      "name": "Aetherwake: Steampunk Skybound Crew.png",
+      "sha256": "84534e61be9a4fc8ee09059405acda980484a21e5797eb1c80ae3e0efe515279",
+      "role": "OLDER_REALISTIC_FACE_CANDIDATE"
+    },
+    {
+      "name": "Aetherwake: JRPG Character Design Board.png",
+      "sha256": "e973be82a026e0d2df441471fa5dd0fd5214265152757bec07d9c493563b93de",
+      "role": "OLDER_REALISTIC_FACE_CANDIDATE"
+    },
+    {
+      "name": "Ender: Solarpunk RPG Character Sheet.png",
+      "sha256": "18a73e5a4baf284aaffe96de57599e14158d437af2c1c601f0a9c90972332727",
+      "role": "APPROVED_INDIVIDUAL_CROSSCHECK"
+    }
+  ],
+  "secondary_shipdeck_usage": "CLOTHING_MATERIALS_EQUIPMENT_LIGHTING_ONLY",
+  "secondary_shipdeck_facial_landmarks_authorized": false,
+  "image_space_coordinates_published": false,
+  "private_annotation_status": "PROVISIONAL_NOT_CREATOR_REVIEWED",
+  "native_landmark_count_verified": 79,
+  "native_semantic_mapping_status": "UNMAPPED_REQUIRES_HUMAN_REVIEW",
+  "proposal_points": [
+    {
+      "name": "image_left_eye_center",
+      "image_x_px": null,
+      "image_y_px": null,
+      "native_index": null,
+      "artist_verified": false
+    },
+    {
+      "name": "image_right_eye_center",
+      "image_x_px": null,
+      "image_y_px": null,
+      "native_index": null,
+      "artist_verified": false
+    },
+    {
+      "name": "nose_tip",
+      "image_x_px": null,
+      "image_y_px": null,
+      "native_index": null,
+      "artist_verified": false
+    },
+    {
+      "name": "chin_point",
+      "image_x_px": null,
+      "image_y_px": null,
+      "native_index": null,
+      "artist_verified": false
+    }
+  ],
+  "hair_color_conflict": "HOLD_REQUIRES_CREATOR_RESOLUTION",
+  "facial_sculpt_approved": false,
+  "canonical_face_asset_promoted": false,
+  "original_reference_image_copied_into_repository": false
+}

@@ -1,0 +1,46 @@
+{
+  "art_review_only": true,
+  "bounds_max_xyz_cm": [
+    9.10884,
+    3.05,
+    1.94
+  ],
+  "bounds_min_xyz_cm": [
+    -9.10884,
+    -3.05,
+    -13.41
+  ],
+  "bounds_xyz_cm": [
+    18.21768,
+    6.1,
+    15.35
+  ],
+  "canonical": false,
+  "face_sculpted": false,
+  "fitted_to_face": false,
+  "game_integrated": false,
+  "imported_objects": [
+    "/Game/ArtLookdev/Characters/EnderV5MetaHumanStudy/Accessories/GogglesCandidateV1/Ender_goggles_noncanonical/Materials/Aged_brass_rims.Aged_brass_rims",
+    "/Game/ArtLookdev/Characters/EnderV5MetaHumanStudy/Accessories/GogglesCandidateV1/Ender_goggles_noncanonical/Materials/Bevelled_gold_inlay.Bevelled_gold_inlay",
+    "/Game/ArtLookdev/Characters/EnderV5MetaHumanStudy/Accessories/GogglesCandidateV1/Ender_goggles_noncanonical/Materials/Deep_oiled_leather_gasket.Deep_oiled_leather_gasket",
+    "/Game/ArtLookdev/Characters/EnderV5MetaHumanStudy/Accessories/GogglesCandidateV1/Ender_goggles_noncanonical/Materials/Dark_metal_bezel.Dark_metal_bezel",
+    "/Game/ArtLookdev/Characters/EnderV5MetaHumanStudy/Accessories/GogglesCandidateV1/Ender_goggles_noncanonical/Materials/Emerald_glass_lenses.Emerald_glass_lenses",
+    "/Game/ArtLookdev/Characters/EnderV5MetaHumanStudy/Accessories/GogglesCandidateV1/Ender_goggles_noncanonical/Materials/Warm_brass_rivets.Warm_brass_rivets",
+    "/Game/ArtLookdev/Characters/EnderV5MetaHumanStudy/Accessories/GogglesCandidateV1/Ender_goggles_noncanonical/Materials/Warm_brass_hinges.Warm_brass_hinges",
+    "/Game/ArtLookdev/Characters/EnderV5MetaHumanStudy/Accessories/GogglesCandidateV1/Ender_goggles_noncanonical/Materials/Stitched_dark_leather_strap.Stitched_dark_leather_strap",
+    "/Game/ArtLookdev/Characters/EnderV5MetaHumanStudy/Accessories/GogglesCandidateV1/Ender_goggles_noncanonical/Materials/Thread_stitch_hardware.Thread_stitch_hardware",
+    "/Game/ArtLookdev/Characters/EnderV5MetaHumanStudy/Accessories/GogglesCandidateV1/Ender_goggles_noncanonical/StaticMeshes/Ender_goggles_noncanonical.Ender_goggles_noncanonical"
+  ],
+  "map_sha256_after": "025539f8717c6215a17dc8acff24ec7bd39b3d43129de4069a9418b3d8da3a2a",
+  "material_slot_count": 9,
+  "meta_sha256_after": "2bb581a27aee55b0352f52227a3afe2c6d01a529b63c8dc661cbe8f4edbb2e3d",
+  "project": "C:\\MH5\\CastAllSandbox",
+  "rigged": false,
+  "source_glb_sha256": "76eb9696e2abf719bcfd3d467313e46136f5d92cc36cd6b3845ae447a272c1ae",
+  "source_map_sha256": "025539f8717c6215a17dc8acff24ec7bd39b3d43129de4069a9418b3d8da3a2a",
+  "source_original_metahuman_sha256": "2bb581a27aee55b0352f52227a3afe2c6d01a529b63c8dc661cbe8f4edbb2e3d",
+  "static_mesh_path": "/Game/ArtLookdev/Characters/EnderV5MetaHumanStudy/Accessories/GogglesCandidateV1/Ender_goggles_noncanonical/StaticMeshes/Ender_goggles_noncanonical.Ender_goggles_noncanonical",
+  "status": "MH5_NATIVE_GOGGLES_IMPORT_PASS_POSITIONING_PENDING",
+  "target": "/Game/ArtLookdev/Characters/EnderV5MetaHumanStudy/Accessories/GogglesCandidateV1",
+  "visual_acceptance": false
+}

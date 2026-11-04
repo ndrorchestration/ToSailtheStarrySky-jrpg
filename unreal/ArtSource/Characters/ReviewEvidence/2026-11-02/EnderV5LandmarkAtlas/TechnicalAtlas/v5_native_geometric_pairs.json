@@ -1,0 +1,201 @@
+{
+  "schema_version": 1,
+  "source_native_json_sha256": "9abcca28c03b21c13a5a1f35bc5b2126393debbc63c494e268c6df18d74eafed",
+  "source_engine": "5.8.4-58902052+++UE5+Release-5.8",
+  "source_landmark_count": 79,
+  "classification": "MODEL_SPACE_GEOMETRIC_SYMMETRY_ONLY",
+  "x_center_threshold_cm": 0.08,
+  "max_allowed_pair_residual_cm": 0.15,
+  "observed_max_pair_residual_cm": 0.13009,
+  "negative_x_count": 32,
+  "positive_x_count": 32,
+  "near_centerline_count": 15,
+  "near_centerline_indices": [
+    4,
+    5,
+    6,
+    7,
+    8,
+    12,
+    13,
+    14,
+    15,
+    50,
+    59,
+    60,
+    62,
+    64,
+    65
+  ],
+  "mirror_pairs": [
+    {
+      "negative_x_index": 0,
+      "positive_x_index": 27,
+      "mirror_residual_cm": 0.07827
+    },
+    {
+      "negative_x_index": 1,
+      "positive_x_index": 28,
+      "mirror_residual_cm": 0.0611
+    },
+    {
+      "negative_x_index": 2,
+      "positive_x_index": 29,
+      "mirror_residual_cm": 0.02446
+    },
+    {
+      "negative_x_index": 3,
+      "positive_x_index": 30,
+      "mirror_residual_cm": 0.00864
+    },
+    {
+      "negative_x_index": 9,
+      "positive_x_index": 16,
+      "mirror_residual_cm": 0.01948
+    },
+    {
+      "negative_x_index": 10,
+      "positive_x_index": 26,
+      "mirror_residual_cm": 0.0488
+    },
+    {
+      "negative_x_index": 11,
+      "positive_x_index": 17,
+      "mirror_residual_cm": 0.03099
+    },
+    {
+      "negative_x_index": 22,
+      "positive_x_index": 18,
+      "mirror_residual_cm": 0.04833
+    },
+    {
+      "negative_x_index": 33,
+      "positive_x_index": 19,
+      "mirror_residual_cm": 0.02048
+    },
+    {
+      "negative_x_index": 44,
+      "positive_x_index": 20,
+      "mirror_residual_cm": 0.02956
+    },
+    {
+      "negative_x_index": 47,
+      "positive_x_index": 31,
+      "mirror_residual_cm": 0.01307
+    },
+    {
+      "negative_x_index": 48,
+      "positive_x_index": 32,
+      "mirror_residual_cm": 0.02986
+    },
+    {
+      "negative_x_index": 49,
+      "positive_x_index": 34,
+      "mirror_residual_cm": 0.00385
+    },
+    {
+      "negative_x_index": 51,
+      "positive_x_index": 35,
+      "mirror_residual_cm": 0.02985
+    },
+    {
+      "negative_x_index": 52,
+      "positive_x_index": 36,
+      "mirror_residual_cm": 0.02579
+    },
+    {
+      "negative_x_index": 53,
+      "positive_x_index": 37,
+      "mirror_residual_cm": 0.03587
+    },
+    {
+      "negative_x_index": 54,
+      "positive_x_index": 38,
+      "mirror_residual_cm": 0.13009
+    },
+    {
+      "negative_x_index": 55,
+      "positive_x_index": 21,
+      "mirror_residual_cm": 0.0721
+    },
+    {
+      "negative_x_index": 56,
+      "positive_x_index": 39,
+      "mirror_residual_cm": 0.07978
+    },
+    {
+      "negative_x_index": 57,
+      "positive_x_index": 40,
+      "mirror_residual_cm": 0.01749
+    },
+    {
+      "negative_x_index": 58,
+      "positive_x_index": 41,
+      "mirror_residual_cm": 0.05765
+    },
+    {
+      "negative_x_index": 61,
+      "positive_x_index": 42,
+      "mirror_residual_cm": 0.06712
+    },
+    {
+      "negative_x_index": 63,
+      "positive_x_index": 43,
+      "mirror_residual_cm": 0.01724
+    },
+    {
+      "negative_x_index": 66,
+      "positive_x_index": 23,
+      "mirror_residual_cm": 0.03143
+    },
+    {
+      "negative_x_index": 67,
+      "positive_x_index": 45,
+      "mirror_residual_cm": 0.01282
+    },
+    {
+      "negative_x_index": 68,
+      "positive_x_index": 46,
+      "mirror_residual_cm": 0.02092
+    },
+    {
+      "negative_x_index": 69,
+      "positive_x_index": 73,
+      "mirror_residual_cm": 0.10379
+    },
+    {
+      "negative_x_index": 70,
+      "positive_x_index": 74,
+      "mirror_residual_cm": 0.00871
+    },
+    {
+      "negative_x_index": 71,
+      "positive_x_index": 75,
+      "mirror_residual_cm": 0.05657
+    },
+    {
+      "negative_x_index": 72,
+      "positive_x_index": 76,
+      "mirror_residual_cm": 0.04696
+    },
+    {
+      "negative_x_index": 77,
+      "positive_x_index": 24,
+      "mirror_residual_cm": 0.0306
+    },
+    {
+      "negative_x_index": 78,
+      "positive_x_index": 25,
+      "mirror_residual_cm": 0.03811
+    }
+  ],
+  "point_indices_anatomically_labeled": false,
+  "image_space_coordinates_registered": false,
+  "approved_source_face_correspondence_established": false,
+  "secondary_shipdeck_used_for_face_landmarks": false,
+  "hair_conflict_resolved": false,
+  "face_sculpted": false,
+  "artist_likeness_approved": false,
+  "canonical_art_promoted": false,
+  "status": "TECHNICAL_PAIRING_VERIFIED_SEMANTIC_MAPPING_HOLD"
+}

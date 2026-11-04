@@ -1,0 +1,18 @@
+{
+  "artist_reference_image_included": false,
+  "csv_sha256": "99a2b7ffcc7cbb0c752d0371e38c1b8f11b1cd39fb606b4ad439579026ebf556",
+  "engine_native_landmarks": 79,
+  "facial_semantic_index_mapping_approved": false,
+  "front_axes": "x,z",
+  "image_size": [
+    2560,
+    1450
+  ],
+  "native_data_sha256": "9abcca28c03b21c13a5a1f35bc5b2126393debbc63c494e268c6df18d74eafed",
+  "owner_likeness_approved": false,
+  "png_sha256": "13faf1b8400123a8a0227b4938db199c7b700ec165b327f66ebcd594042e6652",
+  "point_count": 79,
+  "profile_axes": "y,z",
+  "real_unreal_render": false,
+  "status": "TECHNICAL_79_INDEX_ATLAS_RENDERED_NOT_REFERENCE_ALIGNED"
+}

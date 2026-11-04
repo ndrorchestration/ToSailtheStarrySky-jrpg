@@ -1,0 +1,46 @@
+{
+  "artist_accepted": false,
+  "canonical": false,
+  "material_fidelity_verified": false,
+  "original_file": "C:\\MH5\\CastAllSandbox\\Saved\\CharacterLookdev\\GogglesFitV1\\RenderTargetCombined02\\ender_v5_goggles_rt_front.png",
+  "original_raw_sha256": "6fa6d7ee088554b3af114e32b1df2ba5ecf65d88e52ac6a7983c57ff8f24d624",
+  "pillow_verified": true,
+  "pixel_data_modified_in_png": false,
+  "png_chunk_crc_verified": true,
+  "png_width_height": [
+    480,
+    320
+  ],
+  "production_game_asset": false,
+  "raw_bytes": 112860,
+  "review_webp": "C:\\MH5\\CastAllSandbox\\Saved\\CharacterLookdev\\GogglesFitV1\\RenderTargetCombined02\\ender_v5_goggles_rt_front_review.webp",
+  "review_webp_bytes": 6534,
+  "review_webp_lossy_recompression": true,
+  "review_webp_sha256": "412b5b2ca48d167c3c79ca25eee04a69044785533b1aef108a2268381e6561e0",
+  "rgb_extrema": [
+    [
+      0,
+      255
+    ],
+    [
+      0,
+      255
+    ],
+    [
+      0,
+      255
+    ]
+  ],
+  "rgb_mean": [
+    70.31,
+    69.61,
+    68.53
+  ],
+  "source_character_or_map_modified": false,
+  "status": "NATIVE_V5_GOGGLES_PNG_CORE_VERIFIED_SAFE_COPY",
+  "trailing_bytes_removed": 1555,
+  "validated_copy": "C:\\MH5\\CastAllSandbox\\Saved\\CharacterLookdev\\GogglesFitV1\\RenderTargetCombined02\\ender_v5_goggles_rt_front_clean.png",
+  "validated_png_bytes": 111305,
+  "validated_png_sha256": "212041ad0b39fc7eefc5f479bd3dae4427aa04ffcf4e497ec95283123407f808",
+  "wearable_head_fit_verified": false
+}

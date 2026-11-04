@@ -1,0 +1,162 @@
+{
+  "actual_goggle_vs_skin_triangle_collision_verified": false,
+  "artist_approved": false,
+  "candidate_rotation_pitch_yaw_roll": [
+    90,
+    180,
+    0
+  ],
+  "canon_promoted": false,
+  "goggles_source_sha256_after": "5b1b5c5ac0b1be754d9e19b3bd9cec293c819259d18b39e8ad8f56228d22b5cb",
+  "head_fitted": false,
+  "landmark_sha256": "9abcca28c03b21c13a5a1f35bc5b2126393debbc63c494e268c6df18d74eafed",
+  "level_saved": false,
+  "map_sha256": "025539f8717c6215a17dc8acff24ec7bd39b3d43129de4069a9418b3d8da3a2a",
+  "map_sha256_after": "025539f8717c6215a17dc8acff24ec7bd39b3d43129de4069a9418b3d8da3a2a",
+  "mesh_source_sha256": "5b1b5c5ac0b1be754d9e19b3bd9cec293c819259d18b39e8ad8f56228d22b5cb",
+  "meta_sha256": "2bb581a27aee55b0352f52227a3afe2c6d01a529b63c8dc661cbe8f4edbb2e3d",
+  "meta_sha256_after": "2bb581a27aee55b0352f52227a3afe2c6d01a529b63c8dc661cbe8f4edbb2e3d",
+  "native_mesh": "/Game/ArtLookdev/Characters/EnderV5MetaHumanStudy/Accessories/SealedGogglesCandidateV2/Ender_Sealed_Aviator_Goggles_V2_NONCANONICAL/StaticMeshes/Ender_S_ANONICAL.Ender_S_ANONICAL",
+  "native_preview_class": "MetaHumanDefaultEditorPipelineActor",
+  "production_game_modified": false,
+  "rig_attached": false,
+  "skeletal_preview_component_names": [
+    "Body",
+    "Face"
+  ],
+  "skin_and_hair_approved": false,
+  "source_assets_modified": false,
+  "source_index_points_have_approved_semantic_labels": false,
+  "status": "NATIVE_V2_UPRIGHT_AXES_AND_THREE_AABB_TRIALS_PASS_VISUAL_FIT_PENDING",
+  "strap_or_lens_materials_approved": false,
+  "trials": [
+    {
+      "aabb_max_cm": [
+        9.6,
+        16.225,
+        169.11
+      ],
+      "aabb_min_cm": [
+        -9.6,
+        -2.946,
+        161.09
+      ],
+      "absolute_actor_position_cm": [
+        0,
+        11.4,
+        164.5
+      ],
+      "indexed_face_points_inside_outer_aabb": 22,
+      "indexed_face_points_within_1cm_of_outer_aabb": 34,
+      "indices_inside": [
+        0,
+        7,
+        10,
+        20,
+        24,
+        25,
+        26,
+        27,
+        35,
+        36,
+        39,
+        42,
+        44,
+        51,
+        52,
+        56,
+        59,
+        61,
+        71,
+        75,
+        77,
+        78
+      ],
+      "label": "eye_height_hypothesis",
+      "native_outer_aabb_cm": [
+        19.2,
+        19.171,
+        8.02
+      ],
+      "outer_AABB_is_NOT_wearable_fit": true,
+      "relative_position_cm": [
+        0,
+        11.4,
+        164.5
+      ]
+    },
+    {
+      "aabb_max_cm": [
+        9.6,
+        14.325,
+        176.11
+      ],
+      "aabb_min_cm": [
+        -9.6,
+        -4.846,
+        168.09
+      ],
+      "absolute_actor_position_cm": [
+        0,
+        9.5,
+        171.5
+      ],
+      "indexed_face_points_inside_outer_aabb": 1,
+      "indexed_face_points_within_1cm_of_outer_aabb": 1,
+      "indices_inside": [
+        60
+      ],
+      "label": "above_brow_hypothesis",
+      "native_outer_aabb_cm": [
+        19.2,
+        19.171,
+        8.02
+      ],
+      "outer_AABB_is_NOT_wearable_fit": true,
+      "relative_position_cm": [
+        0,
+        9.5,
+        171.5
+      ]
+    },
+    {
+      "aabb_max_cm": [
+        9.6,
+        14.325,
+        173.11
+      ],
+      "aabb_min_cm": [
+        -9.6,
+        -4.846,
+        165.09
+      ],
+      "absolute_actor_position_cm": [
+        0,
+        9.5,
+        168.5
+      ],
+      "indexed_face_points_inside_outer_aabb": 6,
+      "indexed_face_points_within_1cm_of_outer_aabb": 6,
+      "indices_inside": [
+        0,
+        7,
+        27,
+        42,
+        60,
+        61
+      ],
+      "label": "lower_forehead_hypothesis",
+      "native_outer_aabb_cm": [
+        19.2,
+        19.171,
+        8.02
+      ],
+      "outer_AABB_is_NOT_wearable_fit": true,
+      "relative_position_cm": [
+        0,
+        9.5,
+        168.5
+      ]
+    }
+  ]
+}

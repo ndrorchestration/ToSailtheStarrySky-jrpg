@@ -1,0 +1,20 @@
+{
+  "any_sculpt_or_material_asset_changed": false,
+  "baseline_core_sha256": "212041ad0b39fc7eefc5f479bd3dae4427aa04ffcf4e497ec95283123407f808",
+  "baseline_png_trailing_bytes": 1555,
+  "canonical": false,
+  "exposure_bias_ev_proposed": -2,
+  "goggles_fit_verified": false,
+  "minus2_core_sha256": "212041ad0b39fc7eefc5f479bd3dae4427aa04ffcf4e497ec95283123407f808",
+  "minus2_png_trailing_bytes": 1555,
+  "rig_verified": false,
+  "same_png_core_bytes": true,
+  "same_rgb_pixels": true,
+  "sampled_image_size": [
+    480,
+    320
+  ],
+  "source_originals_unchanged": true,
+  "status": "EXPOSURE_MINUS2_RENDER_IDENTICAL_PIXELS_TO_BASELINE",
+  "visual_quality_approved": false
+}

@@ -1,0 +1,42 @@
+{
+  "actor_class": "MetaHumanDefaultEditorPipelineActor",
+  "actual_head_fit_verified": false,
+  "asset_saved": false,
+  "asset_sha256_after": "2bb581a27aee55b0352f52227a3afe2c6d01a529b63c8dc661cbe8f4edbb2e3d",
+  "camera_contract": "FRONTAL_PLUS_Y_CORRECTED_GOGGLES_ABOVE_BROW_BOUNDS_ONLY",
+  "captures": [],
+  "engine": "5.8.4-58902052+++UE5+Release-5.8",
+  "goggles_actor_bounds_xyz_cm": [
+    18.21768,
+    15.35,
+    6.1
+  ],
+  "goggles_glb_sha256_after": "76eb9696e2abf719bcfd3d467313e46136f5d92cc36cd6b3845ae447a272c1ae",
+  "goggles_material_visual_approval": false,
+  "goggles_mesh": "/Game/ArtLookdev/Characters/EnderV5MetaHumanStudy/Accessories/GogglesCandidateV1/Ender_goggles_noncanonical/StaticMeshes/Ender_goggles_noncanonical.Ender_goggles_noncanonical",
+  "goggles_relative_position_cm": [
+    0,
+    9.5,
+    171.5
+  ],
+  "goggles_rotation_pitch_yaw_roll": [
+    90,
+    180,
+    0
+  ],
+  "head_mesh_collision_verified": false,
+  "kind": "NATIVE_TEMPORARY_V5_AND_DETACHED_GOGGLES_REVIEW",
+  "level_saved": false,
+  "map_sha256_after": "025539f8717c6215a17dc8acff24ec7bd39b3d43129de4069a9418b3d8da3a2a",
+  "production_canon_promoted": false,
+  "rig_for_gameplay_verified": false,
+  "skeletal_components": [
+    "Body",
+    "Face"
+  ],
+  "source_asset_sha256": "2bb581a27aee55b0352f52227a3afe2c6d01a529b63c8dc661cbe8f4edbb2e3d",
+  "source_goggles_sha256": "76eb9696e2abf719bcfd3d467313e46136f5d92cc36cd6b3845ae447a272c1ae",
+  "source_map_sha256": "025539f8717c6215a17dc8acff24ec7bd39b3d43129de4069a9418b3d8da3a2a",
+  "status": "TIMED_OUT",
+  "visual_likeness_approved": false
+}

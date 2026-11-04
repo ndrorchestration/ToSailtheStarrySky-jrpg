@@ -1,0 +1,308 @@
+{
+  "artist_approved": false,
+  "candidate_rotations": [
+    {
+      "art_face_fit": false,
+      "local_x_mapped_to_world": [
+        1,
+        0,
+        0
+      ],
+      "local_y_mapped_to_world": [
+        0,
+        0,
+        -1
+      ],
+      "local_z_mapped_to_world": [
+        0,
+        1,
+        0
+      ],
+      "pitch_yaw_roll_deg": [
+        90,
+        0,
+        0
+      ],
+      "world_aabb_dimensions_cm": [
+        18.21768,
+        15.35,
+        6.1
+      ]
+    },
+    {
+      "art_face_fit": false,
+      "local_x_mapped_to_world": [
+        -1,
+        0,
+        0
+      ],
+      "local_y_mapped_to_world": [
+        0,
+        0,
+        -1
+      ],
+      "local_z_mapped_to_world": [
+        0,
+        -1,
+        0
+      ],
+      "pitch_yaw_roll_deg": [
+        90,
+        0,
+        180
+      ],
+      "world_aabb_dimensions_cm": [
+        18.21768,
+        15.35,
+        6.1
+      ]
+    },
+    {
+      "art_face_fit": false,
+      "local_x_mapped_to_world": [
+        -1,
+        0,
+        0
+      ],
+      "local_y_mapped_to_world": [
+        0,
+        0,
+        1
+      ],
+      "local_z_mapped_to_world": [
+        0,
+        1,
+        0
+      ],
+      "pitch_yaw_roll_deg": [
+        90,
+        180,
+        0
+      ],
+      "world_aabb_dimensions_cm": [
+        18.21768,
+        15.35,
+        6.1
+      ]
+    },
+    {
+      "art_face_fit": false,
+      "local_x_mapped_to_world": [
+        1,
+        0,
+        0
+      ],
+      "local_y_mapped_to_world": [
+        0,
+        0,
+        1
+      ],
+      "local_z_mapped_to_world": [
+        0,
+        -1,
+        0
+      ],
+      "pitch_yaw_roll_deg": [
+        90,
+        180,
+        180
+      ],
+      "world_aabb_dimensions_cm": [
+        18.21768,
+        15.35,
+        6.1
+      ]
+    },
+    {
+      "art_face_fit": false,
+      "local_x_mapped_to_world": [
+        1,
+        0,
+        0
+      ],
+      "local_y_mapped_to_world": [
+        0,
+        0,
+        1
+      ],
+      "local_z_mapped_to_world": [
+        0,
+        -1,
+        0
+      ],
+      "pitch_yaw_roll_deg": [
+        270,
+        0,
+        0
+      ],
+      "world_aabb_dimensions_cm": [
+        18.21768,
+        15.35,
+        6.1
+      ]
+    },
+    {
+      "art_face_fit": false,
+      "local_x_mapped_to_world": [
+        -1,
+        0,
+        0
+      ],
+      "local_y_mapped_to_world": [
+        0,
+        0,
+        1
+      ],
+      "local_z_mapped_to_world": [
+        0,
+        1,
+        0
+      ],
+      "pitch_yaw_roll_deg": [
+        270,
+        0,
+        180
+      ],
+      "world_aabb_dimensions_cm": [
+        18.21768,
+        15.35,
+        6.1
+      ]
+    },
+    {
+      "art_face_fit": false,
+      "local_x_mapped_to_world": [
+        -1,
+        0,
+        0
+      ],
+      "local_y_mapped_to_world": [
+        0,
+        0,
+        -1
+      ],
+      "local_z_mapped_to_world": [
+        0,
+        -1,
+        0
+      ],
+      "pitch_yaw_roll_deg": [
+        270,
+        180,
+        0
+      ],
+      "world_aabb_dimensions_cm": [
+        18.21768,
+        15.35,
+        6.1
+      ]
+    },
+    {
+      "art_face_fit": false,
+      "local_x_mapped_to_world": [
+        1,
+        0,
+        0
+      ],
+      "local_y_mapped_to_world": [
+        0,
+        0,
+        -1
+      ],
+      "local_z_mapped_to_world": [
+        0,
+        1,
+        0
+      ],
+      "pitch_yaw_roll_deg": [
+        270,
+        180,
+        180
+      ],
+      "world_aabb_dimensions_cm": [
+        18.21768,
+        15.35,
+        6.1
+      ]
+    }
+  ],
+  "desired_dimensions_cm": [
+    18.21768,
+    15.35,
+    6.1
+  ],
+  "engine": "5.8.4-58902052+++UE5+Release-5.8",
+  "face_fit_proven": false,
+  "importer_mapped_dimensions_cm": [
+    18.21768,
+    6.1,
+    15.35
+  ],
+  "map_sha256": "025539f8717c6215a17dc8acff24ec7bd39b3d43129de4069a9418b3d8da3a2a",
+  "map_sha256_after": "025539f8717c6215a17dc8acff24ec7bd39b3d43129de4069a9418b3d8da3a2a",
+  "mesh": "/Game/ArtLookdev/Characters/EnderV5MetaHumanStudy/Accessories/GogglesCandidateV1/Ender_goggles_noncanonical/StaticMeshes/Ender_goggles_noncanonical.Ender_goggles_noncanonical",
+  "meta_sha256": "2bb581a27aee55b0352f52227a3afe2c6d01a529b63c8dc661cbe8f4edbb2e3d",
+  "meta_sha256_after": "2bb581a27aee55b0352f52227a3afe2c6d01a529b63c8dc661cbe8f4edbb2e3d",
+  "native_screenshot_available": false,
+  "no_assets_saved": true,
+  "preferred_orientation_count": 2,
+  "preferred_orientations": [
+    {
+      "art_face_fit": false,
+      "local_x_mapped_to_world": [
+        -1,
+        0,
+        0
+      ],
+      "local_y_mapped_to_world": [
+        0,
+        0,
+        1
+      ],
+      "local_z_mapped_to_world": [
+        0,
+        1,
+        0
+      ],
+      "pitch_yaw_roll_deg": [
+        90,
+        180,
+        0
+      ],
+      "world_aabb_dimensions_cm": [
+        18.21768,
+        15.35,
+        6.1
+      ]
+    },
+    {
+      "art_face_fit": false,
+      "local_x_mapped_to_world": [
+        -1,
+        0,
+        0
+      ],
+      "local_y_mapped_to_world": [
+        0,
+        0,
+        1
+      ],
+      "local_z_mapped_to_world": [
+        0,
+        1,
+        0
+      ],
+      "pitch_yaw_roll_deg": [
+        270,
+        0,
+        180
+      ],
+      "world_aabb_dimensions_cm": [
+        18.21768,
+        15.35,
+        6.1
+      ]
+    }
+  ],
+  "status": "NATIVE_AXIS_SEARCH_PASS_PREFERRED_AVAILABLE"
+}
