@@ -31,6 +31,7 @@ bool FTSTSSJobTableReadbackTest::RunTest(const FString& Parameters)
         {
             "Name": "ReviewScholar",
             "JobId": "ReviewScholar",
+            "DisplayName": "Review Scholar [Noncanonical Fixture]",
             "ReviewStatus": "DesignOnly",
             "bPrimaryEligible": true,
             "bSecondaryEligible": false
@@ -38,6 +39,7 @@ bool FTSTSSJobTableReadbackTest::RunTest(const FString& Parameters)
         {
             "Name": "ReviewGuard",
             "JobId": "ReviewGuard",
+            "DisplayName": "Review Guard [Noncanonical Fixture]",
             "ReviewStatus": "DesignOnly",
             "bPrimaryEligible": true,
             "bSecondaryEligible": false
