@@ -121,6 +121,39 @@ class V4HorizonCameraSourceTests(unittest.TestCase):
         self.assertIn('if not lib.duplicate_asset(SOURCE,TARGET)',s)
         self.assertIn('status["source_map_sha_after"]=hashfile(SOURCE_FILE)',s)
 
+    def test_stage_camera_values_match_geometry_proposal(self):
+        s=STAGE.read_text(encoding="utf8")
+        self.assertIn('cp=unreal.Vector(900.0,1100.0,190.0)',s)
+        self.assertIn('at=unreal.Vector(0.0,0.0,80.0)',s)
+        self.assertIn(v4.HERO_LABEL,s)
+        self.assertIn(v4.REVIEW_MAP,s)
+        self.assertNotIn("NO_ART_APPROVAL_BYPASS",s)
+
+    def test_windows_runner_guards_editor_ram_disk_and_all_original_maps(self):
+        runner=(TOOLS/"run_aureate_v4_horizon_stage.py").read_text(encoding="utf8")
+        ast.parse(runner)
+        for term in (
+            'free_ram','ram_gib()<4.2','ram_gib()<0.95',
+            '14*1024**3','MAX_SECONDS=180',
+            'UnrealEditor.exe','UnrealEditor-Cmd.exe',
+            '-ExecutePythonScript=','-NullRHI',
+            'four_maps_unchanged()','SOURCE_SHA',
+        ):
+            # SOURCE_SHA is in stage source; runner stores all four explicit digests.
+            if term=='free_ram': continue
+            if term=='SOURCE_SHA': continue
+            with self.subTest(term=term):
+                self.assertIn(term,runner)
+        for sha in ('16bb93fb9bdd2a4e1559864df908122094fe8a641b4a1481f2935d64ba184c40',
+                    'b0b0587783197b2eff4a3e820fb49a52ac70edbbc9519a8cdbceee470edc955a',
+                    '815e235aae6abef0e9a816bd8c9d01a13b4441bd81538763d2424e799e925f35',
+                    '953bb2aaca0db194bdd871229cdb13245c59ceab19cf0f8cbc44a802c01e0e00'):
+            self.assertIn(sha,runner)
+        self.assertIn('OWN_CHILD_STOPPED_LOW_MEMORY',runner)
+        self.assertNotIn('taskkill /IM',runner)
+        self.assertNotIn('git push origin main',runner)
+        self.assertIn('"real_gpu_rendered":False',runner)
+
     def test_src_only_not_native_unreal(self):
         self.assertFalse(v4.plan()["approvals"]["playable"])
         self.assertFalse(v4.plan()["approvals"]["release"])
