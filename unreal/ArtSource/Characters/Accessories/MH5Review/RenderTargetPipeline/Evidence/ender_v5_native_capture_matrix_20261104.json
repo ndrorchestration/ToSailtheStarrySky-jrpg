@@ -1,0 +1,63 @@
+{
+  "actual_native_renderer": "Unreal 5.8.4 D3D11 SM5, SceneCapture2D RenderTarget",
+  "clipping_reduction_fraction_points": 0.564101,
+  "crop_region_xyxy": [
+    140,
+    42,
+    340,
+    320
+  ],
+  "face_approved": false,
+  "goggles_v1_creator_rejected_as_glasses": true,
+  "goggles_v2_fit_approved": false,
+  "identical_meta_map_and_v1_goggles_hashes": {
+    "source_goggles_sha256": "76eb9696e2abf719bcfd3d467313e46136f5d92cc36cd6b3845ae447a272c1ae",
+    "source_map_sha256": "025539f8717c6215a17dc8acff24ec7bd39b3d43129de4069a9418b3d8da3a2a",
+    "source_meta_sha256": "2bb581a27aee55b0352f52227a3afe2c6d01a529b63c8dc661cbe8f4edbb2e3d"
+  },
+  "lighting_changed_only_transiently": true,
+  "lower_light_is_pixel_distinct": true,
+  "manual_exposure_is_pixel_identical": true,
+  "native_captures": {
+    "baseline_final": {
+      "crop_nearblack_fraction": 0.164263,
+      "crop_nearwhite_fraction": 0.564173,
+      "mean_rgb_full": [
+        70.312,
+        69.612,
+        68.525
+      ],
+      "png_core_sha256": "212041ad0b39fc7eefc5f479bd3dae4427aa04ffcf4e497ec95283123407f808",
+      "trailing_bytes": 1555
+    },
+    "manual_minus2_ev": {
+      "crop_nearblack_fraction": 0.164263,
+      "crop_nearwhite_fraction": 0.564173,
+      "mean_rgb_full": [
+        70.312,
+        69.612,
+        68.525
+      ],
+      "png_core_sha256": "212041ad0b39fc7eefc5f479bd3dae4427aa04ffcf4e497ec95283123407f808",
+      "trailing_bytes": 1555
+    },
+    "tenth_temporary_light": {
+      "crop_nearblack_fraction": 0.24295,
+      "crop_nearwhite_fraction": 7.2e-05,
+      "mean_rgb_full": [
+        45.648,
+        44.573,
+        43.068
+      ],
+      "png_core_sha256": "90de28a3d58b37f100c0c8066369c7e18aee49696cbbb5530f2dbc8776c5e58f",
+      "trailing_bytes": 41322
+    }
+  },
+  "no_canon_promotion": true,
+  "private_pngs_in_git": false,
+  "production_actors_changed": false,
+  "production_materials_changed": false,
+  "rig_or_animation_approved": false,
+  "status": "ACTUAL_UE584_TENTH_LIGHT_REDUCES_FINALCOLOR_CLIPPING_ART_HOLD",
+  "white_clip_definition": "min(R,G,B)>=245"
+}

@@ -109,6 +109,16 @@ jobs:
           python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/RenderTargetPipeline/native_rt_ender_v5_goggles_exposure_minus2.py
           python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/RenderTargetPipeline/compare_rt_exposure_minus2.py
 
+      - name: Fail closed on Ender V5 native capture variant source/receipt drift (engine-free)
+        run: |
+          python3 -m unittest discover -s unreal/ArtSource/Characters/Accessories/MH5Review/RenderTargetPipeline -p test_ender_v5_capture_variant_source.py -v
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/RenderTargetPipeline/native_rt_ender_v5_goggles_basecolor_diag_20261104.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/RenderTargetPipeline/native_rt_ender_v5_goggles_manual_exposure_20261104.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/RenderTargetPipeline/native_rt_ender_v5_goggles_light_tenth_20261104.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/RenderTargetPipeline/verify_ender_v5_basecolor_diag_20261104.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/RenderTargetPipeline/verify_ender_v5_native_capture_matrix_20261104.py
+          echo 'Host receipts checked structurally only; actual PNG verification requires separate original workstation pixels.'
+
       - name: Regenerate source assets and confirm exact bytes
         env:
           TSTSS_CAST_OUTPUT: unreal/ArtSource/Characters/Candidates

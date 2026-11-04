@@ -1,0 +1,43 @@
+{
+  "base_color": {
+    "face_goggles_crop_near_black_fraction": 0.24682,
+    "face_goggles_crop_white_clip_fraction": 0.0,
+    "mean_rgb_full": [
+      17.63,
+      16.3,
+      14.94
+    ]
+  },
+  "base_color_png_core_sha256": "33b48e1d1c9ce4b577670116bce92527bfc64d1d9d41839a1936c153080e48c0",
+  "base_color_png_trailing_bytes": 1602,
+  "canon_promotion": false,
+  "changed_capture_source_only": "SCS_FINAL_COLOR_LDR to SCS_BASE_COLOR",
+  "final_color": {
+    "face_goggles_crop_near_black_fraction": 0.16426,
+    "face_goggles_crop_white_clip_fraction": 0.56417,
+    "mean_rgb_full": [
+      70.31,
+      69.61,
+      68.53
+    ]
+  },
+  "final_color_png_core_sha256": "212041ad0b39fc7eefc5f479bd3dae4427aa04ffcf4e497ec95283123407f808",
+  "final_color_png_trailing_bytes": 1555,
+  "gameplay_rig_verified": false,
+  "goggles_v1_approved": false,
+  "goggles_v2_native_verified": false,
+  "metahuman_likeness_approved": false,
+  "native_engine": "UE5.8.4 D3D11",
+  "pixel_differences_exist": true,
+  "private_screenshots_committed": false,
+  "same_source_meta_map_goggles_sha256": {
+    "goggles": "76eb9696e2abf719bcfd3d467313e46136f5d92cc36cd6b3845ae447a272c1ae",
+    "map": "025539f8717c6215a17dc8acff24ec7bd39b3d43129de4069a9418b3d8da3a2a",
+    "meta": "2bb581a27aee55b0352f52227a3afe2c6d01a529b63c8dc661cbe8f4edbb2e3d"
+  },
+  "size": [
+    480,
+    320
+  ],
+  "status": "NATIVE_BASECOLOR_DIAGNOSTIC_PASS_ART_HOLD"
+}
