@@ -1,5 +1,14 @@
 # Unreal Engine 5.8 — active forward-development review track
 
+**SUPERSEDING NATIVE VERIFICATION RECEIPT — 2026-11-02 (exact SHA `e3e3ff5f349c98b2051a18a5f0c3db6097af8040`):** On an authorized Windows `neontic` workstation, an **isolated detached PR #713 checkout** with its two tracked default INI files protected by read-only attributes passed the **Unreal Engine 5.8.4 Win64 Editor UBT build AND all 25 named native automations**, with zero failed, zero not-run and **a clean tracked source tree after testing**. Full `Verify-Unreal.ps1` exited 0. An independent readback found **25 distinct Success records / 25 unique paths / 0 non-success**. Original engine-generated config-write failure from the first unprotected checkout remains a separate preserved diagnostic, not overwritten or ignored. Report SHA-256: `243ad1eedaa344cd52dd4a3380e59cbef34fcfcd3e39c61cc1307195921733a5` (raw report local to the disposable review machine; never upload generated Android File Server tokens). **Evidence status at that exact SHA: `EDITOR_BUILD=PASS`; `NATIVE_25=PASS`; `SOURCE_CUSTODY=CLEAN`; `PIE_P01_P13=NOT_TESTED`; `PRODUCTION_ART=NOT_AUTHORIZED`; `RELEASE=NOT_AUTHORIZED`.** This is *not* an acceptance of actual 13-scenario keyboard gameplay, sea contact/flotation, Splashdown, D3D12 art, packaged install or release. **A subsequent documentation-only SHA cannot inherit the exact-head receipt without its own verification.** See [integrated review gate](Docs/INTEGRATION_GATE_2026-11-02.md), [native command and evidence rules](UNREAL_TEST_COMMANDS.md), and [PR #713](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/713).
+
+
+**Fresh native evidence (November 2, 2026):** On an isolated exact-head PR #713 checkout (`fd0b68c28e6289d45f8b8c70228631c24577a352`), **Unreal 5.8.4 Editor compiled successfully**. The engine reported 25 named automation successes, but the all-green native verifier **refused acceptance** after discovering tracked rewrites of `DefaultEngine.ini` and `DefaultInput.ini`. Preserve the generated Android File Server token as local secret evidence; never stage, distribute or display it. **Native automations = HOLD (post-run source mutation); P01–P13 PIE = NOT TESTED.** [Verification matrix](Docs/PRODUCTION_VERIFICATION_MATRIX.md), [integrated gate](Docs/INTEGRATION_GATE_2026-11-02.md) and [dependency handoff](Docs/FIRST_WAKE_DEPENDENCY_HANDOFF_2026-11-02.md) are the current cross-discipline status, not older #712 receipt claims below.
+
+**Next native verification lane (NOT PASSED):** [Source-locked First Wake V2 Editor map/actor QA](Docs/FIRST_WAKE_NATIVE_MAP_ADMISSION_2026-11-02.md) is implemented and passed 8 Windows safety tests. Its initial native attempt was **blocked** by other Unreal Editor/Live Coding sessions. The verifier now refuses competing sessions before a build; the native map load and all P01–P13 PIE controls remain untested. This does not invalidate the earlier source-locked native 25/25 receipt. No Editor was terminated.
+
+**Combined review orientation:** [PR #713](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/713) is the current integrated **draft** of #712 First Wake, scoped #657 creator authority and #711 dependency register. See [review integration gate](Docs/INTEGRATION_GATE_2026-11-02.md). This branch has not passed native UE build or gameplay acceptance and is not merged to main.
+
 **2026-11-02 · Unreal-first decision · review/experimental; not a completed native game.**
 UE **5.8.4** is the observed Windows development patch within the project's
 `EngineAssociation: "5.8"` family. The preserved Godot and browser projects
@@ -64,3 +73,13 @@ checkout. Do not create a synthetic sea-contact marker to manufacture
 Splashdown: actual contact and stable flotation require separate native
 physics evidence. Any success must include source SHA, logs, evidence
 and unmodified original map/save files. Do not merge based on this README.
+
+
+**Editor map-admission safety:** The [native Prelude V2 map review gate](Docs/FIRST_WAKE_NATIVE_MAP_ADMISSION_2026-11-02.md)
+now has an exact-source Windows PowerShell launcher,
+`Tools/Invoke-NativePreludeMapQA.ps1`, requiring an idle Editor,
+UE5.8.4, clean/disposable worktree and a **verified-build.json**
+receipt from a real clean build-only run. It has source-level safety
+checks but **no accepted real Editor map receipt yet**. Actual
+P01–P13 PIE remains not tested. Do not conflate this with the earlier
+native 25/25 automation receipt.

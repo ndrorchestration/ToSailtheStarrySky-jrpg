@@ -1,5 +1,7 @@
 # Chapter 1 Beta Roadmap — solo development planning baseline
 
+> **ACTIVE ENGINE & STAGE OVERRIDE — 2026-11-02:** This document began as an October Godot-first roadmap. **Unreal Engine 5.8.4** is now the creator-selected forward engine. Preserve the October native Godot evidence only as historical comparison. The opening progression is **Ender → Ionia → Lyra → Reson → Aepex**, and **Splashdown begins Chapter 1, Act 1** after the First Wake prelude. The current [integrated Unreal draft #713](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/713) is review-only; [production QA matrix](../unreal/Docs/PRODUCTION_VERIFICATION_MATRIX.md) and [integration gate](../unreal/Docs/INTEGRATION_GATE_2026-11-02.md) take precedence over older engine implementation steps below. Dates remain *provisional planning targets*, not game release authorization.
+
 > **2026-10-28 evidence update:** Pinned Windows Godot 4.7.2 import, five headless tests and nine native render frames passed at `4d2ec5fb`. **New P0 acceptance blocker:** the captured Chapter 1 review scene uses legacy Lyra-first startup and labels Ionia-first opt-in, while the desired production startup is Ionia-first. P1: text occlusion, mixed character presentation and historical branding. These are distinct from the separate main-entry-to-water regression PASS. Do not advance the November integration milestone until normal F5 default-route gameplay and visuals are independently verified. [Native audit](CHAPTER_1_NATIVE_INTEGRATION_AUDIT_2026-10-28.md).
 
 **Planning date:** 2026-10-28  
@@ -9,12 +11,12 @@
 **Status:** planning proposal, not release commitment or proof of completion.
 
 ## Evidence boundary
-The repository contains a historical browser/p5.js preservation runtime and active native Godot/GDScript development. Current Godot Chapter 1 art, ships, story transitions, JRPG system cohesion and Windows packaging work include multiple **draft, unmerged pull requests**. Passing tests on a draft branch do not establish main-branch behavior, artistic acceptance, shipped Windows artifacts, or a complete Chapter 1. Preserve established Five Lights/celestial canon and the current Ionia-first native opening; treat older Lyra-first browser documents as historical until reconciled.
+The repository contains historical browser/p5.js and Godot/GDScript preservation work, while **Unreal Engine 5.8.4 C++/Blueprints** is the current forward-development target. Recent Unreal First Wake, combat, ship, artwork and Windows packaging efforts include multiple **draft, unmerged pull requests**. Passing tests on a draft branch do not establish main-branch behavior, artistic acceptance, shipped Windows artifacts, or a complete Chapter 1. Preserve established Five Lights/celestial canon and the current Ionia-first native opening; treat older Lyra-first browser documents as historical until reconciled.
 
 ## Monthly gates
 | Deadline | Phase | Evidence required |
 |---|---|---|
-| 2026-11-30 | Integration foundation | One canonical playable Godot route, consistent opening sequence, verified build, save contract, reproducible capture and smoke checks; Windows install candidate |
+| 2026-11-30 | Integration foundation | One canonical **Unreal** First Wake prelude → genuine sea landing → Splashdown review path, correct Ionia-before-Lyra sequence, exact-head UE Editor build and automations, isolated save contract and reproducible PIE evidence; Windows installed candidate remains a separate future gate |
 | 2026-12-31 | Narrative and JRPG | Core quest progression and playable representative battle, deterministic rules for stats/skills/magic/leveling, save/resume |
 | 2027-01-31 | Cinematic environments | Chapter 1-critical locations, ocean, berth, Aureate Wake, coherent materials, lighting, sky/weather and camera; side-by-side native render review |
 | 2027-02-28 | Characters and battle | Creator-correct Five Lights visuals, real gameplay animations, enemy/effects/UI integration, encounter balance review |
@@ -44,8 +46,8 @@ See [exact-head Chapter 1 integration audit](CHAPTER_1_NATIVE_INTEGRATION_AUDIT_
 
 ## Immediate work (November P0)
 1. Audit and deduplicate recent Chapter 1 draft PR stacks; identify exact-head dependencies, conflicts and actual main state.
-2. Reconcile Ionia-first Godot opening against legacy Lyra-first README/JS narrative.
-3. Promote one native continuous First Wake → berth → story/quest scene path behind tests.
+2. Reconcile **Unreal** Ionia-first recruitment and Prelude/Splashdown stage boundary against the historical Lyra-first JS/Godot descriptions; validate in actual Editor PIE rather than assuming the seven-marker scene proves Chapter 1.
+3. Validate a native **Unreal** continuous First Wake → real sea landing → Splashdown path behind source-locked Win64 and PIE gates. Do not promote review-only markers as genuine sea-water physics.
 4. Establish one authoritative save version and clean Windows install candidate.
 5. Measure a full native capture and first 30-minute unassisted player path before increasing scope.
 

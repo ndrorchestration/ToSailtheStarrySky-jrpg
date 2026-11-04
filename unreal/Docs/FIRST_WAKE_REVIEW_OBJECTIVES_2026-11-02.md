@@ -1,5 +1,8 @@
 # First Wake — read-only review objectives for the Unreal vertical slice
 
+**LATEST PINNED UE 5.8.4 NATIVE RESULT (2026-11-02):** Draft #713 commit `e3e3ff5f349c98b2051a18a5f0c3db6097af8040` **passed Win64 Editor compilation and 25/25 actual registered native automation tests**. The real JSON has 25 unique Success entries, 0 failed/NotRun; the isolated review worktree was clean after the run and `Verify-Unreal.ps1` exited 0. Report SHA-256 `243ad1eedaa344cd52dd4a3380e59cbef34fcfcd3e39c61cc1307195921733a5`. In this **disposable** checkout only, read-only attributes prevented Unreal from rewriting tracked `DefaultEngine.ini` and `DefaultInput.ini`. An earlier unprotected run's dirty-config/token evidence is still preserved, not erased. **This native receipt is only for the exact tested SHA; later documentation revisions require their own verification.** The **13 interactive PIE scenarios, genuine seawater/flotation, Splashdown, art approval, packaged installer and release are NOT TESTED/NOT AUTHORIZED**. See [exact-head gate](INTEGRATION_GATE_2026-11-02.md). No save schema, engine dependency, main-branch, art or Starbourne promotion occurred.
+
+
 **2026-11-02 · Draft, noncanonical review UX · UE 5.8.4.**
 
 ## Narrow runtime change
@@ -154,3 +157,23 @@ A passing result proves these C++ method bodies behave as expected **under
 the test stand-ins**, not that Unreal's engine SaveGame service or PIE
 runtime follows the same behavior. Exact-source native Windows UE 5.8.4
 validation and real keyboard playtesting remain required and unclaimed.
+
+## November 2, 2026 — Preserve existing party saves on story-only F5
+
+A native `UTSTSSSaveGame` payload can contain valid `PartyRoster`
+data, but the First Wake review pawn does **not** manage that party.
+Previously `SaveFirstWake` always allocated a fresh, roster-empty
+save object. Saving to an existing `first_wake_quick` slot could
+therefore silently discard a roster. The method now **refuses writes**
+to an existing save when the file is unsupported, corrupted, unreadable
+or contains a nonempty `PartyRoster`. A valid existing roster-free
+save can be updated by reusing the loaded object, preserving fields
+outside the First Wake story snapshot.
+
+The direct C++ source method is compiled/exercised against in-memory
+stand-ins by `check_first_wake_save_guard_compiled.py --self-test`,
+including a negative mutation that removes the roster protection.
+The test uses no actual disk SaveGame or Windows Unreal service. Native
+PIE evidence, 25 named automations and external save hash verification
+remain pending. This safeguard does **not** authorize party recruitment
+or an automatic combat roster synchronized from narrative story state.
