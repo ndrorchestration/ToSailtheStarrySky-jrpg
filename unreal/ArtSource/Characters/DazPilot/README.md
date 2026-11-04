@@ -8,6 +8,10 @@ Develop a Daz-only reference study of Ender for *To Sail the Starry Sky*, to add
 
 Use [Ender's creator-approved visual reference](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/blob/1e54efdc313067c7361a74438fda201112167cca/art-staging/field/ender/approved-appearance-20261008.png) and the [character authority](../../../../docs/CHARACTER_AND_ART_AUTHORITY.md): 22-year-old, slender adult, expressive green eyes, short auburn/dark-copper hair, brass forehead goggles, olive waistcoat, cream embroidered shirt, practical boots/satchel and a full-length staff with centered wrap and brass ferrules. A later group image shows green hair, but **that conflict is not permission to override the approved individual look**. Respect the height ranking Reson > Aepex > Ender > Ionia > Lyra; numeric heights remain provisional.
 
+## Coordination with existing Ender V5 development
+
+[Draft PR #721](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/721) independently contains a more advanced Ender V5 MetaHuman and a corrective sealed-aviator goggles V2 source study. Genuine Unreal 5.8.4 native V5 plus earlier goggles images exist, but face/hair likeness, materials, fitting and full rig remain unapproved; V2 native import is still pending. Keep V5 as the active Unreal Ender lookdev track. **Daz is an optional secondary 2D reference study**, not a substitute for MetaHuman or an approved game mesh.
+
 ## What is free and what is not
 
 Daz Studio and [Genesis 9 Starter Essentials (SKU 86958)](https://www.daz3d.com/genesis-9-starter-essentials) are free as an initial software/content offering. Daz's [September 2026 licensing explanation](https://www.daz3d.com/blog/daz-3d-interactive-license) distinguishes **2D renders**, which are generally permitted under the standard terms, from using Daz-store **3D figure, hair, costume, rig, morph or texture data in a game**, which requires applicable product-specific Interactive Licenses. The free starter price grants no automatic 3D game use rights. Keep the Daz study private, and do not export Daz-store 3D data into TSTSS until licensing has been independently checked.
