@@ -182,3 +182,48 @@ Only then is the opt-in Python Editor map QA runnable via the launcher.
 The actual map/actor check is **NOT TESTED** at current integration
 head while other Editors remain active. Neither build-only nor map
 inspection can satisfy P01–P13 genuine PIE or ship-water physics.
+
+
+## November 3 — installed Windows MSVC C++ HUD behavior gate (no Editor)
+
+While the authorized Windows workstation has active Unreal Editor or
+Live Coding sessions, it is possible to run the **actual production
+`DrawHUD()` method** against controlled minimal C++ API stand-ins
+without starting UBT, the Unreal Editor or a game. This is not an
+Unreal Engine native build or rendering acceptance result.
+
+From the exact-source review checkout, use PowerShell:
+
+```powershell
+$Review = "C:\TSTSS_PR713_NativeMapQA_20261102"
+Set-Location $Review
+$env:PYTHONDONTWRITEBYTECODE = "1"
+py -3 -B unreal/Tools/check_first_wake_review_hud_msvc.py
+```
+
+The runner uses the **already-installed** Visual Studio 2022
+Build Tools `vcvars64.bat`, creates a disposable batch/executable
+under the Windows temporary directory and deletes both afterward.
+It extracts the unchanged C++ production `DrawHUD()` method
+from `TSTSSFirstWakeReviewHUD.cpp`, compiling/testing both
+`UE_BUILD_SHIPPING=0` and `=1`. No Windows PATH change,
+dependency install, tracked project mutation, real player save access
+or Editor interaction is needed.
+
+**Observed successful execution (2026-11-03) at source
+`64387804fb40cde97d20bb68e033ec57bf5cbfd2`:**
+MSVC BuildTools 14.44 on `neontic` produced
+`MSVC_SHIPPING=0: PASS: 21 portable C++ real DrawHUD behavior checks`
+and `MSVC_SHIPPING=1: PASS: 1 ...`, followed by
+`MSVC_REAL_DrawHUD_BODY_TEST_PASS_NOT_UE_EDITOR_OR_PIE`.
+The detached review checkout retained **zero tracked changes**.
+The first attempted invocation had a command-line quoting issue
+caused by spaces in `vcvars64.bat`'s path, which was resolved by
+running through a temporary `.cmd` file; the final run passed.
+Linux CI independently compiles both variants with its C++ compiler.
+
+**Authority gate remains:** real UE5.8.4 Win64 Editor build,
+real HUD visuals, in-editor PIE keyboard/save testing and the
+P01–P13 interaction matrix are **not proved** by this MSVC
+source-only run. Respect the strict idle-Editor gate and retain
+the older 25/25 native automation proof at its separate SHA.
