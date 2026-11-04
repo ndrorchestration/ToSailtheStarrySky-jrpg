@@ -24,7 +24,13 @@ API = r"""
 #include <string>
 #include <vector>
 #define TEXT(x) x
-using FString = std::string;
+struct FString : std::string {
+    using std::string::string;
+    using std::string::operator=;
+    FString() = default;
+    FString(const std::string& s) : std::string(s) {}
+    bool IsEmpty() const { return empty(); }
+};
 struct FLinearColor {
     float r, g, b, a;
     FLinearColor(float red, float green, float blue, float alpha)
