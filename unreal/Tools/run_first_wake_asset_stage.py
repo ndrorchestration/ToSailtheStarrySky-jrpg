@@ -20,9 +20,9 @@ UPROJECT = PROJECT / "ToSailTheStarrySky.uproject"
 EDITOR = Path("C:/Program Files/Epic Games/UE_5.8/Engine/Binaries/Win64/UnrealEditor.exe")
 SCRIPT = Path(__file__).with_name("stage_first_wake_asset_scene.py")
 OUTPUT = PROJECT / "Saved/AssetAssemblyEvidence"
-NATIVE = OUTPUT / "first_wake_asset_scene_native_v2_20261104.json"
-HOST = OUTPUT / "host_asset_stage_v2_20261104.json"
-LOG = OUTPUT / "first_wake_asset_stage_v2_20261104.log"
+NATIVE = OUTPUT / "first_wake_asset_scene_native_v3_20261104.json"
+HOST = OUTPUT / "host_asset_stage_v3_20261104.json"
+LOG = OUTPUT / "first_wake_asset_stage_v3_20261104.log"
 BASE = PROJECT / "Content/TSTSS/Review/FirstWake_PreludeInteraction_V2.umap"
 EXPECTED_SHA = "4c96f1fb28fe4af91b879977e473c20de32bd933f741a5384bb8403a00254b80"
 

@@ -33,6 +33,8 @@ class AssetWorldSourceContracts(unittest.TestCase):
                      "LiftStation", "PressureStation", "ReserveStation",
                      "EngineeringApproval"):
             self.assertIn('"' + stop + '"', self.src)
+        self.assertIn('n == "TSTSS_PRELUDE_REVIEW_" + stop', self.src)
+        self.assertNotIn("n.endswith(stop)", self.src)
         self.assertIn("native map readback lost one or more staged assets", self.src)
         self.assertIn("native readback lost first-wake milestones", self.src)
         self.assertIn("original player start not preserved", self.src.replace("player start not preserved", "original player start not preserved"))

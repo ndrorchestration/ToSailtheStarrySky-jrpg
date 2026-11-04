@@ -16,11 +16,11 @@ import unreal
 PROJECT = Path(unreal.Paths.project_dir()).resolve()
 ROOT = PROJECT.parent
 BASE_MAP = "/Game/TSTSS/Review/FirstWake_PreludeInteraction_V2"
-DEST_MAP = "/Game/TSTSS/Review/Scenes/FirstWake_AssetAssembly_20261104_REVIEW_V2"
+DEST_MAP = "/Game/TSTSS/Review/Scenes/FirstWake_AssetAssembly_20261104_REVIEW_V3"
 BASE_FILE = PROJECT / "Content/TSTSS/Review/FirstWake_PreludeInteraction_V2.umap"
-DEST_FILE = PROJECT / "Content/TSTSS/Review/Scenes/FirstWake_AssetAssembly_20261104_REVIEW_V2.umap"
+DEST_FILE = PROJECT / "Content/TSTSS/Review/Scenes/FirstWake_AssetAssembly_20261104_REVIEW_V3.umap"
 BASE_SHA = "4c96f1fb28fe4af91b879977e473c20de32bd933f741a5384bb8403a00254b80"
-RECEIPT = PROJECT / "Saved/AssetAssemblyEvidence/first_wake_asset_scene_native_v2_20261104.json"
+RECEIPT = PROJECT / "Saved/AssetAssemblyEvidence/first_wake_asset_scene_native_v3_20261104.json"
 PREFIX = "TSTSS_ASSET_REVIEW_"
 STOPS = ("FlyerDiscovery", "IoniaHiring", "AureateBoarding",
          "LiftStation", "PressureStation", "ReserveStation", "EngineeringApproval")
@@ -101,7 +101,7 @@ try:
     before = list(actors.get_all_level_actors())
     names = [a.get_actor_label() for a in before]
     for stop in STOPS:
-        must(sum(1 for n in names if n.endswith(stop)) == 1,
+        must(sum(1 for n in names if n == "TSTSS_PRELUDE_REVIEW_" + stop) == 1,
              "missing or duplicate original milestone: " + stop)
     must(sum(isinstance(a, unreal.PlayerStart) for a in before) == 1,
          "player start not preserved")
@@ -153,7 +153,7 @@ try:
     reloaded = [a.get_actor_label() for a in actors.get_all_level_actors()]
     must(all(reloaded.count(name) == 1 for name in added),
          "native map readback lost one or more staged assets")
-    must(all(sum(n.endswith(stop) for n in reloaded) == 1 for stop in STOPS),
+    must(all(sum(n == "TSTSS_PRELUDE_REVIEW_" + stop for n in reloaded) == 1 for stop in STOPS),
          "native readback lost first-wake milestones")
     must(digest(BASE_FILE) == BASE_SHA, "original map changed during stage")
     must(all(digest(p) == config_hashes[p.name] for p in config_paths),
