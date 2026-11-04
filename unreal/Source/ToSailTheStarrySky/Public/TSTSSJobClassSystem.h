@@ -45,6 +45,17 @@ struct FTSTSSJobLoadoutState
     TSet<FName> ExplicitOffJobTransferSkillIds;
 };
 
+// Data-only view model for a future class-selection UI. Availability only
+// means the existing review fixture can select a loadout; NOT gameplay access.
+struct FTSTSSJobSelectionPreviewRow
+{
+    FName JobId = NAME_None;
+    FText DisplayName;
+    bool bExplicitlyUnlocked = false;
+    bool bPrimaryReviewSelectable = false;
+    bool bSecondaryReviewSelectable = false;
+};
+
 // An ability's class eligibility is distinct from its learned status, magic
 // school mastery, weapon requirements, costs, and ReviewExecutable admission.
 // This preview-only policy cannot call FTSTSSBattleSkillSystem::TryUseRow.
@@ -70,6 +81,14 @@ public:
     static bool TryReadJobDefinitionsForReview(
         const UDataTable& Table,
         TMap<FName, FTSTSSJobDefinitionRow>& OutDefinitions);
+
+    // Deterministic, read-only menu projection from the validated table.
+    // Reuses TrySelectJobs so UI eligibility cannot bypass existing gates.
+    // Rejects invalid state/catalog without modifying the caller's output.
+    static bool TryBuildJobSelectionPreviewForReview(
+        const FTSTSSJobLoadoutState& Current,
+        const UDataTable& Table,
+        TArray<FTSTSSJobSelectionPreviewRow>& OutRows);
 
     // Both job slots are explicitly selected; they never follow Five Lights,
     // native identity, inventory, affinities, school mastery, or skill learning.

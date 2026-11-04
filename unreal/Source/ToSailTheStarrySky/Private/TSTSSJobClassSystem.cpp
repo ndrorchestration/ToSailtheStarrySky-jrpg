@@ -30,6 +30,53 @@ bool FTSTSSJobClassSystem::TryReadJobDefinitionsForReview(
     return true;
 }
 
+bool FTSTSSJobClassSystem::TryBuildJobSelectionPreviewForReview(
+    const FTSTSSJobLoadoutState& Current,
+    const UDataTable& Table,
+    TArray<FTSTSSJobSelectionPreviewRow>& OutRows)
+{
+    if (!IsProtagonist(Current.CharacterId)
+        || Current.NativeProfession != CanonicalNativeProfession(Current.CharacterId)
+        || Current.CharacterLevel < 1)
+    {
+        return false;
+    }
+
+    TMap<FName, FTSTSSJobDefinitionRow> Definitions;
+    if (!TryReadJobDefinitionsForReview(Table, Definitions))
+    {
+        return false;
+    }
+
+    TArray<FName> Keys;
+    Definitions.GetKeys(Keys);
+    Keys.Sort([](const FName& Left, const FName& Right)
+    {
+        return Left.ToString() < Right.ToString();
+    });
+
+    TArray<FTSTSSJobSelectionPreviewRow> CandidateRows;
+    for (const FName& JobId : Keys)
+    {
+        const FTSTSSJobDefinitionRow& Definition = Definitions.FindChecked(JobId);
+        FTSTSSJobSelectionPreviewRow Choice;
+        Choice.JobId = JobId;
+        Choice.DisplayName = Definition.DisplayName;
+        Choice.bExplicitlyUnlocked = Current.ExplicitlyUnlockedJobs.Contains(JobId);
+
+        FTSTSSJobLoadoutState IgnoredCandidate;
+        Choice.bPrimaryReviewSelectable = TrySelectJobs(
+            Current, Definitions, JobId, NAME_None, IgnoredCandidate);
+        Choice.bSecondaryReviewSelectable = !Current.PrimaryJob.IsNone()
+            && TrySelectJobs(Current, Definitions, Current.PrimaryJob,
+                JobId, IgnoredCandidate);
+        CandidateRows.Add(MoveTemp(Choice));
+    }
+
+    OutRows = MoveTemp(CandidateRows);
+    return true;
+}
+
 bool FTSTSSJobClassSystem::IsProtagonist(FName CharacterId)
 {
     return CharacterId == TEXT("Ender")
