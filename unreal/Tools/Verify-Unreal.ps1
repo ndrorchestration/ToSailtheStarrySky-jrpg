@@ -65,6 +65,7 @@ $RequiredTests = @(
     'TSTSS.CombatIntegration.DataContractCannotAutoAuthorize',
     'TSTSS.CombatIntegration.ProgressiveRecruitmentPartySize',
     'TSTSS.CombatData.NonExecutableSkillReconciliation',
+    'TSTSS.Design.HybridCharacterJobs',
     'TSTSS.CombatIntegration.DesignOnlyTurnManagerDenial',
     'TSTSS.Combat.EncounterCompletion',
     'TSTSS.FirstWake.RequiresOrderedMilestones',
