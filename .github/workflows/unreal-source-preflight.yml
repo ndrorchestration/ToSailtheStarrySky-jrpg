@@ -163,3 +163,7 @@ jobs:
         run: python3 unreal/Tools/check_combat_design_only_compiled.py
       - name: First Wake interaction-to-Splashdown authority contract (source only)
         run: python3 unreal/Tools/test_firstwake_integration_contract.py
+      - name: First Wake imported-asset review scene contracts (source only)
+        run: |
+          python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_asset_scene.py' -v
+          python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_asset_stage_runner.py' -v
