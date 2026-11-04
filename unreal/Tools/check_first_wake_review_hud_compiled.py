@@ -44,7 +44,9 @@ struct UTSTSSFirstWakeState {
 struct APawn { virtual ~APawn() = default; };
 struct ATSTSSExplorerCharacter : APawn {
     UTSTSSFirstWakeState* State = nullptr;
+    FString FocusHint;
     UTSTSSFirstWakeState* GetFirstWakeState() const { return State; }
+    FString GetFocusedReviewInteractionHint() const { return FocusHint; }
 };
 struct APlayerController {
     APawn* Pawn = nullptr;
@@ -186,6 +188,19 @@ int main() {
         expect(hud.text[hud.text.size()-2].value.find("E interact") != FString::npos &&
                hud.text.back().value.find("no sea landing") != FString::npos,
                "compact layout must use shortened controls and review disclaimer");
+        const auto beforeFocus = hud.text.size();
+        const auto beforeFocusRects = hud.rects.size();
+        explorer.FocusHint = "E: attempt engineering inspection";
+        hud.DrawHUD();
+        expect(hud.text.size() == beforeFocus + 6 &&
+               hud.rects.size() == beforeFocusRects + 5,
+               "a reachable target must add one context prompt and its background");
+        expect(hud.text.back().value == explorer.FocusHint,
+               "HUD must show the exact live focus hint");
+        explorer.FocusHint.clear();
+        hud.DrawHUD();
+        expect(hud.text.back().value.find("no sea landing") != FString::npos,
+               "moving aim away must remove the context prompt on the next frame");
         const auto beforeChapter = hud.text.size();
         state.ChapterOne = true;
         hud.DrawHUD();
@@ -231,6 +246,9 @@ def extract(source: str) -> str:
                     "InspectionMask & 0x01u",
                     "InspectionMask & 0x02u",
                     "InspectionMask & 0x04u",
+                    "GetFocusedReviewInteractionHint()",
+                    "Canvas->ClipY >= 280.f",
+
                 ):
                     if token not in body:
                         raise ValueError("Actual HUD lost safety feature: " + token)
