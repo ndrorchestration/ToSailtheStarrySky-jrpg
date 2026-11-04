@@ -1,0 +1,47 @@
+{
+  "comparison_crop_xyxy": [
+    110,
+    38,
+    370,
+    319
+  ],
+  "facial_likeness_approved": false,
+  "goggles_physically_fitted": false,
+  "native_ue": "5.8.4 D3D11",
+  "old_lighting": {
+    "crop_nearblack_fraction": 0.3951,
+    "crop_nearwhite_fraction": 0.335177,
+    "mean_rgb_full": [
+      62.564,
+      62.369,
+      60.421
+    ],
+    "sha256_png_core": "dc9116e68a5404ebb4b377b78f443a902a5a4521734ad5533e94793e104fc709",
+    "trailing_exporter_bytes": 34755
+  },
+  "original_V2_binary_byte_parity_claim": false,
+  "private_source_images_in_repository": false,
+  "production_model_changed": false,
+  "real_rig_approved": false,
+  "review_only_noncanonical": true,
+  "same_source_sha256_before_after": {
+    "goggles": "5b1b5c5ac0b1be754d9e19b3bd9cec293c819259d18b39e8ad8f56228d22b5cb",
+    "map": "025539f8717c6215a17dc8acff24ec7bd39b3d43129de4069a9418b3d8da3a2a",
+    "meta": "2bb581a27aee55b0352f52227a3afe2c6d01a529b63c8dc661cbe8f4edbb2e3d"
+  },
+  "status": "NATIVE_V2_SEALED_GOGGLES_LOW_LIGHT_IMPROVES_READABILITY_ART_HOLD",
+  "temporary_pointlight_x0p1": {
+    "crop_nearblack_fraction": 0.499644,
+    "crop_nearwhite_fraction": 0.000383,
+    "mean_rgb_full": [
+      38.112,
+      37.786,
+      35.425
+    ],
+    "sha256_png_core": "6ef2842848c21207cd17859341b015169e91d8929ea5c9f96a10f3f9aa5efbb2",
+    "trailing_exporter_bytes": 39802
+  },
+  "visual_material_approval": false,
+  "white_clip_fraction_point_reduction": 0.334794,
+  "white_clip_test": "min(R,G,B)>=245"
+}

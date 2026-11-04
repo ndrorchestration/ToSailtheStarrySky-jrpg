@@ -119,6 +119,13 @@ jobs:
           python3 -m py_compile unreal/ArtSource/Characters/Accessories/V2Sealed/native_rt_v2_lower_forehead_front.py
           python3 -m py_compile unreal/ArtSource/Characters/Accessories/V2Sealed/native_rt_v2_threequarter.py
 
+      - name: Check Ender V2 low-light review source and anti-promotion receipts (engine-free)
+        run: |
+          python3 -m unittest discover -s unreal/ArtSource/Characters/Accessories/V2Sealed -p test_v2_lower_light_source_20261104.py -v
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/V2Sealed/native_rt_v2_lower_forehead_light_tenth_review_20261104.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/V2Sealed/verify_v2_lower_light_native_20261104.py
+          echo 'Native pixels were checked separately on NEONTIC; hosted test is source and receipt only.'
+
       - name: Regenerate source assets and confirm exact bytes
         env:
           TSTSS_CAST_OUTPUT: unreal/ArtSource/Characters/Candidates
