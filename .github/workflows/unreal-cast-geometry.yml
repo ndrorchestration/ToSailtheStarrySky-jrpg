@@ -18,6 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Daz reference-only readiness policy and privacy fixture tests
+        run: python3 -m unittest discover -s unreal/ArtSource/Characters/DazPilot -p 'test_dim_readiness_audit.py' -v
       - name: Check glTF structure, indices, normals and surface orientation
         run: python3 unreal/ArtSource/Characters/check_cast_geometry.py
       - name: Verify cast source pose, facing direction and adversarial flips
