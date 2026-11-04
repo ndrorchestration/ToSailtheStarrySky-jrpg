@@ -73,8 +73,12 @@ bool FTSTSSJobTableReadbackTest::RunTest(const FString& Parameters)
         Scholar->bSecondaryEligible || Guard->bSecondaryEligible);
 
     TMap<FName, FTSTSSJobDefinitionRow> Definitions;
-    Definitions.Add(Scholar->JobId, *Scholar);
-    Definitions.Add(Guard->JobId, *Guard);
+    if (!TestTrue(TEXT("strict DataTable catalog readback succeeds"),
+        FTSTSSJobClassSystem::TryReadJobDefinitionsForReview(*Table, Definitions)))
+    {
+        return false;
+    }
+    TestEqual(TEXT("strict catalog contains two rows"), Definitions.Num(), 2);
     FTSTSSJobLoadoutState Ender;
     Ender.CharacterId = TEXT("Ender");
     Ender.NativeProfession = TEXT("Rift Scholar");
@@ -87,6 +91,35 @@ bool FTSTSSJobTableReadbackTest::RunTest(const FString& Parameters)
             Ender, Definitions, Scholar->JobId, NAME_None, Output));
     TestEqual(TEXT("data-driven rejection keeps caller output unchanged"),
         Output.CharacterId, FName(TEXT("NeverOverwrite")));
+
+    // A DataTable row can have a distinct key and in-row JobId. Reject the
+    // whole catalog instead of silently overwriting the first definition.
+    FTSTSSJobDefinitionRow Alias = Definitions.FindChecked(FName(TEXT("ReviewScholar")));
+    Table->AddRow(TEXT("ReviewAlias"), Alias);
+    TestFalse(TEXT("aliased/duplicate job ID rejects full catalog"),
+        FTSTSSJobClassSystem::TryReadJobDefinitionsForReview(*Table, Definitions));
+    TestEqual(TEXT("alias failure preserves prior catalog"), Definitions.Num(), 2);
+    TestFalse(TEXT("alias not admitted"), Definitions.Contains(TEXT("ReviewAlias")));
+    Table->RemoveRow(TEXT("ReviewAlias"));
+
+    FTSTSSJobDefinitionRow Untitled = Definitions.FindChecked(FName(TEXT("ReviewGuard")));
+    Untitled.JobId = TEXT("ReviewUntitled");
+    Untitled.DisplayName = FText::GetEmpty();
+    Table->AddRow(TEXT("ReviewUntitled"), Untitled);
+    TestFalse(TEXT("missing displayed job name denies catalog"),
+        FTSTSSJobClassSystem::TryReadJobDefinitionsForReview(*Table, Definitions));
+    TestEqual(TEXT("missing name never clobbers prior rows"), Definitions.Num(), 2);
+    Table->RemoveRow(TEXT("ReviewUntitled"));
+
+    UDataTable* EmptyTable = NewObject<UDataTable>(GetTransientPackage());
+    EmptyTable->CreateTableFromRawData(NoInitialRows, FTSTSSJobDefinitionRow::StaticStruct());
+    TestFalse(TEXT("empty authored catalog rejects without changing output"),
+        FTSTSSJobClassSystem::TryReadJobDefinitionsForReview(*EmptyTable, Definitions));
+    UDataTable* WrongSchema = NewObject<UDataTable>(GetTransientPackage());
+    WrongSchema->CreateTableFromRawData(NoInitialRows, FTableRowBase::StaticStruct());
+    TestFalse(TEXT("unrelated DataTable schema rejected"),
+        FTSTSSJobClassSystem::TryReadJobDefinitionsForReview(*WrongSchema, Definitions));
+    TestEqual(TEXT("all failure paths preserve accepted catalog"), Definitions.Num(), 2);
 
     return ImportProblems.Num() == 0;
 }
