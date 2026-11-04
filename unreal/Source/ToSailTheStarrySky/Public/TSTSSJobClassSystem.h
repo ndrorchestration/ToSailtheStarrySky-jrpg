@@ -64,6 +64,13 @@ public:
     static bool IsProtagonist(FName CharacterId);
     static FName CanonicalNativeProfession(FName CharacterId);
 
+    // Convert an authored DataTable into a catalog without losing row-key
+    // integrity or silently overwriting duplicate/misnamed job IDs. Reject
+    // empty/wrong-schema/malformed tables transactionally. No job admission.
+    static bool TryReadJobDefinitionsForReview(
+        const UDataTable& Table,
+        TMap<FName, FTSTSSJobDefinitionRow>& OutDefinitions);
+
     // Both job slots are explicitly selected; they never follow Five Lights,
     // native identity, inventory, affinities, school mastery, or skill learning.
     // On rejection the destination is byte-for-byte logically unchanged.

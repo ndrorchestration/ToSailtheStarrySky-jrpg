@@ -1,5 +1,35 @@
 #include "TSTSSJobClassSystem.h"
 
+bool FTSTSSJobClassSystem::TryReadJobDefinitionsForReview(
+    const UDataTable& Table,
+    TMap<FName, FTSTSSJobDefinitionRow>& OutDefinitions)
+{
+    if (Table.GetRowStruct() != FTSTSSJobDefinitionRow::StaticStruct()
+        || Table.GetRowMap().IsEmpty())
+    {
+        return false;
+    }
+
+    TMap<FName, FTSTSSJobDefinitionRow> CandidateDefinitions;
+    for (const TPair<FName, uint8*>& Entry : Table.GetRowMap())
+    {
+        const FTSTSSJobDefinitionRow* Row =
+            reinterpret_cast<const FTSTSSJobDefinitionRow*>(Entry.Value);
+        if (Entry.Key.IsNone()
+            || !Row
+            || Row->JobId != Entry.Key
+            || Row->DisplayName.IsEmpty()
+            || CandidateDefinitions.Contains(Row->JobId))
+        {
+            return false;
+        }
+        CandidateDefinitions.Add(Row->JobId, *Row);
+    }
+
+    OutDefinitions = MoveTemp(CandidateDefinitions);
+    return true;
+}
+
 bool FTSTSSJobClassSystem::IsProtagonist(FName CharacterId)
 {
     return CharacterId == TEXT("Ender")
