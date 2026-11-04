@@ -242,3 +242,21 @@ objective agrees with J and F9, test on at least 1280×720 and
 the overlay does not misrepresent Splashdown as implemented. The
 portable C++ checks cannot establish real UE font metrics, rendering,
 line-of-sight, movement, keyboard input or the P01–P13 results.
+
+
+## November 3 — MSVC proof of HUD method, real PIE visuals still required
+
+The real C++ `DrawHUD()` method was extracted without rewriting its
+body and compiled/executed under installed MSVC 2022 Build Tools
+14.44 using minimal Engine API stand-ins at exact SHA
+`64387804fb40cde97d20bb68e033ec57bf5cbfd2`.
+**21/21 non-shipping behavior assertions** and **1/1 shipping
+absence assertion passed**; clean detached Windows worktree.
+This supplements the Linux hosted C++ source test and supports the
+review-only HUD's intended objective/engineering lamp behavior.
+It does **not** prove native Unreal rendering, on-screen font
+clipping, contrast, visibility, actual SaveGame/PIE interactions or
+P01–P13. The open Editor was minimized; no trustworthy
+visual capture was obtained. Keep P01–P13 and both native visual
+review resolutions (**1280×720 and 500 px wide**) as NOT TESTED
+until observed and recorded in a real Editor play session.
