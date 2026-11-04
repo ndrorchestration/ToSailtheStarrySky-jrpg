@@ -5,10 +5,12 @@ One glTF mesh, multiple material primitives. Static only. Noncanonical.
 Requires numpy and trimesh. No external assets or paid services.
 """
 from pathlib import Path
+import os
 import numpy as np
 import trimesh
 import math, json, hashlib, struct, itertools
-OUT = Path('/mnt/data')
+OUT = Path(os.environ.get('TSTSS_V2_OUTPUT_DIR', '/mnt/data'))
+OUT.mkdir(parents=True, exist_ok=True)
 G = OUT / 'Ender_Sealed_Aviator_Goggles_V2_NONCANONICAL.glb'
 REPORT = OUT / 'Ender_Goggles_V2_3D_Validation.json'
 TAU = 2 * np.pi
