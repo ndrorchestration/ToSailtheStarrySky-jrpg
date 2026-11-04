@@ -35,7 +35,7 @@ $Valid = [ordered]@{
     render_or_water_physics_approved = $false
     character_or_ship_art_approved = $false
     source_bindings = [ordered]@{
-        config_mapping_count = 9
+        config_mapping_count = 10
         source_handlers_verified = $true
         player_keyboard_input_executed = $false
     }
