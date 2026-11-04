@@ -1,5 +1,12 @@
 # First Wake V2 — UE 5.8.4 isolated PIE acceptance matrix
 
+## November 4, 2026 — PIE-only F6 quicksave replaces hazardous F5 binding (draft PR #760)
+
+During real UE5.8.4 PIE testing, a synthetic Win32 LeftShift+F5 chord created a new disposable review save even after a source-verified modifier guard. The Editor did not reliably pass Shift state to the gameplay handler. **The first candidate FAILED this live test despite 29/29 native automations PASS.** Both affected isolated saves are preserved. This revised candidate keeps non-PIE Game `F5` as the normal quicksave, maps PIE quicksave to **F6 only**, and retains `F9` for load; PIE must never bind gameplay saving to `F5`. The normal historical 2026-11-02 recorded control procedures below are superseded where they mention F5 **in PIE only**. Do not reinterpret earlier native/PIE evidence or mark any of P01–P13 PASS without a new exact-head native and real-input observation.
+
+The legacy export label `PIE_F5_F9_STORY_SAVE` is retained for provenance in the old acceptance receipt schema. For this revision record the additional field `PIE_F6_F9_STORY_SAVE=NOT_TESTED|PASS|FAIL`; tests using the old field must not infer the newer F6 shortcut passed.
+
+
 **LATEST PINNED UE 5.8.4 NATIVE RESULT (2026-11-02):** Draft #713 commit `e3e3ff5f349c98b2051a18a5f0c3db6097af8040` **passed Win64 Editor compilation and 25/25 actual registered native automation tests**. The real JSON has 25 unique Success entries, 0 failed/NotRun; the isolated review worktree was clean after the run and `Verify-Unreal.ps1` exited 0. Report SHA-256 `243ad1eedaa344cd52dd4a3380e59cbef34fcfcd3e39c61cc1307195921733a5`. In this **disposable** checkout only, read-only attributes prevented Unreal from rewriting tracked `DefaultEngine.ini` and `DefaultInput.ini`. An earlier unprotected run's dirty-config/token evidence is still preserved, not erased. **This native receipt is only for the exact tested SHA; later documentation revisions require their own verification.** The **13 interactive PIE scenarios, genuine seawater/flotation, Splashdown, art approval, packaged installer and release are NOT TESTED/NOT AUTHORIZED**. See [exact-head gate](INTEGRATION_GATE_2026-11-02.md). No save schema, engine dependency, main-branch, art or Starbourne promotion occurred.
 
 
@@ -23,7 +30,7 @@ production assets.
 2. Do not interfere with a parallel Unreal Editor/Live Coding build. Require
    installed UE **5.8.4** and normal supported Windows toolchain.
 3. The isolated project must not contain a pre-existing
-   `unreal/Saved/SaveGames/tstss_prelude_pie_quick.sav` before testing F5.
+   `unreal/Saved/SaveGames/tstss_prelude_pie_quick.sav` before testing the **PIE-specific F6 save**.
    The game itself refuses to adopt or overwrite a stale PIE slot.
    Any existing `first_wake_quick.sav` is a potentially valuable non-PIE
    player save; it must be left untouched. **Stop** if either slot's
@@ -53,11 +60,11 @@ production assets.
 | P06 | In a clean ordered run: flyer → Ionia → boarding; press J after each | Objectives advance in order, with no phantom new party member or magic unlock |
 | P07 | While boarded, inspect Reserve before Lift/Pressure | Reserve accepted once; J still names the earliest incomplete inspection, Lift |
 | P08 | Complete Lift and Pressure; press E on engineering signoff | Signoff accepted only when all three inspections are recorded; objective becomes launch preparation |
-| P09 | In isolated clean slot only: after hiring Ionia press F5, board and inspect Lift, then press F9 | Reports actual save/load results. On successful load, story objective reverts to boarding; player world position does **not** rewind |
+| P09 | In isolated clean slot only: after hiring Ionia press **F6**, board and inspect Lift, then press F9 | Reports actual save/load results. On successful load, story objective reverts to boarding; player world position does **not** rewind |
 | P10 | Press E without hitting a marker, through an occluder, or outside reach | No progression or misleading 'marker rejected' cue for a miss; visibility/reach checks remain active |
 | P11 | Inspect a station a second time | Rejected with no mask mutation and no premature engineering signoff |
 | P12 | After engineering signoff in V2, inspect story state and try to progress to Splashdown using available review markers | No false `SeaContact`, `FlotationConfirmed` or Chapter 1 Act 1 completion |
-| P13 | In a fresh PIE session with an **already existing** `tstss_prelude_pie_quick` save, press F5 and F9; preserve original bytes for comparison | F5 refuses to overwrite the pre-existing review save, F9 refuses to load it, and the external `first_wake_quick` player slot is never touched |
+| P13 | In a fresh PIE session with an **already existing** `tstss_prelude_pie_quick` save, press **F6** and **F9**; also press unmodified F5 and Shift+F5 and preserve original bytes for comparison | F6 refuses to overwrite the pre-existing review save, F9 refuses to load it, and F5 never invokes gameplay quicksave in PIE, and the external `first_wake_quick` player slot is never touched |
 
 **Existing player-save safety extension:** Before any actual native
 save test, ensure the disposable test profile contains **only**
@@ -71,9 +78,9 @@ If the engine returns a different result, preserve original file
 hashes and report BLOCKED rather than deleting or replacing the slot.
 
 **Save-test safety:** P09 must use a disposable checkout with no pre-existing
-PIE review slot. In PIE, F5/F9 now select `tstss_prelude_pie_quick`; the
+PIE review slot. In PIE, **F6/F9** now select `tstss_prelude_pie_quick`; the
 pawn records ownership only after its first successful save in the
-current session. Further F5 writes in the same session may update that
+current session. Further F6 writes in the same session may update that
 same review slot; new sessions with an existing review slot fail closed.
 Non-PIE use still targets `first_wake_quick`. Never touch a player's
 non-PIE save folder; discard review-only artifacts only after
@@ -183,7 +190,7 @@ A new **non-shipping, review-only** C++ `ATSTSSFirstWakeReviewHUD`
 is selected by `ATSTSSGameMode` in non-shipping builds. It draws a
 bounded translucent first-person-screen overlay (not in-world art),
 the active `GetReviewObjectiveText()` from Ender's own
-`UTSTSSFirstWakeState`, W/A/S/D/E/J/F5/F9 review controls, and an
+`UTSTSSFirstWakeState`, W/A/S/D/E/J/**F6**/F9 review controls (Game-world F5 unchanged), and an
 explicit noncanonical Prelude disclaimer. It does not cache or
 advance story state, inspect/save a player slot, alter combat,
 recruit anyone, or unlock launch/sea contact/Splashdown.
