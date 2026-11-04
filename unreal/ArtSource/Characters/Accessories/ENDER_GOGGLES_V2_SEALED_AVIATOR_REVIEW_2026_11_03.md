@@ -1,3 +1,16 @@
+# November 4 native development update — supersedes the November 3 pending status
+
+The November 3 note below was correct *before* the native import. **V2 is now reproduced on NEONTIC and successfully imported into an isolated UE 5.8.4 review project, with three genuine native GPU screenshots.** See the [full reviewed V2 native evidence report](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/blob/0016a2c53f0e5ff785f2053a278f6b0fa229523c/unreal/ArtSource/Characters/Accessories/V2Sealed/ENDER_V2_NATIVE_DEVELOPMENT_2026_11_04.md).
+
+- **Actual native StaticMesh import:** PASS, one mesh, 11 slots, 19.2×8.02×19.171 cm imported axes, without changing V1 or Ender.
+- **Native temporary orientation/placement:** PASS only for correct world axes and 79-point outer bounding-box proximity. Physical fit and hair/strap clipping **not proven**.
+- **Native GPU render:** three real V2-and-Ender V5 views PASS technically: above-brow front, 3 cm lower front, lower three-quarter. Images remain private on NEONTIC; evidence receipts and source committed.
+- **Creator and production holds:** brass overexposed, green lenses dark, face likeness and hair unfinished, no approved physical fit, no production rig, no game/canon promotion. The V1 design remains explicitly **rejected as glasses**, despite its historical technical evidence.
+
+The newer generator is committed to `Accessories/V2Sealed/ender_aviator_goggles_v2_generator.py`; its NEONTIC rebuilt GLB has the same mesh/material/bounds counts as the originally delivered source, but different serialization SHA. The executable native import, three GPU capture scripts, regression tests and exact receipts are under `Accessories/V2Sealed/`. Prior text stating “not staged on NEONTIC” or “native import unverified” is **historical, not current**.
+
+---
+
 # Ender goggles corrective design — **V2 sealed aviator prototype**
 
 **2026-11-03; draft review art; not canonical.** The creator rejected the existing V1 candidate as **glasses**, not goggles. V1's prior static Unreal import and V5+goggles screenshot prove only that *V1* rendered; they do not constitute approval of a goggles design. Preserve its evidence and do not silently rebrand it.
