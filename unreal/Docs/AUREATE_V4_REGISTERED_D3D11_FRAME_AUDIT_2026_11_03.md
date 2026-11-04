@@ -81,3 +81,50 @@ A fresh direct Windows `certutil -hashfile ... SHA256` read of all four original
 | Starbourne, developer-only static | `953bb2aaca0db194bdd871229cdb13245c59ceab19cf0f8cbc44a802c01e0e00` | PASS |
 
 This is **file-integrity evidence only**; it does not re-run the Unreal four-map readback, prove GPU images from all four forms, approve art, or authorize a Starbourne player/story unlock. Automation09 remains **NOT LAUNCHED** until its resource gate passes.
+
+
+## November 4 native skydome diagnosis — three new D3D11 test receipts
+
+**Source branch evidence boundary:** PR #732 remained **OPEN, DRAFT, UNMERGED** at `d6f296c5da9108288ec473da471edf94e561fcad` immediately before this addendum; **8/8 exact-head hosted source workflows SUCCESS**. The following three real D3D11 executions used privately prepared **uncommitted, isolated review-only scripts** in the authorized workstation's disposable Unreal 5.8.4 project. They are **not** exact-head GitHub code/CI results and must not be presented as merged/canonical project art.
+
+### Three native registered Editor.Python captures
+
+| Evidence | Automation09: camera-forward flat panel | Automation10: two-sided camera-centered sphere | Automation11: high-emission sphere diagnostic |
+| --- | --- | --- | --- |
+| Named test / Unreal process | PASS, exit 0 | PASS, exit 0 | PASS, exit 0 |
+| Image dimensions | 1280×720 | 1280×720 | 1280×720 |
+| D3D11 PNG SHA-256 | `302b344e757cb2e89c9f0454473824e953818e85fdcfcc039bdcf10c2ae2e6b8` | `fb1385379fd067dedb52d4f3554029c35dbe941a4d06c28a785fc2af8c3f1e7f` | `764d305b24c8aecbb93cad113b93d460623c609c2825a77f8ff71b6192f1f7a1` |
+| Near-black pixels (max RGB < 12) | 84.732% | 70.911% | **0.273%** |
+| Pixels with max RGB > 40 | 13.496% | 13.524% | **99.392%** |
+| Mean R/G/B pixel values | 20.75 / 22.02 / 23.65 | 22.14 / 24.49 / 27.85 | 116.92 / 157.71 / 191.73 |
+| Top-left pixel | (0, 1, 2) | (1, 2, 5) | **(85, 131, 178)** |
+| Native/host SHA, dimension & map preservation cross-check | PASS | PASS | PASS |
+| Cinematic / physically accurate sky approval | HOLD | HOLD | **HOLD — diagnostic, not approved art** |
+
+The material/camera setup was changed *only in separate, unsaved review render sessions*:
+
+1. **09:** developer-only flat unlit panel, moved to camera-forward 6,500 cm. Native screenshot succeeded but background remained black. Repeatedly moving that panel is not justified.
+2. **10:** a two-sided spherical skydome centered on the camera, ~5,000 cm radius, with low provisional emissive color (0.12, 0.22, 0.35). Native pass; largely black visual result.
+3. **11:** same two-sided skydome geometry/camera/light pipeline, with only a stronger provisional emissive color (4.0, 8.0, 16.0). Native pass; rendered a **clearly visible continuous blue background** around the old Skybourne blockout without changing its scene geometry. This isolates **emissive-material/exposure strength as a major factor**; it does not establish a physically modeled atmosphere or prove that all other rendering issues are resolved.
+
+Automation11 source SHA-256: `c9b743ae6b000715654bdb39497fc31a3ec9bf0a7282adaba919fbc4f079e9b8`. Registration SHA-256: `f7122bae328947ca47e510ac180037bc64ad55b662b56b906239d7fb45e625ab`. Host/native receipts and real PNGs are in separate immutable `SkybourneV4NativeGPU_20261103_Automation09`, `...Automation10`, `...Automation11` folders under `C:\tmp\TSTSS_AureateCinematicV4_Native_20261103`. The controller's one "new screenshot / no approved ground truth" warning is **not** an approved image-comparison test. All three exact controller tests returned Success.
+
+**Artifact boundaries:** the attempts each created a uniquely named **developer material `.uasset` inside the disposable sandbox only**, plus private logs/PNGs/automation reports. They did not save the source review `.umap`, modify the playable ship/production Unreal project, change SaveGame or unlock Starbourne. It would be inaccurate to say the *sandbox* was entirely unchanged; only the original review maps and production content stayed unchanged. The camera-lit materials, blue backdrop, old rectangular wing stand-ins, spherical bridge and box-like quarters are **not creator-approved art**.
+
+### Postflight preservation and source QA
+
+Independent host/native receipts **and fresh Windows `certutil -hashfile`** checks confirmed the unchanged original Skybourne map `16bb93fb9bdd2a4e1559864df908122094fe8a641b4a1481f2935d64ba184c40`. After the additional native runs, all four original V4 mode map SHA-256s were re-read and still matched the previous four-map audit; the separate authored-leaf fresh Skybourne map also matched `93b0940c75bcd0269d0d20dbf55aaf2bfad3c2f903f82d4daf835797be220e95`.
+
+Local independent stdlib/source unittest checks were executed in the **dirty c182cea review checkout**: `test_aureate_v4_*.py` **52/52 PASS**, `test_aureate_cinematic_v4.py` **8/8 PASS**. These **60/60** are valid local test executions, but **not** exact-current-GitHub-head test evidence. Preserve the checkout's existing modified and untracked authored-wing sources; do not blindly push or rebase them.
+
+### Authored leaf-wing daytime Skybourne — prepared, execution HOLD
+
+A separate **Automation12** registered Editor.Python test was generated by combining the known-good Automation11 *nonphysical* blue diagnostic skydome with the already-native-imported, four-rooted **280 cm authored wing** study. The source parses, asserts the separate authored-leaf review map's exact SHA, confirms four unique leaf-wing actor identities and exact imported mesh path, preserves full RAM/disk/process watchdogs, and refuses existing evidence/output paths.
+
+**Automation12 did not launch**: the guarded runner found another unrelated `UnrealEditor-Cmd.exe` process active (observed PID 19696, ~2.5 GiB working set), and correctly refused concurrency. That process was **not terminated or altered**. The new automation has **no PNG/native result**, and no claim is made that combining the leaf wings with blue sky succeeds. The source is local and uncommitted review work, not a production asset.
+
+### Updated next visual gate
+
+The narrow next experiment is **one guarded daytime authored-leaf Skybourne screenshot** via the prepared registered Automation12, *only after* the other native session completes and the resource preflight confirms >=6.5 GiB available RAM, >=14 GiB free disk, the original authored-leaf map SHA and a unique output destination. Independently inspect the real PNG; compare framing, wing geometry, sky contrast, hull curvature/crew scale and approved reference art. A source QA PASS or a visible background **never** implies cinematic creator approval.
+
+Keep the black-sky/atmosphere #705 acceptance lane separate. Do not run all four forms, retune production camera exposure, promote developer sphere materials, merge PR #732 or unlock Starbourne. Any visual improvements remain **NONCANONICAL** until explicit creator signoff and independent physical/geometry verification.
