@@ -6,6 +6,8 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/PlayerController.h"
+#include "InputCoreTypes.h"
 #include "Components/InputComponent.h"
 #include "Engine/World.h"
 #include "Engine/Engine.h"
@@ -186,10 +188,23 @@ void ATSTSSExplorerCharacter::ShowObjectiveReview()
 
 void ATSTSSExplorerCharacter::QuickSave()
 {
-    // PIE testing must not write the normal quicksave slot. Never adopt or
-    // overwrite a leftover review save from another Editor session.
+    // UE's Shift+F5 is Stop Play-In-Editor. The F5 action may also be
+    // dispatched to this pawn before PIE shuts down; that must never
+    // create a new review SaveGame as a side effect of stopping play.
+    // Fail closed for unpossessed PIE pawns as well.
     const UWorld* World = GetWorld();
     const bool bPIE = World && World->WorldType == EWorldType::PIE;
+    if (bPIE)
+    {
+        const APlayerController* PC = Cast<APlayerController>(GetController());
+        if (!PC || PC->IsInputKeyDown(EKeys::LeftShift) ||
+            PC->IsInputKeyDown(EKeys::RightShift))
+        {
+            return;
+        }
+    }
+    // PIE testing must not write the normal quicksave slot. Never adopt or
+    // overwrite a leftover review save from another Editor session.
     const FString Slot = bPIE ? TEXT("tstss_prelude_pie_quick") : TEXT("first_wake_quick");
     if (bPIE && !bPIEReviewQuickSlotOwned &&
         UGameplayStatics::DoesSaveGameExist(Slot, 0))
