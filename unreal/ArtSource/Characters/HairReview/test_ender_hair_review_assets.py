@@ -98,5 +98,21 @@ class ReviewHairSourceTests(unittest.TestCase):
             self.assertNotIn("save_current_level(",script)
             self.assertNotIn("source_assets_saved=True",script)
 
+    def test_v2_native_gpu_receipt_cannot_pretend_art_pass(self):
+        evidence=json.loads((HERE/"Evidence/ender_hair_native_provenance_v2_20261104.json")
+                            .read_text(encoding="utf-8"))
+        self.assertEqual(evidence["status"],"NATIVE_V1_V2_RENDER_TECH_VERIFIED_ART_HOLD")
+        self.assertFalse(evidence["creator_approval"])
+        self.assertFalse(evidence["gameplay_integration"])
+        self.assertFalse(evidence["hair_groom_rigging_approved"])
+        self.assertTrue(evidence["scalp_bounds_native_api_unavailable"])
+        self.assertEqual(
+            evidence["v2_actual_native_gpu_png"]["sha256_png_core"],
+            "591e4e999f69c3015e91633038ceb78b48ed0eed5f3388e4848e7d957a7afa1c")
+        self.assertEqual(evidence["v2_static_import"]["material_slots"],5)
+        self.assertNotEqual(
+            evidence["v1_actual_native_gpu_png"]["sha256_png_core"],
+            evidence["v2_actual_native_gpu_png"]["sha256_png_core"])
+
 if __name__=="__main__":
     unittest.main()

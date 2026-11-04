@@ -139,6 +139,8 @@ jobs:
           python3 -m py_compile unreal/ArtSource/Characters/HairReview/native_probe_v5_head_bounds_20261104.py
           python3 -m py_compile unreal/ArtSource/Characters/HairReview/native_capture_ender_hair_v1_v2_goggles_20261104.py
           python3 -m py_compile unreal/ArtSource/Characters/HairReview/native_capture_ender_hair_v2_v2_goggles_20261104.py
+          python3 -m py_compile unreal/ArtSource/Characters/HairReview/verify_ender_hair_native_evidence_20261104.py
+          python3 -m py_compile unreal/ArtSource/Characters/HairReview/verify_ender_hair_native_v2_gpu_20261104.py
           echo 'Hosted source tests cannot certify native Unreal renders, scalp fit, hair groom, facial likeness, or creator approval.'
 
       - name: Regenerate source assets and confirm exact bytes
