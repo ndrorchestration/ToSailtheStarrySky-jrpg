@@ -109,6 +109,16 @@ jobs:
           python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/RenderTargetPipeline/native_rt_ender_v5_goggles_exposure_minus2.py
           python3 -m py_compile unreal/ArtSource/Characters/Accessories/MH5Review/RenderTargetPipeline/compare_rt_exposure_minus2.py
 
+      - name: Verify V2 true sealed goggles native evidence and preserve artist hold (engine-free)
+        run: |
+          python3 -m unittest discover -s unreal/ArtSource/Characters/Accessories/V2Sealed -p test_native_v2_sealed_goggles_receipts.py -v
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/V2Sealed/ender_aviator_goggles_v2_generator.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/V2Sealed/native_import_ender_v2_goggles_to_MH5.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/V2Sealed/native_spatial_v2_to_MH5.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/V2Sealed/native_rt_v2_above_brow_front.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/V2Sealed/native_rt_v2_lower_forehead_front.py
+          python3 -m py_compile unreal/ArtSource/Characters/Accessories/V2Sealed/native_rt_v2_threequarter_EXPERIMENTAL_NOT_RUN.py
+
       - name: Regenerate source assets and confirm exact bytes
         env:
           TSTSS_CAST_OUTPUT: unreal/ArtSource/Characters/Candidates
