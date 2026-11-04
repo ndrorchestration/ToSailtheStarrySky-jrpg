@@ -1,5 +1,6 @@
 #include "TSTSSMilestoneActor.h"
 #include "Components/StaticMeshComponent.h"
+#include "Engine/World.h"
 
 ATSTSSMilestoneActor::ATSTSSMilestoneActor()
 {
@@ -21,5 +22,21 @@ bool ATSTSSMilestoneActor::TryActivate(UTSTSSFirstWakeState* State)
         : State->AdvanceTo(Milestone);
     if (!bSucceeded) return false;
     OnMilestoneActivated();
+
+#if WITH_EDITOR
+    // These bright, solid review cubes are *not* production interaction art.
+    // After a successful E press they must stop blocking the next marker's
+    // camera ray and the reviewing pawn's route. Never change failed or
+    // out-of-order gates, other actors, non-PIE worlds, or gameplay saves.
+    const UWorld* World = GetWorld();
+    if (World && World->WorldType == EWorldType::PIE &&
+        GetActorLabel().StartsWith(TEXT("TSTSS_PRELUDE_REVIEW_")) &&
+        IsValid(InteractionMesh))
+    {
+        InteractionMesh->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
+        InteractionMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+    }
+#endif
+
     return true;
 }
