@@ -89,7 +89,7 @@ def plan():
         "SAVED_MAP_ORIGINAL_SHA_MUST_REMAIN_UNCHANGED",
         "APPROVED_HULL_AND_GEODESIC_GLASS_DOME_NOT_IMPLEMENTED",
         "HORIZON_AND_GAMEPLAY_VISUAL_ACCEPTANCE_NOT_ESTABLISHED",
-        "STARBourNE_PLAYER_UNLOCK_REMAINS_CLOSED"
+        "STARBOURNE_PLAYER_UNLOCK_REMAINS_CLOSED"
       ],
       "approvals":{"production_art":False,"playable":False,"release":False,
                    "starbourne_player_unlock":False},
