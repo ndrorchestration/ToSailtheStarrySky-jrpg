@@ -43,14 +43,22 @@ def run_msvc_case(vcvars: Path, method: str, shipping: int) -> str:
                           encoding="utf-8")
         # Input paths are obtained exclusively from the current temp directory
         # and a locally installed VC environment; no user command injection.
-        command = (
-            f'call "{vcvars}" >nul && '
-            'cl /nologo /std:c++17 /EHsc /GR /W4 '
-            f'/DUE_BUILD_SHIPPING={shipping} '
-            f'/Fe:"{target}" "{source}"'
+        # cmd /c can misparse a single quoted vcvars64.bat path when
+        # subprocess quotes the whole /c argument. A temp batch file
+        # eliminates that ambiguity; no machine files/settings are changed.
+        batch = folder / "compile_hud_standin.cmd"
+        batch.write_text(
+            '@echo off\n'
+            + f'call "{vcvars}" >nul\n'
+            + 'if errorlevel 1 exit /b 1\n'
+            + 'cl /nologo /std:c++17 /EHsc /GR /W4 '
+            + f'/DUE_BUILD_SHIPPING={shipping} '
+            + f'/Fe:"{target}" "{source}"\n'
+            + 'exit /b %errorlevel%\n',
+            encoding="utf-8",
         )
         build = subprocess.run(
-            ["cmd.exe", "/d", "/c", command], cwd=folder,
+            ["cmd.exe", "/d", "/c", batch.name], cwd=folder,
             capture_output=True, text=True, timeout=90,
             check=False,
         )
