@@ -72,7 +72,7 @@ foreach ($Name in @('DefaultEngine.ini','DefaultInput.ini')) {
 $FreeKiB = (Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory
 if ($FreeKiB -lt 6500000) { throw 'Insufficient free RAM for graphical review' }
 Write-Output "FIRST_WAKE_REVIEW_READY HEAD=$Head MAP=$Map"
-Write-Output 'Controls in PIE: WASD, mouse, E interact, J objective, F5/F9 isolated story save/load.'
+Write-Output 'Controls in PIE: WASD, mouse, E interact, J objective, F6 review save, F9 isolated review load. F5 is reserved for Editor shortcuts in PIE.'
 Write-Output 'This seven-stop Prelude ends at engineering signoff. Launch/Splashdown and cinematic art are not complete.'
 if (-not $OpenEditor) { return }
 try {
