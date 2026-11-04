@@ -49,3 +49,12 @@ The Automation07 map is a **fresh authored-wing review map**, not a replacement 
 4. Only after improved background *and* visual side-by-side review, extend to matched cameras for Seabourne/Submersible. Keep Starbourne a **private static development study**; player/story gate remains LOCKED.
 
 **Unchanged authority:** PR #732 stays draft and unmerged. No production C++ actor, SaveGame, source model or four original review maps was modified by this audit. No Starbourne player unlock, cinematic approval, continuous physical clearance, water/pressure validation or distribution is authorized.
+
+
+## Automation09 preflight — prepared, NOT executed
+
+A uniquely named **camera-relative solid cyclorama** experiment was source-prepared on the private Windows workstation from the safely archived Automation06 source. The bounded change moves the temporary backdrop center from hard-coded world coordinates to the camera's forward vector at 6,500 cm. The private capture and runner scripts passed Python compilation and a new registered Editor.Python entry was prepared **without touching the original V4 maps or the archived source**.
+
+The GPU runner immediately **refused execution because free physical RAM was below its 6.5 GiB launch gate**. No UnrealEditor-Cmd process was launched, no Automation09 GPU image/host receipt/native log was created, and there is **no evidence that camera-relative placement fixes the black background**. A follow-up native-process check found no orphan commandlet; independent SHA and pixel integrity rechecks of Automation06 and Automation07 remained PASS. Do not weaken the resource gate or repeatedly retry while memory fluctuates around the threshold. Preserve this failed preflight as a separate source-prepared, **NATIVE_NOT_RUN** experiment. The old standalone 08 preparer also refused due to an archived source location before creating any runtime artifact.
+
+The next GPU work remains exactly one unique, guarded registered-test run under sufficient stable RAM/disk headroom, with pixel validation and unchanged original maps. **No four-form GPU campaign, cinematic signoff, production promotion, or Starbourne unlock is authorized.**
