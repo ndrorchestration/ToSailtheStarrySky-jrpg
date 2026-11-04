@@ -127,6 +127,20 @@ jobs:
           python3 -m py_compile unreal/ArtSource/Characters/Accessories/V2Sealed/ReviewEvidence/v2_native_exposure_metrics.py
           python3 -m py_compile unreal/ArtSource/Characters/Accessories/V2Sealed/ReviewEvidence/inspect_v2_glb_material_inventory.py
 
+      - name: Verify Ender dark-copper hair V1/V2 original GLBs and nonapproval source controls (engine-free)
+        run: |
+          python3 -m unittest discover -s unreal/ArtSource/Characters/HairReview -p test_ender_hair_review_assets.py -v
+          python3 -m py_compile unreal/ArtSource/Characters/HairReview/generate_ender_copper_hair_v1.py
+          python3 -m py_compile unreal/ArtSource/Characters/HairReview/generate_ender_copper_hair_v2.py
+          python3 -m py_compile unreal/ArtSource/Characters/HairReview/verify_ender_copper_hair_v1.py
+          python3 -m py_compile unreal/ArtSource/Characters/HairReview/verify_ender_copper_hair_v2.py
+          python3 -m py_compile unreal/ArtSource/Characters/HairReview/native_import_ender_hair_v1_20261104.py
+          python3 -m py_compile unreal/ArtSource/Characters/HairReview/native_import_ender_hair_v2_20261104.py
+          python3 -m py_compile unreal/ArtSource/Characters/HairReview/native_probe_v5_head_bounds_20261104.py
+          python3 -m py_compile unreal/ArtSource/Characters/HairReview/native_capture_ender_hair_v1_v2_goggles_20261104.py
+          python3 -m py_compile unreal/ArtSource/Characters/HairReview/native_capture_ender_hair_v2_v2_goggles_20261104.py
+          echo 'Hosted source tests cannot certify native Unreal renders, scalp fit, hair groom, facial likeness, or creator approval.'
+
       - name: Regenerate source assets and confirm exact bytes
         env:
           TSTSS_CAST_OUTPUT: unreal/ArtSource/Characters/Candidates
