@@ -73,3 +73,15 @@ The reproducible script is unreal/Tools/verify_first_wake_asset_scene_native.py.
 4. Drive one encounter from real UI/controller with the existing class/equipment and combat foundation. Keep ship physics, Starbourne and save-schema changes separately gated.
 
 **Binary custody:** All imported native assets, saved .umap worlds, screenshots and original source references remain local/untracked in the isolated workstation. Source and documentation only are proposed for GitHub review. No protected-main merge or release; none of the lookdev art has been promoted to canon.
+
+## Opt-in gameplay/graphics review launcher
+
+Run the guarded **preflight only** from PowerShell in the isolated worktree:
+
+    $root = 'C:\TSTSS_AssetAssembly_20261104'
+    $head = (git -C $root rev-parse HEAD).Trim()
+    & "$root\unreal\Tools\Start-FirstWakeAssetReview.ps1" -EngineRoot 'C:\Program Files\Epic Games\UE_5.8' -ExpectedHead $head
+
+Once the native stage/readback, source SHA, untouched gameplay source/config, original and asset map digests, original assets, absent prior PIE saves, no competing Editor process, and **>=6.5 GiB free RAM** pass, use the same command with **-OpenEditor** to open the V3 asset-filled level in UE5.8.4 D3D11. The terminal remains open while the Editor runs and protects both map files and tracked configs against inadvertent saves. No Editor is started without that explicit switch.
+
+The real gameplay exercise still requires a player or a separately verified native input harness: press **Play in Editor** and inspect movement, actual visibility/reach, E interaction progression, J objective and F5/F9 disposable story-only quicksave. Note the cinematic lighting, ship scale, wing obstruction, static art rig gaps, and observed frame-time. An Editor launch is **not** a gameplay PASS by itself. If existing SaveGames are present, preserve them and use a new isolated workspace rather than deleting any files.
