@@ -260,3 +260,40 @@ P01–P13. The open Editor was minimized; no trustworthy
 visual capture was obtained. Keep P01–P13 and both native visual
 review resolutions (**1280×720 and 500 px wide**) as NOT TESTED
 until observed and recorded in a real Editor play session.
+
+
+## November 3 — in-reach, line-of-sight E prompt (not PIE proof)
+
+The First Wake **non-shipping review HUD** now shows a discrete
+bottom-screen **E: attempt milestone interaction** or **E: attempt
+engineering inspection** hint **only when** Ender's camera visibility
+trace strikes a native `ATSTSSMilestoneActor` and the actual hit
+point is within the existing **300 cm pawn-centered interaction
+radius**. The same `TSTSSInteractionReach::GetCameraTraceLength`
+and `IsInsidePlayerReach` constraints used by the E action are
+reused in a new read-only `GetFocusedReviewInteractionHint()`
+method. No target/miss/out-of-range/invalid story/Chapter 1 state
+yields an empty hint; shipping code emits no review prompt. The
+word **attempt** does not promise story authorization: E may still
+reject a blocked or repeated beat. No actor, story bitmask, save or
+water-landing gate is changed by displaying this hint.
+
+**Executed source-level checks at exact commit
+`9cb62bd1f6329c1fd996c6dc51c1d570bc832fef`:** the
+authorized Windows machine compiled the **actual production
+focus-hint C++ method with installed MSVC 2022** against bounded
+Unreal API doubles and passed **14 non-shipping and 2 shipping
+checks**; the **actual HUD DrawHUD method** separately passed
+**24 non-shipping and 1 shipping C++ checks**. All **7 Windows
+HUD integration/source safety checks** passed, Git tree remained
+clean, and **4/4 hosted GitHub workflows succeeded**.
+Portable/stand-in proof does not establish actual Unreal renderer
+visibility, trace collision, frame performance or PIE player input.
+
+In **P02/P03/P06**, record actual E prompt appearance at a correct
+trace hit, disappearance on miss or out-of-range camera aim,
+handling of occluded markers, E rejection on out-of-order story
+beats, and HUD restoration after F9. Capture native frames with
+the prompt at supported viewport sizes and verify readable
+contrast against dark/light/atmospheric scenes. P01–P13 remain
+**NOT TESTED** in real UE Play In Editor until independently run.
