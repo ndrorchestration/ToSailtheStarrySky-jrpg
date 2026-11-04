@@ -121,6 +121,62 @@ bool FTSTSSJobTableReadbackTest::RunTest(const FString& Parameters)
         FTSTSSJobClassSystem::TryReadJobDefinitionsForReview(*WrongSchema, Definitions));
     TestEqual(TEXT("all failure paths preserve accepted catalog"), Definitions.Num(), 2);
 
+    TArray<FTSTSSJobSelectionPreviewRow> Preview;
+    TestTrue(TEXT("DesignOnly catalog produces read-only menu projection"),
+        FTSTSSJobClassSystem::TryBuildJobSelectionPreviewForReview(
+            Ender, *Table, Preview));
+    if (!TestEqual(TEXT("preview has exactly two rows"), Preview.Num(), 2))
+    {
+        return false;
+    }
+    TestEqual(TEXT("preview uses deterministic job ID ordering"),
+        Preview[0].JobId, FName(TEXT("ReviewGuard")));
+    TestFalse(TEXT("DesignOnly unlocked Guard cannot be selected"),
+        Preview[0].bPrimaryReviewSelectable || Preview[0].bSecondaryReviewSelectable);
+    TestFalse(TEXT("DesignOnly unlocked Scholar cannot be selected"),
+        Preview[1].bPrimaryReviewSelectable || Preview[1].bSecondaryReviewSelectable);
+
+    // ReviewSelectable is only a disposable test-fixture status.
+    FTSTSSJobDefinitionRow SelectableScholar = Definitions.FindChecked(FName(TEXT("ReviewScholar")));
+    FTSTSSJobDefinitionRow SelectableGuard = Definitions.FindChecked(FName(TEXT("ReviewGuard")));
+    SelectableScholar.ReviewStatus = ETSTSSJobReviewStatus::ReviewSelectable;
+    SelectableGuard.ReviewStatus = ETSTSSJobReviewStatus::ReviewSelectable;
+    SelectableScholar.bSecondaryEligible = true;
+    SelectableGuard.bSecondaryEligible = true;
+    Table->RemoveRow(TEXT("ReviewScholar"));
+    Table->RemoveRow(TEXT("ReviewGuard"));
+    Table->AddRow(TEXT("ReviewScholar"), SelectableScholar);
+    Table->AddRow(TEXT("ReviewGuard"), SelectableGuard);
+    Ender.PrimaryJob = TEXT("ReviewScholar");
+    TestTrue(TEXT("preview reuses explicit existing selection gates"),
+        FTSTSSJobClassSystem::TryBuildJobSelectionPreviewForReview(
+            Ender, *Table, Preview));
+    TestTrue(TEXT("unlocked Guard can be primary in review fixture"),
+        Preview[0].bExplicitlyUnlocked && Preview[0].bPrimaryReviewSelectable);
+    TestTrue(TEXT("unlocked Guard may be secondary under current Scholar"),
+        Preview[0].bSecondaryReviewSelectable);
+    TestFalse(TEXT("duplicate primary Scholar cannot occupy secondary slot"),
+        Preview[1].bSecondaryReviewSelectable);
+    TestTrue(TEXT("menu projection never grants learned skills"),
+        Ender.LearnedSkillIds.IsEmpty());
+
+    FTSTSSJobLoadoutState InvalidIdentity = Ender;
+    InvalidIdentity.CharacterId = TEXT("UnknownSixth");
+    TestFalse(TEXT("unknown character cannot acquire a menu projection"),
+        FTSTSSJobClassSystem::TryBuildJobSelectionPreviewForReview(
+            InvalidIdentity, *Table, Preview));
+    TestEqual(TEXT("invalid identity preserves prior preview rows"), Preview.Num(), 2);
+    TestEqual(TEXT("invalid identity preserves first preview row"),
+        Preview[0].JobId, FName(TEXT("ReviewGuard")));
+
+    // A malformed table must not leak a partial menu into the output.
+    Table->AddRow(TEXT("ReviewAlias"), SelectableGuard);
+    TestFalse(TEXT("mismatched DataTable identity rejects entire preview"),
+        FTSTSSJobClassSystem::TryBuildJobSelectionPreviewForReview(
+            Ender, *Table, Preview));
+    TestEqual(TEXT("malformed catalog preserves prior menu"), Preview.Num(), 2);
+    Table->RemoveRow(TEXT("ReviewAlias"));
+
     return ImportProblems.Num() == 0;
 }
 #endif
