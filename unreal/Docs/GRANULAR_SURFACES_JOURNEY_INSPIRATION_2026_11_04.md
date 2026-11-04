@@ -1,5 +1,31 @@
 # TSTSS — Journey-inspired sand and snow art direction for Unreal (2026-11-04)
 
+## November 4 — TWO actual native UE5.8.4 attempts (latest evidence; FAIL-CLOSED)
+
+**Separate original private sandbox projects; no playable/prod content modified.** Source is commit `3c9ad4ede1c88987485a37fd0aae82c6be6b2524` for attempt 02, with an isolated clean review checkout and **11/11 engine-free tests PASS**. All six hosted exact-head GitHub source workflows completed **SUCCESS**. Those tests do not validate a native GPU frame.
+
+| Evidence boundary | Attempt 01 | Attempt 02 |
+| --- | --- | --- |
+| Private Windows project | `C:\tmp\TSTSS_GranularV2_Native_20261104\GranularV2Sandbox` | `C:\tmp\TSTSS_GranularV2_Native_20261104_02\GranularV2Sandbox` |
+| Exact source commit | `758af9b0bad079dd8556d472dd7c8d09928f8621` | `3c9ad4ede1c88987485a37fd0aae82c6be6b2524` |
+| UE5.8.4 D3D11 native result | `NATIVE_MATERIAL_BUILD_HOLD`: material graph connection failed before compiler | Internal Python receipt `NATIVE_TWO_SURFACE_MATERIAL_BUILD_PASS`: compiler error arrays reported clean and both material instances plus map were saved |
+| Windows Unreal Editor **process** exit | **0**, but source receipt failed | **3221225477 (0xC0000005, access violation)** near/after UE shutdown; **strict G1 overall HOLD**, not success |
+| Actual screenshots/performance | **NONE / NOT RUN** | **NONE / NOT RUN** |
+| Evidence preservation | Original logs and failure receipts retained | Original native/host receipts, full log and five assets retained |
+
+Attempt 02 **independently enumerated and SHA-256 rehashed** all five physical files in its disposable project:
+- `GranularReview.umap` `2bee9a7ec491522527ad240bb5645613c3b4e59f47f80bc24083ee96ac79a8f7`
+- `M_SilkenDune.uasset` `a031feccc0b0147c1c1e85632426492667d3e6c530239065a60aa9731f6d5539`
+- `MI_SilkenDune.uasset` `8cfe6d2f480036efa17554085fa5c00fbb72e3bc29dc7c0e2c96de6babac206e`
+- `M_WindCrustSnow.uasset` `13c9dbcc8cd80ed89c6fd00a4f5a95ad8d1e422fc07747af815961a0edf5c872`
+- `MI_WindCrustSnow.uasset` `e5f4e3755d069d13ff1f1f6ed8826b69b10dff9512808c658b42d4230510c70b`
+
+This establishes that the UE Editor Python graph builder advanced from a first-pin error to **writing both native material/material-instance assets and a review map**, with no compiler errors returned by the synchronous `recompile_material` calls. It **does not** prove that those materials display correctly, survive an independent Unreal reopen, render on the GPU, or pass a clean process shutdown. In fact the abnormal exit is a blocker even though `LogExit: Exiting.` appears in the tail of the log. Do **not** infer a known crash cause or retry the occupied attempt paths. The source input hash was checked at startup; the second native host log SHA-256 is `0dfda89a8701269d4bf176cc55008089fe7e8c4425152df85276506991309e8e`.
+
+**Next smallest safe gate:** read-only engine AssetRegistry and material-graph readback from a separate, clean *third* reviewer project or a snapshot of the generated review project; identify the `0xC0000005` shutdown if repeatable, and only then attempt **one** review screenshot with defined light direction, exposure, full provenance and pixel QA. Do not approve source-only manifests, assume this exit is harmless, or merge draft PRs. Production weather, globe material blending, footprints, snowfall wind transport, canonical terrain and Starbourne remain untouched.
+
+---
+
 **CREATOR DIRECTION — ADOPTED:** The experiential sand and snow presentation of *Journey* (thatgamecompany, 2012) is the **primary artistic/technical inspiration** for sand and snow in *To Sail the Starry Sky*. This is an art-direction constraint, not a request to recreate proprietary code, sample assets, copy its world layout, or clone character designs. The TSTSS visual target remains *original premium cinematic science fantasy*: believable planetary curvature, scale, lighting, atmospheric depth, readable contrast, environmental storytelling, and an emotionally resonant world.
 
 **Source authority:** user's direct design decision on November 4, 2026. This page **does not** declare an exact implementation of *Journey*'s technology, approved TSTSS assets, canon geography, implemented footsteps, weather simulation or a tested Unreal renderer.
