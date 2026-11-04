@@ -164,6 +164,16 @@ void ATSTSSExplorerCharacter::Interact()
             {
                 if (Milestone->TryActivate(FirstWakeState))
                 {
+#if WITH_EDITOR
+                    if (GetWorld()->WorldType == EWorldType::PIE)
+                    {
+                        UE_LOG(LogTemp, Display,
+                            TEXT("TSTSS_PIE_REVIEW_E_ACCEPT target=%s pawn_hit_cm=%.1f objective_after=%s"),
+                            *Milestone->GetActorLabel(),
+                            FVector::Dist(PawnLocation, Hit.ImpactPoint),
+                            *FirstWakeState->GetReviewObjectiveText());
+                    }
+#endif
                     ShowFirstWakeReviewObjective(FirstWakeState);
                 }
                 else
@@ -171,6 +181,16 @@ void ATSTSSExplorerCharacter::Interact()
                     // A valid, in-reach marker rejected the state transition.
                     // This does not grant progression or claim that E hit when
                     // the camera trace missed or the target was out of reach.
+#if WITH_EDITOR
+                    if (GetWorld()->WorldType == EWorldType::PIE)
+                    {
+                        UE_LOG(LogTemp, Display,
+                            TEXT("TSTSS_PIE_REVIEW_E_DENIED target=%s pawn_hit_cm=%.1f objective=%s"),
+                            *Milestone->GetActorLabel(),
+                            FVector::Dist(PawnLocation, Hit.ImpactPoint),
+                            *FirstWakeState->GetReviewObjectiveText());
+                    }
+#endif
                     ShowFirstWakeReviewBlockedInteraction(FirstWakeState);
                 }
             }
