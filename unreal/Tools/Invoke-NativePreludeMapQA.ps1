@@ -150,10 +150,11 @@ if (Test-Path -LiteralPath $LocalReceipt) {
 New-Item -Path $LocalReceipt -ItemType Directory -ErrorAction Stop | Out-Null
 $Head | Set-Content -LiteralPath (Join-Path $LocalReceipt 'head.txt')
 $LogFile = Join-Path $LocalReceipt 'editor-map-commandlet.log'
+$NativeLogFile = Join-Path $LocalReceipt 'editor-native-full.log'
 $env:TSTSS_REVIEW_EXPECTED_HEAD = $Head
 try {
     # Source-locked read-only Editor inspection, not a game or PIE launch.
-    & $EditorCmd $Project '-run=pythonscript' "-script=$Verifier" '-unattended' '-nop4' '-nullrhi' '-log' 2>&1 |
+    & $EditorCmd $Project '-run=pythonscript' "-script=$Verifier" "-abslog=$NativeLogFile" '-unattended' '-nop4' '-nullrhi' '-log' 2>&1 |
         Tee-Object -FilePath $LogFile
     if ($LASTEXITCODE -ne 0) {
         throw "HOLD: native Editor map commandlet failed with exit code $LASTEXITCODE"
@@ -161,7 +162,7 @@ try {
 } finally {
     Remove-Item Env:TSTSS_REVIEW_EXPECTED_HEAD -ErrorAction SilentlyContinue
 }
-$LogBody = Get-Content -LiteralPath $LogFile -Raw
+$LogBody = Get-Content -LiteralPath $NativeLogFile -Raw
 if (-not $LogBody.Contains('TSTSS_NATIVE_PRELUDE_MAP_QA_PASS')) {
     throw 'HOLD: Editor returned without the actual native map-QA PASS sentinel'
 }
