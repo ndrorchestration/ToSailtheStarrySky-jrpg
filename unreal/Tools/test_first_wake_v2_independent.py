@@ -33,7 +33,7 @@ class IndependentV2GateTests(TestCase):
         state = qa.inspect_input_source(PROJECT)
         self.assertFalse(state["player_keyboard_input_executed"])
         self.assertTrue(state["source_handlers_verified"])
-        self.assertEqual(state["config_mapping_count"], 9)
+        self.assertEqual(state["config_mapping_count"], 10)
 
     def test_fabricated_input_mapping_fails(self):
         with mock.patch.dict(qa.EXPECTED_ACTIONS, {"Interact": "Space"}, clear=False):
