@@ -59,8 +59,8 @@ void ATSTSSFirstWakeReviewHUD::DrawHUD()
              FLinearColor(0.77f, 0.84f, 0.86f, 1.f),
              Margin + 84.f, Margin + 62.f, GEngine->GetSmallFont(), bCompact ? 0.75f : 0.85f);
 
-    DrawText(bCompact ? TEXT("WASD move  E interact  J objective  F5/F9 save/load")
-                      : TEXT("WASD: move  |  E: interact  |  J: objective  |  F5/F9: review save/load"),
+    DrawText(bCompact ? TEXT("WASD E interact J | PIE F6/F9  Game F5/F9")
+                      : TEXT("WASD move | E: interact | J: objective | PIE F6/F9; Game F5/F9"),
              FLinearColor(0.77f, 0.84f, 0.86f, 1.f),
              Margin + 16.f, Margin + 88.f, GEngine->GetSmallFont(), bCompact ? 0.72f : 0.9f);
     DrawText(bCompact ? TEXT("Review only: no sea landing or Chapter 1 approval")
