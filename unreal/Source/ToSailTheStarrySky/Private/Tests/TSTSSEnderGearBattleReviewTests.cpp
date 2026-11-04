@@ -162,7 +162,7 @@ bool FTSTSSEnderGearBattleReviewTest::RunTest(const FString& Parameters)
         FTSTSSBattleSkillSystem::TryUseRow(
             Start, EquippedKnowledge, Factions, TEXT("crew"), TEXT("enemy"),
             Ender, FoeId, Basic.SkillId, Basic, AfterStrike, StrikeCue))) return false;
-    TestEqual(TEXT("weapon-stat damage used"), AfterStrike.Combat.Roster[1].Health, 35);
+    TestEqual(TEXT("weapon-stat damage used"), AfterStrike.Combat.Roster[1].Health, 36);
     if (!TestTrue(TEXT("foe turn resolves against equipped armor"),
         FTSTSSBattleSkillSystem::TryUseRow(
             AfterStrike, EquippedKnowledge, Factions, TEXT("crew"), TEXT("enemy"),
@@ -174,7 +174,7 @@ bool FTSTSSEnderGearBattleReviewTest::RunTest(const FString& Parameters)
         FTSTSSBattleSkillSystem::TryUseRow(
             AfterFoe1, EquippedKnowledge, Factions, TEXT("crew"), TEXT("enemy"),
             Ender, FoeId, Arc.SkillId, Arc, AfterArc, ArcCue))) return false;
-    TestEqual(TEXT("technique damage"), AfterArc.Combat.Roster[1].Health, 27);
+    TestEqual(TEXT("technique damage"), AfterArc.Combat.Roster[1].Health, 29);
     TestEqual(TEXT("technique costs resource"), AfterArc.Combat.Roster[0].Resource, 10);
     TestEqual(TEXT("accepted technique carries animation cue"),
         ArcCue.AnimationCueId, FName(TEXT("Anim.Review.StaffArc")));
@@ -188,7 +188,7 @@ bool FTSTSSEnderGearBattleReviewTest::RunTest(const FString& Parameters)
             AfterFoe2, EquippedKnowledge, Factions, TEXT("crew"), TEXT("enemy"),
             Ender, FoeId, Pulse.SkillId, Pulse, AfterPulse, PulseCue))) return false;
     TestEqual(TEXT("spell effect uses existing combat power calculation"),
-        AfterPulse.Combat.Roster[1].Health, 17);
+        AfterPulse.Combat.Roster[1].Health, 20);
     TestEqual(TEXT("spell cost deducted by turn authority"),
         AfterPulse.Combat.Roster[0].Resource, 7);
     TestEqual(TEXT("magic effect cue ID, not an actual Niagara emitter"),

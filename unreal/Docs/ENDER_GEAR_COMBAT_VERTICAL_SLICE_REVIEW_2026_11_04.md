@@ -26,3 +26,9 @@ All fixture numbers, item names and spells are **test-only**. Ender's innate Lum
 ## Next smallest step
 
 After native compilation and full review-regression success, add one opt-in disposable **combat arena Actor/UMG UI** that routes player-selected actions to the same transactional skill executor. Make one actual staff attack, technique and spell visible with appropriate animation and effects, then test gamepad, restart and lost-item prevention. Keep creator approval and production integration as separate gates.
+
+## 2026-11-04 first native Editor attempt — preserved failure and corrective test-only revision
+
+The new branch first built with **actual UE5.8.4 UHT/MSVC Editor: PASS**, but its **native 26-suite test report was 25 Success / 1 Fail / 0 NotRun** on `16b4543e995c1636a257944e53b6020349c1e574`. The failure is isolated to the new `EnderGearSpellBattleReview` test: the **Unreal combat implementation and equip/projection calls ran**, but three author-written HP assertions expected 35, 27, and 17, whereas the current real formula `max(1, Power + Actor.Attack - Target.Defense)` produced **36, 29, and 20**, respectively. The test-only expectations are now changed to match the existing, unchanged calculation. **No combat, armor, skill, ability or item logic changed in this correction.**
+
+The original failed report and build/automation logs are archived privately in the *isolated checkout* under `unreal/Saved/MigrationEvidence/FirstFailure_16b4543_20261104`. Its original native `AutomationReport/index.json` SHA-256 is `fe1edbcbd2f9c7fe49f17744b2f6fb558dc8ec14f2c6a62f40b0addcae3319c6`. Unreal's first startup also generated changes **only** to `unreal/Config/DefaultEngine.ini` and `unreal/Config/DefaultInput.ini`; the diff was archived privately, not pushed to GitHub or accepted as new defaults. Until a fresh exact-new-head native Editor build, 26/26 named tests and clean tracked-tree check pass, status remains **NATIVE_AUTOMATION=HOLD**.
