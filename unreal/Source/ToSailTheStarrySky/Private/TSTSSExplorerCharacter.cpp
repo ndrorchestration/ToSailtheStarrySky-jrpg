@@ -154,7 +154,19 @@ void ATSTSSExplorerCharacter::Interact()
     const FVector End = Start + FollowCamera->GetForwardVector() * CameraTraceLength;
     FHitResult Hit;
     FCollisionQueryParams Query(SCENE_QUERY_STAT(TSTSSInteract), false, this);
-    if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Query))
+    const bool bTraceHit = GetWorld()->LineTraceSingleByChannel(
+        Hit, Start, End, ECC_Visibility, Query);
+#if WITH_EDITOR
+    if (GetWorld()->WorldType == EWorldType::PIE && !bTraceHit)
+    {
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_PIE_REVIEW_E_MISS pawn=%s camera=%s forward=%s trace_cm=%.1f objective=%s"),
+            *PawnLocation.ToCompactString(), *Start.ToCompactString(),
+            *FollowCamera->GetForwardVector().ToCompactString(), CameraTraceLength,
+            *FirstWakeState->GetReviewObjectiveText());
+    }
+#endif
+    if (bTraceHit)
     {
         if (ATSTSSMilestoneActor* Milestone = Cast<ATSTSSMilestoneActor>(Hit.GetActor()))
         {
@@ -194,6 +206,34 @@ void ATSTSSExplorerCharacter::Interact()
                     ShowFirstWakeReviewBlockedInteraction(FirstWakeState);
                 }
             }
+            else
+            {
+#if WITH_EDITOR
+                if (GetWorld()->WorldType == EWorldType::PIE)
+                {
+                    UE_LOG(LogTemp, Display,
+                        TEXT("TSTSS_PIE_REVIEW_E_OUT_OF_REACH target=%s pawn=%s pawn_hit_cm=%.1f limit_cm=%.1f objective=%s"),
+                        *Milestone->GetActorLabel(), *PawnLocation.ToCompactString(),
+                        FVector::Dist(PawnLocation, Hit.ImpactPoint),
+                        InteractionDistance, *FirstWakeState->GetReviewObjectiveText());
+                }
+#endif
+            }
+        }
+        else
+        {
+#if WITH_EDITOR
+            if (GetWorld()->WorldType == EWorldType::PIE)
+            {
+                const AActor* OtherActor = Hit.GetActor();
+                UE_LOG(LogTemp, Display,
+                    TEXT("TSTSS_PIE_REVIEW_E_OTHER target=%s pawn=%s pawn_hit_cm=%.1f objective=%s"),
+                    OtherActor ? *OtherActor->GetActorNameOrLabel() : TEXT("None"),
+                    *PawnLocation.ToCompactString(),
+                    FVector::Dist(PawnLocation, Hit.ImpactPoint),
+                    *FirstWakeState->GetReviewObjectiveText());
+            }
+#endif
         }
     }
 }

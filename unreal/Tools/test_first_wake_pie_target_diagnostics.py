@@ -25,19 +25,29 @@ class EditorOnlyInteractionTelemetryTests(unittest.TestCase):
         self.assertIn("*FirstWakeState->GetReviewObjectiveText()",self.interact)
 
     def test_only_in_editor_pie_and_no_extra_mutation(self):
-        self.assertEqual(self.interact.count("#if WITH_EDITOR"),2)
-        self.assertEqual(self.interact.count("#endif"),2)
-        self.assertEqual(self.interact.count("GetWorld()->WorldType == EWorldType::PIE"),2)
+        self.assertEqual(self.interact.count("#if WITH_EDITOR"),5)
+        self.assertEqual(self.interact.count("#endif"),5)
+        self.assertEqual(self.interact.count("GetWorld()->WorldType == EWorldType::PIE"),5)
         self.assertEqual(self.interact.count("Milestone->TryActivate(FirstWakeState)"),1)
         self.assertEqual(self.interact.count("ShowFirstWakeReviewObjective(FirstWakeState)"),1)
         self.assertEqual(self.interact.count("ShowFirstWakeReviewBlockedInteraction(FirstWakeState)"),1)
-        self.assertEqual(self.interact.count("UE_LOG("),2)
+        self.assertEqual(self.interact.count("UE_LOG("),5)
         for forbidden in ("SetActorLocation(", "SetActorRotation(", "SaveGameToSlot(",
                           "OnMilestoneActivated(", "AdvanceTo(", "InteractionDistance ="):
             self.assertNotIn(forbidden,self.interact)
 
+    def test_rejected_target_categories_are_logged_without_extra_calls(self):
+        for category in ("E_MISS", "E_OTHER", "E_OUT_OF_REACH", "E_DENIED", "E_ACCEPT"):
+            self.assertIn("TSTSS_PIE_REVIEW_"+category,self.interact)
+        self.assertEqual(self.interact.count("LineTraceSingleByChannel("),1)
+        self.assertEqual(self.interact.count("Milestone->TryActivate(FirstWakeState)"),1)
+        self.assertIn("camera=%s forward=%s trace_cm=%.1f",self.interact)
+        self.assertIn("OtherActor ? *OtherActor->GetActorNameOrLabel()",self.interact)
+        self.assertIn("InteractionDistance, *FirstWakeState->GetReviewObjectiveText()",self.interact)
+
     def test_source_keeps_both_camera_and_pawn_reach_guards(self):
-        self.assertIn("LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Query)",self.interact)
+        self.assertIn("LineTraceSingleByChannel(",self.interact)
+        self.assertIn("Hit, Start, End, ECC_Visibility, Query)",self.interact)
         self.assertIn("TSTSSInteractionReach::IsInsidePlayerReach(",self.interact)
         self.assertIn("TSTSSInteractionReach::GetCameraTraceLength(",self.interact)
         self.assertLess(self.interact.index("IsInsidePlayerReach("),
