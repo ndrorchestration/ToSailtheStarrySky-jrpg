@@ -16,6 +16,7 @@ META="2bb581a27aee55b0352f52227a3afe2c6d01a529b63c8dc661cbe8f4edbb2e3d"
 MAP="025539f8717c6215a17dc8acff24ec7bd39b3d43129de4069a9418b3d8da3a2a"
 BEFORE="9e032f7350f3013e646619ab8d86280bce0b7c08ef191729d749562e015b2990"
 LOWER="dc9116e68a5404ebb4b377b78f443a902a5a4521734ad5533e94793e104fc709"
+THREEQUARTER="3608f2405ba4e667d020df25a187029614133d6dd9e1494d6541d6c89da48bb9"
 
 def read(filename):
     return json.loads((ROOT/filename).read_text(encoding="utf8"))
@@ -23,7 +24,7 @@ def read(filename):
 def check(ok,reason):
     if not ok: raise ValueError(reason)
 
-def verify(build,imp,spatial,first,second):
+def verify(build,imp,spatial,first,second,third):
     check(build["status"]=="STATIC_3D_SEALED_GOGGLES_V2_SOURCE_VALIDATED_NONCANONICAL","source build")
     check(build["glb_sha256"]==V2 and build["glb_bytes"]==1412976,"source identity")
     check(build["material_count"]==11 and build["material_primitives"]==11,"source materials")
@@ -62,7 +63,8 @@ def verify(build,imp,spatial,first,second):
         check(spatial[k] is False,"false spatial approval "+k)
 
     for capture,position,expected_sha in ((first,[0,9.5,171.5],BEFORE),
-                                            (second,[0,9.5,168.5],LOWER)):
+                                            (second,[0,9.5,168.5],LOWER),
+                                            (third,[0,9.5,168.5],THREEQUARTER)):
         check(capture["status"]=="NATIVE_V5_GOGGLES_RENDER_TARGET_PNG_CORE_PASS_VISUAL_UNREVIEWED","native GPU")
         check(capture["source_goggles_sha256"]==V2 and capture["goggles_sha256_after"]==V2,"GPU GLB drift")
         check(capture["source_meta_sha256"]==META and capture["meta_sha256_after"]==META,"GPU MetaHuman drift")
@@ -75,8 +77,8 @@ def verify(build,imp,spatial,first,second):
         for k in ("canonical","face_likeness_approved","goggles_fit_approved","materials_artist_approved",
                   "rigging_verified","source_assets_saved","review_map_saved","production_game_modified"):
             check(capture[k] is False,"render treated as art approval "+k)
-    check(BEFORE!=LOWER,"independent viewpoint experiment must not be identical")
-    return "SOURCE_AND_NATIVE_IMPORT_AND_TWO_GPU_RECEIPTS_CONSISTENT_NONCANONICAL"
+    check(BEFORE!=LOWER and LOWER!=THREEQUARTER,"separate native captures must differ")
+    return "SOURCE_AND_NATIVE_IMPORT_AND_THREE_GPU_RECEIPTS_CONSISTENT_NONCANONICAL"
 
 class NativeV2GogglesEvidenceTests(unittest.TestCase):
     @classmethod
@@ -84,11 +86,12 @@ class NativeV2GogglesEvidenceTests(unittest.TestCase):
         cls.args=[read(x) for x in (
             "neontic_v2_geometry_rebuild.json","native_import_v2.json",
             "native_spatial_v2.json","native_v2_above_brow_front_capture.json",
-            "native_v2_lower_forehead_capture.json")]
+            "native_v2_lower_forehead_capture.json",
+            "native_v2_threequarter_capture.json")]
 
     def test_receipts_provenance(self):
         self.assertEqual(verify(*self.args),
-            "SOURCE_AND_NATIVE_IMPORT_AND_TWO_GPU_RECEIPTS_CONSISTENT_NONCANONICAL")
+            "SOURCE_AND_NATIVE_IMPORT_AND_THREE_GPU_RECEIPTS_CONSISTENT_NONCANONICAL")
 
     def test_false_fit_and_canon_refused(self):
         for index,key in ((1,"fitted_to_metahuman"),(2,"head_fitted"),(3,"goggles_fit_approved"),
