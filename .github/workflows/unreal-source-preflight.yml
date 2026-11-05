@@ -173,3 +173,5 @@ jobs:
           python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_input_binding_compiled.py' -v
       - name: Keep #769 29-native-name and sandboxed Editor admission fail-closed (source only)
         run: python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_combined_native_admission.py' -v
+      - name: Test read-only exact-head UE readiness refusal paths (NO Unreal started)
+        run: python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_native_readiness.py' -v
