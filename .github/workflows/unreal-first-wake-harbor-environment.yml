@@ -1,0 +1,28 @@
+name: First Wake harbor environment source safety
+on:
+  pull_request:
+    paths:
+      - 'unreal/Tools/build_first_wake_harbor_environment.py'
+      - 'unreal/Tools/test_first_wake_harbor_environment.py'
+      - 'unreal/Tools/run_first_wake_harbor_native_stage.py'
+      - 'unreal/Tools/test_first_wake_harbor_native_runner.py'
+      - 'unreal/Docs/FIRST_WAKE_ENVIRONMENT_2026_11_04.md'
+      - '.github/workflows/unreal-first-wake-harbor-environment.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-only:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Static syntax and engine-free geometry/safety checks
+        run: |
+          python -m py_compile unreal/Tools/build_first_wake_harbor_environment.py
+          python -m py_compile unreal/Tools/test_first_wake_harbor_environment.py unreal/Tools/run_first_wake_harbor_native_stage.py unreal/Tools/test_first_wake_harbor_native_runner.py
+          python -m unittest discover -s unreal/Tools -p 'test_first_wake_harbor_environment.py' -v
+          python -m unittest discover -s unreal/Tools -p 'test_first_wake_harbor_native_runner.py' -v
+          python unreal/Tools/build_first_wake_harbor_environment.py --validate
