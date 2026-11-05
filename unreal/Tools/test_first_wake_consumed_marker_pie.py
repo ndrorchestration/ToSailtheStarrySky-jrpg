@@ -14,7 +14,9 @@ class ConsumedReviewMarkerTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.source = SOURCE.read_text(encoding="utf-8")
-        cls.method = cls.source.split("bool ATSTSSMilestoneActor::TryActivate(", 1)[1]
+        cls.method = cls.source.split("bool ATSTSSMilestoneActor::TryActivate(", 1)[1].split(
+            "\n#if WITH_EDITOR\nvoid ATSTSSMilestoneActor::ReconcileReviewCollisionAfterRestore(", 1
+        )[0]
 
     def test_already_authorized_story_state_remains_the_only_gate(self):
         s = self.method
