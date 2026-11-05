@@ -27,6 +27,10 @@ On NEONTIC Windows with VS2022/MSVC 14.44, compiled and ran actual existing prod
 4. One physical P01–P13 First Wake traversal with real Ender possession, target visibility, authored Ionia/NPC dialogue, collidable pier/room, first launch, real hull and water-volume overlap, continuous two-second flotation, and disk restart. Synthetic `WaterGate::Observe` tests and source-authored graybox are **not** equivalent.
 5. Separate cinematic D3D viewport screenshots/side-by-side review for Ender, Ionia, harbor, Aureate forms, sky/sea, lighting and atmospheric depth. Creator approval before canon art, merge, distribution or release. Starbourne remains gate-locked.
 
+## Native readiness improvements (November 5)
+
+The separately compiled `unreal/Tools/check_first_wake_native_readiness.py` read-only probe rejects wrong source SHA/dirty Git, V2 map/hash, wrong UE5.8.4 version, any protected review save, running Editor/Live Coding, incomplete 29-name test inventory and inadequate RAM/disk; it uses no SaveGame writes and produces a **HOLD** JSON rather than a false UE PASS. Its 18 source fixture cases exercise the negative controls. All three actual launch paths independently refuse low RAM/disk before issuing an Editor or UBT process: 5 GiB RAM/14 GiB free disk for native Win64 and map QA, 6.5 GiB RAM/14 GiB free disk for full interactive PIE. Source regression coverage includes 13 dedicated launcher boundary checks. Actual UE-native tests, player saves, flight, world map and cinematic art remain unverified on this branch.
+
 ## Workflow and custody
 
 Source test `unreal/Tools/test_first_wake_f6_objective_combined.py` fails closed if PIE F6 is accidentally replaced with F5, normal Game F5 is replaced with F6, F6 mapping changes, existing-session save refusal disappears, or any of the 16 original objective assertions is altered. Source preflight invokes it. These checks **cannot claim live keystrokes, native UObject reflection, real map rendering, real disk SaveGame or physical Splashdown**. Keep this composite as a separate **DRAFT PR**, unmerged.

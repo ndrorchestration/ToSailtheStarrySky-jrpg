@@ -73,6 +73,10 @@ foreach ($Name in @('DefaultEngine.ini','DefaultInput.ini')) {
 $FreeKiB = (Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory
 # FreePhysicalMemory is reported in KiB: 6.5 GiB = 6,815,744 KiB.
 if ($FreeKiB -lt 6815744) { throw 'Insufficient free RAM: require at least 6.5 GiB for graphical review' }
+$Disk = Get-PSDrive -Name C -ErrorAction Stop
+if ($null -eq $Disk.Free -or $Disk.Free -lt (14 * 1GB)) {
+    throw 'Insufficient free disk: require at least 14 GiB for graphical review'
+}
 Write-Output "FIRST_WAKE_REVIEW_READY HEAD=$Head MAP=$Map"
 Write-Output 'Controls in PIE: WASD, mouse, E interact, J objective, F6 review save, F9 isolated review load. F5 is reserved for Editor shortcuts in PIE.'
 Write-Output 'This seven-stop Prelude ends at engineering signoff. Launch/Splashdown and cinematic art are not complete.'

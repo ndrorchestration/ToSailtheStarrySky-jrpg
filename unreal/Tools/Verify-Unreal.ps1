@@ -48,6 +48,15 @@ $ActiveNativeProcesses = @(Get-Process -Name 'UnrealEditor','UnrealEditor-Cmd','
 if ($ActiveNativeProcesses.Count -gt 0) {
     throw 'Active Unreal Editor or Live Coding process detected; leave existing sessions untouched and run native verification only after the machine is idle'
 }
+# Resource admission BEFORE any evidence directory, compiler or Unreal process.
+$FreeMemoryKiB = (Get-CimInstance Win32_OperatingSystem -ErrorAction Stop).FreePhysicalMemory
+if ($null -eq $FreeMemoryKiB -or $FreeMemoryKiB -lt 5242880) {
+    throw 'Insufficient free RAM for native build: require at least 5 GiB'
+}
+$Disk = Get-PSDrive -Name C -ErrorAction Stop
+if ($null -eq $Disk.Free -or $Disk.Free -lt (14 * 1GB)) {
+    throw 'Insufficient free disk for native build: require at least 14 GiB'
+}
 # Every verification attempt receives a fresh, non-overwriting receipt folder.
 # Keep previous success AND failure logs for head-specific review and debugging.
 $RunId = ('{0}-{1}-{2}' -f $GitHead.Substring(0, 12),

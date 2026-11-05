@@ -25,7 +25,7 @@ The script returns JSON on standard output, **exit code 2** on `status=HOLD`, ex
 - UE5.8.4 installed engine version plus GUI/commandlet exe presence; **29 distinct required native automation names** in `Verify-Unreal.ps1`, not the older 26-test subset.
 - No existing `*.sav` files in the **candidate** project `unreal/Saved/SaveGames`. Never delete, move, rename, overwrite or adopt another project's player saves to pass this check.
 - No running UnrealEditor, UnrealEditor-Cmd or LiveCodingConsole.
-- Build admission: at least **5 GiB free physical RAM** and **14 GiB disk**. Full-Editor PIE admission: at least **6.5 GiB free physical RAM** and **14 GiB disk**. A live Unreal process blocks both phases even if memory is otherwise sufficient.
+- Build admission: at least **5 GiB free physical RAM** and **14 GiB disk**. Full-Editor PIE admission: at least **6.5 GiB free physical RAM** and **14 GiB disk**. A live Unreal process blocks both phases even if memory is otherwise sufficient. These resource checks are also implemented independently inside `Verify-Unreal.ps1` (before evidence directory/UBT), `Invoke-NativePreludeMapQA.ps1` (before native commandlet/preflight receipt), and `Start-FirstWakeReview.ps1` (before opening the GUI). Five new negative source tests reject RAM/disk downgrades in these native launch paths.
 - PIE also requires exact-head native automation and native map **receipt candidates**. Existence alone is **not approval**: each must undergo the existing strict independent receipt/schema validators and the original `Start-FirstWakeReview.ps1` checks before Editor start.
 
 ## Verification and limitations

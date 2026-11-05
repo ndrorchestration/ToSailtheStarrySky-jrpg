@@ -95,6 +95,15 @@ $ActiveEditors = @(Get-Process -Name 'UnrealEditor','UnrealEditor-Cmd','LiveCodi
 if ($ActiveEditors.Count -gt 0) {
     throw 'HOLD: active Unreal Editor or Live Coding session; do not stop other work to force native QA'
 }
+# Native map QA is also an Editor process, with independent resource safety.
+$FreeMemoryKiB = (Get-CimInstance Win32_OperatingSystem -ErrorAction Stop).FreePhysicalMemory
+if ($null -eq $FreeMemoryKiB -or $FreeMemoryKiB -lt 5242880) {
+    throw 'HOLD: native map QA requires at least 5 GiB free RAM'
+}
+$Disk = Get-PSDrive -Name C -ErrorAction Stop
+if ($null -eq $Disk.Free -or $Disk.Free -lt (14 * 1GB)) {
+    throw 'HOLD: native map QA requires at least 14 GiB free disk'
+}
 if ($PreflightOnly) {
     Write-Output "NATIVE_PRELUDE_MAP_PREFLIGHT_PASS_NO_EDITOR_LAUNCHED HEAD=$Head"
     return

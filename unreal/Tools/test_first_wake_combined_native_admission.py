@@ -54,6 +54,20 @@ def verify(review: str, map_launcher: str, builder: str) -> list[str]:
         errors.append("Exact combined-head native registry not 29 unique named tests")
     if "Source HEAD differs from the explicitly requested review commit" not in builder:
         errors.append("Native build lacks commit-custody check")
+    for label, source, before in (
+        ("native build", builder, "$RunId ="),
+        ("native map", map_launcher, "if ($PreflightOnly)"),
+    ):
+        if ("if ($null -eq $FreeMemoryKiB -or $FreeMemoryKiB -lt 5242880)" not in source
+                or "Get-PSDrive -Name C -ErrorAction Stop" not in source
+                or "$Disk.Free -lt (14 * 1GB)" not in source
+                or source.index("$Disk.Free -lt (14 * 1GB)") > source.index(before)):
+            errors.append(label + ": 5 GiB RAM / 14 GiB disk guard missing or too late")
+    if ("Get-PSDrive -Name C -ErrorAction Stop" not in review or
+            "$Disk.Free -lt (14 * 1GB)" not in review or
+            review.index("$Disk.Free -lt (14 * 1GB)") >
+            review.index('Write-Output "FIRST_WAKE_REVIEW_READY')):
+        errors.append("GUI review: 14 GiB disk gate missing or too late")
     return errors
 
 
@@ -99,6 +113,28 @@ class CombinedNativeAdmissionContracts(unittest.TestCase):
 
     def test_original_map_sha_mutation_rejected(self):
         self.assertTrue(self.check(map_launcher=self.map.replace(MAP_SHA, "0" * 64, 1)))
+
+    def test_native_build_ram_downgrade_rejected(self):
+        self.assertTrue(self.check(builder=self.builder.replace(
+            "if ($null -eq $FreeMemoryKiB -or $FreeMemoryKiB -lt 5242880)",
+            "if ($null -eq $FreeMemoryKiB -or $FreeMemoryKiB -lt 1)", 1)))
+
+    def test_native_build_disk_downgrade_rejected(self):
+        self.assertTrue(self.check(builder=self.builder.replace(
+            "$Disk.Free -lt (14 * 1GB)", "$Disk.Free -lt 1", 1)))
+
+    def test_map_qa_ram_downgrade_rejected(self):
+        self.assertTrue(self.check(map_launcher=self.map.replace(
+            "if ($null -eq $FreeMemoryKiB -or $FreeMemoryKiB -lt 5242880)",
+            "if ($null -eq $FreeMemoryKiB -or $FreeMemoryKiB -lt 1", 1)))
+
+    def test_map_qa_disk_downgrade_rejected(self):
+        self.assertTrue(self.check(map_launcher=self.map.replace(
+            "$Disk.Free -lt (14 * 1GB)", "$Disk.Free -lt 1", 1)))
+
+    def test_full_editor_disk_downgrade_rejected(self):
+        self.assertTrue(self.check(review=self.review.replace(
+            "$Disk.Free -lt (14 * 1GB)", "$Disk.Free -lt 1", 1)))
 
 
 if __name__ == "__main__":
