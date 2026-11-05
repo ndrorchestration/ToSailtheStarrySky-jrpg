@@ -292,8 +292,10 @@ def main() -> None:
             ("|| !Hull->IsSimulatingPhysics()","", "non_physics_hull_allowed"),
             ("Other->ActorHasTag(WaterVolumeTag)","true","untagged_volume_allowed"),
             ("bBelowSurface && Submersion > 0.01f","Submersion > 0.01f","false_waterline_allowed"),
-            ("if (!bAfterLaunch)\n            {\n                return;\n            }",
-             "if (false)\n            {\n                return;\n            }",
+            # The optional review logger now sits inside this guarded body.
+            # Mutate only the condition; never assume the exact body layout.
+            ("if (!bAfterLaunch)\n            {",
+             "if (false)\n            {",
              "prelaunch_hull_physics_armed"),
             ("Hull->SetWorldTransform(InitialPrototypeHullTransform, false, nullptr,\n"
              "                                    ETeleportType::TeleportPhysics);",

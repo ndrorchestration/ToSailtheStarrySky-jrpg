@@ -2,6 +2,20 @@
 #include "Components/StaticMeshComponent.h"
 #include "TSTSSExplorerCharacter.h"
 #include "Kismet/GameplayStatics.h"
+#include "Engine/World.h"
+
+#if WITH_EDITOR
+#include "HAL/IConsoleManager.h"
+namespace
+{
+// Explicitly opt in only while running the protected native review PIE.
+// Defaults OFF; the bounded log is not a new physics or story authority.
+TAutoConsoleVariable<int32> CVarTstssWaterReviewTrace(
+    TEXT("tstss.FirstWake.WaterTrace"), 0,
+    TEXT("Record bounded First Wake greybox hull/water review samples in PIE (default off)."),
+    ECVF_Default);
+}
+#endif
 
 ATSTSSWaterContactAdapter::ATSTSSWaterContactAdapter()
 {
@@ -90,6 +104,30 @@ void ATSTSSWaterContactAdapter::Tick(float DeltaSeconds)
             bPrototypeTimelineObserved = true;
             if (!bAfterLaunch)
             {
+#if WITH_EDITOR
+                // One genuine DRY/disabled-physics sample per world second
+                // (maximum 30) on the opt-in disposable PIE actor.
+                UWorld* TraceWorld = GetWorld();
+                if (TraceWorld && TraceWorld->WorldType == EWorldType::PIE &&
+                    CVarTstssWaterReviewTrace.GetValueOnGameThread() != 0 &&
+                    DryReviewTraceSamples < 30)
+                {
+                    const float Now = TraceWorld->GetTimeSeconds();
+                    if (Now - LastDryReviewTraceWorldSeconds >= 1.f)
+                    {
+                        UE_LOG(LogTemp, Display,
+                            TEXT("TSTSS_WATER_REVIEW_SAMPLE phase=DRY world_sec=%.4f started=%d beat=%d sim=%d hull_z_cm=%.3f stable_sec=%.4f restore_gen=%llu"),
+                            Now, bStoryStarted ? 1 : 0,
+                            IsValid(Story) ? static_cast<int32>(Story->GetCurrentBeat()) : -1,
+                            Hull->IsSimulatingPhysics() ? 1 : 0,
+                            Hull->GetComponentLocation().Z,
+                            Gate->GetStableContactSeconds(),
+                            static_cast<unsigned long long>(Generation));
+                        LastDryReviewTraceWorldSeconds = Now;
+                        ++DryReviewTraceSamples;
+                    }
+                }
+#endif
                 return;
             }
         }
@@ -180,5 +218,32 @@ void ATSTSSWaterContactAdapter::Tick(float DeltaSeconds)
             Hull->AddForce(FVector(0.f, 0.f, Mass * Acceleration));
         }
     }
+#if WITH_EDITOR
+    const ETSTSSFirstWakeBeat BeforeObservedBeat = Story->GetCurrentBeat();
+#endif
     Gate->Observe(DeltaSeconds, bActualImmersion, VerticalSpeed, Story);
+
+#if WITH_EDITOR
+    // Per-physics-frame values: direct measurements, not inferred from HUD
+    // objectives. Explicitly opt in; bound one actor to 6000 finite samples.
+    // Logging NEVER changes collision, forces, state or save content.
+    UWorld* TraceWorld = GetWorld();
+    if (bArmPrototypePhysicsOnLaunch && TraceWorld &&
+        TraceWorld->WorldType == EWorldType::PIE &&
+        CVarTstssWaterReviewTrace.GetValueOnGameThread() != 0 &&
+        PhysicalReviewTraceSamples < 6000)
+    {
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_WATER_REVIEW_SAMPLE phase=PHYSICS world_sec=%.4f dt=%.4f hull_z_cm=%.3f hull_bottom_z_cm=%.3f water_surface_z_cm=%.3f tagged_overlap=%d immersed=%d submersion=%.5f vertical_speed_cm_s=%.3f stable_sec=%.4f beat_before=%d beat_after=%d sim=%d restore_gen=%llu"),
+            TraceWorld->GetTimeSeconds(), DeltaSeconds, HullOrigin.Z,
+            HullOrigin.Z - HullExtent.Z, WaterSurfaceZ,
+            bInWater ? 1 : 0, bActualImmersion ? 1 : 0,
+            Submersion, VerticalSpeed, Gate->GetStableContactSeconds(),
+            static_cast<int32>(BeforeObservedBeat),
+            static_cast<int32>(Story->GetCurrentBeat()),
+            Hull->IsSimulatingPhysics() ? 1 : 0,
+            static_cast<unsigned long long>(Story->GetRestoreGeneration()));
+        ++PhysicalReviewTraceSamples;
+    }
+#endif
 }

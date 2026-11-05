@@ -52,4 +52,12 @@ protected:
     uint64 PrototypeRestoreGeneration = 0;
     UPROPERTY(Transient)
     TWeakObjectPtr<UTSTSSFirstWakeState> PrototypeObservedStory;
+
+#if WITH_EDITOR
+    // Bounded, opt-in review-only observations. Never serialized or used
+    // as story or physics authority, including after Reset/Restore.
+    uint32 DryReviewTraceSamples = 0;
+    uint32 PhysicalReviewTraceSamples = 0;
+    float LastDryReviewTraceWorldSeconds = -10000.f;
+#endif
 };
