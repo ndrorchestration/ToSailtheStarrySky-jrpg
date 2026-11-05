@@ -154,7 +154,28 @@ void ATSTSSExplorerCharacter::Interact()
     const FVector End = Start + FollowCamera->GetForwardVector() * CameraTraceLength;
     FHitResult Hit;
     FCollisionQueryParams Query(SCENE_QUERY_STAT(TSTSSInteract), false, this);
-    if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Query))
+#if !UE_BUILD_SHIPPING
+    // One diagnostic line per real E press in the disposable asset review map.
+    // It identifies an occluding actor or a repeated marker without changing
+    // the camera ray, pawn reach or ordered story transition.
+    const bool bReviewTrace = GetWorld()->GetMapName().Contains(
+        TEXT("FirstWake_AssetAssembly_20261104_REVIEW_V3"));
+#endif
+    const bool bCameraHit = GetWorld()->LineTraceSingleByChannel(
+        Hit, Start, End, ECC_Visibility, Query);
+#if !UE_BUILD_SHIPPING
+    if (bReviewTrace)
+    {
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_REVIEW_E_TRACE camera_hit=%d hit_actor=%s pawn=%s camera=%s forward=%s impact=%s pawn_distance_cm=%.1f reach_cm=%.1f"),
+            bCameraHit ? 1 : 0, *GetNameSafe(Hit.GetActor()),
+            *PawnLocation.ToString(), *Start.ToString(),
+            *FollowCamera->GetForwardVector().ToString(), *Hit.ImpactPoint.ToString(),
+            bCameraHit ? FVector::Dist(PawnLocation, Hit.ImpactPoint) : -1.f,
+            InteractionDistance);
+    }
+#endif
+    if (bCameraHit)
     {
         if (ATSTSSMilestoneActor* Milestone = Cast<ATSTSSMilestoneActor>(Hit.GetActor()))
         {
@@ -162,8 +183,26 @@ void ATSTSSExplorerCharacter::Interact()
             if (TSTSSInteractionReach::IsInsidePlayerReach(
                     PawnLocation, Hit.ImpactPoint, InteractionDistance))
             {
+#if !UE_BUILD_SHIPPING
+                const ETSTSSFirstWakeBeat BeforeBeat = FirstWakeState->GetCurrentBeat();
+                const uint8 BeforeMask = FirstWakeState->GetInspectionMask();
+                const bool bBeforeStarted = FirstWakeState->HasStarted();
+#endif
                 if (Milestone->TryActivate(FirstWakeState))
                 {
+#if !UE_BUILD_SHIPPING
+                    if (bReviewTrace)
+                    {
+                        UE_LOG(LogTemp, Display,
+                            TEXT("TSTSS_REVIEW_E_RESOLVE accepted=1 marker=%s configured_beat=%d inspection=%d station=%d before_started=%d before_beat=%d before_mask=%u after_beat=%d after_mask=%u"),
+                            *GetNameSafe(Milestone), static_cast<int32>(Milestone->Milestone),
+                            Milestone->bIsInspectionStation ? 1 : 0,
+                            static_cast<int32>(Milestone->InspectionStation), bBeforeStarted ? 1 : 0,
+                            static_cast<int32>(BeforeBeat), static_cast<uint32>(BeforeMask),
+                            static_cast<int32>(FirstWakeState->GetCurrentBeat()),
+                            static_cast<uint32>(FirstWakeState->GetInspectionMask()));
+                    }
+#endif
                     ShowFirstWakeReviewObjective(FirstWakeState);
                 }
                 else
@@ -171,6 +210,19 @@ void ATSTSSExplorerCharacter::Interact()
                     // A valid, in-reach marker rejected the state transition.
                     // This does not grant progression or claim that E hit when
                     // the camera trace missed or the target was out of reach.
+#if !UE_BUILD_SHIPPING
+                    if (bReviewTrace)
+                    {
+                        UE_LOG(LogTemp, Warning,
+                            TEXT("TSTSS_REVIEW_E_RESOLVE accepted=0 marker=%s configured_beat=%d inspection=%d station=%d before_started=%d before_beat=%d before_mask=%u after_beat=%d after_mask=%u"),
+                            *GetNameSafe(Milestone), static_cast<int32>(Milestone->Milestone),
+                            Milestone->bIsInspectionStation ? 1 : 0,
+                            static_cast<int32>(Milestone->InspectionStation), bBeforeStarted ? 1 : 0,
+                            static_cast<int32>(BeforeBeat), static_cast<uint32>(BeforeMask),
+                            static_cast<int32>(FirstWakeState->GetCurrentBeat()),
+                            static_cast<uint32>(FirstWakeState->GetInspectionMask()));
+                    }
+#endif
                     ShowFirstWakeReviewBlockedInteraction(FirstWakeState);
                 }
             }
