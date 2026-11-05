@@ -26,11 +26,14 @@ bool ATSTSSMilestoneActor::TryActivate(UTSTSSFirstWakeState* State)
 #if WITH_EDITOR
     // These bright, solid review cubes are *not* production interaction art.
     // After a successful E press they must stop blocking the next marker's
-    // camera ray and the reviewing pawn's route. Never change failed or
-    // out-of-order gates, other actors, non-PIE worlds, or gameplay saves.
+    // camera ray and the reviewing pawn's route. This applies to the original
+    // seven Prelude stops AND the three additive splashdown/recovery stops.
+    // Never change failed/out-of-order gates, other actors, non-PIE worlds,
+    // water physics, or gameplay saves.
     const UWorld* World = GetWorld();
     if (World && World->WorldType == EWorldType::PIE &&
-        GetActorLabel().StartsWith(TEXT("TSTSS_PRELUDE_REVIEW_")) &&
+        (GetActorLabel().StartsWith(TEXT("TSTSS_PRELUDE_REVIEW_")) ||
+         GetActorLabel().StartsWith(TEXT("TSTSS_SPLASHDOWN_GREYBOX_"))) &&
         IsValid(InteractionMesh))
     {
         InteractionMesh->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);

@@ -4,6 +4,7 @@
 #include "TSTSSWaterLandingGate.h"
 #include "TSTSSSaveGame.h"
 #include "Engine/World.h"
+#include "Components/PrimitiveComponent.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 
@@ -139,6 +140,85 @@ bool FTSTSSFirstWakeInteractionSplashdownTest::RunTest(const FString& Parameters
         Restored->GetCurrentBeat(), ETSTSSFirstWakeBeat::ReturnedToBerth);
     Restored->Reset();
     TestFalse(TEXT("New game reset returns to Prelude"), Restored->IsChapterOneActOne());
+
+#if WITH_EDITOR
+    // Native PIE-world contract for both review namespaces. Consumed
+    // splashdown markers must release the camera ray and pawn, but rejected
+    // milestones and unrelated production actors must keep their collision.
+    UWorld* ReviewWorld = UWorld::CreateWorld(
+        EWorldType::PIE, false, FName(TEXT("TSTSSConsumedSplashdownReviewTest")));
+    if (!TestNotNull(TEXT("Transient PIE-world available"), ReviewWorld))
+    {
+        World->DestroyWorld(false);
+        return false;
+    }
+    UTSTSSFirstWakeState* LaunchStory =
+        NewObject<UTSTSSFirstWakeState>(GetTransientPackage());
+    TestTrue(TEXT("Bounded test story can restore prelaunch engineering signoff"),
+        LaunchStory->Restore(true, ETSTSSFirstWakeBeat::EngineeringChecked, 0x07));
+    ATSTSSMilestoneActor* LaunchMarker =
+        ReviewWorld->SpawnActor<ATSTSSMilestoneActor>();
+    if (TestNotNull(TEXT("Real splashdown review milestone spawned"), LaunchMarker))
+    {
+        LaunchMarker->SetActorLabel(
+            TEXT("TSTSS_SPLASHDOWN_GREYBOX_LaunchMarker"));
+        LaunchMarker->Milestone = ETSTSSFirstWakeBeat::Launched;
+        UPrimitiveComponent* ReviewMesh =
+            Cast<UPrimitiveComponent>(LaunchMarker->GetRootComponent());
+        if (TestNotNull(TEXT("Review collision component exists"), ReviewMesh))
+        {
+            TestEqual(TEXT("Launch marker visibility initially blocks ray"),
+                ReviewMesh->GetCollisionResponseToChannel(ECC_Visibility), ECR_Block);
+            TestTrue(TEXT("Launch accepted by real native actor"),
+                LaunchMarker->TryActivate(LaunchStory));
+            TestEqual(TEXT("Accepted launch marker releases visibility ray"),
+                ReviewMesh->GetCollisionResponseToChannel(ECC_Visibility), ECR_Ignore);
+            TestEqual(TEXT("Accepted launch marker releases pawn movement"),
+                ReviewMesh->GetCollisionResponseToChannel(ECC_Pawn), ECR_Ignore);
+            TestFalse(TEXT("Consumed launch marker cannot advance twice"),
+                LaunchMarker->TryActivate(LaunchStory));
+        }
+    }
+
+    ATSTSSMilestoneActor* RejectedMarker =
+        ReviewWorld->SpawnActor<ATSTSSMilestoneActor>();
+    UTSTSSFirstWakeState* Unstarted =
+        NewObject<UTSTSSFirstWakeState>(GetTransientPackage());
+    if (TestNotNull(TEXT("Rejected marker exists"), RejectedMarker))
+    {
+        RejectedMarker->SetActorLabel(
+            TEXT("TSTSS_SPLASHDOWN_GREYBOX_LaunchMarker"));
+        RejectedMarker->Milestone = ETSTSSFirstWakeBeat::Launched;
+        UPrimitiveComponent* RejectedMesh =
+            Cast<UPrimitiveComponent>(RejectedMarker->GetRootComponent());
+        TestFalse(TEXT("Out-of-order launch denied"), RejectedMarker->TryActivate(Unstarted));
+        if (TestNotNull(TEXT("Rejected marker mesh exists"), RejectedMesh))
+        {
+            TestEqual(TEXT("Rejected launch marker must retain visibility block"),
+                RejectedMesh->GetCollisionResponseToChannel(ECC_Visibility), ECR_Block);
+        }
+    }
+
+    ATSTSSMilestoneActor* NonReview =
+        ReviewWorld->SpawnActor<ATSTSSMilestoneActor>();
+    UTSTSSFirstWakeState* NonReviewStory =
+        NewObject<UTSTSSFirstWakeState>(GetTransientPackage());
+    if (TestNotNull(TEXT("Unrelated actor exists"), NonReview))
+    {
+        NonReview->SetActorLabel(TEXT("TSTSS_PRODUCTION_ShipInteraction"));
+        NonReview->Milestone = ETSTSSFirstWakeBeat::FlyerDiscovered;
+        UPrimitiveComponent* NonReviewMesh =
+            Cast<UPrimitiveComponent>(NonReview->GetRootComponent());
+        TestTrue(TEXT("Non-review milestone still follows story"),
+            NonReview->TryActivate(NonReviewStory));
+        if (TestNotNull(TEXT("Unrelated actor mesh exists"), NonReviewMesh))
+        {
+            TestEqual(TEXT("Production-like actor keeps visibility blocking"),
+                NonReviewMesh->GetCollisionResponseToChannel(ECC_Visibility), ECR_Block);
+        }
+    }
+    ReviewWorld->DestroyWorld(false);
+#endif
 
     // No player save slot is written; do not alter any gameplay session.
     World->DestroyWorld(false);

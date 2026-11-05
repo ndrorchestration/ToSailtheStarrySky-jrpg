@@ -33,6 +33,9 @@ class ConsumedReviewMarkerTests(unittest.TestCase):
         self.assertEqual(s.count("#endif"), 1)
         self.assertIn("World->WorldType == EWorldType::PIE", s)
         self.assertIn('GetActorLabel().StartsWith(TEXT("TSTSS_PRELUDE_REVIEW_"))', s)
+        self.assertIn('GetActorLabel().StartsWith(TEXT("TSTSS_SPLASHDOWN_GREYBOX_"))', s)
+        # Both known review namespaces are under the same exact PIE-only gate.
+        self.assertRegex(s, r'World->WorldType == EWorldType::PIE &&\s*\(')
         self.assertIn("IsValid(InteractionMesh)", s)
         self.assertLess(s.index("#if WITH_EDITOR"),
                         s.index("SetCollisionResponseToChannel("))
