@@ -2,7 +2,7 @@
 
 The C++ DrawHUD body is compiled/exercised separately with API doubles.
 These source checks ensure that it is wired only in non-shipping targets,
-does not add new engine/plugin dependencies, and never mutates story/saves.
+keeps HUD source independent of title/class UI, and never mutates story/saves.
 """
 from pathlib import Path
 import unittest
@@ -44,8 +44,9 @@ class ObjectiveHudContracts(unittest.TestCase):
     def test_canvas_hud_stays_independent_of_class_umg(self):
         module = MODULE.read_text(encoding="utf-8")
         self.assertIn('"Engine", "InputCore"', module)
-        for dependency in ('"Slate"', '"SlateCore"'):
-            self.assertNotIn(dependency, module)
+        for include in ('Slate/', 'SlateCore/', 'MediaPlayer.h', 'MediaTexture.h'):
+            self.assertNotIn(include, self.hud)
+            self.assertNotIn(include, self.header)
         self.assertNotIn('Blueprint/UserWidget.h', self.hud)
         self.assertNotIn('TSTSSJobSelectionReviewWidget', self.hud)
         self.assertIn('#include "Engine/Canvas.h"', self.hud)
