@@ -16,6 +16,7 @@ On NEONTIC Windows with VS2022/MSVC 14.44, compiled and ran actual existing prod
 - **15/15** QuickSave/QuickLoad handler cases; existing-slot overwrite and both modifier-guard mutants rejected.
 - **10/10** SaveFirstWake roster/slot protection cases; unsafe overwrite mutant rejected.
 - **341 production state/water rewind assertions** across restored SeaContact, interrupted contact, same-beat restore and full Reset; both malicious/buggy guard mutations rejected.
+- **22 real-source input-binding C++ checks PASS**, compiling the actual `ATSTSSExplorerCharacter::SetupPlayerInputComponent` against C++ API doubles with Visual Studio 2022/MSVC, including PIE F6-only, Game F5-only, Editor no save binding and null-world fail-closed behavior. Three deliberate unsafe mutations (PIE-F5, Game-F6 and config F6-to-F5) were all rejected. Six additional source-only regression checks protect the extraction, input configuration, mutation guards and absence of disk SaveGame operations. This does **not** prove actual UE key dispatch, particularly the historically failing Shift+F5 shortcut; the separate live PIE F5/Shift+F5 no-write and F6/F9 tests remain mandatory.
 - Python source suite and combined six-case negative-controls must also PASS on this exact combined head. No touched real game saves, world/level content, approved art, engine config, existing Editor processes or protected main.
 
 ## Open native admission gates (no shortcuts)

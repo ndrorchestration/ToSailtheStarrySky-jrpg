@@ -167,3 +167,7 @@ jobs:
         run: python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_objective_continuity_transfer.py' -v
       - name: Prove PIE F6 binding and objective continuity coexist (source only)
         run: python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_f6_objective_combined.py' -v
+      - name: Execute real input binding C++ method against portable compiler doubles (not native UE/PIE)
+        run: |
+          python3 unreal/Tools/check_first_wake_input_binding_compiled.py --self-test
+          python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_input_binding_compiled.py' -v
