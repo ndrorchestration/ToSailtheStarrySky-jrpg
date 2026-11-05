@@ -171,3 +171,5 @@ jobs:
         run: |
           python3 unreal/Tools/check_first_wake_input_binding_compiled.py --self-test
           python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_input_binding_compiled.py' -v
+      - name: Keep #769 29-native-name and sandboxed Editor admission fail-closed (source only)
+        run: python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_combined_native_admission.py' -v

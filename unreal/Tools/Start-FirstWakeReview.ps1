@@ -5,8 +5,9 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
-if ((Split-Path $RepoRoot -Leaf) -ne 'TSTSS_GameAssembly_20261104') {
-    throw 'Use the isolated game assembly checkout'
+$AllowedReviewRoots = @('TSTSS_GameAssembly_20261104', 'TSTSS_P0CombinedF6Objectives_20261104')
+if ((Split-Path $RepoRoot -Leaf) -notin $AllowedReviewRoots) {
+    throw 'Use an explicitly approved disposable First Wake review checkout'
 }
 if ($ExpectedHead -notmatch '^[a-fA-F0-9]{40}$') { throw 'Full ExpectedHead required' }
 $Head = (& git -C $RepoRoot rev-parse HEAD).Trim()
@@ -70,7 +71,8 @@ foreach ($Name in @('DefaultEngine.ini','DefaultInput.ini')) {
     $Configs += [pscustomobject]@{ Path=$Path; Hash=(Get-ReviewHash $Path) }
 }
 $FreeKiB = (Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory
-if ($FreeKiB -lt 6500000) { throw 'Insufficient free RAM for graphical review' }
+# FreePhysicalMemory is reported in KiB: 6.5 GiB = 6,815,744 KiB.
+if ($FreeKiB -lt 6815744) { throw 'Insufficient free RAM: require at least 6.5 GiB for graphical review' }
 Write-Output "FIRST_WAKE_REVIEW_READY HEAD=$Head MAP=$Map"
 Write-Output 'Controls in PIE: WASD, mouse, E interact, J objective, F6 review save, F9 isolated review load. F5 is reserved for Editor shortcuts in PIE.'
 Write-Output 'This seven-stop Prelude ends at engineering signoff. Launch/Splashdown and cinematic art are not complete.'
