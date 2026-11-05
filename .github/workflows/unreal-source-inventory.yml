@@ -1,5 +1,7 @@
 name: Unreal source inventory (engine-free)
 on:
+  push:
+    branches: [main]
   pull_request:
     paths:
       - 'unreal/**'

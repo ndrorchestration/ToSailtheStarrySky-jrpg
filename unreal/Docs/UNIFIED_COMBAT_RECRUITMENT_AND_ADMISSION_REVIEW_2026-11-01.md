@@ -1,7 +1,7 @@
 # Unreal combat: unified draft native gates for story recruitment and DesignOnly commands
 
-**Date:** 2026-11-01  
-**Scope:** source-side C++ integration and native test *declarations*, not a UE Editor run  
+**Date:** 2026-11-01
+**Scope:** source-side C++ integration and native test *declarations*, not a UE Editor run
 **Status:** DRAFT / UNMERGED / NATIVE UE 5.8.4 UHT + TESTS NOT YET VERIFIED
 
 ## Exact upstream provenance / noninterference

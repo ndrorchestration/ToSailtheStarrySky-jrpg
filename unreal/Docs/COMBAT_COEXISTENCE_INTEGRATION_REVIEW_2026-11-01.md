@@ -36,7 +36,7 @@ Fixture spells and numbers are **not approved gameplay content**. These checks d
 ## Source checks performed
 
 - Read source at the exact heads above.
-- Compared declared test registrations against `Verify-Unreal.ps1`: **20 declared, 20 required, no duplicates or missing** across nine C++ test files (source-text enumeration). 
+- Compared declared test registrations against `Verify-Unreal.ps1`: **20 declared, 20 required, no duplicates or missing** across nine C++ test files (source-text enumeration).
 - No Windows native UE 5.8.4 UHT/C++ compile or Editor automation has been performed for this *combined branch*. The authorized RDC device was offline at review time; a previously successful ship-only Unreal build is not evidence for this combat branch.
 
 ## Required native verification before merge or gameplay wiring

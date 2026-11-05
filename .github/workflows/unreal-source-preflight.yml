@@ -1,6 +1,8 @@
 name: Unreal source preflight
 
 on:
+  push:
+    branches: [main]
   pull_request:
     paths:
       - 'unreal/Source/**'

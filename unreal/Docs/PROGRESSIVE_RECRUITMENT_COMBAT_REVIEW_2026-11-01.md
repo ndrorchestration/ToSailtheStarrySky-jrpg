@@ -1,6 +1,6 @@
 # Unreal combat — progressive recruitment versus three-active party QA
 
-Date: 2026-11-01. **Status: native test authored / source CI pending / UE 5.8.4 execution NOT VERIFIED.**  
+Date: 2026-11-01. **Status: native test authored / source CI pending / UE 5.8.4 execution NOT VERIFIED.**
 Draft only, stacked exclusively on [PR #671](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/671) and inherited #666/#662/#665. No runtime modifications, art admission, merge or release.
 
 ## Problem identified during multi-track reconciliation
