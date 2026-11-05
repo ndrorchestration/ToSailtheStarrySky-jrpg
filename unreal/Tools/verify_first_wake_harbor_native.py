@@ -1,16 +1,21 @@
 #!/usr/bin/env python3
 """Independent UE 5.8.4 readback of newly staged First Wake Harbor V1.
 
-Run only in a SEPARATE UnrealEditor-Cmd process AFTER staging. Read-only:
+Run only in a SEPARATE headless UnrealEditor.exe -NullRHI process AFTER staging. Read-only:
 never call save_current_level(), alter actor transforms, or create new assets.
 This is not a GPU screenshot, animation, physics or PIE acceptance.
 """
 from __future__ import annotations
 
-import hashlib
 import json
 from pathlib import Path
+import sys
 
+# Unreal -ExecutePythonScript may use the project root as its import cwd.
+# Resolve this trusted sibling recipe in the exact disposable worktree.
+TOOLS_DIR = str(Path(__file__).resolve().parent)
+if TOOLS_DIR not in sys.path:
+    sys.path.insert(0, TOOLS_DIR)
 import build_first_wake_harbor_environment as harbor
 
 
