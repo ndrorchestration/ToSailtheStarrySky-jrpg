@@ -163,3 +163,5 @@ jobs:
         run: python3 unreal/Tools/check_combat_design_only_compiled.py
       - name: First Wake interaction-to-Splashdown authority contract (source only)
         run: python3 unreal/Tools/test_firstwake_integration_contract.py
+      - name: Preserve 16 First Wake objective-continuity assertions from #734 (source only)
+        run: python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_objective_continuity_transfer.py' -v

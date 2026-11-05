@@ -48,6 +48,8 @@ bool FTSTSSFirstWakeInteractionSplashdownTest::RunTest(const FString& Parameters
         return Trigger->TryActivate(Story);
     };
 
+    TestEqual(TEXT("Opening objective prompts Ender toward flyer"), Story->GetReviewObjectiveText(),
+        FString(TEXT("Find Ionia's flyer")));
     TestFalse(TEXT("Cannot board before discovering flyer"),
         ActivateBeat(ETSTSSFirstWakeBeat::BoardedAureateWake));
     TestFalse(TEXT("Cannot hire Ionia before discovering flyer"),
@@ -55,23 +57,43 @@ bool FTSTSSFirstWakeInteractionSplashdownTest::RunTest(const FString& Parameters
     TestFalse(TEXT("Chapter 1 unavailable before story begins"), Story->IsChapterOneActOne());
     TestTrue(TEXT("Ender can inspect Ionia hiring flyer"),
         ActivateBeat(ETSTSSFirstWakeBeat::FlyerDiscovered));
+    TestEqual(TEXT("Flyer changes objective to Captain Ionia"), Story->GetReviewObjectiveText(),
+        FString(TEXT("Speak with Captain Ionia")));
     TestFalse(TEXT("Flyer interaction cannot be repeated"),
         ActivateBeat(ETSTSSFirstWakeBeat::FlyerDiscovered));
+    TestEqual(TEXT("Rejected flyer keeps Ionia objective"), Story->GetReviewObjectiveText(),
+        FString(TEXT("Speak with Captain Ionia")));
     TestTrue(TEXT("Ionia is hired before boarding"),
         ActivateBeat(ETSTSSFirstWakeBeat::IoniaHired));
+    TestEqual(TEXT("Ionia hiring changes objective to ship boarding"), Story->GetReviewObjectiveText(),
+        FString(TEXT("Board the Aureate Wake")));
     TestTrue(TEXT("Board Aureate Wake in sequence"),
         ActivateBeat(ETSTSSFirstWakeBeat::BoardedAureateWake));
+    TestEqual(TEXT("Boarding prompts lift inspection"), Story->GetReviewObjectiveText(),
+        FString(TEXT("Inspect the levitation lift")));
     TestFalse(TEXT("Engineering clearance blocked until every inspection"),
         ActivateBeat(ETSTSSFirstWakeBeat::EngineeringChecked));
     TestTrue(TEXT("Lift station interaction accepted"), Inspect(ETSTSSInspectionStation::Lift));
+    TestEqual(TEXT("Lift check prompts pressure inspection"), Story->GetReviewObjectiveText(),
+        FString(TEXT("Inspect the pressure systems")));
     TestFalse(TEXT("Duplicate lift evidence cannot advance"), Inspect(ETSTSSInspectionStation::Lift));
+    TestEqual(TEXT("Duplicate lift preserves pressure objective"), Story->GetReviewObjectiveText(),
+        FString(TEXT("Inspect the pressure systems")));
     TestTrue(TEXT("Pressure station interaction accepted"), Inspect(ETSTSSInspectionStation::Pressure));
+    TestEqual(TEXT("Pressure check prompts reserve inspection"), Story->GetReviewObjectiveText(),
+        FString(TEXT("Inspect the reserve systems")));
     TestFalse(TEXT("Reserve still missing blocks clearance"),
         ActivateBeat(ETSTSSFirstWakeBeat::EngineeringChecked));
     TestTrue(TEXT("Reserve station interaction accepted"), Inspect(ETSTSSInspectionStation::Reserve));
+    TestEqual(TEXT("Three inspections prompt engineering signoff"), Story->GetReviewObjectiveText(),
+        FString(TEXT("Complete engineering signoff")));
     TestTrue(TEXT("Three inspections unlock engineering signoff"),
         ActivateBeat(ETSTSSFirstWakeBeat::EngineeringChecked));
+    TestEqual(TEXT("Engineering signoff prompts launch"), Story->GetReviewObjectiveText(),
+        FString(TEXT("Prepare for the First Wake launch")));
     TestTrue(TEXT("First flight genuinely launches"), ActivateBeat(ETSTSSFirstWakeBeat::Launched));
+    TestEqual(TEXT("Launch objective remains in Prelude flight"), Story->GetReviewObjectiveText(),
+        FString(TEXT("Navigate the First Wake flight")));
     TestFalse(TEXT("No chapter transition on launch"), Story->IsChapterOneActOne());
 
     // The interactive actor must never forge water contact or flotation.
@@ -87,6 +109,8 @@ bool FTSTSSFirstWakeInteractionSplashdownTest::RunTest(const FString& Parameters
         WaterGate->Observe(0.1f, true, 180.f, Story));
     TestEqual(TEXT("Physical impact records contact"), Story->GetCurrentBeat(),
         ETSTSSFirstWakeBeat::SeaContact);
+    TestEqual(TEXT("Sea contact prompts landing stabilization"), Story->GetReviewObjectiveText(),
+        FString(TEXT("Stabilize the water landing")));
     TestFalse(TEXT("SeaContact remains Prelude"), Story->IsChapterOneActOne());
 
     // 1 second of calm then discontinuity: not enough to enter Chapter 1.
@@ -112,12 +136,18 @@ bool FTSTSSFirstWakeInteractionSplashdownTest::RunTest(const FString& Parameters
     TestTrue(TEXT("Chapter 1 Act 1 begins ONLY at sustained flotation"),
         Story->IsChapterOneActOne());
 
+    TestEqual(TEXT("Splashdown objective prompts empty reserve investigation"), Story->GetReviewObjectiveText(),
+        FString(TEXT("Investigate the empty reserves")));
     // No Lyra recruitment is synthesized here. Existing recovery milestones
     // take place only after the physical boundary.
     TestTrue(TEXT("Inspect empty reserve after Splashdown"),
         ActivateBeat(ETSTSSFirstWakeBeat::EmptyReserveInspected));
+    TestEqual(TEXT("Reserve inspection prompts berth recovery"), Story->GetReviewObjectiveText(),
+        FString(TEXT("Return to berth")));
     TestTrue(TEXT("Return to berth is post-Splashdown"),
         ActivateBeat(ETSTSSFirstWakeBeat::ReturnedToBerth));
+    TestEqual(TEXT("Recovered story has final review objective"), Story->GetReviewObjectiveText(),
+        FString(TEXT("First Wake review sequence complete")));
     TestFalse(TEXT("Cannot advance beyond final recovery beat"),
         ActivateBeat(ETSTSSFirstWakeBeat::ReturnedToBerth));
     TestTrue(TEXT("Chapter 1 persists through recovery"), Story->IsChapterOneActOne());
@@ -140,6 +170,8 @@ bool FTSTSSFirstWakeInteractionSplashdownTest::RunTest(const FString& Parameters
     Restored->Reset();
     TestFalse(TEXT("New game reset returns to Prelude"), Restored->IsChapterOneActOne());
 
+    TestEqual(TEXT("Reset restores first objective"), Restored->GetReviewObjectiveText(),
+        FString(TEXT("Find Ionia's flyer")));
     // No player save slot is written; do not alter any gameplay session.
     World->DestroyWorld(false);
     return true;
