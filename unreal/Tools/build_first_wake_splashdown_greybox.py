@@ -199,7 +199,11 @@ def build_in_unreal() -> dict:
     hull_mesh.set_collision_profile_name("PhysicsActor")
     hull_mesh.set_collision_enabled(unreal.CollisionEnabled.QUERY_AND_PHYSICS)
     hull_mesh.set_generate_overlap_events(True)
-    hull_mesh.set_simulate_physics(True)
+    hull_mesh.set_mobility(unreal.ComponentMobility.MOVABLE)
+    # The player must authorize launch before gravity can drop the hull.
+    # Runtime opt-in arms this exact dry pose on the real Launched story beat.
+    hull_mesh.set_simulate_physics(False)
+    hull.set_editor_property("arm_prototype_physics_on_launch", True)
     hull.set_editor_property("enable_prototype_buoyancy", True)
     # Native bAutoBindPlayerStory defaults true: story authority still requires
     # First Wake launch, actual overlap, finite velocity and two stable seconds.

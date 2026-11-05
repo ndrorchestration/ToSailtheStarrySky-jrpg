@@ -15,6 +15,14 @@ void ATSTSSWaterContactAdapter::BeginPlay()
 {
     Super::BeginPlay();
     Gate = NewObject<UTSTSSWaterLandingGate>(this);
+    if (bArmPrototypePhysicsOnLaunch && IsValid(Hull))
+    {
+        // The separate greybox does not drop its provisional hull before
+        // the player actually authorizes launch. Production maps opt out.
+        InitialPrototypeHullTransform = Hull->GetComponentTransform();
+        bHasPrototypeInitialTransform = true;
+        Hull->SetSimulatePhysics(false);
+    }
     if (bAutoBindPlayerStory)
     {
         if (ATSTSSExplorerCharacter* Player = Cast<ATSTSSExplorerCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
@@ -46,6 +54,50 @@ void ATSTSSWaterContactAdapter::Tick(float DeltaSeconds)
         if (Story != CurrentPlayerStory)
         {
             BindStory(CurrentPlayerStory);
+        }
+    }
+    if (bArmPrototypePhysicsOnLaunch)
+    {
+        // Review-only chronology: no prelaunch water contact is reusable as
+        // proof of a later splashdown, even if the proto hull overlaps water.
+        if (!IsValid(Hull) || !bHasPrototypeInitialTransform)
+        {
+            Gate->Reset();
+            return;
+        }
+        const bool bStoryStarted = IsValid(Story) && Story->HasStarted();
+        const bool bAfterLaunch = bStoryStarted &&
+            static_cast<uint8>(Story->GetCurrentBeat()) >=
+                static_cast<uint8>(ETSTSSFirstWakeBeat::Launched);
+        const uint64 Generation = bStoryStarted ? Story->GetRestoreGeneration() : 0;
+        const bool bNewTimeline = !bPrototypeTimelineObserved ||
+            PrototypeObservedStory.Get() != Story ||
+            PrototypeRestoreGeneration != Generation;
+        if (bNewTimeline || !bAfterLaunch)
+        {
+            // On a story reset/quickload, return to the initial DRY pose.
+            // The original hull physics actor cannot carry old contact into
+            // a fresh timeline. No canonical ship geometry is changed.
+            if (Hull->IsSimulatingPhysics())
+            {
+                Hull->SetSimulatePhysics(false);
+            }
+            Hull->SetWorldTransform(InitialPrototypeHullTransform, false, nullptr,
+                                    ETeleportType::TeleportPhysics);
+            Gate->Reset();
+            PrototypeObservedStory = Story;
+            PrototypeRestoreGeneration = Generation;
+            bPrototypeTimelineObserved = true;
+            if (!bAfterLaunch)
+            {
+                return;
+            }
+        }
+        // Launch begins actual gravity/contact. Merely reaching Launched
+        // does not grant SeaContact or FlotationConfirmed.
+        if (!Hull->IsSimulatingPhysics())
+        {
+            Hull->SetSimulatePhysics(true);
         }
     }
     if (!IsValid(Story) || !IsValid(Hull) || !Hull->IsSimulatingPhysics())

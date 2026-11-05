@@ -149,12 +149,14 @@ class GreyboxAuthoringContract(TestCase):
                 self.collision = None
                 self.overlap = False
                 self.simulated = False
+                self.mobility = None
 
             def set_static_mesh(self, mesh): self.mesh = mesh
             def set_collision_profile_name(self, profile): self.profile = profile
             def set_collision_enabled(self, value): self.collision = value
             def set_generate_overlap_events(self, enabled): self.overlap = enabled
             def set_simulate_physics(self, enabled): self.simulated = enabled
+            def set_mobility(self, value): self.mobility = value
 
         class FakeText:
             def set_text(self, txt): self.text = txt
@@ -218,6 +220,7 @@ class GreyboxAuthoringContract(TestCase):
                     RETURNED_TO_BERTH=8),
                 CollisionEnabled=SimpleNamespace(
                     QUERY_AND_PHYSICS="QueryAndPhysics", QUERY_ONLY="QueryOnly"),
+                ComponentMobility=SimpleNamespace(MOVABLE="Movable"),
                 Name=lambda name: name,
                 Vector=lambda *xyz: xyz,
                 Rotator=lambda **kwargs: kwargs,
@@ -233,8 +236,10 @@ class GreyboxAuthoringContract(TestCase):
             self.assertEqual(len(editor.actors), 8)  # 3 markers+signs, water, hull
             hull = next(a for a in editor.actors if "HullPhysicsProxy" in a.label)
             water = next(a for a in editor.actors if "WaterVolume" in a.label)
-            self.assertTrue(hull.mesh.simulated)
+            self.assertFalse(hull.mesh.simulated)  # no prelaunch free fall
+            self.assertEqual(hull.mesh.mobility, "Movable")
             self.assertTrue(hull.mesh.overlap)
+            self.assertTrue(hull.properties["arm_prototype_physics_on_launch"])
             self.assertTrue(hull.properties["enable_prototype_buoyancy"])
             self.assertEqual(water.properties["tags"], ["TSTSSWaterVolume"])
             self.assertEqual(water.mesh.profile, "OverlapAllDynamic")
@@ -255,6 +260,9 @@ class GreyboxAuthoringContract(TestCase):
                       source)
         self.assertIn('hull.set_editor_property("enable_prototype_buoyancy", True)',
                       source)
+        self.assertIn('hull.set_editor_property("arm_prototype_physics_on_launch", True)',
+                      source)
+        self.assertIn("hull_mesh.set_simulate_physics(False)", source)
         self.assertIn("hashlib.sha256(parent_map.read_bytes()).hexdigest()", source)
         for forbidden in ("save_map(world, v2.REVIEW_MAP)",
                           "delete_game_in_slot", "save_game_to_slot",
