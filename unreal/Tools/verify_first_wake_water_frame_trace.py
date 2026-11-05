@@ -7,11 +7,12 @@ fixtures cannot establish gameplay or physical water contact.
 import argparse
 import hashlib
 import json
+import math
 from pathlib import Path
 import subprocess
 
 PREFIX = "TSTSS_WATER_REVIEW_SAMPLE "
-NEEDED = ("world_sec","dt","hull_z_cm","water_surface_z_cm",
+NEEDED = ("world_sec","dt","hull_z_cm","hull_bottom_z_cm","water_surface_z_cm",
           "tagged_overlap","immersed","submersion",
           "vertical_speed_cm_s","stable_sec","beat_before",
           "beat_after","sim","restore_gen")
@@ -49,11 +50,18 @@ def analyze(text):
     physical=[x for x in samples if x["phase"]=="PHYSICS"]
     if not dry or len(dry)>30 or not physical or len(physical)>6000:
         raise ValueError("dry/physics bounded samples missing or excessive")
-    if not any(x.get("sim")=="0" and float(x.get("stable_sec","-1"))==0 for x in dry):
+    first_physical = next(i for i, x in enumerate(samples) if x["phase"] == "PHYSICS")
+    prelaunch = [x for x in samples[:first_physical] if x["phase"] == "DRY"]
+    if not any(x.get("sim")=="0" and float(x.get("stable_sec","-1"))==0 for x in prelaunch):
         raise ValueError("no genuine dry, nonsimulating prelaunch frame")
     for x in physical:
         if any(k not in x for k in NEEDED):
             raise ValueError("incomplete actual physical sample")
+        for field in ("world_sec", "dt", "hull_z_cm", "hull_bottom_z_cm",
+                      "water_surface_z_cm", "submersion", "vertical_speed_cm_s",
+                      "stable_sec"):
+            if not math.isfinite(float(x[field])):
+                raise ValueError("nonfinite physical measurement: " + field)
     transitions=[i for i,x in enumerate(physical)
                  if x["beat_before"]=="5" and x["beat_after"]=="6"]
     if len(transitions)!=1:
@@ -63,7 +71,9 @@ def analyze(text):
         raise ValueError("native flotation transition lacks stable gate time")
     generation=physical[i]["restore_gen"]
     previous=None
+    previous_dt=None
     duration=0.0
+    duration_dt=0.0
     used=0
     for x in reversed(physical[:i+1]):
         dt=float(x["dt"])
@@ -77,11 +87,16 @@ def analyze(text):
             break
         if previous is not None:
             gap=previous-t
-            if not 0<gap<=0.25:
+            # Both fields are logged to four decimal places. The elapsed
+            # world time must agree with the later frame's delta, allowing
+            # for rounding of both clock readings and the delta itself.
+            if not 0<gap<=0.25 or abs(gap-previous_dt)>0.0002:
                 break
+            duration+=gap
+            duration_dt+=previous_dt
         previous=t
+        previous_dt=dt
         used+=1
-        duration+=dt
         if duration>=2.0:
             break
     if duration < 2.0:
@@ -91,7 +106,8 @@ def analyze(text):
         "dry_samples":len(dry),
         "physical_samples":len(physical),
         "window_samples":used,
-        "window_seconds_sum_dt":round(duration,4),
+        "window_seconds_sum_dt":round(duration_dt,4),
+        "window_seconds_world_clock":round(duration,4),
         "transition_world_seconds":float(physical[i]["world_sec"]),
         "stable_seconds_at_transition":float(physical[i]["stable_sec"]),
         "restore_generation":generation,
@@ -128,3 +144,4 @@ def main():
 
 if __name__=="__main__":
     main()
+
