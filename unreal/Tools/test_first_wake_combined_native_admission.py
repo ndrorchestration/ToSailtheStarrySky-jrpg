@@ -14,19 +14,21 @@ MAP = UNREAL / "Tools/Invoke-NativePreludeMapQA.ps1"
 BUILD = UNREAL / "Tools/Verify-Unreal.ps1"
 REQUIRED_ROOT = "TSTSS_P0CombinedF6Objectives_20261104"
 MAP_REPAIR_ROOT = "TSTSS_FirstWakeMapQARepair_20261105"
+JOIN_ROOT = "TSTSS_MarkerSaveJoin_20261105"
 MAP_SHA = "4c96f1fb28fe4af91b879977e473c20de32bd933f741a5384bb8403a00254b80"
 
 
 def verify(review: str, map_launcher: str, builder: str) -> list[str]:
     errors = []
     expected_roots = (
-        ("review", review, ["TSTSS_GameAssembly_20261104", REQUIRED_ROOT, MAP_REPAIR_ROOT]),
+        ("review", review, ["TSTSS_GameAssembly_20261104", REQUIRED_ROOT, MAP_REPAIR_ROOT, JOIN_ROOT]),
         ("map QA", map_launcher, [
             "TSTSS_PR713_NativeMapQA_20261102",
             "TSTSS_PR735_NativeMapQA_20261103",
             "TSTSS_GameAssembly_20261104",
             REQUIRED_ROOT,
             MAP_REPAIR_ROOT,
+            JOIN_ROOT,
         ]),
     )
     for label, src, allowed in expected_roots:

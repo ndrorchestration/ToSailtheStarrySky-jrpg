@@ -55,6 +55,13 @@ class FirstWakeNativeReadinessNegativeFixtures(unittest.TestCase):
         self.assertEqual(self.result(root_name=MAP_REPAIR_ROOT + "_copy")["status"], "HOLD")
         self.assertEqual(self.result(root_name=MAP_REPAIR_ROOT, git_clean=False)["status"], "HOLD")
 
+    def test_marker_save_join_root_stays_exact_and_clean(self):
+        from check_first_wake_native_readiness import MARKER_SAVE_JOIN_ROOT
+        self.assertEqual(self.result(root_name=MARKER_SAVE_JOIN_ROOT)["status"],
+                         "READ_ONLY_PREFLIGHT_PASS_NOT_NATIVE_EVIDENCE")
+        self.assertEqual(self.result(root_name=MARKER_SAVE_JOIN_ROOT + "_copy")["status"], "HOLD")
+        self.assertEqual(self.result(root_name=MARKER_SAVE_JOIN_ROOT, git_clean=False)["status"], "HOLD")
+
     def test_wrong_sha_refused(self):
         self.assertEqual(self.result(git_head="0" * 40)["status"], "HOLD")
 

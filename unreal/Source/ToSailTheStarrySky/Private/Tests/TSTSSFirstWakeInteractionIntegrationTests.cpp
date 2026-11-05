@@ -3,6 +3,7 @@
 #include "TSTSSMilestoneActor.h"
 #include "TSTSSWaterLandingGate.h"
 #include "TSTSSSaveGame.h"
+#include "Components/StaticMeshComponent.h"
 #include "Engine/World.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
@@ -34,6 +35,19 @@ bool FTSTSSFirstWakeInteractionSplashdownTest::RunTest(const FString& Parameters
         World->DestroyWorld(false);
         return false;
     }
+
+    UStaticMeshComponent* MarkerMesh = Trigger->FindComponentByClass<UStaticMeshComponent>();
+    if (!TestNotNull(TEXT("Interaction marker mesh exists"), MarkerMesh))
+    {
+        World->DestroyWorld(false);
+        return false;
+    }
+    TestEqual(TEXT("Marker is query-only; it cannot physically obstruct the route"),
+        MarkerMesh->GetCollisionEnabled(), ECollisionEnabled::QueryOnly);
+    TestEqual(TEXT("Pawn can pass a completed marker"),
+        MarkerMesh->GetCollisionResponseToChannel(ECC_Pawn), ECR_Ignore);
+    TestEqual(TEXT("E visibility ray still hits the marker"),
+        MarkerMesh->GetCollisionResponseToChannel(ECC_Visibility), ECR_Block);
 
     const auto ActivateBeat = [Trigger, Story](ETSTSSFirstWakeBeat Beat) -> bool
     {

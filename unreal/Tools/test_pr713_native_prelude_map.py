@@ -65,7 +65,7 @@ class NativeMapSourceGateTests(unittest.TestCase):
         self.assertEqual(qa.EXPECTED_PARENT, "TSTSS_PR713_NativeMapQA_20261102")
         self.assertEqual(qa.JOINED_EXPECTED_PARENT, "TSTSS_PR735_NativeMapQA_20261103")
         self.assertEqual(qa.ALLOWED_PARENTS,
-                         {qa.EXPECTED_PARENT, qa.JOINED_EXPECTED_PARENT, qa.ASSEMBLY_EXPECTED_PARENT, qa.MAP_REPAIR_EXPECTED_PARENT})
+                         {qa.EXPECTED_PARENT, qa.JOINED_EXPECTED_PARENT, qa.ASSEMBLY_EXPECTED_PARENT, qa.MAP_REPAIR_EXPECTED_PARENT, qa.MARKER_SAVE_JOIN_EXPECTED_PARENT})
         self.assertEqual(qa.LABEL_PREFIX, "TSTSS_PRELUDE_REVIEW_")
 
     def test_bad_checkout_and_wrong_commit_fail_closed_before_ue(self):
@@ -103,6 +103,18 @@ class NativeMapSourceGateTests(unittest.TestCase):
             impostor.mkdir(parents=True)
             with self.assertRaisesRegex(RuntimeError, "not the explicitly named"):
                 qa.check_source(impostor, "a" * 40)
+
+    def test_join_workspace_requires_pin_and_rejects_suffix(self):
+        with tempfile.TemporaryDirectory() as directory:
+            exact = Path(directory) / qa.MARKER_SAVE_JOIN_EXPECTED_PARENT / "unreal"
+            exact.mkdir(parents=True)
+            with mock.patch.object(qa, "git", return_value="b" * 40):
+                with self.assertRaisesRegex(RuntimeError, "SHA does not match"):
+                    qa.check_source(exact, "a" * 40)
+            renamed = Path(directory) / (qa.MARKER_SAVE_JOIN_EXPECTED_PARENT + "_copy") / "unreal"
+            renamed.mkdir(parents=True)
+            with self.assertRaisesRegex(RuntimeError, "not the explicitly named"):
+                qa.check_source(renamed, "a" * 40)
 
     def test_dirty_worktree_refused_before_asset_io(self):
         with tempfile.TemporaryDirectory() as directory:

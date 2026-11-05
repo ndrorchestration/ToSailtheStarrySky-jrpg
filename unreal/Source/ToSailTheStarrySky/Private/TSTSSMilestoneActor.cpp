@@ -6,7 +6,19 @@ ATSTSSMilestoneActor::ATSTSSMilestoneActor()
     PrimaryActorTick.bCanEverTick = false;
     InteractionMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("InteractionMesh"));
     RootComponent = InteractionMesh;
-    InteractionMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    InteractionMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    InteractionMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
+    InteractionMesh->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+}
+
+void ATSTSSMilestoneActor::BeginPlay()
+{
+    Super::BeginPlay();
+    // The existing saved review map explicitly serialized BlockAll on these
+    // meshes. Reapply pass-through collision in PIE without rewriting the map.
+    // The E visibility ray still hits each marker; pawn movement does not.
+    InteractionMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    InteractionMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
     InteractionMesh->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 }
 
