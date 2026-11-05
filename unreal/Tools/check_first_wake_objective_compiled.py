@@ -106,10 +106,18 @@ def compile_and_run(compiler: str, method: str) -> subprocess.CompletedProcess[s
         src = root / "objective_probe.cpp"
         executable = root / "objective_probe"
         src.write_text(PREFIX + method + SUFFIX, encoding="utf-8")
+        is_msvc = Path(compiler).name.lower() == "cl.exe"
+        if is_msvc:
+            executable = root / "objective_probe.exe"
+            args = [compiler, "/nologo", "/std:c++17", "/EHsc",
+                    "/W4", "/WX", str(src),
+                    "/Fo:" + str(root / "objective_probe.obj"),
+                    "/Fe:" + str(executable)]
+        else:
+            args = [compiler, "-std=c++17", "-O0", "-Wall", "-Wextra", "-Werror",
+                    "-pedantic", str(src), "-o", str(executable)]
         compiled = subprocess.run(
-            [compiler, "-std=c++17", "-O0", "-Wall", "-Wextra", "-Werror",
-             "-pedantic", str(src), "-o", str(executable)],
-            check=False, capture_output=True, text=True, timeout=45,
+            args, check=False, capture_output=True, text=True, timeout=45,
         )
         if compiled.returncode != 0:
             raise RuntimeError("Portable C++ objective compile failed: " + compiled.stderr[-4000:])
@@ -126,7 +134,9 @@ def main() -> int:
     compiler = next((p for name in ("g++", "clang++", "c++")
                      if (p := shutil.which(name))), None)
     if compiler is None:
-        raise RuntimeError("No C++17 compiler; cannot claim portable behavioral pass")
+        compiler = shutil.which("cl")
+    if compiler is None:
+        raise RuntimeError("No C++17 compiler; cannot claim compiled behavioral pass")
     method = extract_method(SOURCE.read_text(encoding="utf-8"))
     actual = compile_and_run(compiler, method)
     if actual.returncode != 0:
