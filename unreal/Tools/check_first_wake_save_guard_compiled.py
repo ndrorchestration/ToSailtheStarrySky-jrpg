@@ -224,14 +224,21 @@ def build_run(compiler: str, method: str) -> subprocess.CompletedProcess[str]:
     with tempfile.TemporaryDirectory(prefix="tstss-real-save-guard-") as directory:
         root = Path(directory)
         source = root / "save.cpp"
-        binary = root / "save"
+        binary = root / ("save.exe" if Path(compiler).name.lower() == "cl.exe" else "save")
         source.write_text(PREFIX + method + SUFFIX, encoding="utf-8")
+        if Path(compiler).name.lower() == "cl.exe":
+            # Mutation tests intentionally compile constant-false conditions;
+            # suppress only MSVC C4127 while keeping all other warnings fatal.
+            command = [compiler, "/nologo", "/std:c++17", "/EHsc", "/W4",
+                       "/WX", "/wd4127", str(source), "/Fo:" + str(root / "save.obj"),
+                       "/Fe:" + str(binary)]
+        else:
+            command = [compiler, "-std=c++17", "-O0", "-Wall", "-Wextra",
+                       "-Werror", "-pedantic", str(source), "-o", str(binary)]
         built = subprocess.run(
-            [compiler, "-std=c++17", "-O0", "-Wall", "-Wextra", "-Werror",
-             "-pedantic", str(source), "-o", str(binary)],
-            capture_output=True, text=True, timeout=45, check=False)
+            command, capture_output=True, text=True, timeout=45, check=False)
         if built.returncode:
-            raise RuntimeError("C++ portable compile failed: " + built.stderr[-5000:])
+            raise RuntimeError("C++ portable compile failed: " + (built.stdout + built.stderr)[-5000:])
         return subprocess.run([str(binary)], capture_output=True, text=True,
                               timeout=25, check=False)
 
@@ -240,7 +247,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
-    compiler = next((exe for name in ("g++", "clang++", "c++")
+    compiler = next((exe for name in ("g++", "clang++", "c++", "cl")
                      if (exe := shutil.which(name))), None)
     if compiler is None:
         raise RuntimeError("C++17 compiler required: native Unreal not available")
