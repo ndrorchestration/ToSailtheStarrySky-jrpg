@@ -13,6 +13,9 @@
 #include "Engine/Engine.h"
 #include "Kismet/GameplayStatics.h"
 #include "CollisionQueryParams.h"
+#if WITH_EDITOR
+#include "EngineUtils.h"
+#endif
 
 namespace
 {
@@ -168,7 +171,19 @@ void ATSTSSExplorerCharacter::Interact()
     const FVector End = Start + FollowCamera->GetForwardVector() * CameraTraceLength;
     FHitResult Hit;
     FCollisionQueryParams Query(SCENE_QUERY_STAT(TSTSSInteract), false, this);
-    if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Query))
+    const bool bTraceHit = GetWorld()->LineTraceSingleByChannel(
+        Hit, Start, End, ECC_Visibility, Query);
+#if WITH_EDITOR
+    if (GetWorld()->WorldType == EWorldType::PIE && !bTraceHit)
+    {
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_PIE_REVIEW_E_MISS pawn=%s camera=%s forward=%s trace_cm=%.1f objective=%s"),
+            *PawnLocation.ToCompactString(), *Start.ToCompactString(),
+            *FollowCamera->GetForwardVector().ToCompactString(), CameraTraceLength,
+            *FirstWakeState->GetReviewObjectiveText());
+    }
+#endif
+    if (bTraceHit)
     {
         if (ATSTSSMilestoneActor* Milestone = Cast<ATSTSSMilestoneActor>(Hit.GetActor()))
         {
@@ -178,6 +193,16 @@ void ATSTSSExplorerCharacter::Interact()
             {
                 if (Milestone->TryActivate(FirstWakeState))
                 {
+#if WITH_EDITOR
+                    if (GetWorld()->WorldType == EWorldType::PIE)
+                    {
+                        UE_LOG(LogTemp, Display,
+                            TEXT("TSTSS_PIE_REVIEW_E_ACCEPT target=%s pawn_hit_cm=%.1f objective_after=%s"),
+                            *Milestone->GetActorLabel(),
+                            FVector::Dist(PawnLocation, Hit.ImpactPoint),
+                            *FirstWakeState->GetReviewObjectiveText());
+                    }
+#endif
                     ShowFirstWakeReviewObjective(FirstWakeState);
                 }
                 else
@@ -185,9 +210,47 @@ void ATSTSSExplorerCharacter::Interact()
                     // A valid, in-reach marker rejected the state transition.
                     // This does not grant progression or claim that E hit when
                     // the camera trace missed or the target was out of reach.
+#if WITH_EDITOR
+                    if (GetWorld()->WorldType == EWorldType::PIE)
+                    {
+                        UE_LOG(LogTemp, Display,
+                            TEXT("TSTSS_PIE_REVIEW_E_DENIED target=%s pawn_hit_cm=%.1f objective=%s"),
+                            *Milestone->GetActorLabel(),
+                            FVector::Dist(PawnLocation, Hit.ImpactPoint),
+                            *FirstWakeState->GetReviewObjectiveText());
+                    }
+#endif
                     ShowFirstWakeReviewBlockedInteraction(FirstWakeState);
                 }
             }
+            else
+            {
+#if WITH_EDITOR
+                if (GetWorld()->WorldType == EWorldType::PIE)
+                {
+                    UE_LOG(LogTemp, Display,
+                        TEXT("TSTSS_PIE_REVIEW_E_OUT_OF_REACH target=%s pawn=%s pawn_hit_cm=%.1f limit_cm=%.1f objective=%s"),
+                        *Milestone->GetActorLabel(), *PawnLocation.ToCompactString(),
+                        FVector::Dist(PawnLocation, Hit.ImpactPoint),
+                        InteractionDistance, *FirstWakeState->GetReviewObjectiveText());
+                }
+#endif
+            }
+        }
+        else
+        {
+#if WITH_EDITOR
+            if (GetWorld()->WorldType == EWorldType::PIE)
+            {
+                const AActor* OtherActor = Hit.GetActor();
+                UE_LOG(LogTemp, Display,
+                    TEXT("TSTSS_PIE_REVIEW_E_OTHER target=%s pawn=%s pawn_hit_cm=%.1f objective=%s"),
+                    OtherActor ? *OtherActor->GetActorNameOrLabel() : TEXT("None"),
+                    *PawnLocation.ToCompactString(),
+                    FVector::Dist(PawnLocation, Hit.ImpactPoint),
+                    *FirstWakeState->GetReviewObjectiveText());
+            }
+#endif
         }
     }
 }
@@ -291,5 +354,32 @@ bool ATSTSSExplorerCharacter::LoadFirstWake(const FString& Slot)
     if (!IsValid(FirstWakeState)) return false;
     const UTSTSSSaveGame* Save = UTSTSSPersistence::LoadProgress(Slot);
     if (!Save) return false;
-    return FirstWakeState->Restore(Save->bFirstWakeStarted, Save->FirstWakeBeat, Save->InspectionMask);
+    const bool bRestored = FirstWakeState->Restore(
+        Save->bFirstWakeStarted, Save->FirstWakeBeat, Save->InspectionMask);
+#if WITH_EDITOR
+    // Previously accepted review cubes have been made transparent to rays
+    // and pawn movement. Restoring an earlier story beat must reactivate
+    // only the markers which are now incomplete; keep saved-complete ones
+    // transparent. Do not touch non-PIE or production-world actors.
+    UWorld* World = GetWorld();
+    if (bRestored && World && World->WorldType == EWorldType::PIE)
+    {
+        int32 ReconciledCount = 0;
+        for (TActorIterator<ATSTSSMilestoneActor> It(World); It; ++It)
+        {
+            if (IsValid(*It))
+            {
+                It->ReconcileReviewCollisionAfterRestore(FirstWakeState);
+                ++ReconciledCount;
+            }
+        }
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_PIE_REVIEW_LOAD_REBOUND beat=%d inspection_mask=%u generation=%llu actors_considered=%d"),
+            static_cast<int32>(FirstWakeState->GetCurrentBeat()),
+            static_cast<uint32>(FirstWakeState->GetInspectionMask()),
+            static_cast<unsigned long long>(FirstWakeState->GetRestoreGeneration()),
+            ReconciledCount);
+    }
+#endif
+    return bRestored;
 }
