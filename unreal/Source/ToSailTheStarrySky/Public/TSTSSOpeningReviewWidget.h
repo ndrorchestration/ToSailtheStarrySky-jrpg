@@ -24,9 +24,9 @@ private:
     UFUNCTION()
     void BeginJourney();
     UFUNCTION()
-    void OnMovieOpened(const FString& OpenedUrl);
+    void OnMovieOpened(FString OpenedUrl);
     UFUNCTION()
-    void OnMovieOpenFailed(const FString& FailedUrl);
+    void OnMovieOpenFailed(FString FailedUrl);
 
     UPROPERTY() TObjectPtr<UButton> NewGameButton;
     UPROPERTY() TObjectPtr<UButton> VideoButton;

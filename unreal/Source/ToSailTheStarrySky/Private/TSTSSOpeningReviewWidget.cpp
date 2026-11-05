@@ -44,7 +44,7 @@ void UTSTSSOpeningReviewWidget::NativeOnInitialized()
     UCanvasPanelSlot* ColumnSlot = Fallback->AddChildToCanvas(Column);
     ColumnSlot->SetAnchors(FAnchors(0.08f, 0.16f, 0.82f, 0.86f));
     ColumnSlot->SetOffsets(FMargin(0));
-    auto AddText = [this, Column](const TCHAR* Copy, int32 Size, const FLinearColor Color, float Padding)
+    auto AddText = [this, Column](const TCHAR* Copy, int32 Size, const FLinearColor Color, float BottomPadding)
     {
         UTextBlock* Text = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
         Text->SetText(FText::FromString(Copy));
@@ -53,14 +53,13 @@ void UTSTSSOpeningReviewWidget::NativeOnInitialized()
         Font.Size = Size;
         Text->SetFont(Font);
         Text->SetAutoWrapText(true);
-        Column->AddChildToVerticalBox(Text)->SetPadding(FMargin(0.f, 0.f, 0.f, Padding));
+        Column->AddChildToVerticalBox(Text)->SetPadding(FMargin(0.f, 0.f, 0.f, BottomPadding));
     };
     AddText(TEXT("A JOURNEY BEYOND THE HORIZON"), 15, FLinearColor(0.48f, 0.84f, 0.86f, 1.f), 22.f);
     AddText(TEXT("TO SAIL THE"), 30, FLinearColor(0.95f, 0.94f, 0.85f, 1.f), 0.f);
     AddText(TEXT("STARRY SKY"), 54, FLinearColor(0.98f, 0.94f, 0.79f, 1.f), 25.f);
     AddText(TEXT("Every voyage begins with a single note."), 19, FLinearColor(0.76f, 0.85f, 0.85f, 1.f), 40.f);
     NewGameButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass());
-    NewGameButton->SetIsFocusable(true);
     NewGameButton->OnClicked.AddDynamic(this, &UTSTSSOpeningReviewWidget::BeginJourney);
     UTextBlock* Label = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
     Label->SetText(FText::FromString(TEXT("  NEW GAME  ")));
@@ -115,7 +114,6 @@ void UTSTSSOpeningReviewWidget::NativeOnInitialized()
     ImageSlot->SetOffsets(FMargin(0));
 
     VideoButton = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass());
-    VideoButton->SetIsFocusable(true);
     VideoButton->SetToolTipText(FText::FromString(TEXT("New Game")));
     FButtonStyle Style;
     Style.SetNormal(FSlateColorBrush(FLinearColor(0.f, 0.f, 0.f, 0.f)));
@@ -140,7 +138,7 @@ void UTSTSSOpeningReviewWidget::NativeOnInitialized()
     }
 }
 
-void UTSTSSOpeningReviewWidget::OnMovieOpened(const FString& OpenedUrl)
+void UTSTSSOpeningReviewWidget::OnMovieOpened(FString OpenedUrl)
 {
     (void)OpenedUrl;
     if (!MoviePlayer || !VideoPanel || !FallbackPanel) return;
@@ -150,7 +148,7 @@ void UTSTSSOpeningReviewWidget::OnMovieOpened(const FString& OpenedUrl)
     if (VideoButton && GetOwningPlayer()) VideoButton->SetUserFocus(GetOwningPlayer());
 }
 
-void UTSTSSOpeningReviewWidget::OnMovieOpenFailed(const FString& FailedUrl)
+void UTSTSSOpeningReviewWidget::OnMovieOpenFailed(FString FailedUrl)
 {
     (void)FailedUrl;
     if (VideoPanel) VideoPanel->SetVisibility(ESlateVisibility::Collapsed);
