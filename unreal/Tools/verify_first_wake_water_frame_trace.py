@@ -63,7 +63,9 @@ def analyze(text):
         raise ValueError("native flotation transition lacks stable gate time")
     generation=physical[i]["restore_gen"]
     previous=None
+    previous_dt=None
     duration=0.0
+    duration_dt=0.0
     used=0
     for x in reversed(physical[:i+1]):
         dt=float(x["dt"])
@@ -77,11 +79,16 @@ def analyze(text):
             break
         if previous is not None:
             gap=previous-t
-            if not 0<gap<=0.25:
+            # Both fields are logged to four decimal places. The elapsed
+            # world time must agree with the later frame's delta, allowing
+            # for rounding of both clock readings and the delta itself.
+            if not 0<gap<=0.25 or abs(gap-previous_dt)>0.0002:
                 break
+            duration+=gap
+            duration_dt+=previous_dt
         previous=t
+        previous_dt=dt
         used+=1
-        duration+=dt
         if duration>=2.0:
             break
     if duration < 2.0:
@@ -91,7 +98,8 @@ def analyze(text):
         "dry_samples":len(dry),
         "physical_samples":len(physical),
         "window_samples":used,
-        "window_seconds_sum_dt":round(duration,4),
+        "window_seconds_sum_dt":round(duration_dt,4),
+        "window_seconds_world_clock":round(duration,4),
         "transition_world_seconds":float(physical[i]["world_sec"]),
         "stable_seconds_at_transition":float(physical[i]["stable_sec"]),
         "restore_generation":generation,
@@ -128,3 +136,4 @@ def main():
 
 if __name__=="__main__":
     main()
+
