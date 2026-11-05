@@ -26,6 +26,17 @@ def sample_log(gap_at=None, lose_immersion_at=None, have_dry=True):
     return "\n".join(lines)
 
 class FailClosedWaterFrameValidatorTest(unittest.TestCase):
+    def test_dry_sample_after_physics_does_not_prove_prelaunch(self):
+        lines = sample_log().splitlines()
+        lines.append(lines.pop(1))
+        with self.assertRaises(ValueError):
+            validator.analyze('\n'.join(lines))
+
+    def test_nonfinite_hull_measurements_are_rejected(self):
+        log = sample_log().replace('hull_z_cm=-20.000', 'hull_z_cm=nan')
+        with self.assertRaises(ValueError):
+            validator.analyze(log)
+
     def test_compressed_world_clock_cannot_prove_two_seconds(self):
         lines = sample_log().splitlines()
         index = 0
