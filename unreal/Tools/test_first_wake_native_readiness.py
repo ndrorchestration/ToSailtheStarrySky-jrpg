@@ -48,6 +48,13 @@ class FirstWakeNativeReadinessNegativeFixtures(unittest.TestCase):
     def test_unapproved_directory_refused(self):
         self.assertEqual(self.result(root_name="C_Unsafe")["status"], "HOLD")
 
+    def test_explicit_map_repair_root_allowed_only_when_all_other_gates_pass(self):
+        from check_first_wake_native_readiness import MAP_REPAIR_ROOT
+        self.assertEqual(self.result(root_name=MAP_REPAIR_ROOT)["status"],
+                         "READ_ONLY_PREFLIGHT_PASS_NOT_NATIVE_EVIDENCE")
+        self.assertEqual(self.result(root_name=MAP_REPAIR_ROOT + "_copy")["status"], "HOLD")
+        self.assertEqual(self.result(root_name=MAP_REPAIR_ROOT, git_clean=False)["status"], "HOLD")
+
     def test_wrong_sha_refused(self):
         self.assertEqual(self.result(git_head="0" * 40)["status"], "HOLD")
 

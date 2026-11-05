@@ -5,7 +5,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
-$AllowedReviewRoots = @('TSTSS_GameAssembly_20261104', 'TSTSS_P0CombinedF6Objectives_20261104')
+$AllowedReviewRoots = @('TSTSS_GameAssembly_20261104', 'TSTSS_P0CombinedF6Objectives_20261104', 'TSTSS_FirstWakeMapQARepair_20261105')
 if ((Split-Path $RepoRoot -Leaf) -notin $AllowedReviewRoots) {
     throw 'Use an explicitly approved disposable First Wake review checkout'
 }

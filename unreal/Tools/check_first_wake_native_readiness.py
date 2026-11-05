@@ -16,6 +16,8 @@ import sys
 from pathlib import Path
 
 APPROVED_ROOT = "TSTSS_P0CombinedF6Objectives_20261104"
+MAP_REPAIR_ROOT = "TSTSS_FirstWakeMapQARepair_20261105"
+APPROVED_ROOTS = frozenset((APPROVED_ROOT, MAP_REPAIR_ROOT))
 EXPECTED_MAP_SHA = "4c96f1fb28fe4af91b879977e473c20de32bd933f741a5384bb8403a00254b80"
 MAP_REL = "unreal/Content/TSTSS/Review/FirstWake_PreludeInteraction_V2.umap"
 VERSION_REL = "Engine/Build/Build.version"
@@ -127,7 +129,7 @@ def evaluate(found: dict, expected: str, phase: str) -> dict:
     reasons = list(found.get("errors") or [])
     if not SHA_RE.fullmatch(expected):
         reasons.append("Expected source SHA must contain 40 hex digits")
-    if found.get("root_name") != APPROVED_ROOT or not found.get("git_root_matches"):
+    if found.get("root_name") not in APPROVED_ROOTS or not found.get("git_root_matches"):
         reasons.append("Not the named, exact-root disposable PR769 worktree")
     if found.get("git_head") != expected or not found.get("git_clean"):
         reasons.append("HEAD or complete Git working tree differs from pinned source")
