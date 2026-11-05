@@ -26,6 +26,18 @@ def sample_log(gap_at=None, lose_immersion_at=None, have_dry=True):
     return "\n".join(lines)
 
 class FailClosedWaterFrameValidatorTest(unittest.TestCase):
+    def test_compressed_world_clock_cannot_prove_two_seconds(self):
+        lines = sample_log().splitlines()
+        index = 0
+        for n, line in enumerate(lines):
+            if 'phase=PHYSICS' in line:
+                start = line.index('world_sec=') + len('world_sec=')
+                end = line.index(' ', start)
+                lines[n] = line[:start] + f'{20 + index * 0.001:.4f}' + line[end:]
+                index += 1
+        with self.assertRaises(ValueError):
+            validator.analyze('\n'.join(lines))
+
     def test_contiguous_two_second_series_passes_only_as_synthetic(self):
         x=validator.analyze(sample_log())
         self.assertEqual(x["status"],"DIRECT_NATIVE_WATER_FLOTATION_TIMESERIES_PASS")
@@ -54,3 +66,4 @@ class FailClosedWaterFrameValidatorTest(unittest.TestCase):
 
 if __name__=="__main__":
     unittest.main()
+
