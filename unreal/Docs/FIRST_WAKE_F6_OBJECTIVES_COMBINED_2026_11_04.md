@@ -1,0 +1,31 @@
+# First Wake — combined objective-continuity and isolated PIE F6 review save
+
+**Classification:** Unreal Engine 5.8.4 SOURCE/PORTABLE-MSVC REVIEW ONLY. Not a native Unreal Editor acceptance receipt. No release, merge, creator-art approval, player-save mutation or Starbourne authorization.
+
+## Exact source lineage
+
+This isolated worktree `C:\TSTSS_P0CombinedF6Objectives_20261104` begins at **draft [PR #760](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/760)** source head `bbbff92a0a7bcd601ed324fa2fd02323b03cbc86`, already stacked on [#750](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/750). It cherry-picks exactly the tested/source-green change `84e9760a7ef75ed43302c24bdd9ca8f4da4b2a67` from [draft #768](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/768): **16 ordered objective C++ assertions**, the source regression/negative-control tests and portable Windows MSVC objective compiler fallback. It selectively carries the three-file MSVC C++ save-harness adapter from [#763](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/763) at `baba204d403723886b5dc01357e48bbd12cbfe0d` (new original-test and isolated source files); no unrelated #763 native gameplay branch was merged. All three source contributions remain independently available at their original refs.
+
+The `ATSTSSExplorerCharacter::SetupPlayerInputComponent` branch from #760 binds **PIE F6** exclusively for `PIEReviewQuickSave`; ordinary Game uses **F5** for `QuickSave`; F9 review quickload remains isolated to the already-owned session slot. The 16 objective assertions use the same existing `TSTSS.FirstWake.InteractionToSplashdown` native test and reference both active `Story` and the final reset `Restored` object correctly.
+
+## Actual bounded verification
+
+On NEONTIC Windows with VS2022/MSVC 14.44, compiled and ran actual existing production C++ method bodies using deliberately small API stand-ins. All PASS, **not** UE Editor runs:
+
+- **16/16** GetReviewObjectiveText read-only objective cases; deliberate changed-objective mutant rejected.
+- **15/15** QuickSave/QuickLoad handler cases; existing-slot overwrite and both modifier-guard mutants rejected.
+- **10/10** SaveFirstWake roster/slot protection cases; unsafe overwrite mutant rejected.
+- **341 production state/water rewind assertions** across restored SeaContact, interrupted contact, same-beat restore and full Reset; both malicious/buggy guard mutations rejected.
+- Python source suite and combined six-case negative-controls must also PASS on this exact combined head. No touched real game saves, world/level content, approved art, engine config, existing Editor processes or protected main.
+
+## Open native admission gates (no shortcuts)
+
+1. Save/close the existing user UnrealEditor and LiveCoding processes through the **normal user interface**; do not force-stop or compete with an active Editor. Before starting a *new* UE process require source exactly pinned, tracked tree clean, normal user SaveGames byte-hash untouched, no other Editor/LiveCoding/UBT, **at least 6.5 GiB available physical RAM** for GUI PIE and **at least 14 GiB C: free**. Check native stage tool requirements separately. Current observation at outset: Editor PID 20808 and LiveCoding PID 7904 active, 5.67 GiB free RAM, 14.84 GiB disk. No native stage requested or launched.
+2. A **fresh disposable worktree** at the combined exact commit with private V2 map/art staged only via existing guarded processes. Preserve the original V2 map and project INI hashes before/after. Run a real UE5.8.4 Win64 Editor UHT/UBT build and **26 unique named native automation PASS** report at the **new combined SHA**, not an older receipt. Native map QA/readback is separate.
+3. Actual focused native PIE input with **no preexisting review save**: unmodified F5 must not create review save, Shift+F5 must not create review save and should stop PIE safely, F6 must create only `tstss_prelude_pie_quick`, F9 same-session must reload intended story state, and attempts to adopt or overwrite another session's review save must fail. Preserve all unexpected files and original bytes; never delete player SaveGames just to clear a gate.
+4. One physical P01–P13 First Wake traversal with real Ender possession, target visibility, authored Ionia/NPC dialogue, collidable pier/room, first launch, real hull and water-volume overlap, continuous two-second flotation, and disk restart. Synthetic `WaterGate::Observe` tests and source-authored graybox are **not** equivalent.
+5. Separate cinematic D3D viewport screenshots/side-by-side review for Ender, Ionia, harbor, Aureate forms, sky/sea, lighting and atmospheric depth. Creator approval before canon art, merge, distribution or release. Starbourne remains gate-locked.
+
+## Workflow and custody
+
+Source test `unreal/Tools/test_first_wake_f6_objective_combined.py` fails closed if PIE F6 is accidentally replaced with F5, normal Game F5 is replaced with F6, F6 mapping changes, existing-session save refusal disappears, or any of the 16 original objective assertions is altered. Source preflight invokes it. These checks **cannot claim live keystrokes, native UObject reflection, real map rendering, real disk SaveGame or physical Splashdown**. Keep this composite as a separate **DRAFT PR**, unmerged.
