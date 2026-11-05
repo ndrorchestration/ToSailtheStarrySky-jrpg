@@ -43,3 +43,50 @@ bool ATSTSSMilestoneActor::TryActivate(UTSTSSFirstWakeState* State)
 
     return true;
 }
+
+#if WITH_EDITOR
+void ATSTSSMilestoneActor::ReconcileReviewCollisionAfterRestore(
+    const UTSTSSFirstWakeState* State)
+{
+    // This is visual review collision state only. Never grants story beats,
+    // changes water contact, or touches real production actor collision.
+    const UWorld* World = GetWorld();
+    if (!IsValid(State) || !World || World->WorldType != EWorldType::PIE ||
+        !IsValid(InteractionMesh))
+    {
+        return;
+    }
+    const FString Label = GetActorLabel();
+    if (!Label.StartsWith(TEXT("TSTSS_PRELUDE_REVIEW_")) &&
+        !Label.StartsWith(TEXT("TSTSS_SPLASHDOWN_GREYBOX_")))
+    {
+        return;
+    }
+    // Actor-driven sea contact/flotation remains impossible even in review.
+    if (!bIsInspectionStation &&
+        (Milestone == ETSTSSFirstWakeBeat::SeaContact ||
+         Milestone == ETSTSSFirstWakeBeat::FlotationConfirmed))
+    {
+        return;
+    }
+
+    bool bAlreadyConsumed = false;
+    if (bIsInspectionStation)
+    {
+        const uint8 StationBit =
+            static_cast<uint8>(1u << static_cast<uint8>(InspectionStation));
+        bAlreadyConsumed = State->HasStarted() &&
+            (State->GetInspectionMask() & StationBit) != 0;
+    }
+    else
+    {
+        bAlreadyConsumed = State->HasStarted() &&
+            static_cast<uint8>(State->GetCurrentBeat()) >=
+            static_cast<uint8>(Milestone);
+    }
+    const ECollisionResponse ReviewResponse =
+        bAlreadyConsumed ? ECR_Ignore : ECR_Block;
+    InteractionMesh->SetCollisionResponseToChannel(ECC_Visibility, ReviewResponse);
+    InteractionMesh->SetCollisionResponseToChannel(ECC_Pawn, ReviewResponse);
+}
+#endif

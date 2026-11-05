@@ -11,6 +11,9 @@
 #include "Engine/Engine.h"
 #include "Kismet/GameplayStatics.h"
 #include "CollisionQueryParams.h"
+#if WITH_EDITOR
+#include "EngineUtils.h"
+#endif
 
 namespace
 {
@@ -324,5 +327,32 @@ bool ATSTSSExplorerCharacter::LoadFirstWake(const FString& Slot)
     if (!IsValid(FirstWakeState)) return false;
     const UTSTSSSaveGame* Save = UTSTSSPersistence::LoadProgress(Slot);
     if (!Save) return false;
-    return FirstWakeState->Restore(Save->bFirstWakeStarted, Save->FirstWakeBeat, Save->InspectionMask);
+    const bool bRestored = FirstWakeState->Restore(
+        Save->bFirstWakeStarted, Save->FirstWakeBeat, Save->InspectionMask);
+#if WITH_EDITOR
+    // Previously accepted review cubes have been made transparent to rays
+    // and pawn movement. Restoring an earlier story beat must reactivate
+    // only the markers which are now incomplete; keep saved-complete ones
+    // transparent. Do not touch non-PIE or production-world actors.
+    UWorld* World = GetWorld();
+    if (bRestored && World && World->WorldType == EWorldType::PIE)
+    {
+        int32 ReconciledCount = 0;
+        for (TActorIterator<ATSTSSMilestoneActor> It(World); It; ++It)
+        {
+            if (IsValid(*It))
+            {
+                It->ReconcileReviewCollisionAfterRestore(FirstWakeState);
+                ++ReconciledCount;
+            }
+        }
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_PIE_REVIEW_LOAD_REBOUND beat=%d inspection_mask=%u generation=%llu actors_considered=%d"),
+            static_cast<int32>(FirstWakeState->GetCurrentBeat()),
+            static_cast<uint32>(FirstWakeState->GetInspectionMask()),
+            static_cast<unsigned long long>(FirstWakeState->GetRestoreGeneration()),
+            ReconciledCount);
+    }
+#endif
+    return bRestored;
 }

@@ -177,6 +177,18 @@ bool FTSTSSFirstWakeInteractionSplashdownTest::RunTest(const FString& Parameters
                 ReviewMesh->GetCollisionResponseToChannel(ECC_Pawn), ECR_Ignore);
             TestFalse(TEXT("Consumed launch marker cannot advance twice"),
                 LaunchMarker->TryActivate(LaunchStory));
+            TestTrue(TEXT("Quickload rehearsal restores prelaunch signoff"),
+                LaunchStory->Restore(
+                    true, ETSTSSFirstWakeBeat::EngineeringChecked, 0x07));
+            LaunchMarker->ReconcileReviewCollisionAfterRestore(LaunchStory);
+            TestEqual(TEXT("Quickload reactivates not-yet-launched visibility"),
+                ReviewMesh->GetCollisionResponseToChannel(ECC_Visibility), ECR_Block);
+            TestEqual(TEXT("Quickload reactivates not-yet-launched pawn blocking"),
+                ReviewMesh->GetCollisionResponseToChannel(ECC_Pawn), ECR_Block);
+            TestTrue(TEXT("Reactivated launch requires and accepts a fresh E"),
+                LaunchMarker->TryActivate(LaunchStory));
+            TestEqual(TEXT("Fresh accepted E again releases launch marker"),
+                ReviewMesh->GetCollisionResponseToChannel(ECC_Visibility), ECR_Ignore);
         }
     }
 
@@ -213,8 +225,57 @@ bool FTSTSSFirstWakeInteractionSplashdownTest::RunTest(const FString& Parameters
             NonReview->TryActivate(NonReviewStory));
         if (TestNotNull(TEXT("Unrelated actor mesh exists"), NonReviewMesh))
         {
+            NonReview->ReconcileReviewCollisionAfterRestore(NonReviewStory);
             TestEqual(TEXT("Production-like actor keeps visibility blocking"),
                 NonReviewMesh->GetCollisionResponseToChannel(ECC_Visibility), ECR_Block);
+        }
+    }
+
+    UTSTSSFirstWakeState* SavedIoniaStory =
+        NewObject<UTSTSSFirstWakeState>(GetTransientPackage());
+    TestTrue(TEXT("Valid saved Ionia beat is restorable"),
+        SavedIoniaStory->Restore(true, ETSTSSFirstWakeBeat::IoniaHired, 0));
+    ATSTSSMilestoneActor* AlreadyCompletedFlyer =
+        ReviewWorld->SpawnActor<ATSTSSMilestoneActor>();
+    if (TestNotNull(TEXT("Completed flyer review actor exists"), AlreadyCompletedFlyer))
+    {
+        AlreadyCompletedFlyer->SetActorLabel(
+            TEXT("TSTSS_PRELUDE_REVIEW_FlyerDiscovery"));
+        AlreadyCompletedFlyer->Milestone = ETSTSSFirstWakeBeat::FlyerDiscovered;
+        UPrimitiveComponent* CompletedMesh =
+            Cast<UPrimitiveComponent>(AlreadyCompletedFlyer->GetRootComponent());
+        AlreadyCompletedFlyer->ReconcileReviewCollisionAfterRestore(SavedIoniaStory);
+        if (TestNotNull(TEXT("Completed flyer mesh exists"), CompletedMesh))
+        {
+            TestEqual(TEXT("Saved-complete flyer remains transparent to camera"),
+                CompletedMesh->GetCollisionResponseToChannel(ECC_Visibility), ECR_Ignore);
+        }
+    }
+
+    UTSTSSFirstWakeState* PartialInspectionStory =
+        NewObject<UTSTSSFirstWakeState>(GetTransientPackage());
+    TestTrue(TEXT("Valid pre-inspection save restores"), PartialInspectionStory->Restore(
+        true, ETSTSSFirstWakeBeat::BoardedAureateWake, 0));
+    ATSTSSMilestoneActor* LiftReview =
+        ReviewWorld->SpawnActor<ATSTSSMilestoneActor>();
+    if (TestNotNull(TEXT("Native review inspection marker exists"), LiftReview))
+    {
+        LiftReview->SetActorLabel(TEXT("TSTSS_PRELUDE_REVIEW_LiftStation"));
+        LiftReview->bIsInspectionStation = true;
+        LiftReview->InspectionStation = ETSTSSInspectionStation::Lift;
+        UPrimitiveComponent* LiftMesh =
+            Cast<UPrimitiveComponent>(LiftReview->GetRootComponent());
+        LiftReview->ReconcileReviewCollisionAfterRestore(PartialInspectionStory);
+        if (TestNotNull(TEXT("Lift review mesh exists"), LiftMesh))
+        {
+            TestEqual(TEXT("Uninspected lift remains interactable after restore"),
+                LiftMesh->GetCollisionResponseToChannel(ECC_Visibility), ECR_Block);
+            TestTrue(TEXT("Save with only Lift inspection can restore"),
+                PartialInspectionStory->Restore(
+                    true, ETSTSSFirstWakeBeat::BoardedAureateWake, 0x01));
+            LiftReview->ReconcileReviewCollisionAfterRestore(PartialInspectionStory);
+            TestEqual(TEXT("Already inspected Lift stops blocking on load"),
+                LiftMesh->GetCollisionResponseToChannel(ECC_Visibility), ECR_Ignore);
         }
     }
     ReviewWorld->DestroyWorld(false);
