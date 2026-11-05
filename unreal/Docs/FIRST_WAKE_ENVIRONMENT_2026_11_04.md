@@ -51,3 +51,13 @@ Journey-inspired sand/snow (#753) are a **separate original-material review** an
 | Shoreline after Splashdown / Lyra | Not built in this pass | Original rocky coastline, sand, shallow water, interaction trigger |
 
 **HOLD:** No new map saved in Unreal, no GPU image, material compilation, native readback, PIE, artistic sign-off or packaged build has been performed for this environment branch. Existing RAM measured ~4.96 GiB free with Unreal Editor active. Do not close user processes or bypass the resource gate.
+
+## November 4 — native execution preparation follow-up
+
+The authorized workstation still has active UnrealEditor.exe (PID 21200) and LiveCodingConsole.exe (PID 9460), so the branch native stage preflight correctly refuses to create a competing Editor. At the latest observation, 6.63 GiB physical RAM and 14.87 GiB C: disk were free; those are point-in-time readings, not reserved capacity. Original map, copied native review assets, tracked configs and user Editor remain untouched. No native harbor World has been saved or rendered yet.
+
+Native material staging now fails closed on failed Base Color/Roughness graph connections and on any Unreal Engine 5.8 MaterialEditingLibrary compiler errors. Source-only tests do not prove successful native compilation.
+
+An independent read-only saved-World verifier is now provided as unreal/Tools/verify_first_wake_harbor_native.py. In a later distinct native Unreal commandlet process, after a valid stage receipt, it will require 84 actors in the new map (34 original + 47 collision-disabled scenery meshes + native SkyAtmosphere, height fog and camera), seven reflected First Wake milestones, one PlayerStart, correct mesh/material bindings, all eight native materials, original directional sun atmosphere linkage, and unchanged parent-map SHA. It reports INDEPENDENT_NATIVE_HARBOR_SAVED_WORLD_READBACK_PASS_NOT_PIE only after real native execution. Source-only tests must never claim that status.
+
+Remaining: guarded host readback invocation, native receipt and process-exit custody, actual GPU image capture, camera/lighting acceptance and PIE gameplay verification.

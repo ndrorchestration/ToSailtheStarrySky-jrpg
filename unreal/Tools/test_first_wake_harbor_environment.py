@@ -92,6 +92,14 @@ class FirstWakeHarborEnvironmentTests(unittest.TestCase):
         self.assertIn("NoCollision", source)
         self.assertIn("TSTSS_HARBOR_NATIVE_STAGE_SAVED_NOT_PIE", source)
 
+    def test_material_graph_and_compile_fail_closed(self):
+        from pathlib import Path
+        src = Path(harbor.__file__).read_text(encoding="utf-8")
+        self.assertIn("if not unreal.MaterialEditingLibrary.connect_material_property(", src)
+        self.assertIn("compiler_errors = list(unreal.MaterialEditingLibrary.recompile_material(material))", src)
+        self.assertIn("if compiler_errors:", src)
+        self.assertIn("HOLD: material compile failed", src)
+
     def test_physical_water_and_runtime_permissions_not_changed(self):
         source = __import__("pathlib").Path(harbor.__file__).read_text(encoding="utf-8")
         self.assertNotIn("SaveGameToSlot", source)

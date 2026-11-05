@@ -6,6 +6,8 @@ on:
       - 'unreal/Tools/test_first_wake_harbor_environment.py'
       - 'unreal/Tools/run_first_wake_harbor_native_stage.py'
       - 'unreal/Tools/test_first_wake_harbor_native_runner.py'
+      - 'unreal/Tools/verify_first_wake_harbor_native.py'
+      - 'unreal/Tools/test_first_wake_harbor_readback.py'
       - 'unreal/Docs/FIRST_WAKE_ENVIRONMENT_2026_11_04.md'
       - '.github/workflows/unreal-first-wake-harbor-environment.yml'
   workflow_dispatch:
@@ -22,7 +24,8 @@ jobs:
       - name: Static syntax and engine-free geometry/safety checks
         run: |
           python -m py_compile unreal/Tools/build_first_wake_harbor_environment.py
-          python -m py_compile unreal/Tools/test_first_wake_harbor_environment.py unreal/Tools/run_first_wake_harbor_native_stage.py unreal/Tools/test_first_wake_harbor_native_runner.py
+          python -m py_compile unreal/Tools/test_first_wake_harbor_environment.py unreal/Tools/run_first_wake_harbor_native_stage.py unreal/Tools/test_first_wake_harbor_native_runner.py unreal/Tools/verify_first_wake_harbor_native.py unreal/Tools/test_first_wake_harbor_readback.py
           python -m unittest discover -s unreal/Tools -p 'test_first_wake_harbor_environment.py' -v
           python -m unittest discover -s unreal/Tools -p 'test_first_wake_harbor_native_runner.py' -v
+          python -m unittest discover -s unreal/Tools -p 'test_first_wake_harbor_readback.py' -v
           python unreal/Tools/build_first_wake_harbor_environment.py --validate

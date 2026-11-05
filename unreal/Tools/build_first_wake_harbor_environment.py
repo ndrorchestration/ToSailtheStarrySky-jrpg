@@ -205,14 +205,18 @@ def build_in_unreal() -> dict:
         color = unreal.MaterialEditingLibrary.create_material_expression(
             material, unreal.MaterialExpressionConstant3Vector, -350, 0)
         color.set_editor_property("constant", unreal.LinearColor(*rgb, 1))
-        unreal.MaterialEditingLibrary.connect_material_property(
-            color, "", unreal.MaterialProperty.MP_BASE_COLOR)
+        if not unreal.MaterialEditingLibrary.connect_material_property(
+                color, "", unreal.MaterialProperty.MP_BASE_COLOR):
+            raise RuntimeError("HOLD: base-color graph connection failed " + role)
         r = unreal.MaterialEditingLibrary.create_material_expression(
             material, unreal.MaterialExpressionConstant, -350, 200)
         r.set_editor_property("r", roughness)
-        unreal.MaterialEditingLibrary.connect_material_property(
-            r, "", unreal.MaterialProperty.MP_ROUGHNESS)
-        unreal.MaterialEditingLibrary.recompile_material(material)
+        if not unreal.MaterialEditingLibrary.connect_material_property(
+                r, "", unreal.MaterialProperty.MP_ROUGHNESS):
+            raise RuntimeError("HOLD: roughness graph connection failed " + role)
+        compiler_errors = list(unreal.MaterialEditingLibrary.recompile_material(material))
+        if compiler_errors:
+            raise RuntimeError("HOLD: material compile failed " + role + ": " + "; ".join(map(str, compiler_errors)))
         if not library.save_loaded_asset(material):
             raise RuntimeError("HOLD: review material did not save " + role)
         materials[role] = material
