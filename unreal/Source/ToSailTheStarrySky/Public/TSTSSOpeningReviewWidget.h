@@ -4,8 +4,13 @@
 #include "TSTSSOpeningReviewWidget.generated.h"
 
 class UButton;
+class UFileMediaSource;
+class UMediaPlayer;
+class UMediaSoundComponent;
+class UMediaTexture;
+class UWidget;
 
-// Opt-in review screen; never installed as the project's default menu.
+// Explicitly opted-in review screen; never the project's default menu.
 UCLASS()
 class TOSAILTHESTARRYSKY_API UTSTSSOpeningReviewWidget : public UUserWidget
 {
@@ -14,9 +19,21 @@ public:
     UWidget* GetInitialFocus() const;
 protected:
     virtual void NativeOnInitialized() override;
+    virtual void NativeDestruct() override;
 private:
     UFUNCTION()
     void BeginJourney();
-    UPROPERTY()
-    TObjectPtr<UButton> NewGameButton;
+    UFUNCTION()
+    void OnMovieOpened(const FString& OpenedUrl);
+    UFUNCTION()
+    void OnMovieOpenFailed(const FString& FailedUrl);
+
+    UPROPERTY() TObjectPtr<UButton> NewGameButton;
+    UPROPERTY() TObjectPtr<UButton> VideoButton;
+    UPROPERTY() TObjectPtr<UWidget> FallbackPanel;
+    UPROPERTY() TObjectPtr<UWidget> VideoPanel;
+    UPROPERTY() TObjectPtr<UMediaPlayer> MoviePlayer;
+    UPROPERTY() TObjectPtr<UMediaTexture> MovieTexture;
+    UPROPERTY() TObjectPtr<UFileMediaSource> MovieSource;
+    UPROPERTY() TObjectPtr<UMediaSoundComponent> MovieSound;
 };

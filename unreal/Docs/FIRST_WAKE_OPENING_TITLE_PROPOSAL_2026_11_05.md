@@ -5,7 +5,7 @@
 ## Player experience proposal
 
 ### Title
-Look across the harbor and the Aureate Wake beneath a veil of deep blue. Let warm light and the ship's dragonfly-inspired wings draw the eye. Use the full game title and a single prominent **New Game** control. A quiet melodic phrase suggests the importance of sound; this is a musical direction, not a completed score. The current code uses whichever review level is already loaded behind the overlay: no cinematic camera, approved ship asset or music is provided by this change.
+Look across the harbor and the Aureate Wake beneath a veil of deep blue. Let warm light and the ship's dragonfly-inspired wings draw the eye. Use the full game title and a single prominent **New Game** control. A quiet melodic phrase suggests the importance of sound; this is a musical direction, not a completed score. The opt-in review can play the creator-provided title video from a private local movie file, including its soundtrack, with a live New Game control aligned over the painted button. If the file cannot be opened, the original text menu is the fallback. Native rendering, input, sound and packaging still require verification.
 
 ### 1. The harbor — approximately 2 minutes
 Fade from the title to a lived-in harbor at morning. Ender arrives with his staff and tools, responding to an opportunity to repair a ship's harmonic levitation engine. Before a lore explanation, give the player control: walk toward a posted job and examine it. Nearby sound, movement and ship silhouettes establish a working place. No exposition dump.
@@ -32,7 +32,7 @@ After splashdown, introduce Lyra and her five-year-old son Talen through a perso
 
 - The opening review mode and widget are additive source candidates. The mode is selected explicitly; normal startup and configuration are unchanged.
 - **New Game** only closes the overlay and returns control to the already-loaded review level. It does not create, overwrite, erase or load a save, initialize a party, load a map, or implement a full production new-game flow.
-- No options, continue, quit, camera, audio, subtitles, save slots or localization have been implemented.
+- No options, continue, quit, cinematic camera, subtitles, save slots or localization have been implemented. The movie soundtrack has a review playback path but has not been heard or verified in Unreal.
 - Native compilation, actual control testing, safe map selection, readability at multiple resolutions, capture against the approved ship, and creator visual review are outstanding.
 - The isolated candidate is based on draft PR #772, not protected main. Its inherited milestone and F6/F9 review behavior applies only when the appropriate separately available review map is loaded. No claim is made that a private map ships with this source.
 - Keep current five-character and ship visual approvals, Ionia-first ordering, Lyra-after-splashdown, Starbourne gate, and save boundaries unchanged.
