@@ -11,9 +11,52 @@
 #include "Engine/Engine.h"
 #include "Kismet/GameplayStatics.h"
 #include "CollisionQueryParams.h"
+#include "Components/PrimitiveComponent.h"
+#include "HAL/IConsoleManager.h"
 
 namespace
 {
+#if !UE_BUILD_SHIPPING
+// Read-only, opt-in telemetry for one actual E press. Never alter reach,
+// line-of-sight, story order, or shipping gameplay to diagnose a review map.
+TAutoConsoleVariable<int32> CVarFirstWakeInteractionTrace(
+    TEXT("tstss.FirstWake.InteractionTrace"), 0,
+    TEXT("Enable First Wake review interaction ray/target diagnostics (default 0)."),
+    ECVF_Default);
+#endif
+
+void TraceFirstWakeReviewInteraction(
+    const TCHAR* Outcome, const FVector& Pawn, const FVector& Camera,
+    const FVector& Forward, const FHitResult* Hit, const float Reach, const int32 BeatBefore,
+    const UTSTSSFirstWakeState* State)
+{
+#if !UE_BUILD_SHIPPING
+    if (CVarFirstWakeInteractionTrace.GetValueOnGameThread() == 0)
+    {
+        return;
+    }
+    const AActor* Target = Hit ? Hit->GetActor() : nullptr;
+    const float PawnToHit = Hit ? FVector::Dist(Pawn, Hit->ImpactPoint) : -1.f;
+    UE_LOG(LogTemp, Display,
+        TEXT("TSTSS_FIRST_WAKE_INTERACTION_DIAG outcome=%s pawn=%s camera=%s forward=%s hit_actor=%s hit_component=%s impact=%s pawn_hit_cm=%.1f max_reach_cm=%.1f beat_before=%d beat_after=%d"),
+        Outcome, *Pawn.ToCompactString(), *Camera.ToCompactString(),
+        *Forward.ToCompactString(), *GetNameSafe(Target),
+        *GetNameSafe(Hit ? Hit->GetComponent() : nullptr),
+        *(Hit ? Hit->ImpactPoint.ToCompactString() : FString(TEXT("None"))),
+        PawnToHit, Reach, BeatBefore,
+        IsValid(State) ? static_cast<int32>(State->GetCurrentBeat()) : -1);
+#else
+    (void)Outcome;
+    (void)Pawn;
+    (void)Camera;
+    (void)Forward;
+    (void)Hit;
+    (void)Reach;
+    (void)BeatBefore;
+    (void)State;
+#endif
+}
+
 // This review slot captures story/inspection state, not pawn location.
 void ShowFirstWakeReviewSaveLoadStatus(const bool bLoad, const bool bSucceeded)
 {
@@ -141,29 +184,39 @@ void ATSTSSExplorerCharacter::Interact()
     if (!FirstWakeState || !FollowCamera || !GetWorld()) return;
     const FVector Start = FollowCamera->GetComponentLocation();
     const FVector PawnLocation = GetActorLocation();
+    const int32 BeatBefore = static_cast<int32>(FirstWakeState->GetCurrentBeat());
+    const FVector Forward = FollowCamera->GetForwardVector();
     const float CameraTraceLength =
         TSTSSInteractionReach::GetCameraTraceLength(Start, PawnLocation, InteractionDistance);
     if (CameraTraceLength <= 0.f)
     {
+        TraceFirstWakeReviewInteraction(TEXT("trace_disabled"), PawnLocation, Start,
+                                        Forward, nullptr, InteractionDistance, BeatBefore, FirstWakeState);
         return;
     }
 
     // Trace across the camera boom before applying the *separate* pawn
     // reach check. At a 360 cm boom and 300 cm interact range the old
     // camera-only 300 cm ray could end behind the player entirely.
-    const FVector End = Start + FollowCamera->GetForwardVector() * CameraTraceLength;
+    const FVector End = Start + Forward * CameraTraceLength;
     FHitResult Hit;
     FCollisionQueryParams Query(SCENE_QUERY_STAT(TSTSSInteract), false, this);
-    if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Query))
+    const bool bTraceHit =
+        GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Query);
+    const TCHAR* Outcome = TEXT("visibility_miss");
+    if (bTraceHit)
     {
+        Outcome = TEXT("visibility_hit_non_milestone");
         if (ATSTSSMilestoneActor* Milestone = Cast<ATSTSSMilestoneActor>(Hit.GetActor()))
         {
+            Outcome = TEXT("outside_pawn_reach");
             // A longer camera ray never increases interaction reach.
             if (TSTSSInteractionReach::IsInsidePlayerReach(
                     PawnLocation, Hit.ImpactPoint, InteractionDistance))
             {
                 if (Milestone->TryActivate(FirstWakeState))
                 {
+                    Outcome = TEXT("accepted");
                     ShowFirstWakeReviewObjective(FirstWakeState);
                 }
                 else
@@ -171,11 +224,18 @@ void ATSTSSExplorerCharacter::Interact()
                     // A valid, in-reach marker rejected the state transition.
                     // This does not grant progression or claim that E hit when
                     // the camera trace missed or the target was out of reach.
+                    Outcome = TEXT("story_or_repeat_rejected");
                     ShowFirstWakeReviewBlockedInteraction(FirstWakeState);
                 }
             }
         }
     }
+    // One log line per E press, only when the default-off review CVar is enabled.
+    // This reports observed ray/target/reach/state outcomes; it never
+    // manufactures a hit, advances the beat, or changes collision.
+    TraceFirstWakeReviewInteraction(Outcome, PawnLocation, Start, Forward,
+                                    bTraceHit ? &Hit : nullptr,
+                                    InteractionDistance, BeatBefore, FirstWakeState);
 }
 
 void ATSTSSExplorerCharacter::ShowObjectiveReview()
