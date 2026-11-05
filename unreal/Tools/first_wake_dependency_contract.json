@@ -12,7 +12,7 @@
       "Core",
       "CoreUObject",
       "Engine",
-      "InputCore", "UMG", "MediaAssets"
+      "InputCore", "UMG", "MediaAssets", "SlateCore", "AudioMixer"
     ],
     "target_build_settings": "V7",
     "target_include_order": "Unreal5_8",

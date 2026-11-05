@@ -80,7 +80,7 @@ CI source checks and exact-head evidence can advance here.
 | --- | --- | --- |
 | Unreal family | `EngineAssociation: "5.8"` in `unreal/ToSailTheStarrySky.uproject`; review workstation UE **5.8.4** observed | Active forward engine; patch installed is host evidence, not enforced by `.uproject` |
 | Native Game + Editor targets | `BuildSettingsVersion.V7`, `EngineIncludeOrderVersion.Unreal5_8` | Known reviewed UE5.8 compilation settings; preserve on both targets |
-| UE C++ public modules | `Core`, `CoreUObject`, `Engine`, `InputCore`, `UMG`, `MediaAssets` | Engine-provided modules; `MediaAssets` is used by the opt-in title-video review and still needs native and packaging verification. |
+| UE C++ public modules | `Core`, `CoreUObject`, `Engine`, `InputCore`, `UMG`, `MediaAssets`, `SlateCore`, `AudioMixer` | Engine-provided modules; the last three support the opt-in title-video image and soundtrack and still need runtime and packaging verification. |
 | Project-enabled plugin | `PythonScriptPlugin` | Needed for Editor scene staging and native Python verification; **packaged game role not yet evidenced** |
 | Project's additional runtime packages | None declared in `unreal/Source/ToSailTheStarrySky/ToSailTheStarrySky.Build.cs` | Do not infer every transitive engine binary is inventoried or licensed by this table |
 | Legacy JS/NW.js | npm root `package.json` and committed `package-lock.json` v3 | Browser/old desktop project; security/release HOLD, NOT an Unreal runtime dependency |

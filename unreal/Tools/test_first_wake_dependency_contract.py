@@ -23,7 +23,7 @@ class FirstWakeDependencyContractTests(unittest.TestCase):
         result = checker.check_snapshot(*self.original)
         self.assertEqual(result["status"], "SOURCE_DECLARATIONS_MATCH_NOT_NATIVE_VERIFICATION")
         self.assertEqual(result["engine_family"], "5.8")
-        self.assertEqual(result["module_count"], 6)
+        self.assertEqual(result["module_count"], 8)
         self.assertEqual(result["enabled_plugins"], ["PythonScriptPlugin"])
         self.assertFalse(result["unreal_native_execution"])
         self.assertFalse(result["install_or_upgrade_performed"])

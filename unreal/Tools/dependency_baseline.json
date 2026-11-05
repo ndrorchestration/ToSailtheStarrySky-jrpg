@@ -13,7 +13,7 @@
       "Core",
       "CoreUObject",
       "Engine",
-      "InputCore", "UMG", "MediaAssets"
+      "InputCore", "UMG", "MediaAssets", "SlateCore", "AudioMixer"
     ],
     "enabled_project_plugins": [
       "PythonScriptPlugin"
