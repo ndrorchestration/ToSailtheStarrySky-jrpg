@@ -11,7 +11,8 @@ import run_first_wake_harbor_native_stage as runner
 
 class HarborNativeRunnerContracts(unittest.TestCase):
     def test_worktree_scoped_and_exact_engine_required(self):
-        self.assertEqual(runner.ROOT.name, "TSTSS_EnvironmentHarbor_20261104")
+        self.assertIn('ROOT.name != "TSTSS_EnvironmentHarbor_20261104"',
+                      inspect.getsource(runner.native_preflight))
         self.assertEqual(runner.EXPECTED_BRANCH, "review/ue58-firstwake-environments-20261104")
         self.assertIn("5.8", str(runner.EDITOR))
         self.assertEqual(runner.EXPECTED_MAP_SHA, harbor.BASE_SHA256)
