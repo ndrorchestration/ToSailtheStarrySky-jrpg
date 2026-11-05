@@ -1,0 +1,7 @@
+# Water landing adaptation — logic-only, verification pending
+
+Source contract: Godot #547 physics-derived sea contact and settled buoyancy, per `docs/CHAPTER_ONE_HIGH_QUALITY_POLISH_CHECKLIST_2026-10-28.md` CH1-05. The Unreal `UTSTSSWaterLandingGate` provides a bounded progression predicate, **not** an Unreal physics simulation.
+
+An authored hull collision component must report verified overlap with water volume, a measured world-space hull vertical velocity, and measured frame delta. It must not supply arbitrary booleans, run off a cinematic cue or use water surface artwork as physical proof. After `Launched`, first verified overlap records `SeaContact`. Settled contact at <=25 cm/s for >=2s records `FlotationConfirmed`; losing overlap or excess vertical motion clears the stability timer. This is an initial tunable test threshold, not calibrated physics or approved buoyancy.
+
+Important integration restriction: generic milestone actors must never be used to advance `SeaContact` or `FlotationConfirmed`; these beats require a trusted physics source. More robust enforcement should make these transitions inaccessible through the generic story method at all call sites. Future native scene testing must cover high-speed impact, brief touch, missed contact, re-entry, wave motion, save/restore and honest 3D immersion. Do not promote a level or screenshot without native scene and physics evidence. Keep Godot independent and unaffected.

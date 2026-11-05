@@ -1,0 +1,179 @@
+name: Unreal source preflight
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - 'unreal/Source/**'
+      - 'unreal/Config/**'
+      - 'unreal/Tools/**'
+      - 'unreal/Docs/**'
+      - 'unreal/README.md'
+      - 'unreal/Docs/DEPENDENCY_AND_EVIDENCE_REGISTER_2026-11-01.md'
+      - 'AGENTS.md'
+      - 'README.md'
+      - 'docs/CHARACTER_AND_ART_AUTHORITY.md'
+      - 'docs/CANON_AND_REVEAL_POLICY.md'
+      - 'docs/AGENT_HANDOFF_INDEX.md'
+      - 'docs/CHAPTER_1_BETA_ROADMAP.md'
+      - 'docs/NOTION_SOURCE_INDEX.md'
+      - 'docs/LEVEL_ONE_STAT_RANK_CANON_2026_11_01.md'
+      - 'data/design/level-one-rank-constraints.json'
+      - 'tests/level-one-stat-ranks.test.js'
+      - 'tools/validate-level-one-stat-ranks.js'
+      - 'unreal/ToSailTheStarrySky.uproject'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/unreal-source-preflight.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  registry:
+    name: Unreal automation source registration (not native tests)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify checker self-tests
+        run: python3 unreal/Tools/test_automation_registry.py
+      - name: Compare expected and registered Unreal tests
+        run: python3 unreal/Tools/check_automation_registry.py
+      - name: Assert prior UE 5.8 native compatibility corrections (source-only)
+        run: python3 -m unittest discover -s unreal/Tools -p 'test_ue58_composed_compatibility.py' -v
+      - name: Validate seven-stop First Wake Prelude review authoring plan (source only)
+        run: |
+          python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_prelude_interaction.py' -v
+          python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_prelude_geometry.py' -v
+          python3 unreal/Tools/build_first_wake_prelude_interaction.py --validate
+          python3 -m py_compile unreal/Tools/build_first_wake_prelude_interaction.py
+      - name: Verify tracked V2 Prelude map, controls and separate native QA source
+        run: |
+          python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_v2_independent.py' -v
+          python3 unreal/Tools/verify_first_wake_v2_independent.py --source unreal
+          python3 -m py_compile unreal/Tools/verify_first_wake_v2_independent.py
+      - name: Validate third-person E interaction ray includes camera boom (source only)
+        run: python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_interaction_reach.py' -v
+      - name: Check First Wake objective cue safety (source-only, no native UX claim)
+        run: python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_objective_review.py' -v
+      - name: Compile actual First Wake objective C++ with API stand-ins and mutation control
+        run: python3 unreal/Tools/check_first_wake_objective_compiled.py --self-test
+      - name: Compile actual F5/F9 handler bodies with simulated PIE save protection
+        run: python3 unreal/Tools/check_first_wake_pie_save_compiled.py --self-test
+      - name: Compile real SaveFirstWake C++ and reject overwrite of party or unreadable saves
+        run: python3 unreal/Tools/check_first_wake_save_guard_compiled.py --self-test
+      - name: Compile actual water landing state and reject stale contact after quickload (not native physics)
+        run: python3 unreal/Tools/check_water_landing_rewind_compiled.py --self-test
+      - name: Compile actual physical water adapter Tick and reject spoofed contact (API doubles, not UE physics)
+        run: python3 unreal/Tools/check_first_wake_physical_adapter_compiled.py --self-test
+      - name: Guard opt-in First Wake launch/water/recovery greybox authoring (source-only, no new map)
+        run: |
+          python3 unreal/Tools/build_first_wake_splashdown_greybox.py --validate
+          python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_splashdown_greybox.py' -v
+      - name: Compile actual persistent Prelude HUD C++ in development and shipping modes (API stand-ins)
+        run: python3 unreal/Tools/check_first_wake_review_hud_compiled.py
+      - name: Check review-only HUD GameMode wiring and absence of new plugin dependencies
+        run: python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_review_hud.py' -v
+      - name: Verify Unreal and legacy declarations agree with draft branch dependency policy
+        run: |
+          python3 unreal/Tools/check_first_wake_dependency_contract.py
+          python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_dependency_contract.py' -v
+      - name: Validate historical dependency register against its independent baseline
+        run: |
+          python3 unreal/Tools/check_dependency_contract.py
+          python3 -m unittest discover -s unreal/Tools -p 'test_dependency_contract.py' -v
+          python3 -m unittest discover -s unreal/Tools -p 'test_dependency_register_reconciliation.py' -v
+      - name: Enforce relative-only Level 1 creator stat ranking (not game balance)
+        run: node tests/level-one-stat-ranks.test.js
+      - name: Enforce transversal Unreal canon, documentation and Notion links (source-only)
+        run: python3 -m unittest discover -s unreal/Tools -p 'test_transversal_documentation_authority.py' -v
+      - name: Gate source-locked native Prelude map QA before separate UE execution
+        run: python3 -m unittest discover -s unreal/Tools -p 'test_pr713_native_prelude_map.py' -v
+      - name: Exercise real Prelude map checker logic against fake Editor world (not native)
+        run: python3 -m unittest discover -s unreal/Tools -p 'test_pr713_native_prelude_behavior.py' -v
+      - name: Gate native Editor map commandlet launcher and build-only receipt admission
+        run: python3 -m unittest discover -s unreal/Tools -p 'test_native_prelude_launcher.py' -v
+      - name: Test real native map report validator against contradictory synthetic receipts
+        shell: pwsh
+        run: ./unreal/Tools/Test-NativePreludeMapReceiptFixtures.ps1
+      - name: Reconcile authority and both dependency baselines without native claims
+        run: |
+          python3 unreal/Tools/check_integrated_review_contract.py
+          python3 -m unittest discover -s unreal/Tools -p 'test_integrated_review_contract.py' -v
+      - name: Verify native receipt retention and exact-source assertion (source-only)
+        run: python3 -m unittest discover -s unreal/Tools -p 'test_native_evidence_safety.py' -v
+      - name: Parse native verifier using PowerShell 7 (no Unreal execution)
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $parseErrors = $null
+          foreach ($file in @(
+            'unreal/Tools/Verify-Unreal.ps1',
+            'unreal/Tools/Assert-NativeAutomationReport.ps1',
+            'unreal/Tools/Test-NativeAutomationReportFixtures.ps1',
+            'unreal/Tools/Invoke-NativePreludeMapQA.ps1',
+            'unreal/Tools/Assert-NativePreludeMapReceipt.ps1',
+            'unreal/Tools/Test-NativePreludeMapReceiptFixtures.ps1'
+          )) {
+            $path = (Resolve-Path $file).Path
+            $parseErrors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($path, [ref]$tokens, [ref]$parseErrors) | Out-Null
+            if ($parseErrors.Count -gt 0) {
+              throw "PowerShell parser rejected ${file}: $($parseErrors -join '; ')"
+            }
+          }
+          Write-Output "PASS: 6 PowerShell verification scripts parse (no engine launched)"
+      - name: Exercise actual native report validator with positive and negative PowerShell fixtures
+        shell: pwsh
+        run: ./unreal/Tools/Test-NativeAutomationReportFixtures.ps1
+      - name: Exercise native verifier wrong-engine and wrong-SHA holds (synthetic fixture)
+        shell: pwsh
+        run: |
+          $fakeRoot = Join-Path $env:RUNNER_TEMP ('tstss-fake-ue-' + [guid]::NewGuid().ToString('N'))
+          try {
+            New-Item -ItemType Directory -Path (Join-Path $fakeRoot 'Engine/Build/BatchFiles') -Force | Out-Null
+            New-Item -ItemType Directory -Path (Join-Path $fakeRoot 'Engine/Binaries/Win64') -Force | Out-Null
+            Set-Content -LiteralPath (Join-Path $fakeRoot 'Engine/Build/BatchFiles/Build.bat') -Value 'SYNTHETIC DO NOT EXECUTE'
+            Set-Content -LiteralPath (Join-Path $fakeRoot 'Engine/Binaries/Win64/UnrealEditor-Cmd.exe') -Value 'SYNTHETIC DO NOT EXECUTE'
+            $versionFile = Join-Path $fakeRoot 'Engine/Build/Build.version'
+            '{"MajorVersion":5,"MinorVersion":9,"PatchVersion":0}' | Set-Content -LiteralPath $versionFile
+            $expected = $false
+            try {
+              & ./unreal/Tools/Verify-Unreal.ps1 -EngineRoot $fakeRoot -ExpectedHead ('0' * 40)
+            } catch {
+              if ($_.Exception.Message -match 'Incorrect Unreal version:.*requires 5\.8\.4') { $expected = $true } else { throw }
+            }
+            if (-not $expected) { throw 'Wrong Unreal Engine version was not rejected before build' }
+            '{"MajorVersion":5,"MinorVersion":8,"PatchVersion":4}' | Set-Content -LiteralPath $versionFile
+            $expected = $false
+            try {
+              & ./unreal/Tools/Verify-Unreal.ps1 -EngineRoot $fakeRoot -ExpectedHead ('0' * 40)
+            } catch {
+              if ($_.Exception.Message -match 'Source HEAD differs from the explicitly requested review commit') { $expected = $true } else { throw }
+            }
+            if (-not $expected) { throw 'Incorrect exact SHA was not rejected before build' }
+            Write-Output "PASS: wrong-engine and wrong-SHA holds (synthetic files only; no UBT/UE)"
+          } finally {
+            if (Test-Path -LiteralPath $fakeRoot) { Remove-Item -LiteralPath $fakeRoot -Recurse -Force }
+          }
+      - name: Reject detached Game startup false-positive and BufferReader crash logs
+        run: python3 -m unittest discover -s unreal/Tools -p 'test_unreal_game_startup_log.py' -v
+      - name: Compile and exercise actual DesignOnly C++ adapter (API doubles, not Unreal)
+        run: python3 unreal/Tools/check_combat_design_only_compiled.py
+      - name: First Wake interaction-to-Splashdown authority contract (source only)
+        run: python3 unreal/Tools/test_firstwake_integration_contract.py
+      - name: Preserve 16 First Wake objective-continuity assertions from #734 (source only)
+        run: python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_objective_continuity_transfer.py' -v
+      - name: Prove PIE F6 binding and objective continuity coexist (source only)
+        run: python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_f6_objective_combined.py' -v
+      - name: Execute real input binding C++ method against portable compiler doubles (not native UE/PIE)
+        run: |
+          python3 unreal/Tools/check_first_wake_input_binding_compiled.py --self-test
+          python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_input_binding_compiled.py' -v
+      - name: Keep #769 29-native-name and sandboxed Editor admission fail-closed (source only)
+        run: python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_combined_native_admission.py' -v
+      - name: Test read-only exact-head UE readiness refusal paths (NO Unreal started)
+        run: python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_native_readiness.py' -v

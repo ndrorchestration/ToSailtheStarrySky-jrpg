@@ -1,0 +1,311 @@
+# First Wake V2 native Editor map-admission review — November 2, 2026
+
+**Status: REVIEW ONLY, not P01–P13 Play In Editor acceptance.**
+
+## Why this gate exists
+
+PR [#713](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/713)
+already has exact-head UE5.8.4 Win64 Editor build and 25/25 native automation
+verification at `52e13aedaa8bda900cece849b54eae570179c838`.
+Those tests do **not** load the real V2 Prelude level as an editor map,
+confirm every placed collision target, or exercise a player's WASD/mouse/E/J/F5/F9
+input path.
+
+The narrowly separate `unreal/Tools/verify_pr713_native_prelude_map.py`
+inspects the **actual UE Editor loaded world** and **actual reflected C++
+actor methods** without using a fabricated keyboard/PIE transcript.
+
+## Source custody and execution
+
+Use **only** a fresh isolated, detached Windows checkout named
+`C:\TSTSS_PR713_NativeMapQA_20261102`, pinned to the exact PR head under
+inspection. Do not run this script in the user's real project, personal
+save directory, main branch, or another live Editor session.
+
+This script requires the environment variable
+`TSTSS_REVIEW_EXPECTED_HEAD` to contain the entire 40-character SHA
+matching Git HEAD; it checks a clean tree and the SHA-256 of the tracked
+V2 `.umap`, refuses potentially present normal/PIE SaveGame files, and
+checks all tracked map/config hashes and Git HEAD again after inspection.
+It writes one exclusive receipt under **ignored**
+`unreal/Saved/NativePreludeMapQA/`. No existing receipt is overwritten.
+
+On an already compiled Unreal 5.8.4 Editor environment, from PowerShell,
+adjusting paths to the explicitly named disposable checkout:
+
+```powershell
+$Review = "C:\TSTSS_PR713_NativeMapQA_20261102"
+$env:TSTSS_REVIEW_EXPECTED_HEAD = (git -C $Review rev-parse HEAD).Trim()
+$Editor = "C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor-Cmd.exe"
+$Project = Join-Path $Review "unreal\ToSailTheStarrySky.uproject"
+$Script = Join-Path $Review "unreal\Tools\verify_pr713_native_prelude_map.py"
+& $Editor $Project "-run=pythonscript" "-script=$Script" -unattended -nop4 -nullrhi -log
+```
+
+The script is an Editor Python **commandlet**, not a runnable in-game Python
+controller. The project must already have `PythonScriptPlugin` available.
+Use a dedicated private log and verify a real
+`TSTSS_NATIVE_PRELUDE_MAP_QA_PASS` sentinel, JSON receipt and zero process
+exit; if any is absent, **HOLD**. Do not weaken guards to accommodate a
+different checkout or engine patch. Startup may change tracked INI files:
+in the disposable review checkout only, protecting the two tracked
+`DefaultEngine.ini` and `DefaultInput.ini` from writes is an approved
+experiment. Retain failed logs and avoid publishing generated Android File
+Server tokens. No dependency installation/upgrade is authorized.
+
+## Bounded checks
+
+The script verifies actual level load, seven distinct C++
+`ATSTSSMilestoneActor` instances and their visible collision components,
+actual review spawn/floor/no-collision ocean, GameMode's native explorer
+pawn class, native read-only initial objective, rejected out-of-order Ionia
+and engineering signoff, ordered flyer → Ionia → boarding, duplicate
+inspection rejection, all three independent engineering bits, successful
+signoff and no false Chapter 1 Act 1 transition. It records actor origin
+coordinates and spawn-to-flyer distance **for later geometry QA**, not as
+proof that a player can see or click a marker. The script has **no calls
+to save map/content, create/delete disk SaveGame slots, inject gameplay
+input, activate Play In Editor or enter the shipping runtime**.
+
+A positive result establishes `NATIVE_EDITOR_MAP_AND_REAL_ACTORS_PASS_NOT_PIE`,
+not the P01–P13 human input matrix. In particular it does not establish
+camera line traces/occlusion, actual 300 cm reach, E/J feedback rendering,
+F5/F9 story persistence in PIE, stale-session isolation, sea-contact
+or flotation physics, Lyra onboarding, visual quality, art acceptance,
+installer security, a release or permission to unlock Starbourne.
+
+The existing strict [P01–P13 review matrix](FIRST_WAKE_V2_PIE_ACCEPTANCE_MATRIX_2026-11-02.md)
+remains **NOT TESTED** until genuine in-Editor player interaction is
+observed and recorded. A source-only GitHub preflight for
+`test_pr713_native_prelude_map.py` verifies this script's admission
+guards and negative controls; those tests do not load the Unreal level.
+
+## Failure handling
+
+If the commandlet cannot load the level, a Python reflection API is
+missing, the state transition fails, or the source/map/config hashes
+change, retain the original log and checkout for review. Do not promote
+partial or synthetic results to native gameplay acceptance, reset
+unexamined files, or change plugin/build dependencies to force a pass.
+
+## 2026-11-02 native map admission status — safe execution blocked
+
+- Source-only native map verifier `verify_pr713_native_prelude_map.py` and its
+  **eight** source/admission tests passed on the actual Windows checkout
+  (review HEAD `a06f203902fcb1594e1b55e43d1ec9f27d9ed583`).
+- A subsequent native Win64 build attempt at that exact head was **BLOCKED
+  BY ACTIVE LIVE CODING**, before a real Editor map could be loaded. Other
+  Editor sessions were active, including a separate character-review task;
+  none was terminated or modified.
+- To avoid wasting system resources and interfering with parallel work,
+  `Verify-Unreal.ps1` now fails closed **before build or evidence creation**
+  when `UnrealEditor`, `UnrealEditor-Cmd`, or `LiveCodingConsole`
+  is running. At pinned `cfb88a9edf582b57ca95db1f731b68d79da3a22c`,
+  this check was actually invoked on Windows and correctly **refused**
+  execution: no additional receipt directory, tracked files unchanged.
+  Its **13 Windows source-safety tests** passed, and **four hosted
+  GitHub workflows** were SUCCESS at the same head.
+- The previously accepted **25/25 native Editor automation receipt at
+  `52e13aedaa8bda900cece849b54eae570179c838` remains valid for
+  that earlier exact source**, but cannot be transferred to the new
+  map-checker revision.
+- **Next evidence gate:** once the authorized workstation is idle, repeat
+  the Win64 5.8.4 build in the dedicated, source-clean PR713 map QA
+  checkout and then execute the Python Editor commandlet. Require
+  actual `TSTSS_NATIVE_PRELUDE_MAP_QA_PASS`, a unique local JSON receipt,
+  unchanged map/config SHA-256 and clean tracked tree. The script itself
+  does **not** run or pass P01–P13 PIE keyboard/visual cases; those remain
+  separately NOT TESTED. Never alter Live Coding or terminate someone
+  else's Editor to unblock a review.
+
+
+## 2026-11-02 continuation — safe, repeatable native commandlet launcher
+
+**Preferred source-locked execution path** is the opt-in
+`unreal/Tools/Invoke-NativePreludeMapQA.ps1` PowerShell launcher, rather
+than manually guessing the project/Editor commandline. In a *pre-existing*,
+isolated `C:\TSTSS_PR713_NativeMapQA_20261102` checkout pinned to its
+full current SHA, use:
+
+```powershell
+$Review = "C:\TSTSS_PR713_NativeMapQA_20261102"
+$Commit = (git -C $Review rev-parse HEAD).Trim()
+$VersionedUE = "C:\Program Files\Epic Games\UE_5.8"
+& "$Review\unreal\Tools\Invoke-NativePreludeMapQA.ps1" -EngineRoot $VersionedUE -ExpectedHead $Commit -PreflightOnly
+& "$Review\unreal\Tools\Verify-Unreal.ps1" -EngineRoot $VersionedUE -ExpectedHead $Commit -SkipTests
+& "$Review\unreal\Tools\Invoke-NativePreludeMapQA.ps1" -EngineRoot $VersionedUE -ExpectedHead $Commit
+```
+
+Only execute the second/third command **after** the first admits a
+voluntarily idle workstation. Neither command may run while another
+`UnrealEditor`, `UnrealEditor-Cmd`, or `LiveCodingConsole` process
+is active. Do not terminate the user's character-preview or other
+Editor work. The displayed `-PreflightOnly` mode creates no output
+receipt, launches no Editor and does not certify gameplay.
+
+The build-only script now emits an **exclusive**
+`Saved/MigrationEvidence/<SHA>-<timestamp>-<nonce>/verified-build.json`
+**only after** UBT succeeds and Git HEAD plus a clean worktree pass
+post-build. The map launcher requires that exact-SHA
+`WIN64_EDITOR_BUILD_PASS_CLEAN_SOURCE` receipt; an empty/stale
+`build.log` is explicitly insufficient. The launcher rechecks
+source/map/config hashes, an empty SaveGames test directory, read-only
+tracked default INI files, engine patch **5.8.4** and idle Editor
+processes. Its actual Editor commandlet must produce a **new** exclusive
+JSON report plus the `TSTSS_NATIVE_PRELUDE_MAP_QA_PASS` sentinel,
+with source SHA, seven actors and **PIE NOT TESTED**; false/duplicate
+results fail closed. Each invocation preserves a separate ignored
+private log under `Saved/NativePreludeMapQA/LauncherReceipts/`.
+
+**Current evidence status:** This launcher has source/PowerShell
+syntax and preflight negative controls only; no valid native map
+inspection has yet completed. In the last authorized Windows check
+other Unreal and Live Coding sessions were active. Native 25/25
+belongs to earlier exact tested SHA
+`52e13aedaa8bda900cece849b54eae570179c838`.
+A future positive map-admission check still **does not** establish
+P01–P13 genuine keyboard PIE, physical splashdown or approved art.
+
+## 2026-11-03 — Actual Python map-checker behavior exercised (not native)
+
+The exact `check_native()` implementation in
+`unreal/Tools/verify_pr713_native_prelude_map.py` now has an independent
+`test_pr713_native_prelude_behavior.py` suite with **23 positive and
+fail-closed tests**. The suite runs the actual Python inspection function
+unchanged against disposable Editor API and in-memory actor/state doubles.
+It checks the valid seven-milestone story/inspection sequence and deliberately
+rejects incorrect Unreal patch, map load, subsystem, duplicate/extra/missing
+actors, station tags, absent collision, invalid floor/ocean profiles,
+missing player spawn, wrong native explorer pawn, skipped Ionia/story beats,
+premature/duplicate engineering signoff, wrong objective and a false
+Splashdown/Chapter 1 flag.
+
+At commit `2a9c03a5588ff4290211d9d315fe367690821a19` these 23 cases
+**passed on the authorized Windows checkout**, with a clean Git working tree.
+Four hosted GitHub workflows, including the same behavioral test step,
+also **completed SUCCESS**. The tests do not import/run Unreal's real
+Python bridge, load a real `.umap`, simulate a player, render images
+or prove native editor collision/PIE interaction.
+
+**Native hold:** two Editor/Live Coding processes were still active at
+the last workstation check, so the real `UnrealEditor-Cmd` map checker
+was intentionally not launched. The 25/25 true native automation PASS
+remains pinned to the earlier exact tested SHA
+`52e13aedaa8bda900cece849b54eae570179c838`.
+A new native map report and P01–P13 gameplay evidence are still required.
+
+## November 3, 2026 — full map receipt consistency gate
+
+The actual `Invoke-NativePreludeMapQA.ps1` commandlet launcher now
+calls `unreal/Tools/Assert-NativePreludeMapReceipt.ps1` to reject
+**incomplete, inconsistent or overclaimed native Editor JSON**, rather
+than relying on a `PASS` status and seven-actor count. The validator
+requires matching full exact-source SHA and committed map SHA-256,
+installed UE5.8.4, seven named actor coordinate triplets, finite
+positive spawn-to-flyer origin separation, all confirmed Editor/collision,
+default pawn, Ionia-first progression, inspection and objective flags,
+the three-bit engineering mask, and all nine declared source input
+mappings/handlers. Unsupported gameplay assertions—real PIE keyboard
+input, disk SaveGame roundtrip, genuine collision line trace, water
+physics, character/ship art and Chapter 1 entry—must explicitly be
+**false**. Each missing field, type mismatch, duplicate/missing actor
+coordinate or contradictory success flag is an automatic **HOLD**.
+
+The same production PowerShell function was executed on the Windows
+review workstation against **32 synthetic cases**, including **31
+rejected invalid/misleading receipts** and one accepted fully formed
+receipt; the associated **14 launcher source-safety tests passed**.
+Hosted GitHub source preflight, which includes both tests and parsing
+the six PowerShell verification scripts, also **passed** at source
+`afac6d0eddaa9aa01a391d466d76557666fe6a9a`.
+This is proof of the *admission logic only*; no real UE map JSON,
+player PIE or rendering was generated. The legitimate prior native
+25/25 automation result remains bound to its distinct older exact SHA
+`52e13aedaa8bda900cece849b54eae570179c838`.
+
+The source files `Assert-NativePreludeMapReceipt.ps1` and
+`Test-NativePreludeMapReceiptFixtures.ps1` introduce **no engine,
+toolchain, Python package, plugin or SaveGame dependency**. The
+existing Editor/Live Coding idle guard remains a required prerequisite
+for actual native map inspection. The review worktree and all player
+save files stay untouched by these synthetic fixtures.
+
+## November 3, 2026 — source-only authored route/floor coverage
+
+The existing `build_first_wake_prelude_interaction.py` **source authoring
+plan**, which created the already committed map, now also validates that
+the player spawn and seven 75 cm wide interaction markers lie entirely
+inside the continuous BasicShapes review floor footprint. The floor
+must have positive dimensions, finite coordinates and a level top.
+The first flyer must not already be within the pawn's **300 cm**
+interaction reach at the starting location. Current source geometry:
+floor X **−3750 to +2550 cm**, floor Y **−700 to +700 cm** and
+nearest spawn-to-flyer marker horizontal edge **542.5 cm**.
+The output explicitly labels this as **authoring geometry only**.
+
+At source `efa5e508d7e081c03ec211643f4722261b82201b`, the
+Windows checkout passed **13/13 new spatial checks**, including
+out-of-floor, nonfinite, early-interaction and malformed floor
+negatives, plus **10/10 existing Prelude authoring tests**.
+Unreal source preflight also passed at that SHA. The committed `.umap`
+was **not rebuilt or modified**; this source geometry is a necessary
+but insufficient condition for navigation, line-of-sight,
+camera aiming, collision and P01–P13 input-based PIE acceptance.
+The real Editor map test remains separately held while other
+Unreal Editor/Live Coding sessions are active.
+
+## November 3 — actual Editor transforms and marker scales gate
+
+The opt-in native `verify_pr713_native_prelude_map.py` now cross-checks
+the **real Editor world transforms** against the source-controlled
+`build_first_wake_prelude_interaction.py` layout, not merely whether
+the expected actors exist. It requires the seven actual C++
+milestone proxies at their authored XYZ positions, the authored player
+spawn, physical traversal floor position and XYZ scale, and that
+every marker footprint is contained within the measured floor.
+It also verifies the actual 0.75 × 0.75 × 1.6 actor scale for each
+BasicShapes cube marker: without that check, assuming a 37.5 cm
+half-width could falsely certify a scaled-up marker as beyond reach.
+All coordinates and scales must be finite; tolerance is at most 1 cm
+for serialized actor transforms. The first marker's actual nearest
+horizontal edge must be more than 300 cm from spawn.
+
+The actual native report now includes
+`world_layout_matches_authoring_plan=true`,
+`all_marker_footprints_on_floor=true`,
+`first_marker_initially_out_of_interaction_reach=true` and the
+measured nearest-edge distance. The production
+`Assert-NativePreludeMapReceipt.ps1` requires these fields and
+rejects an edge-distance result at or below 300 cm or an inconsistent
+distance. This does **not** validate camera visibility raycasts,
+dynamic obstacles, actual movement or player E key input.
+
+At source `127667c48045f06f82f23d98faafe35eca3df6a3`, the
+connected Windows workstation ran the **actual Python checker function
+against stand-ins**: **31/31 behavior scenarios PASS**, including
+displaced Ionia/player, misplaced floor, altered marker Z, enlarged
+proxy, invalid floor scale and nonfinite positions/scales. The
+source-admission checks passed **8/8**, and the *real* PowerShell
+receipt validator passed **37 synthetic report fixtures**
+(1 accepted complete and 36 invalid rejected).
+Git remained clean. These checks used **no actual Unreal map load**;
+the genuine commandlet is still blocked by active Editor and Live
+Coding sessions. P01–P13 PIE and native 25/25 at the latest revision
+are **not claimed**.
+
+
+## November 3 — tightly scoped joined PR #735 map-QA lane (review only)
+
+The original PR #713 `TSTSS_PR713_NativeMapQA_20261102` directory remains supported and never changes its evidence. The **joined** First Wake vertical-slice draft #735 requires an independent exact-head map check; the initial launcher and Python bridge could not accept a separate worktree because they recognized only the legacy path. In the joined draft only, both now accept a **fixed two-name allowlist**: the original and `TSTSS_PR735_NativeMapQA_20261103`. Arbitrary checkouts, renamed copies, wrong SHA, dirty worktrees, unexpected map bytes, unprotected tracked default configs, existing SaveGames, active Editor/Live Coding, or absent prior **build-only** receipts still **HOLD**. Neither command relaxes a UE version requirement or transforms fake Python into native gameplay proof.
+
+**Opt-in native execution after Editor/Live Coding is closed through normal user workflow:** In a newly created *disposable* `C:\TSTSS_PR735_NativeMapQA_20261103` detached worktree pinned to an **explicit 40-character Git commit of #735**, set only the two isolated `unreal/Config/DefaultEngine.ini` and `DefaultInput.ini` files read-only (do not touch another checkout), ensure its `unreal/Saved/SaveGames` has no `.sav`, and run:
+
+```powershell
+$Review = 'C:\TSTSS_PR735_NativeMapQA_20261103'
+$Sha = (git -C $Review rev-parse HEAD).Trim()
+& "$Review\unreal\Tools\Verify-Unreal.ps1" -EngineRoot 'C:\Program Files\Epic Games\UE_5.8' -ExpectedHead $Sha -SkipTests
+& "$Review\unreal\Tools\Invoke-NativePreludeMapQA.ps1" -EngineRoot 'C:\Program Files\Epic Games\UE_5.8' -ExpectedHead $Sha -PreflightOnly
+& "$Review\unreal\Tools\Invoke-NativePreludeMapQA.ps1" -EngineRoot 'C:\Program Files\Epic Games\UE_5.8' -ExpectedHead $Sha
+```
+
+A real map receipt still requires actual Unreal Editor commandlet load, seven reflected milestone actors, source/map/config postflight, independent contradictory-receipt validator and unique ignored evidence. The build-only receipt is separate from the **26/26 real native automation** gate; run full `Verify-Unreal.ps1` without `-SkipTests` separately on the same exact clean head before claiming native test coverage. **PIE P01–P13, physical hull/water contact, rendered Splashdown, art acceptance and merge/release remain NOT TESTED/NOT AUTHORIZED.** Do not run the native commands against a running Editor or invent their results from this documentation.

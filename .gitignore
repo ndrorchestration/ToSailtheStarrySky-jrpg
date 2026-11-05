@@ -82,3 +82,7 @@ nwjs-win64.zip
 # Staged player runtime
 .desktop-runtime/
 local-release/
+
+# Generated Python bytecode
+__pycache__/
+*.py[cod]

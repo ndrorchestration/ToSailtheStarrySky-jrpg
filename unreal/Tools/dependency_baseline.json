@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "status": "REVIEW_ONLY_DEPENDENCY_INVENTORY_NOT_AN_UPGRADE_OR_DEPLOYMENT_APPROVAL",
+  "engine": {
+    "association": "5.8",
+    "windows_review_patch_observed": "5.8.4",
+    "target_build_settings": "V7",
+    "include_order": "Unreal5_8",
+    "note": "Review workstation patch is observational; .uproject selects the 5.8 engine family."
+  },
+  "unreal": {
+    "runtime_module_dependencies": [
+      "Core",
+      "CoreUObject",
+      "Engine",
+      "InputCore", "UMG", "MediaAssets", "SlateCore", "AudioMixer"
+    ],
+    "enabled_project_plugins": [
+      "PythonScriptPlugin"
+    ],
+    "plugin_use": "Editor Python review/staging tooling; not an approved packaged runtime dependency.",
+    "third_party_runtime_packages_added": []
+  },
+  "legacy_nwjs": {
+    "package_manager": "npm",
+    "package_manifest": "package.json",
+    "lockfile": "package-lock.json",
+    "lockfile_version": 3,
+    "private": true,
+    "release_hold": true,
+    "role": "Historical browser/NW.js game and security-hold packaging; not forward Unreal gameplay.",
+    "dev_dependencies": {
+      "nw": "^0.116.0",
+      "nwjs": "^1.4.4",
+      "playwright": "^1.63.0",
+      "nw-builder": "^4.5.0"
+    }
+  },
+  "policy": {
+    "engine_upgrades_require": "Explicit review plus native Game and Editor builds, per-test JSON, PIE, packaging and creator approval.",
+    "node_dependency_upgrades_require": "Legacy security/dependency review, lock regeneration in isolation, all NW.js test & Defender-on release gates.",
+    "plugin_additions_require": "Plugin license/source/version, editor-versus-runtime role, import/build/packaging evidence and authored-art provenance.",
+    "auto_upgrade": false,
+    "merge_or_release_authorized": false
+  }
+}
