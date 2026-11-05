@@ -237,15 +237,22 @@ def extract_methods(code: str) -> str:
 def compiled_run(compiler: str, methods: str) -> subprocess.CompletedProcess[str]:
     with tempfile.TemporaryDirectory(prefix="tstss-f5f9-portable-") as tmp:
         src = Path(tmp) / "f5f9.cpp"
-        executable = Path(tmp) / "f5f9"
+        executable = Path(tmp) / ("f5f9.exe" if Path(compiler).name.lower() == "cl.exe" else "f5f9")
         src.write_text(PREFIX + methods + SUFFIX, encoding="utf-8")
+        if Path(compiler).name.lower() == "cl.exe":
+            # Mutation tests intentionally compile constant-false conditions;
+            # suppress only MSVC C4127 while keeping all other warnings fatal.
+            command = [compiler, "/nologo", "/std:c++17", "/EHsc", "/W4",
+                       "/WX", "/wd4127", str(src), "/Fo:" + str(Path(tmp) / "f5f9.obj"),
+                       "/Fe:" + str(executable)]
+        else:
+            command = [compiler, "-std=c++17", "-O0", "-Wall", "-Wextra",
+                       "-Werror", "-pedantic", str(src), "-o", str(executable)]
         build = subprocess.run(
-            [compiler, "-std=c++17", "-O0", "-Wall", "-Wextra", "-Werror",
-             "-pedantic", str(src), "-o", str(executable)],
-            check=False, capture_output=True, text=True, timeout=45,
+            command, check=False, capture_output=True, text=True, timeout=45,
         )
         if build.returncode:
-            raise RuntimeError("Portable handler compile failed:\n" + build.stderr[-5000:])
+            raise RuntimeError("Portable handler compile failed:\n" + (build.stdout + build.stderr)[-5000:])
         return subprocess.run([str(executable)], check=False, capture_output=True,
                               text=True, timeout=25)
 
@@ -254,7 +261,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args()
-    compiler = next((binary for name in ("g++", "clang++", "c++")
+    compiler = next((binary for name in ("g++", "clang++", "c++", "cl")
                      if (binary := shutil.which(name))), None)
     if compiler is None:
         raise RuntimeError("C++17 compiler required for behavioral evidence")
