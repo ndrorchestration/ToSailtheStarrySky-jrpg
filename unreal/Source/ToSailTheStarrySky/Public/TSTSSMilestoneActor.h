@@ -21,6 +21,7 @@ public:
     UFUNCTION(BlueprintImplementableEvent, Category="TSTSS|First Wake")
     void OnMilestoneActivated();
 protected:
+    virtual void BeginPlay() override;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     TObjectPtr<class UStaticMeshComponent> InteractionMesh;
 };
