@@ -154,7 +154,14 @@ class GreyboxAuthoringContract(TestCase):
             def set_static_mesh(self, mesh): self.mesh = mesh
             def set_collision_profile_name(self, profile): self.profile = profile
             def set_collision_enabled(self, value): self.collision = value
-            def set_generate_overlap_events(self, enabled): self.overlap = enabled
+            def set_editor_property(self, name, value):
+                if name != "generate_overlap_events":
+                    raise AssertionError("Unexpected reflected mesh property")
+                self.overlap = value
+            def get_editor_property(self, name):
+                if name != "generate_overlap_events":
+                    raise AssertionError("Unexpected reflected mesh readback")
+                return self.overlap
             def set_simulate_physics(self, enabled): self.simulated = enabled
             def set_mobility(self, value): self.mobility = value
 
@@ -258,6 +265,11 @@ class GreyboxAuthoringContract(TestCase):
         self.assertIn("EditorLoadingAndSavingUtils.save_map(world, MAP)", source)
         self.assertIn('water.set_editor_property("tags", [unreal.Name("TSTSSWaterVolume")])',
                       source)
+        self.assertIn('water_mesh.set_editor_property("generate_overlap_events", True)', source)
+        self.assertIn('hull_mesh.set_editor_property("generate_overlap_events", True)', source)
+        self.assertIn('water_mesh.get_editor_property("generate_overlap_events")', source)
+        self.assertIn('hull_mesh.get_editor_property("generate_overlap_events")', source)
+        self.assertNotIn(".set_generate_overlap_events(", source)
         self.assertIn('hull.set_editor_property("enable_prototype_buoyancy", True)',
                       source)
         self.assertIn('hull.set_editor_property("arm_prototype_physics_on_launch", True)',
