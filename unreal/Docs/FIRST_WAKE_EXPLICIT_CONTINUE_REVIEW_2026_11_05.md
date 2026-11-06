@@ -22,3 +22,7 @@
 3. **Close the Editor fully**, restart same exact-head disposable project/map, press F9 (must refuse stale slot), press F6 preview (must not advance story), then F6 confirm. Verify native log `TSTSS_PIE_REVIEW_CONTINUE_ACCEPT`, Ender restored position, objective and pending inspection mask. Verify player can interact as expected after resume; verify save hashes not changed.
 4. Negative controls: missing sidecar, changed primary, foreign path, unsupported version, after-launch and unsafe position; none may restore; originals preserved.
 5. No protected-main merge, authoritative art promotion, Starbourne unlock or claim of full ship/save release without all gates.
+
+## Additional local C++ logic verification while native UE is resource-held
+
+In the Visual Studio 2022 x64 developer environment, run `python unreal/Tools/check_first_wake_continue_manifest_compiled.py --self-test`. This compiles the **actual** `TSTSSReviewContinueManifest.cpp` body with narrowly defined Unreal API stand-ins using MSVC C++20, then exercises 17 positive and deliberate negative scenarios (project, map, digest, protocol, version, roster, flight, bounds, NaN and infinity). On November 5, 2026 **17/17 PASS**. It never writes game saves or maps and does not build Unreal, run UHT, exercise real F6 input, or count toward the 29 native automation tests. Release gate remains on hold.
