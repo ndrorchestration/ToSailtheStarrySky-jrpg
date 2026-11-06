@@ -19,6 +19,7 @@ public:
     {
         StableContactSeconds = 0.f;
         bContactRecorded = false;
+        bHasPreviousStableSample = false;
         ObservedRestoreGeneration = 0;
         bHasObservedRestoreGeneration = false;
     }
@@ -29,6 +30,8 @@ public:
 private:
     UPROPERTY() float StableContactSeconds = 0.f;
     UPROPERTY() bool bContactRecorded = false;
+    // First qualifying sample anchors the clock; the prior interval is unobserved.
+    UPROPERTY(Transient) bool bHasPreviousStableSample = false;
     UPROPERTY(Transient) uint64 ObservedRestoreGeneration = 0;
     UPROPERTY(Transient) bool bHasObservedRestoreGeneration = false;
 };
