@@ -14,6 +14,8 @@ bool FTSTSSWaterLandingRestoreTest::RunTest(const FString& Parameters)
     if (!TestTrue(TEXT("Restore saved SeaContact"), Story->Restore(true, ETSTSSFirstWakeBeat::SeaContact, 0x07))) return false;
     TestFalse(TEXT("First stable sample does not complete"), Gate->Observe(0.1f, true, 0.f, Story));
     TestEqual(TEXT("Still at SeaContact"), Story->GetCurrentBeat(), ETSTSSFirstWakeBeat::SeaContact);
+    TestEqual(TEXT("First qualifying sample anchors an interval but credits no prior time"),
+        Gate->GetStableContactSeconds(), 0.f);
     for (int32 Index=0; Index<9; ++Index) Gate->Observe(0.1f, true, 0.f, Story);
     TestFalse(TEXT("Loss of overlap resets stability"), Gate->Observe(0.1f, false, 0.f, Story));
     TestEqual(TEXT("No premature flotation"), Story->GetCurrentBeat(), ETSTSSFirstWakeBeat::SeaContact);
@@ -31,8 +33,8 @@ bool FTSTSSWaterLandingRestoreTest::RunTest(const FString& Parameters)
     for (int32 Index = 0; Index < 6; ++Index)
         TestFalse(TEXT("Pre-load timeline remains below two seconds"),
             SameBeatGate->Observe(0.25f, true, 0.f, SameBeatStory));
-    TestEqual(TEXT("Pre-load timeline accumulated 1.75 seconds"),
-        SameBeatGate->GetStableContactSeconds(), 1.75f);
+    TestEqual(TEXT("Pre-load timeline has 1.5 directly observed seconds"),
+        SameBeatGate->GetStableContactSeconds(), 1.5f);
     const uint64 GenerationBeforeSameBeatRestore = SameBeatStory->GetRestoreGeneration();
     TestTrue(TEXT("Restore the same SeaContact snapshot into the same object"),
         SameBeatStory->Restore(true, ETSTSSFirstWakeBeat::SeaContact, 0x07));
@@ -42,14 +44,16 @@ bool FTSTSSWaterLandingRestoreTest::RunTest(const FString& Parameters)
         SameBeatGate->Observe(0.25f, true, 0.f, SameBeatStory));
     TestEqual(TEXT("Same-beat restore remains at SeaContact"),
         SameBeatStory->GetCurrentBeat(), ETSTSSFirstWakeBeat::SeaContact);
-    TestEqual(TEXT("Only post-load stability is counted"),
-        SameBeatGate->GetStableContactSeconds(), 0.25f);
+    TestEqual(TEXT("No pre-load interval is credited to the first post-load sample"),
+        SameBeatGate->GetStableContactSeconds(), 0.f);
     for (int32 Index = 0; Index < 6; ++Index)
         TestFalse(TEXT("Fresh post-load samples remain below two seconds"),
             SameBeatGate->Observe(0.25f, true, 0.f, SameBeatStory));
-    TestEqual(TEXT("Fresh post-load duration is 1.75 seconds"),
-        SameBeatGate->GetStableContactSeconds(), 1.75f);
-    TestTrue(TEXT("Flotation requires two fresh post-load seconds"),
+    TestEqual(TEXT("Fresh post-load observed duration is 1.5 seconds"),
+        SameBeatGate->GetStableContactSeconds(), 1.5f);
+    TestFalse(TEXT("Eight calm samples have only 1.75 observed seconds"),
+        SameBeatGate->Observe(0.25f, true, 0.f, SameBeatStory));
+    TestTrue(TEXT("Nine calm samples span two observed seconds after restore"),
         SameBeatGate->Observe(0.25f, true, 0.f, SameBeatStory));
     TestEqual(TEXT("Same-beat restore eventually confirms flotation"),
         SameBeatStory->GetCurrentBeat(), ETSTSSFirstWakeBeat::FlotationConfirmed);
@@ -59,12 +63,12 @@ bool FTSTSSWaterLandingRestoreTest::RunTest(const FString& Parameters)
     // Quarter-second samples make the two-second boundary exact.
     for (int32 Index = 0; Index < 6; ++Index)
         TestFalse(TEXT("Old timeline has not settled yet"), Gate->Observe(0.25f, true, 0.f, Story));
-    TestEqual(TEXT("Old timeline accumulated stability"), Gate->GetStableContactSeconds(), 1.5f);
+    TestEqual(TEXT("Old timeline has only observed stable intervals"), Gate->GetStableContactSeconds(), 1.25f);
     const uint64 GenerationBeforeRejectedRestore = Story->GetRestoreGeneration();
     TestFalse(TEXT("Incomplete engineering snapshot is rejected"),
         Story->Restore(true, ETSTSSFirstWakeBeat::Launched, 0x03));
     TestEqual(TEXT("Failed restore preserves contact"), Story->GetCurrentBeat(), ETSTSSFirstWakeBeat::SeaContact);
-    TestEqual(TEXT("Failed restore preserves accumulated stability"), Gate->GetStableContactSeconds(), 1.5f);
+    TestEqual(TEXT("Failed restore preserves accumulated stability"), Gate->GetStableContactSeconds(), 1.25f);
     TestEqual(TEXT("Rejected restore does not advance generation"),
         Story->GetRestoreGeneration(), GenerationBeforeRejectedRestore);
     if (!TestTrue(TEXT("Rewind existing story to Launched"),
@@ -74,12 +78,15 @@ bool FTSTSSWaterLandingRestoreTest::RunTest(const FString& Parameters)
         Gate->Observe(0.25f, true, 0.f, Story));
     TestEqual(TEXT("Rewind immediately reacquires SeaContact"),
         Story->GetCurrentBeat(), ETSTSSFirstWakeBeat::SeaContact);
-    TestEqual(TEXT("Rewind discards all old stable duration"), Gate->GetStableContactSeconds(), 0.25f);
+    TestEqual(TEXT("Rewind discards all old stable duration"), Gate->GetStableContactSeconds(), 0.f);
     for (int32 Index = 0; Index < 6; ++Index)
         TestFalse(TEXT("Insufficient fresh stability cannot complete"), Gate->Observe(0.25f, true, 0.f, Story));
-    TestEqual(TEXT("Only fresh samples count toward stability"), Gate->GetStableContactSeconds(), 1.75f);
+    TestEqual(TEXT("Only observed fresh sample intervals count"), Gate->GetStableContactSeconds(), 1.5f);
     TestEqual(TEXT("Still SeaContact before two fresh seconds"), Story->GetCurrentBeat(), ETSTSSFirstWakeBeat::SeaContact);
-    TestTrue(TEXT("Two fresh stable seconds confirm flotation"), Gate->Observe(0.25f, true, 0.f, Story));
+    TestFalse(TEXT("Eight samples are only 1.75 seconds of observed intervals"),
+        Gate->Observe(0.25f, true, 0.f, Story));
+    TestTrue(TEXT("Nine samples span two observed seconds"),
+        Gate->Observe(0.25f, true, 0.f, Story));
     TestEqual(TEXT("Restored contact can eventually confirm flotation"),
         Story->GetCurrentBeat(), ETSTSSFirstWakeBeat::FlotationConfirmed);
     TestEqual(TEXT("Completion uses exactly two fresh seconds"), Gate->GetStableContactSeconds(), 2.f);
@@ -94,8 +101,8 @@ bool FTSTSSWaterLandingRestoreTest::RunTest(const FString& Parameters)
     for (int32 Index = 0; Index < 6; ++Index)
         TestFalse(TEXT("Old restart timeline not yet floating"),
             RestartedGate->Observe(0.25f, true, 0.f, RestartedStory));
-    TestEqual(TEXT("Old restart timeline accumulated 1.5 seconds"),
-        RestartedGate->GetStableContactSeconds(), 1.5f);
+    TestEqual(TEXT("Old restart timeline accumulated 1.25 observed seconds"),
+        RestartedGate->GetStableContactSeconds(), 1.25f);
     const uint64 GenerationBeforeReset = RestartedStory->GetRestoreGeneration();
     RestartedStory->Reset();
     TestEqual(TEXT("Full Reset invalidates cached contact generation"),
@@ -123,14 +130,16 @@ bool FTSTSSWaterLandingRestoreTest::RunTest(const FString& Parameters)
         RestartedGate->Observe(0.25f, true, 0.f, RestartedStory));
     TestEqual(TEXT("New timeline genuinely reacquires SeaContact"),
         RestartedStory->GetCurrentBeat(), ETSTSSFirstWakeBeat::SeaContact);
-    TestEqual(TEXT("New timeline counts only 0.25 second"),
-        RestartedGate->GetStableContactSeconds(), 0.25f);
+    TestEqual(TEXT("New timeline first calm frame credits no prior time"),
+        RestartedGate->GetStableContactSeconds(), 0.f);
     for (int32 Index = 0; Index < 6; ++Index)
         TestFalse(TEXT("New timeline has insufficient stable duration"),
             RestartedGate->Observe(0.25f, true, 0.f, RestartedStory));
-    TestEqual(TEXT("New timeline has precisely 1.75 seconds"),
-        RestartedGate->GetStableContactSeconds(), 1.75f);
-    TestTrue(TEXT("New timeline requires two clean stable seconds"),
+    TestEqual(TEXT("New timeline has precisely 1.5 observed seconds"),
+        RestartedGate->GetStableContactSeconds(), 1.5f);
+    TestFalse(TEXT("Eight samples cannot count as two observed seconds"),
+        RestartedGate->Observe(0.25f, true, 0.f, RestartedStory));
+    TestTrue(TEXT("New timeline requires nine clean samples for two observed seconds"),
         RestartedGate->Observe(0.25f, true, 0.f, RestartedStory));
     TestEqual(TEXT("Full restart eventually confirms fresh flotation"),
         RestartedStory->GetCurrentBeat(), ETSTSSFirstWakeBeat::FlotationConfirmed);
@@ -172,6 +181,30 @@ bool FTSTSSWaterLandingNegativePathsTest::RunTest(const FString& Parameters)
     Gate->Reset();
     TestFalse(TEXT("No overlap after reset"), Gate->Observe(0.1f, false, 0.f, Story));
     TestEqual(TEXT("Reset preserves story contact"), Story->GetCurrentBeat(), ETSTSSFirstWakeBeat::SeaContact);
+
+    // Exactly 25 cm/s is permitted, but the historically observed 25.231
+    // cm/s preceding flotation is not. Neither that unqualified frame nor
+    // its elapsed delta may count toward a new two-second window.
+    UTSTSSFirstWakeState* ThresholdStory = NewObject<UTSTSSFirstWakeState>();
+    UTSTSSWaterLandingGate* ThresholdGate = NewObject<UTSTSSWaterLandingGate>();
+    if (!TestTrue(TEXT("Boundary story restores launched state"),
+        ThresholdStory->Restore(true, ETSTSSFirstWakeBeat::Launched, 0x07))) return false;
+    for (int32 Index = 0; Index < 8; ++Index)
+        TestFalse(TEXT("Eight exact-limit samples cannot confirm flotation"),
+            ThresholdGate->Observe(0.25f, true, 25.f, ThresholdStory));
+    TestEqual(TEXT("Eight exact-limit samples span only 1.75 observed seconds"),
+        ThresholdGate->GetStableContactSeconds(), 1.75f);
+    TestFalse(TEXT("25.231 cm/s is above the stability speed limit"),
+        ThresholdGate->Observe(0.25f, true, 25.231f, ThresholdStory));
+    TestEqual(TEXT("Above-threshold 25.231 cm/s clears stability"),
+        ThresholdGate->GetStableContactSeconds(), 0.f);
+    for (int32 Index = 0; Index < 8; ++Index)
+        TestFalse(TEXT("Eight new limit-speed samples remain below two seconds"),
+            ThresholdGate->Observe(0.25f, true, 25.f, ThresholdStory));
+    TestTrue(TEXT("Nine fresh exact-limit samples finally confirm flotation"),
+        ThresholdGate->Observe(0.25f, true, 25.f, ThresholdStory));
+    TestEqual(TEXT("Boundary trace requires two fresh witnessed seconds"),
+        ThresholdGate->GetStableContactSeconds(), 2.f);
     return true;
 }
 

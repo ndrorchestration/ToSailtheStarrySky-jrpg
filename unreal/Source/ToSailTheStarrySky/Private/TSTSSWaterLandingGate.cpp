@@ -31,6 +31,7 @@ bool UTSTSSWaterLandingGate::Observe(float DeltaSeconds, bool bHullTouchesWater,
     {
         StableContactSeconds = 0.f;
         bContactRecorded = false;
+        bHasPreviousStableSample = false;
         ObservedRestoreGeneration = RestoreGeneration;
         bHasObservedRestoreGeneration = true;
     }
@@ -51,6 +52,16 @@ bool UTSTSSWaterLandingGate::Observe(float DeltaSeconds, bool bHullTouchesWater,
     }
     if (FMath::Abs(HullVerticalSpeedCms) > 25.f)
     {
+        StableContactSeconds = 0.f;
+        bHasPreviousStableSample = false;
+        return false;
+    }
+    // The first calm, immersed frame observes the beginning of a stable window.
+    // Its DeltaSeconds covers time since an earlier UNQUALIFIED or unobserved
+    // frame, so crediting it would overstate directly witnessed stability.
+    if (!bHasPreviousStableSample)
+    {
+        bHasPreviousStableSample = true;
         StableContactSeconds = 0.f;
         return false;
     }
