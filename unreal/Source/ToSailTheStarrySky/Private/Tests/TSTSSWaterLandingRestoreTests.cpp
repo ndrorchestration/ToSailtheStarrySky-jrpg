@@ -181,6 +181,30 @@ bool FTSTSSWaterLandingNegativePathsTest::RunTest(const FString& Parameters)
     Gate->Reset();
     TestFalse(TEXT("No overlap after reset"), Gate->Observe(0.1f, false, 0.f, Story));
     TestEqual(TEXT("Reset preserves story contact"), Story->GetCurrentBeat(), ETSTSSFirstWakeBeat::SeaContact);
+
+    // Exactly 25 cm/s is permitted, but the historically observed 25.231
+    // cm/s preceding flotation is not. Neither that unqualified frame nor
+    // its elapsed delta may count toward a new two-second window.
+    UTSTSSFirstWakeState* ThresholdStory = NewObject<UTSTSSFirstWakeState>();
+    UTSTSSWaterLandingGate* ThresholdGate = NewObject<UTSTSSWaterLandingGate>();
+    if (!TestTrue(TEXT("Boundary story restores launched state"),
+        ThresholdStory->Restore(true, ETSTSSFirstWakeBeat::Launched, 0x07))) return false;
+    for (int32 Index = 0; Index < 8; ++Index)
+        TestFalse(TEXT("Eight exact-limit samples cannot confirm flotation"),
+            ThresholdGate->Observe(0.25f, true, 25.f, ThresholdStory));
+    TestEqual(TEXT("Eight exact-limit samples span only 1.75 observed seconds"),
+        ThresholdGate->GetStableContactSeconds(), 1.75f);
+    TestFalse(TEXT("25.231 cm/s is above the stability speed limit"),
+        ThresholdGate->Observe(0.25f, true, 25.231f, ThresholdStory));
+    TestEqual(TEXT("Above-threshold 25.231 cm/s clears stability"),
+        ThresholdGate->GetStableContactSeconds(), 0.f);
+    for (int32 Index = 0; Index < 8; ++Index)
+        TestFalse(TEXT("Eight new limit-speed samples remain below two seconds"),
+            ThresholdGate->Observe(0.25f, true, 25.f, ThresholdStory));
+    TestTrue(TEXT("Nine fresh exact-limit samples finally confirm flotation"),
+        ThresholdGate->Observe(0.25f, true, 25.f, ThresholdStory));
+    TestEqual(TEXT("Boundary trace requires two fresh witnessed seconds"),
+        ThresholdGate->GetStableContactSeconds(), 2.f);
     return true;
 }
 
