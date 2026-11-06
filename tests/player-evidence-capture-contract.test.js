@@ -28,6 +28,11 @@ assert.strictEqual(
 );
 
 assert(
+  smokeWorkflow.startsWith('name: To Sail the Starry Sky smoke\\n'.replace('\\n', '\n')),
+  'smoke workflow must display the canonical To Sail the Starry Sky project name'
+);
+
+assert(
   smokeWorkflow.includes('npm run test:player-evidence-capture'),
   'smoke workflow must guard the player evidence capture contract'
 );
