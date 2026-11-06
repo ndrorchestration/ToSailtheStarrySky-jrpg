@@ -15,6 +15,16 @@ The water gate now treats the first stable/immersed qualifying frame as the **st
 - This fix does not assert that the exact game-world clock matches every input delta; native per-frame timestamp/delta consistency still requires the independent validator.
 - No change to buoyancy force, water volume, approved hull/wing geometry, cinematic renderer, save schema, game-menu control, party, Lyra recruitment or locked Starbourne.
 
+## Independent native-log validator (engine-free correction)
+
+The read-only `unreal/Tools/verify_first_wake_water_frame_trace.py` now reconstructs the qualifying interval from **consecutive native `world_sec` readings**, not by adding all reported `dt` fields. The first valid sample is an anchor with **zero** elapsed witnessed time; each later sample contributes its actual positive world-time difference, provided that it agrees with the *later* frame's `dt` within bounded tolerance. Both independently observed elapsed world time and qualifying `dt` totals must reach at least 2.0 s. The gate's `stable_sec` cannot exceed the measured world-time window by more than 0.005 s.
+
+The validator rejects missing/nonfinite telemetry, duplicate fields, untagged or non-immersed water contact, nonphysical hull-bottom/water-surface geometry, invalid or duplicate timestamps, excessive frame gaps, mismatched `dt`, restore-generation discontinuities, and forged native stability duration. The returned receipt retains `window_seconds_sum_dt` and adds **`window_seconds_elapsed_world`**; these are separate quantities rather than two ways of expressing the same estimate. A passing synthetic fixture is **not** evidence of a native in-game pass.
+
+New controls exercise the historical **1.9943 s observed / 2.0312 s native gate** mismatch, an eight-frame false pass (eight 0.25s samples span only 1.75s between timestamps), a genuine nine-frame 2.0s window, dt/world-clock disagreement, impossible geometry, nonfinite timestamps, and timeline changes. The actual-source C++ native test bodies now distinguish speed **25.0 cm/s** (permitted) from **25.231 cm/s** (must reset the timer). Portable self-tests compile and deliberately mutate both the first-frame anchor and the 25 cm/s threshold, requiring the native test bodies to reject those regressions.
+
+**Engine-free verification at source head `4dab69e9975d4e5eca5feb913c71199fad86629c`:** GitHub Unreal source preflight SUCCESS; **323/323 Python source tests** and **379 assertions** through production-source-extracted portable C++ water test bodies. The four portable negative mutations (first-frame credit, relaxed speed, restore generation, full Reset generation) were rejected as designed. This is **not** a new native Unreal build, rendered scene test or proof of two observed seconds in real PIE. Full exact-head hosted run completion and native authorizations remain separate.
+
 ## Verification requirements (fail closed)
 
 1. Run the full Python/source suite, production-source extracted portable C++ rewind harness with negative mutations, and input/adapter behavioral harnesses at the **exact new head**, preserving outputs.
