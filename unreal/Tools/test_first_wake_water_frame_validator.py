@@ -78,7 +78,7 @@ class FailClosedWaterFrameValidatorTest(unittest.TestCase):
         for index in range(80, len(lines)):
             lines[index] = lines[index].replace("restore_gen=0", "restore_gen=1")
         with self.assertRaisesRegex(ValueError, "incomplete or discontinuous"):
-            validator.analyze("\\n".join(lines))
+            validator.analyze("\n".join(lines))
 
     def test_missing_dry_negative_fails(self):
         with self.assertRaisesRegex(ValueError,"dry/physics bounded"):
