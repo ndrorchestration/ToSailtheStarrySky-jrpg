@@ -24,13 +24,14 @@ STATE_SOURCE = MODULE / "Private/TSTSSFirstWakeState.cpp"
 GATE_SOURCE = MODULE / "Private/TSTSSWaterLandingGate.cpp"
 TEST_SOURCE = MODULE / "Private/Tests/TSTSSWaterLandingRestoreTests.cpp"
 FAILURE = "WATER_LANDING_BEHAVIOR_FAILURE: "
-RESTORE_ASSERTION = "Same-beat restore cannot inherit pre-load settling time"
+RESTORE_ASSERTION = "No pre-load interval is credited to the first post-load sample"
 RESTORE_GENERATION_GUARD = re.compile(
     r"    const uint64 RestoreGeneration = Story->GetRestoreGeneration\(\);\s*"
     r"    if \(!bHasObservedRestoreGeneration \|\|\s*"
     r"        ObservedRestoreGeneration != RestoreGeneration\)\s*\{\s*"
     r"        StableContactSeconds = 0\.f;\s*"
     r"        bContactRecorded = false;\s*"
+    r"        bHasPreviousStableSample = false;\s*"
     r"        ObservedRestoreGeneration = RestoreGeneration;\s*"
     r"        bHasObservedRestoreGeneration = true;\s*\}"
 )
@@ -95,7 +96,8 @@ void CheckRestoredSeaContact() {
     UTSTSSWaterLandingGate gate;
     Check(story.Restore(true, ETSTSSFirstWakeBeat::SeaContact, 0x07),
           "Saved SeaContact setup failed");
-    for (int sample = 0; sample < 7; ++sample)
+    // Eight samples establish only seven directly observed 0.25s intervals.
+    for (int sample = 0; sample < 8; ++sample)
         Check(!gate.Observe(0.25f, true, 0.f, &story),
               "Saved SeaContact completed before two stable seconds");
     Check(story.GetCurrentBeat() == ETSTSSFirstWakeBeat::SeaContact,
@@ -142,8 +144,8 @@ unsigned CheckInterruptedRewinds() {
             require(!gate.Observe(0.25f, true, 0.f, &story),
                     "old timeline completed too soon");
         require(story.GetCurrentBeat() == ETSTSSFirstWakeBeat::SeaContact &&
-                gate.GetStableContactSeconds() == 1.5f,
-                "old timeline did not accumulate contact evidence");
+                gate.GetStableContactSeconds() == 1.25f,
+                "old timeline did not accumulate directly observed contact evidence");
         require(story.Restore(true, ETSTSSFirstWakeBeat::Launched, 0x07),
                 "in-place rewind failed");
         require(!gate.Observe(sample.delta, sample.wet, sample.speed,
@@ -156,9 +158,9 @@ unsigned CheckInterruptedRewinds() {
                 "interrupted sample recorded the wrong beat");
 
         // Neither dry/invalid samples nor high-speed contact count as settling.
-        for (int index = 0; index < 7; ++index)
+        for (int index = 0; index < 8; ++index)
             require(!gate.Observe(0.25f, true, 0.f, &story),
-                    "insufficient fresh samples completed flotation");
+                    "eight samples are only 1.75 observed seconds");
         require(story.GetCurrentBeat() == ETSTSSFirstWakeBeat::SeaContact &&
                 gate.GetStableContactSeconds() == 1.75f,
                 "recovery did not reacquire contact with fresh duration");
