@@ -42,6 +42,19 @@ class FailClosedWaterFrameValidatorTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "incomplete or discontinuous"):
             validator.analyze(old_gate_log)
 
+    def test_historical_1_9943_seconds_never_rounds_to_two(self):
+        # 65 observations spanning exactly 1.9943 world seconds. This
+        # reproduces the epistemic error from the historical native gate:
+        # it reported 2.0312 seconds while the directly witnessed clock
+        # remained short. The old sum-all-dt verifier falsely passed.
+        period = 1.9943 / 64.0
+        trace = sample_log(count=65, period=period, credit_first=True)
+        original = f"stable_sec={65 * period:.4f}"
+        self.assertIn(original, trace)
+        trace = trace.replace(original, "stable_sec=2.0312")
+        with self.assertRaisesRegex(ValueError, "incomplete or discontinuous"):
+            validator.analyze(trace)
+
     def test_nine_real_observations_span_exactly_two_seconds(self):
         trace = sample_log(count=9, period=0.25)
         result = validator.analyze(trace)
