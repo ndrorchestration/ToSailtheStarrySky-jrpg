@@ -37,6 +37,17 @@ private:
     void QuickSave();
     void QuickLoad();
     void ShowObjectiveReview();
+#if WITH_EDITOR
+    void ReviewContinue();
+    bool SaveReviewContinueBinding(const FString& Slot);
+    bool bPendingReviewContinue = false;
+    FString PendingReviewContinueDigest;
+    float PendingReviewContinueExpireWorldSeconds = 0.f;
+    uint64 PendingReviewContinueRestoreGeneration = 0;
+    bool bPendingReviewContinueStarted = false;
+    ETSTSSFirstWakeBeat PendingReviewContinueBeat = ETSTSSFirstWakeBeat::FlyerDiscovered;
+    uint8 PendingReviewContinueInspectionMask = 0;
+#endif
     // PIE reviews never inherit another session's quicksave ownership.
     UPROPERTY(Transient)
     bool bPIEReviewQuickSlotOwned = false;
