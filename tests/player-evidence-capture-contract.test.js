@@ -27,8 +27,9 @@ assert.strictEqual(
   'package.json must expose the player evidence capture contract test'
 );
 
-assert(
-  smokeWorkflow.startsWith('name: To Sail the Starry Sky smoke\\n'.replace('\\n', '\n')),
+assert.strictEqual(
+  smokeWorkflow.split(/\r?\n/, 1)[0],
+  'name: To Sail the Starry Sky smoke',
   'smoke workflow must display the canonical To Sail the Starry Sky project name'
 );
 
