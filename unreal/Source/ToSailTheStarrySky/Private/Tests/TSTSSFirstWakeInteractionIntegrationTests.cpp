@@ -3,6 +3,7 @@
 #include "TSTSSMilestoneActor.h"
 #include "TSTSSWaterLandingGate.h"
 #include "TSTSSSaveGame.h"
+#include "TSTSSReviewContinueManifest.h"
 #include "Engine/World.h"
 #include "Components/PrimitiveComponent.h"
 
@@ -142,6 +143,64 @@ bool FTSTSSFirstWakeInteractionSplashdownTest::RunTest(const FString& Parameters
     TestFalse(TEXT("New game reset returns to Prelude"), Restored->IsChapterOneActOne());
 
 #if WITH_EDITOR
+    // Native sidecar provenance and no-flight-restore contract. This tests
+    // the actual Unreal SaveGame UObject class without writing a user slot.
+    UTSTSSSaveGame* ContinuePrimary =
+        NewObject<UTSTSSSaveGame>(GetTransientPackage());
+    ContinuePrimary->bFirstWakeStarted = true;
+    ContinuePrimary->FirstWakeBeat = ETSTSSFirstWakeBeat::FlyerDiscovered;
+    UTSTSSReviewContinueManifest* ContinueManifest =
+        NewObject<UTSTSSReviewContinueManifest>(GetTransientPackage());
+    ContinueManifest->PrimarySlot = TEXT("tstss_prelude_pie_quick");
+    ContinueManifest->ProjectRoot = TEXT("C:/TSTSS_ReviewSandbox/unreal/");
+    ContinueManifest->ReviewMapPackage =
+        TEXT("/Game/TSTSS/Review/FirstWake_LaunchWaterGreybox_V1");
+    ContinueManifest->PrimaryBlake3_160 =
+        TEXT("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+    ContinueManifest->bSavedStoryStarted = true;
+    ContinueManifest->SavedBeat = ETSTSSFirstWakeBeat::FlyerDiscovered;
+    ContinueManifest->SavedPawnLocation = FVector(-1300.f, 0.f, 90.f);
+    const auto Bound = [ContinueManifest, ContinuePrimary](
+        const FString& Project, const FString& Map,
+        const FString& Digest) -> bool
+    {
+        return ContinueManifest->IsBoundFor(ContinuePrimary,
+            TEXT("tstss_prelude_pie_quick"), Project, Map, Digest);
+    };
+    const FString GoodProject = ContinueManifest->ProjectRoot;
+    const FString GoodMap = ContinueManifest->ReviewMapPackage;
+    const FString GoodDigest = ContinueManifest->PrimaryBlake3_160;
+    TestTrue(TEXT("Only manifest bound to exact v2 review save can Continue"),
+        Bound(GoodProject, GoodMap, GoodDigest));
+    TestFalse(TEXT("Foreign source project cannot Continue"),
+        Bound(TEXT("C:/OtherGame/"), GoodMap, GoodDigest));
+    TestFalse(TEXT("Foreign review map cannot Continue"),
+        Bound(GoodProject, TEXT("/Game/TSTSS/OtherMap"), GoodDigest));
+    TestFalse(TEXT("Mutated primary bytes cannot Continue"),
+        Bound(GoodProject, GoodMap,
+            TEXT("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")));
+    ContinueManifest->ReviewVersion = 99;
+    TestFalse(TEXT("Unknown future sidecar rejected"),
+        Bound(GoodProject, GoodMap, GoodDigest));
+    ContinueManifest->ReviewVersion =
+        UTSTSSReviewContinueManifest::CurrentReviewVersion;
+    ContinueManifest->SavedPawnLocation = FVector(100001.f, 0.f, 90.f);
+    TestFalse(TEXT("Out-of-bounds pawn location rejected"),
+        Bound(GoodProject, GoodMap, GoodDigest));
+    ContinueManifest->SavedPawnLocation = FVector(-1300.f, 0.f, 90.f);
+    ContinuePrimary->FirstWakeBeat = ETSTSSFirstWakeBeat::Launched;
+    ContinuePrimary->InspectionMask = 0x07;
+    ContinueManifest->SavedBeat = ETSTSSFirstWakeBeat::Launched;
+    ContinueManifest->SavedInspectionMask = 0x07;
+    TestFalse(TEXT("Uncaptured ship flight cannot be restored"),
+        Bound(GoodProject, GoodMap, GoodDigest));
+    ContinuePrimary->FirstWakeBeat = ETSTSSFirstWakeBeat::FlyerDiscovered;
+    ContinuePrimary->InspectionMask = 0;
+    ContinueManifest->SavedBeat = ETSTSSFirstWakeBeat::FlyerDiscovered;
+    ContinueManifest->SavedInspectionMask = 0;
+    TestTrue(TEXT("Prelaunch Continue binding remains allowed"),
+        Bound(GoodProject, GoodMap, GoodDigest));
+
     // Native PIE-world contract for both review namespaces. Consumed
     // splashdown markers must release the camera ray and pawn, but rejected
     // milestones and unrelated production actors must keep their collision.

@@ -13,6 +13,11 @@
 #include "CollisionQueryParams.h"
 #if WITH_EDITOR
 #include "EngineUtils.h"
+#include "TSTSSReviewContinueManifest.h"
+#include "IO/IoHash.h"
+#include "Misc/Paths.h"
+#include "Misc/FileHelper.h"
+#include "Misc/PackageName.h"
 #endif
 
 namespace
@@ -27,7 +32,7 @@ void ShowFirstWakeReviewSaveLoadStatus(const bool bLoad, const bool bSucceeded)
             ? TEXT("First Wake (review): story progress loaded; position unchanged")
             : TEXT("First Wake (review): load failed; no progress restored"))
         : (bSucceeded
-            ? TEXT("First Wake (review): story progress saved; position not saved")
+            ? TEXT("First Wake (review): story saved; F9 does not move pawn; F6 Continue can restore position")
             : TEXT("First Wake (review): save failed; progress not confirmed"));
     GEngine->AddOnScreenDebugMessage(
         -1, 8.f, bSucceeded ? FColor::Green : FColor::Red, Message);
@@ -82,6 +87,72 @@ void ShowFirstWakeReviewObjective(const UTSTSSFirstWakeState* State)
     (void)State;
 #endif
 }
+
+#if WITH_EDITOR
+constexpr const TCHAR* ReviewPrimarySlot = TEXT("tstss_prelude_pie_quick");
+constexpr const TCHAR* ReviewManifestSlot = TEXT("tstss_prelude_pie_manifest_v1");
+
+FString BoundReviewMapPackage(const UWorld* World)
+{
+    if (!World || !World->GetOutermost()) return FString();
+    return FPackageName::GetLongPackagePath(World->GetOutermost()->GetName()) +
+        TEXT("/") + UGameplayStatics::GetCurrentLevelName(World, true);
+}
+
+FString BoundReviewProjectRoot()
+{
+    return FPaths::ConvertRelativePathToFull(FPaths::ProjectDir());
+}
+
+// BLAKE3 truncated to 160 bits is an integrity binding between two
+// SaveGame files, not an authentication signature or source-commit proof.
+bool DigestExactReviewPrimary(const FString& Slot, FString& OutDigest)
+{
+    OutDigest.Reset();
+    if (Slot != ReviewPrimarySlot) return false;
+    const FString Path = FPaths::Combine(
+        FPaths::ProjectSavedDir(), TEXT("SaveGames"), Slot + TEXT(".sav"));
+    TArray<uint8> Bytes;
+    if (!FFileHelper::LoadFileToArray(Bytes, *Path) ||
+        Bytes.IsEmpty() || Bytes.Num() > 262144)
+    {
+        return false;
+    }
+    OutDigest = LexToString(FIoHash::HashBuffer(Bytes.GetData(),
+        static_cast<uint64>(Bytes.Num())));
+    return OutDigest.Len() == 40;
+}
+
+bool LoadBoundReviewContinueCandidate(const UWorld* World, const FString& Slot,
+    UTSTSSSaveGame*& OutSave, UTSTSSReviewContinueManifest*& OutManifest,
+    FString& OutDigest)
+{
+    OutSave = nullptr;
+    OutManifest = nullptr;
+    OutDigest.Reset();
+    if (!World || World->WorldType != EWorldType::PIE ||
+        Slot != ReviewPrimarySlot ||
+        !UGameplayStatics::DoesSaveGameExist(Slot, 0) ||
+        !UGameplayStatics::DoesSaveGameExist(ReviewManifestSlot, 0) ||
+        !DigestExactReviewPrimary(Slot, OutDigest))
+    {
+        return false;
+    }
+    UTSTSSSaveGame* Save = UTSTSSPersistence::LoadProgress(Slot);
+    UTSTSSReviewContinueManifest* Manifest =
+        Cast<UTSTSSReviewContinueManifest>(
+            UGameplayStatics::LoadGameFromSlot(ReviewManifestSlot, 0));
+    if (!IsValid(Save) || !IsValid(Manifest) ||
+        !Manifest->IsBoundFor(Save, Slot, BoundReviewProjectRoot(),
+            BoundReviewMapPackage(World), OutDigest))
+    {
+        return false;
+    }
+    OutSave = Save;
+    OutManifest = Manifest;
+    return true;
+}
+#endif
 }
 
 ATSTSSExplorerCharacter::ATSTSSExplorerCharacter()
@@ -103,6 +174,9 @@ void ATSTSSExplorerCharacter::BeginPlay()
     Super::BeginPlay();
     FirstWakeState = NewObject<UTSTSSFirstWakeState>(this);
     bPIEReviewQuickSlotOwned = false;
+#if WITH_EDITOR
+    bPendingReviewContinue = false;
+#endif
     ShowFirstWakeReviewObjective(FirstWakeState);
 }
 
@@ -117,6 +191,9 @@ void ATSTSSExplorerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
     PlayerInputComponent->BindAction(TEXT("Interact"), IE_Pressed, this, &ATSTSSExplorerCharacter::Interact);
     PlayerInputComponent->BindAction(TEXT("QuickSave"), IE_Pressed, this, &ATSTSSExplorerCharacter::QuickSave);
     PlayerInputComponent->BindAction(TEXT("QuickLoad"), IE_Pressed, this, &ATSTSSExplorerCharacter::QuickLoad);
+#if WITH_EDITOR
+    PlayerInputComponent->BindAction(TEXT("ReviewContinue"), IE_Pressed, this, &ATSTSSExplorerCharacter::ReviewContinue);
+#endif
     PlayerInputComponent->BindAction(TEXT("ReviewObjective"), IE_Pressed, this, &ATSTSSExplorerCharacter::ShowObjectiveReview);
 }
 
@@ -255,12 +332,24 @@ void ATSTSSExplorerCharacter::QuickSave()
     const bool bPIE = World && World->WorldType == EWorldType::PIE;
     const FString Slot = bPIE ? TEXT("tstss_prelude_pie_quick") : TEXT("first_wake_quick");
     if (bPIE && !bPIEReviewQuickSlotOwned &&
-        UGameplayStatics::DoesSaveGameExist(Slot, 0))
+        (UGameplayStatics::DoesSaveGameExist(Slot, 0) ||
+         UGameplayStatics::DoesSaveGameExist(
+             TEXT("tstss_prelude_pie_manifest_v1"), 0)))
     {
         ShowFirstWakeReviewProtectedSlotWarning(false);
         return;
     }
-    const bool bSaved = SaveFirstWake(Slot);
+#if WITH_EDITOR
+    bPendingReviewContinue = false;
+#endif
+    const bool bSavedStory = SaveFirstWake(Slot);
+    bool bSaved = bSavedStory;
+#if WITH_EDITOR
+    if (bPIE && bSavedStory)
+    {
+        bSaved = SaveReviewContinueBinding(Slot);
+    }
+#endif
     if (bPIE && bSaved)
     {
         bPIEReviewQuickSlotOwned = true;
@@ -270,6 +359,9 @@ void ATSTSSExplorerCharacter::QuickSave()
 
 void ATSTSSExplorerCharacter::QuickLoad()
 {
+#if WITH_EDITOR
+    bPendingReviewContinue = false;
+#endif
     const UWorld* World = GetWorld();
     const bool bPIE = World && World->WorldType == EWorldType::PIE;
     const FString Slot = bPIE ? TEXT("tstss_prelude_pie_quick") : TEXT("first_wake_quick");
@@ -356,3 +448,190 @@ bool ATSTSSExplorerCharacter::LoadFirstWake(const FString& Slot)
 #endif
     return bRestored;
 }
+
+#if WITH_EDITOR
+bool ATSTSSExplorerCharacter::SaveReviewContinueBinding(const FString& Slot)
+{
+    const UWorld* World = GetWorld();
+    if (Slot != ReviewPrimarySlot || !World ||
+        World->WorldType != EWorldType::PIE || !IsValid(FirstWakeState))
+    {
+        return false;
+    }
+    FString Digest;
+    if (!DigestExactReviewPrimary(Slot, Digest)) return false;
+
+    UTSTSSReviewContinueManifest* Manifest =
+        NewObject<UTSTSSReviewContinueManifest>(this);
+    if (!IsValid(Manifest)) return false;
+
+    Manifest->PrimarySlot = Slot;
+    Manifest->ProjectRoot = BoundReviewProjectRoot();
+    Manifest->ReviewMapPackage = BoundReviewMapPackage(World);
+    Manifest->PrimaryBlake3_160 = Digest;
+    Manifest->PrimarySchemaVersion = UTSTSSSaveGame::CurrentVersion;
+    Manifest->bSavedStoryStarted = FirstWakeState->HasStarted();
+    Manifest->SavedBeat = FirstWakeState->GetCurrentBeat();
+    Manifest->SavedInspectionMask = FirstWakeState->GetInspectionMask();
+    Manifest->SavedPawnLocation = GetActorLocation();
+    Manifest->SavedPawnRotation = GetActorRotation();
+    Manifest->SavedControlRotation = Controller
+        ? Controller->GetControlRotation() : GetActorRotation();
+
+    // Existing manifest can only be updated after this PIE session owns the
+    // primary slot; QuickSave checks ownership before writing the primary.
+    const bool bStored = UGameplayStatics::SaveGameToSlot(
+        Manifest, ReviewManifestSlot, 0);
+    UE_LOG(LogTemp, Display,
+        TEXT("TSTSS_PIE_REVIEW_CONTINUE_BINDING saved=%d beat=%d slot=%s"),
+        bStored ? 1 : 0, static_cast<int32>(Manifest->SavedBeat), *Slot);
+    return bStored;
+}
+
+void ATSTSSExplorerCharacter::ReviewContinue()
+{
+    UWorld* World = GetWorld();
+    auto Reject = [this](const TCHAR* Reason)
+    {
+        bPendingReviewContinue = false;
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_PIE_REVIEW_CONTINUE_REJECT reason=%s"), Reason);
+        if (GEngine)
+        {
+            GEngine->AddOnScreenDebugMessage(
+                -1, 8.f, FColor::Red,
+                FString::Printf(TEXT("Review Continue refused: %s"), Reason));
+        }
+    };
+
+    if (!World || World->WorldType != EWorldType::PIE ||
+        !IsValid(FirstWakeState))
+    {
+        Reject(TEXT("review_PIE_only"));
+        return;
+    }
+    // F9 remains session-scoped. F6 is a separate explicit action and cannot
+    // silently adopt any save after a fresh Editor process starts.
+    if (bPIEReviewQuickSlotOwned)
+    {
+        Reject(TEXT("session_already_owns_quicksave_use_F9"));
+        return;
+    }
+
+    UTSTSSSaveGame* Saved = nullptr;
+    UTSTSSReviewContinueManifest* Manifest = nullptr;
+    FString Digest;
+    if (!LoadBoundReviewContinueCandidate(
+            World, ReviewPrimarySlot, Saved, Manifest, Digest))
+    {
+        Reject(TEXT("missing_corrupt_foreign_or_flight_save"));
+        return;
+    }
+
+    // A second F6 is effective only for the unchanged state, exact files,
+    // project/world, and same current PIE generation within 30 seconds.
+    const bool bConfirm = bPendingReviewContinue &&
+        World->GetTimeSeconds() <= PendingReviewContinueExpireWorldSeconds &&
+        PendingReviewContinueDigest == Digest &&
+        FirstWakeState->GetRestoreGeneration() ==
+            PendingReviewContinueRestoreGeneration &&
+        FirstWakeState->HasStarted() == bPendingReviewContinueStarted &&
+        FirstWakeState->GetCurrentBeat() == bPendingReviewContinueBeat &&
+        FirstWakeState->GetInspectionMask() ==
+            PendingReviewContinueInspectionMask;
+
+    if (!bConfirm)
+    {
+        bPendingReviewContinue = true;
+        PendingReviewContinueDigest = Digest;
+        PendingReviewContinueExpireWorldSeconds =
+            World->GetTimeSeconds() + 30.f;
+        PendingReviewContinueRestoreGeneration =
+            FirstWakeState->GetRestoreGeneration();
+        bPendingReviewContinueStarted = FirstWakeState->HasStarted();
+        PendingReviewContinueBeat = FirstWakeState->GetCurrentBeat();
+        PendingReviewContinueInspectionMask =
+            FirstWakeState->GetInspectionMask();
+
+        const FString BeatName = StaticEnum<ETSTSSFirstWakeBeat>()->
+            GetNameStringByValue(static_cast<int64>(Saved->FirstWakeBeat));
+        const FString Summary = FString::Printf(
+            TEXT("Continue preview: %s, inspections %u, Ender (%.0f,%.0f,%.0f). Press F6 AGAIN within 30s to confirm."),
+            *BeatName, static_cast<uint32>(Saved->InspectionMask),
+            Manifest->SavedPawnLocation.X, Manifest->SavedPawnLocation.Y,
+            Manifest->SavedPawnLocation.Z);
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_PIE_REVIEW_CONTINUE_PREVIEW beat=%d inspections=%u position=%s confirmation_required=1"),
+            static_cast<int32>(Saved->FirstWakeBeat),
+            static_cast<uint32>(Saved->InspectionMask),
+            *Manifest->SavedPawnLocation.ToCompactString());
+        if (GEngine)
+        {
+            GEngine->AddOnScreenDebugMessage(
+                -1, 30.f, FColor::Cyan, Summary);
+        }
+        return;
+    }
+
+    bPendingReviewContinue = false;
+    // Validate the story restore in an isolated UObject first; no mutations
+    // to the current gameplay state or actor collision on rejected saves.
+    UTSTSSFirstWakeState* Trial =
+        NewObject<UTSTSSFirstWakeState>(this);
+    if (!IsValid(Trial) || !Trial->Restore(
+            Saved->bFirstWakeStarted, Saved->FirstWakeBeat,
+            Saved->InspectionMask))
+    {
+        Reject(TEXT("invalid_story_state"));
+        return;
+    }
+
+    FVector TargetLocation = Manifest->SavedPawnLocation;
+    const FRotator TargetRotation = Manifest->SavedPawnRotation;
+    // Fail closed if the saved pawn would be embedded in collision or moved
+    // far from the position that the player explicitly previewed.
+    if (!World->FindTeleportSpot(this, TargetLocation, TargetRotation) ||
+        FVector::Dist(TargetLocation, Manifest->SavedPawnLocation) > 50.f)
+    {
+        Reject(TEXT("unsafe_saved_player_location"));
+        return;
+    }
+
+    const FVector OriginalLocation = GetActorLocation();
+    const FRotator OriginalRotation = GetActorRotation();
+    if (!TeleportTo(TargetLocation, TargetRotation, false, false))
+    {
+        Reject(TEXT("player_teleport_not_safe"));
+        return;
+    }
+    // Use the same validated story load and review collision reconciliation
+    // as the already tested in-session F9. If it fails, undo the pawn move.
+    if (!LoadFirstWake(ReviewPrimarySlot))
+    {
+        SetActorLocationAndRotation(OriginalLocation, OriginalRotation,
+            false, nullptr, ETeleportType::TeleportPhysics);
+        Reject(TEXT("story_restore_failed"));
+        return;
+    }
+
+    if (Controller)
+    {
+        Controller->SetControlRotation(Manifest->SavedControlRotation);
+    }
+    bPIEReviewQuickSlotOwned = true;
+    UE_LOG(LogTemp, Display,
+        TEXT("TSTSS_PIE_REVIEW_CONTINUE_ACCEPT beat=%d mask=%u location=%s generation=%llu"),
+        static_cast<int32>(FirstWakeState->GetCurrentBeat()),
+        static_cast<uint32>(FirstWakeState->GetInspectionMask()),
+        *GetActorLocation().ToCompactString(),
+        static_cast<unsigned long long>(
+            FirstWakeState->GetRestoreGeneration()));
+    ShowFirstWakeReviewObjective(FirstWakeState);
+    if (GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(
+            -1, 8.f, FColor::Green,
+            TEXT("First Wake review Continue accepted. F9 now uses this session's adopted slot."));
+    }
+}
+#endif
