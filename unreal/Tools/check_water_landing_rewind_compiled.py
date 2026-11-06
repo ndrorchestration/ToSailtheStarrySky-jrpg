@@ -26,7 +26,7 @@ TEST_SOURCE = MODULE / "Private/Tests/TSTSSWaterLandingRestoreTests.cpp"
 FAILURE = "WATER_LANDING_BEHAVIOR_FAILURE: "
 RESTORE_ASSERTION = "No pre-load interval is credited to the first post-load sample"
 FIRST_SAMPLE_ASSERTION = "First qualifying sample anchors an interval but credits no prior time"
-SPEED_LIMIT_ASSERTION = "Above-threshold 25.231 cm/s clears stability"
+SPEED_LIMIT_ASSERTION = "25.231 cm/s is above the stability speed limit"
 FIRST_SAMPLE_ANCHOR = re.compile(
     r"    if \(!bHasPreviousStableSample\)\s*\{\s*"
     r"        bHasPreviousStableSample = true;\s*"
