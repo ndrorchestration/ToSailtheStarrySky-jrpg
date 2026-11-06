@@ -25,6 +25,15 @@ GATE_SOURCE = MODULE / "Private/TSTSSWaterLandingGate.cpp"
 TEST_SOURCE = MODULE / "Private/Tests/TSTSSWaterLandingRestoreTests.cpp"
 FAILURE = "WATER_LANDING_BEHAVIOR_FAILURE: "
 RESTORE_ASSERTION = "No pre-load interval is credited to the first post-load sample"
+FIRST_SAMPLE_ASSERTION = "First qualifying sample anchors an interval but credits no prior time"
+SPEED_LIMIT_ASSERTION = "Above-threshold 25.231 cm/s clears stability"
+FIRST_SAMPLE_ANCHOR = re.compile(
+    r"    if \(!bHasPreviousStableSample\)\s*\{\s*"
+    r"        bHasPreviousStableSample = true;\s*"
+    r"        StableContactSeconds = 0\.f;\s*"
+    r"        return false;\s*\}"
+)
+SPEED_LIMIT_GUARD = re.compile(r"FMath::Abs\(HullVerticalSpeedCms\) > 25\.f")
 RESTORE_GENERATION_GUARD = re.compile(
     r"    const uint64 RestoreGeneration = Story->GetRestoreGeneration\(\);\s*"
     r"    if \(!bHasObservedRestoreGeneration \|\|\s*"
@@ -262,6 +271,34 @@ def main() -> int:
                            + actual.stdout + actual.stderr)
     print(actual.stdout.strip())
     if args.self_test:
+        # Deliberately restore the pre-fix behavior: the first witnessed
+        # stable frame gets its entire prior unobserved dt credited. This
+        # mutation must compile, then fail the precise native test assertion.
+        premature, count = FIRST_SAMPLE_ANCHOR.subn("", gate)
+        if count != 1:
+            raise RuntimeError("First-sample anchor mutation target missing or duplicated")
+        premature_result = compile_and_run(compiler, portable_source(premature))
+        first_expected = FAILURE + FIRST_SAMPLE_ASSERTION
+        if premature_result.returncode != 2 or premature_result.stderr.strip() != first_expected:
+            raise RuntimeError("Premature first-delta credit survived mutation: "
+                               + premature_result.stdout + premature_result.stderr)
+        print("PASS: reintroducing unobserved first-frame credit was rejected by native test body")
+        print("  " + premature_result.stderr.strip())
+
+        # The recorded pre-transition 25.231 cm/s sample must never pass by
+        # widening the existing 25 cm/s motion threshold.
+        permissive, count = SPEED_LIMIT_GUARD.subn(
+            "FMath::Abs(HullVerticalSpeedCms) > 26.f", gate)
+        if count != 1:
+            raise RuntimeError("Speed-limit mutation target missing or duplicated")
+        speed_result = compile_and_run(compiler, portable_source(permissive))
+        speed_expected = FAILURE + SPEED_LIMIT_ASSERTION
+        if speed_result.returncode != 2 or speed_result.stderr.strip() != speed_expected:
+            raise RuntimeError("Speed-limit relaxation survived mutation: "
+                               + speed_result.stdout + speed_result.stderr)
+        print("PASS: widening stability speed limit to 26 cm/s was rejected by native test body")
+        print("  " + speed_result.stderr.strip())
+
         mutated, count = RESTORE_GENERATION_GUARD.subn("", gate)
         if count != 1:
             raise RuntimeError("Restore-generation mutation target is missing or duplicated")
