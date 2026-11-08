@@ -1178,7 +1178,7 @@ function createServer() {
       throw new Error('browser errors:\n' + errors.join('\n'));
     }
 
-    console.log('Aetherwake smoke test: PASS');
+    console.log('To Sail the Starry Sky smoke test: PASS');
     console.log(JSON.stringify({
       openingBootstrap,
       beforeLyraJoin,
@@ -1203,7 +1203,7 @@ function createServer() {
     await new Promise(resolve => server.close(resolve));
   }
 })().catch(err => {
-  console.error('Aetherwake smoke test: FAIL');
+  console.error('To Sail the Starry Sky smoke test: FAIL');
   console.error(err.stack || err.message || String(err));
   process.exit(1);
 });
