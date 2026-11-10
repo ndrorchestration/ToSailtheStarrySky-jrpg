@@ -60,7 +60,7 @@ class ReviewObjectiveSourceTests(unittest.TestCase):
         self.assertIn("ShowFirstWakeReviewSaveLoadStatus(true, bLoaded);", self.explorer)
         self.assertIn("load failed; no progress restored", self.explorer)
         self.assertIn("save failed; progress not confirmed", self.explorer)
-        self.assertIn("F9 does not move pawn; F6 Continue can restore position", self.explorer)
+        self.assertIn("F9 does not move pawn; F7 Continue can restore position", self.explorer)
         self.assertIn("story progress loaded; position unchanged", self.explorer)
         self.assertIn("bSucceeded ? FColor::Green : FColor::Red", self.explorer)
 

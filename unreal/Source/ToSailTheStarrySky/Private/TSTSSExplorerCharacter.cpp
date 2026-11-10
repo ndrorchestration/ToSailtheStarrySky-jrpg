@@ -6,6 +6,8 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/PlayerController.h"
+#include "InputCoreTypes.h"
 #include "Components/InputComponent.h"
 #include "Engine/World.h"
 #include "Engine/Engine.h"
@@ -32,7 +34,7 @@ void ShowFirstWakeReviewSaveLoadStatus(const bool bLoad, const bool bSucceeded)
             ? TEXT("First Wake (review): story progress loaded; position unchanged")
             : TEXT("First Wake (review): load failed; no progress restored"))
         : (bSucceeded
-            ? TEXT("First Wake (review): story saved; F9 does not move pawn; F6 Continue can restore position")
+            ? TEXT("First Wake (review): story saved; F9 does not move pawn; F7 Continue can restore position")
             : TEXT("First Wake (review): save failed; progress not confirmed"));
     GEngine->AddOnScreenDebugMessage(
         -1, 8.f, bSucceeded ? FColor::Green : FColor::Red, Message);
@@ -189,10 +191,23 @@ void ATSTSSExplorerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
     PlayerInputComponent->BindAxis(TEXT("Turn"), this, &ATSTSSExplorerCharacter::Turn);
     PlayerInputComponent->BindAxis(TEXT("LookUp"), this, &ATSTSSExplorerCharacter::LookUp);
     PlayerInputComponent->BindAction(TEXT("Interact"), IE_Pressed, this, &ATSTSSExplorerCharacter::Interact);
-    PlayerInputComponent->BindAction(TEXT("QuickSave"), IE_Pressed, this, &ATSTSSExplorerCharacter::QuickSave);
+    // Maintain the mainline's Shift+F5 safety boundary: Editor PIE saves
+    // only on F6. F5 remains the normal game save key outside PIE.
+    const UWorld* InputWorld = GetWorld();
+    if (InputWorld && InputWorld->WorldType == EWorldType::PIE)
+    {
+        PlayerInputComponent->BindAction(TEXT("PIEReviewQuickSave"), IE_Pressed, this, &ATSTSSExplorerCharacter::QuickSave);
+    }
+    else if (InputWorld && InputWorld->WorldType == EWorldType::Game)
+    {
+        PlayerInputComponent->BindAction(TEXT("QuickSave"), IE_Pressed, this, &ATSTSSExplorerCharacter::QuickSave);
+    }
     PlayerInputComponent->BindAction(TEXT("QuickLoad"), IE_Pressed, this, &ATSTSSExplorerCharacter::QuickLoad);
 #if WITH_EDITOR
-    PlayerInputComponent->BindAction(TEXT("ReviewContinue"), IE_Pressed, this, &ATSTSSExplorerCharacter::ReviewContinue);
+    if (InputWorld && InputWorld->WorldType == EWorldType::PIE)
+    {
+        PlayerInputComponent->BindAction(TEXT("ReviewContinue"), IE_Pressed, this, &ATSTSSExplorerCharacter::ReviewContinue);
+    }
 #endif
     PlayerInputComponent->BindAction(TEXT("ReviewObjective"), IE_Pressed, this, &ATSTSSExplorerCharacter::ShowObjectiveReview);
 }
@@ -330,6 +345,15 @@ void ATSTSSExplorerCharacter::QuickSave()
     // overwrite a leftover review save from another Editor session.
     const UWorld* World = GetWorld();
     const bool bPIE = World && World->WorldType == EWorldType::PIE;
+    if (bPIE)
+    {
+        const APlayerController* PC = Cast<APlayerController>(GetController());
+        if (!PC || PC->IsInputKeyDown(EKeys::LeftShift) ||
+            PC->IsInputKeyDown(EKeys::RightShift))
+        {
+            return;
+        }
+    }
     const FString Slot = bPIE ? TEXT("tstss_prelude_pie_quick") : TEXT("first_wake_quick");
     if (bPIE && !bPIEReviewQuickSlotOwned &&
         (UGameplayStatics::DoesSaveGameExist(Slot, 0) ||
@@ -510,7 +534,7 @@ void ATSTSSExplorerCharacter::ReviewContinue()
         Reject(TEXT("review_PIE_only"));
         return;
     }
-    // F9 remains session-scoped. F6 is a separate explicit action and cannot
+    // F9 remains session-scoped. F7 is a separate explicit action and cannot
     // silently adopt any save after a fresh Editor process starts.
     if (bPIEReviewQuickSlotOwned)
     {
@@ -528,7 +552,7 @@ void ATSTSSExplorerCharacter::ReviewContinue()
         return;
     }
 
-    // A second F6 is effective only for the unchanged state, exact files,
+    // A second F7 is effective only for the unchanged state, exact files,
     // project/world, and same current PIE generation within 30 seconds.
     const bool bConfirm = bPendingReviewContinue &&
         World->GetTimeSeconds() <= PendingReviewContinueExpireWorldSeconds &&
@@ -556,7 +580,7 @@ void ATSTSSExplorerCharacter::ReviewContinue()
         const FString BeatName = StaticEnum<ETSTSSFirstWakeBeat>()->
             GetNameStringByValue(static_cast<int64>(Saved->FirstWakeBeat));
         const FString Summary = FString::Printf(
-            TEXT("Continue preview: %s, inspections %u, Ender (%.0f,%.0f,%.0f). Press F6 AGAIN within 30s to confirm."),
+            TEXT("Continue preview: %s, inspections %u, Ender (%.0f,%.0f,%.0f). Press F7 AGAIN within 30s to confirm."),
             *BeatName, static_cast<uint32>(Saved->InspectionMask),
             Manifest->SavedPawnLocation.X, Manifest->SavedPawnLocation.Y,
             Manifest->SavedPawnLocation.Z);

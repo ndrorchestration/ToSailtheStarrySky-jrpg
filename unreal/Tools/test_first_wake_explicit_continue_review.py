@@ -1,6 +1,6 @@
 """P0-4 engine-free contracts for explicit two-press Continue.
 
-These assertions do not claim real Unreal F6 input, disk restart, or ship-state
+These assertions do not claim real Unreal F7 input, disk restart, or ship-state
 restoration; separate native and actual D3D11 PIE receipts are required.
 """
 from pathlib import Path
@@ -16,10 +16,10 @@ hud=(private/"TSTSSFirstWakeReviewHUD.cpp").read_text()
 native=(private/"Tests/TSTSSFirstWakeInteractionIntegrationTests.cpp").read_text()
 
 class ExplicitContinueContract(unittest.TestCase):
-    def test_separate_visible_f6_action_and_two_step_preview(self):
-        self.assertIn('+ActionMappings=(ActionName="ReviewContinue",Key=F6)',input_config)
+    def test_separate_visible_f7_action_and_two_step_preview(self):
+        self.assertIn('+ActionMappings=(ActionName="ReviewContinue",Key=F7)',input_config)
         self.assertIn('BindAction(TEXT("ReviewContinue")',actor)
-        self.assertIn("F6: Continue preview/confirm",hud)
+        self.assertIn("F7: Continue preview/confirm",hud)
         self.assertIn("TSTSS_PIE_REVIEW_CONTINUE_PREVIEW",actor)
         self.assertIn("TSTSS_PIE_REVIEW_CONTINUE_ACCEPT",actor)
         self.assertIn("World->GetTimeSeconds() + 30.f",actor)
