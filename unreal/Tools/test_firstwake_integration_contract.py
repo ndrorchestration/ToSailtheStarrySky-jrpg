@@ -60,12 +60,22 @@ STORY_MARKERS = (
 
 def contract(sources):
     misses = []
+    # Scope the actor's authority assertions to TryActivate itself:
+    # a separate read-only helper must never satisfy a missing physics guard.
+    start = "bool ATSTSSMilestoneActor::TryActivate("
+    end = "\n#if WITH_EDITOR\nvoid ATSTSSMilestoneActor::ReconcileReviewCollisionAfterRestore("
+    if start not in sources["actor"]:
+        misses.append("actor: TryActivate entrypoint absent")
+        actor_gate = ""
+    else:
+        actor_gate = sources["actor"].split(start, 1)[1].split(end, 1)[0]
     for key, required in (
         ("test", TEST_MARKERS), ("actor", ACTOR_MARKERS),
         ("water", WATER_MARKERS), ("story", STORY_MARKERS),
     ):
         for marker in required:
-            if marker not in sources[key]:
+            examined = actor_gate if key == "actor" else sources[key]
+            if marker not in examined:
                 misses.append(f"{key}: {marker}")
     found = re.findall(
         r'IMPLEMENT_SIMPLE_AUTOMATION_TEST\s*\(\s*\w+\s*,\s*"([^"]+)"',
