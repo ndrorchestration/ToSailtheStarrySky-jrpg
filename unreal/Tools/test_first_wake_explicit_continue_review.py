@@ -34,7 +34,7 @@ class ExplicitContinueContract(unittest.TestCase):
         self.assertNotIn("LoadFirstWake(",begin)
         self.assertNotIn("ReviewContinue(",begin)
 
-    def test_both_primary_and_manifest_preexisting_block_unauthorized_f5(self):
+    def test_both_primary_and_manifest_preexisting_block_unauthorized_pie_f6(self):
         body=actor.split("void ATSTSSExplorerCharacter::QuickSave()",1)[1].split(
             "void ATSTSSExplorerCharacter::QuickLoad()",1)[0]
         self.assertIn("DoesSaveGameExist(Slot, 0)",body)
