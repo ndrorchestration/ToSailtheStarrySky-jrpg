@@ -93,6 +93,7 @@ def analyze(text):
     elapsed_world = 0.0
     elapsed_dt = 0.0
     used = 0
+    observed = []  # Most-recent first; never synthesize missing frames.
     for sample in reversed(physical[:i + 1]):
         speed = _finite(sample, "vertical_speed_cm_s")
         dt = _finite(sample, "dt")
@@ -101,7 +102,17 @@ def analyze(text):
         surface = _finite(sample, "water_surface_z_cm")
         bottom = _finite(sample, "hull_bottom_z_cm")
         submersion = _finite(sample, "submersion")
-        good = (sample["sim"] == "1"
+        # During a witnessed window, genuine samples either hold SeaContact
+        # (5 -> 5), make the *single* flotation transition (5 -> 6), or
+        # begin contact (Launched 4 -> SeaContact 5, zero credited time).
+        # Other story beats must never masquerade as settled water frames.
+        contact_entry = (sample["beat_before"] == "4"
+                         and sample["beat_after"] == "5"
+                         and abs(stable) <= 0.005)
+        at_contact = (sample["beat_before"] == "5"
+                      and sample["beat_after"] in ("5", "6"))
+        good = ((contact_entry or at_contact)
+                and sample["sim"] == "1"
                 and sample["tagged_overlap"] == "1"
                 and sample["immersed"] == "1"
                 and sample["restore_gen"] == generation
@@ -124,7 +135,12 @@ def analyze(text):
             elapsed_world += interval
             elapsed_dt += later_dt
         later = (now, dt, stable)
+        observed.append((dt, stable))
         used += 1
+        if contact_entry:
+            # This frame can anchor the window, but no earlier Launched
+            # frames may be imported as stable SeaContact evidence.
+            break
 
     # Both the independently observed world clock and reported frame deltas
     # must demonstrate the full two seconds. A first frame contributes ZERO
@@ -133,6 +149,15 @@ def analyze(text):
         raise ValueError("incomplete or discontinuous measured two-second contact window")
     if native_stable > elapsed_world + 0.005:
         raise ValueError("native stable timer exceeds directly observed window")
+
+    # A two-second timespan alone does not prove the production gate counted
+    # those frames. Compare the counter advance against each LATER frame dt;
+    # a forged jump at the transition used to pass the elapsed-time check.
+    for (later_dt, later_stable), (_, earlier_stable) in zip(
+            observed, observed[1:]):
+        tolerance = max(0.002, later_dt * 0.15)
+        if abs((later_stable - earlier_stable) - later_dt) > tolerance:
+            raise ValueError("native stable timer progression disagrees with observed frames")
 
     return {
         "status": "DIRECT_NATIVE_WATER_FLOTATION_TIMESERIES_PASS",
