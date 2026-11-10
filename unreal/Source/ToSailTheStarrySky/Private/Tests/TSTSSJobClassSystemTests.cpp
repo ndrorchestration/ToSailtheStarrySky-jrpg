@@ -1,5 +1,6 @@
 #include "Misc/AutomationTest.h"
 #include "TSTSSJobClassSystem.h"
+#include "TSTSSCrewWorkshopReview.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTSTSSHybridCharacterJobContractTest,
@@ -12,9 +13,9 @@ bool FTSTSSHybridCharacterJobContractTest::RunTest(const FString& Parameters)
         FTSTSSJobClassSystem::IsProtagonist(TEXT("Aepex")));
     TestFalse(TEXT("invented identity rejected"),
         FTSTSSJobClassSystem::IsProtagonist(TEXT("TestSixth")));
-    TestEqual(TEXT("Ender native profession remains Rift Scholar"),
+    TestEqual(TEXT("Ender native profession remains Harmonic Resonance Engineer"),
         FTSTSSJobClassSystem::CanonicalNativeProfession(TEXT("Ender")),
-        FName(TEXT("Rift Scholar")));
+        FName(TEXT("Harmonic Resonance Engineer")));
     TestTrue(TEXT("Ionia job remains unnamed"),
         FTSTSSJobClassSystem::CanonicalNativeProfession(TEXT("Ionia")).IsNone());
 
@@ -37,7 +38,7 @@ bool FTSTSSHybridCharacterJobContractTest::RunTest(const FString& Parameters)
 
     FTSTSSJobLoadoutState Ender;
     Ender.CharacterId = TEXT("Ender");
-    Ender.NativeProfession = TEXT("Rift Scholar");
+    Ender.NativeProfession = TEXT("Harmonic Resonance Engineer");
     Ender.PrimaryJob = TEXT("ReviewScholar");
     Ender.CharacterLevel = 9;
     Ender.JobProficiencyById.Add(TEXT("ReviewScholar"), 3);
@@ -83,7 +84,7 @@ bool FTSTSSHybridCharacterJobContractTest::RunTest(const FString& Parameters)
     }
 
     TestEqual(TEXT("native identity immutable"),
-        Output.NativeProfession, FName(TEXT("Rift Scholar")));
+        Output.NativeProfession, FName(TEXT("Harmonic Resonance Engineer")));
     TestEqual(TEXT("character level unchanged"), Output.CharacterLevel, 9);
     TestEqual(TEXT("job proficiency preserved"),
         Output.JobProficiencyById.FindRef(TEXT("ReviewScholar")), 3);
@@ -122,6 +123,148 @@ bool FTSTSSHybridCharacterJobContractTest::RunTest(const FString& Parameters)
     Skill.bAllowExplicitOffJobTransfer = false;
     TestFalse(TEXT("skill policy can revoke transfer eligibility"),
         FTSTSSJobClassSystem::IsSkillEligibleForReview(Output, Skill));
+
+    // Creator requirements: ALL five can equip allowed primary/secondary jobs.
+    // Role/affinity descriptors are never a fixed class admission restriction.
+    const FName CharacterIds[] = {
+        TEXT("Ender"), TEXT("Ionia"), TEXT("Lyra"), TEXT("Reson"), TEXT("Aepex")
+    };
+    const FName Affinities[] = {
+        TEXT("Spirit"), TEXT("Earth"), TEXT("Water"), TEXT("Fire"), TEXT("Air")
+    };
+    for (int32 Index = 0; Index < 5; ++Index)
+    {
+        FTSTSSCrewRoleProfile Profile;
+        TestTrue(TEXT("known protagonist has stable role profile"),
+            FTSTSSCrewWorkshopReview::TryGetRoleProfile(CharacterIds[Index], Profile));
+        TestEqual(TEXT("story affinity preserved"), Profile.FiveLightAffinity,
+            Affinities[Index]);
+        TestTrue(TEXT("every protagonist is job-flexible"), Profile.bCanEquipUnlockedJobs);
+
+        FTSTSSJobLoadoutState Character;
+        Character.CharacterId = CharacterIds[Index];
+        Character.NativeProfession =
+            FTSTSSJobClassSystem::CanonicalNativeProfession(CharacterIds[Index]);
+        Character.ExplicitlyUnlockedJobs.Add(TEXT("ReviewScholar"));
+        Character.ExplicitlyUnlockedJobs.Add(TEXT("ReviewGuard"));
+        FTSTSSJobLoadoutState Selected;
+        TestTrue(TEXT("all five may choose admitted primary plus secondary jobs"),
+            FTSTSSJobClassSystem::TrySelectJobs(
+                Character, Jobs, TEXT("ReviewGuard"), TEXT("ReviewScholar"), Selected));
+        TestEqual(TEXT("primary class is chosen, not fixed to narrative role"),
+            Selected.PrimaryJob, FName(TEXT("ReviewGuard")));
+        TestEqual(TEXT("native identity unaffected by selection"),
+            Selected.NativeProfession, Character.NativeProfession);
+    }
+
+    FTSTSSCrewRoleProfile UnknownProfile;
+    UnknownProfile.CharacterId = TEXT("PreserveSentinel");
+    TestFalse(TEXT("unknown character profile rejected"),
+        FTSTSSCrewWorkshopReview::TryGetRoleProfile(TEXT("Unknown"), UnknownProfile));
+    TestEqual(TEXT("unknown character rejection leaves output unchanged"),
+        UnknownProfile.CharacterId, FName(TEXT("PreserveSentinel")));
+
+    FTSTSSCrewRoleProfile LyraProfile;
+    FTSTSSCrewWorkshopReview::TryGetRoleProfile(TEXT("Lyra"), LyraProfile);
+    TestTrue(TEXT("Lyra naturally heals but is not class-locked"),
+        LyraProfile.bDefaultHealer && LyraProfile.bCanEquipUnlockedJobs);
+    FTSTSSCrewRoleProfile ResonProfile;
+    FTSTSSCrewWorkshopReview::TryGetRoleProfile(TEXT("Reson"), ResonProfile);
+    TestTrue(TEXT("Reson armsmaster and ace pilot are persistent aptitudes"),
+        ResonProfile.bArmsmaster && ResonProfile.bAcePilot);
+    FTSTSSCrewRoleProfile AepexProfile;
+    FTSTSSCrewWorkshopReview::TryGetRoleProfile(TEXT("Aepex"), AepexProfile);
+    TestTrue(TEXT("Aepex can build upgrades independent of battle class"),
+        AepexProfile.bWorkshopBuilder && AepexProfile.bCanEquipUnlockedJobs);
+    FTSTSSCrewRoleProfile IoniaProfile;
+    FTSTSSCrewWorkshopReview::TryGetRoleProfile(TEXT("Ionia"), IoniaProfile);
+    TestTrue(TEXT("Ionia retains captain authority"), IoniaProfile.bCaptain);
+
+    FTSTSSCrewWorkshopReviewState Crew;
+    Crew.RecruitedCharacters.Add(TEXT("Ender"));
+    Crew.RecruitedCharacters.Add(TEXT("Ionia"));
+    Crew.bAtSafeWorkshop = true;
+    Crew.ReviewMaterials.Add(TEXT("ReviewAlloy"), 4);
+    Crew.ExplicitlyUnlockedUpgradeIds.Add(TEXT("ReviewStabilizer"));
+    FTSTSSWorkshopUpgradeReview ReviewUpgrade;
+    ReviewUpgrade.UpgradeId = TEXT("ReviewStabilizer");
+    ReviewUpgrade.Target = ETSTSSWorkshopTarget::Vessel;
+    ReviewUpgrade.TargetId = TEXT("AureateWake");
+    ReviewUpgrade.MaterialId = TEXT("ReviewAlloy");
+    ReviewUpgrade.MaterialCost = 3;
+    ReviewUpgrade.bReviewSelectable = true;
+    ReviewUpgrade.bRequiresEnderObservation = true;
+    ReviewUpgrade.RequiredObservationId = TEXT("ReviewPhaseAnomaly");
+
+    FTSTSSCrewWorkshopReviewState Sentinel;
+    Sentinel.ReviewMaterials.Add(TEXT("Sentinel"), 99);
+    TestFalse(TEXT("Aepex cannot install before joining"),
+        FTSTSSCrewWorkshopReview::TryInstallReviewUpgrade(Crew, ReviewUpgrade, Sentinel));
+    TestEqual(TEXT("denial preserves caller destination"),
+        Sentinel.ReviewMaterials.FindRef(TEXT("Sentinel")), 99);
+    Crew.RecruitedCharacters.Add(TEXT("Aepex"));
+    Crew.bCaptainAuthorizedVesselWork = true;
+    TestFalse(TEXT("harmonic upgrade requires observed clue"),
+        FTSTSSCrewWorkshopReview::TryInstallReviewUpgrade(Crew, ReviewUpgrade, Sentinel));
+    TestFalse(TEXT("unobserved diagnostic cannot be recorded"),
+        FTSTSSCrewWorkshopReview::TryRecordEngineObservation(
+            Crew, TEXT("ReviewPhaseAnomaly"), false, Sentinel));
+    TestTrue(TEXT("Ender records direct clue without claiming its meaning"),
+        FTSTSSCrewWorkshopReview::TryRecordEngineObservation(
+            Crew, TEXT("ReviewPhaseAnomaly"), true, Sentinel));
+    TestFalse(TEXT("recorded clue does not auto-install upgrade"),
+        Sentinel.InstalledReviewUpgradeIds.Contains(TEXT("ReviewStabilizer")));
+    TestFalse(TEXT("missing captain approval denies vessel work"),
+        [&]()
+        {
+            FTSTSSCrewWorkshopReviewState Blocked = Sentinel;
+            Blocked.bCaptainAuthorizedVesselWork = false;
+            return FTSTSSCrewWorkshopReview::TryInstallReviewUpgrade(
+                Blocked, ReviewUpgrade, Crew);
+        }());
+
+    FTSTSSCrewWorkshopReviewState Installed;
+    TestTrue(TEXT("Aepex + Ender clue + Ionia authority permits review installation"),
+        FTSTSSCrewWorkshopReview::TryInstallReviewUpgrade(
+            Sentinel, ReviewUpgrade, Installed));
+    TestEqual(TEXT("material deduction is transactional"),
+        Installed.ReviewMaterials.FindRef(TEXT("ReviewAlloy")), 1);
+    TestTrue(TEXT("installed review receipt recorded"),
+        Installed.InstalledReviewUpgradeIds.Contains(TEXT("ReviewStabilizer")));
+    TestEqual(TEXT("original inventory is untouched"),
+        Sentinel.ReviewMaterials.FindRef(TEXT("ReviewAlloy")), 4);
+    TestFalse(TEXT("duplicate upgrade rejected"),
+        FTSTSSCrewWorkshopReview::TryInstallReviewUpgrade(
+            Installed, ReviewUpgrade, Crew));
+
+    FTSTSSWorkshopUpgradeReview GearUpgrade = ReviewUpgrade;
+    GearUpgrade.UpgradeId = TEXT("ReviewGear");
+    GearUpgrade.Target = ETSTSSWorkshopTarget::Equipment;
+    GearUpgrade.TargetId = TEXT("ReviewBoots");
+    GearUpgrade.MaterialCost = 1;
+    GearUpgrade.bRequiresEnderObservation = false;
+    GearUpgrade.RequiredObservationId = NAME_None;
+    Installed.ExplicitlyUnlockedUpgradeIds.Add(GearUpgrade.UpgradeId);
+    TestTrue(TEXT("Aepex can independently install ordinary gear upgrades"),
+        FTSTSSCrewWorkshopReview::TryInstallReviewUpgrade(
+            Installed, GearUpgrade, Crew));
+    TestEqual(TEXT("ordinary gear spends its reviewed material"),
+        Crew.ReviewMaterials.FindRef(TEXT("ReviewAlloy")), 0);
+    GearUpgrade.Target = static_cast<ETSTSSWorkshopTarget>(255);
+    TestFalse(TEXT("invalid workshop target fails closed"),
+        FTSTSSCrewWorkshopReview::TryInstallReviewUpgrade(
+            Installed, GearUpgrade, Crew));
+
+    // Regression: the former protagonist title belongs to the Wise Woman NPC,
+    // not Ender's current profession, and cannot pass native identity checks.
+    Ender.NativeProfession = TEXT("Rift Scholar");
+    FTSTSSJobLoadoutState FormerProfessionRejected;
+    FormerProfessionRejected.CharacterId = TEXT("PreserveSentinel");
+    TestFalse(TEXT("superseded Rift Scholar identity must not equip Ender jobs"),
+        FTSTSSJobClassSystem::TrySelectJobs(
+            Ender, Jobs, TEXT("ReviewGuard"), NAME_None, FormerProfessionRejected));
+    TestEqual(TEXT("old-profession rejection preserves output"),
+        FormerProfessionRejected.CharacterId, FName(TEXT("PreserveSentinel")));
 
     Ender.NativeProfession = TEXT("InventedClass");
     FTSTSSJobLoadoutState Rejected;

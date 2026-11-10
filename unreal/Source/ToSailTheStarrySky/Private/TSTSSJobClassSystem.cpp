@@ -41,7 +41,7 @@ bool FTSTSSJobClassSystem::IsProtagonist(FName CharacterId)
 
 FName FTSTSSJobClassSystem::CanonicalNativeProfession(FName CharacterId)
 {
-    return CharacterId == TEXT("Ender") ? FName(TEXT("Rift Scholar")) : NAME_None;
+    return CharacterId == TEXT("Ender") ? FName(TEXT("Harmonic Resonance Engineer")) : NAME_None;
 }
 
 bool FTSTSSJobClassSystem::TrySelectJobs(

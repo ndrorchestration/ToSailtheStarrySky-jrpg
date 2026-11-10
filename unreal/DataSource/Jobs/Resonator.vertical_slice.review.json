@@ -1,0 +1,16 @@
+[
+  {
+    "Name": "Resonator",
+    "JobId": "Resonator",
+    "DisplayName": "Resonator",
+    "ReviewStatus": "ReviewSelectable",
+    "bPrimaryEligible": true,
+    "bSecondaryEligible": false,
+    "CurriculumFamilies": [
+      "ResonanceHarmonic",
+      "Correspondence",
+      "PsychicPsion",
+      "Synergy"
+    ]
+  }
+]

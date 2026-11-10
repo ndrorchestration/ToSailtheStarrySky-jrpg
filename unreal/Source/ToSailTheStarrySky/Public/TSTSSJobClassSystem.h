@@ -23,6 +23,12 @@ struct TOSAILTHESTARRYSKY_API FTSTSSJobDefinitionRow : public FTableRowBase
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Review") ETSTSSJobReviewStatus ReviewStatus = ETSTSSJobReviewStatus::DesignOnly;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Loadout") bool bPrimaryEligible = true;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Loadout") bool bSecondaryEligible = false;
+
+    // Explicitly authored curriculum availability, NOT skill knowledge,
+    // innate magical affinity, mastery, or authority to execute a spell.
+    // E.g. creator-selected vertical-slice Resonator covers 4 families.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Job|Curriculum")
+    TArray<FName> CurriculumFamilies;
 };
 
 // Volatile review-model state. This is deliberately NOT a UPROPERTY, SaveGame,
@@ -59,7 +65,8 @@ struct FTSTSSJobSkillPolicy
 class TOSAILTHESTARRYSKY_API FTSTSSJobClassSystem
 {
 public:
-    // Only Ender's Rift Scholar profession has a creator-approved name.
+    // Ender's permanent trade is Harmonic Resonance Engineer; combat job remains flexible.
+    // Rift Scholar remains a distinct supporting-NPC profession (Wise Woman), not Ender's.
     // A missing profession for other protagonists is intentionally not invented.
     static bool IsProtagonist(FName CharacterId);
     static FName CanonicalNativeProfession(FName CharacterId);

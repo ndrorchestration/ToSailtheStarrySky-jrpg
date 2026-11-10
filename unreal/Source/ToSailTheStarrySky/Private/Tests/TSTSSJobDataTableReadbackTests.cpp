@@ -1,5 +1,7 @@
 #include "Misc/AutomationTest.h"
 #include "Engine/DataTable.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
 #include "UObject/UObjectGlobals.h"
 #include "TSTSSJobClassSystem.h"
 
@@ -81,7 +83,7 @@ bool FTSTSSJobTableReadbackTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("strict catalog contains two rows"), Definitions.Num(), 2);
     FTSTSSJobLoadoutState Ender;
     Ender.CharacterId = TEXT("Ender");
-    Ender.NativeProfession = TEXT("Rift Scholar");
+    Ender.NativeProfession = TEXT("Harmonic Resonance Engineer");
     Ender.ExplicitlyUnlockedJobs.Add(Scholar->JobId);
     Ender.ExplicitlyUnlockedJobs.Add(Guard->JobId);
     FTSTSSJobLoadoutState Output;
@@ -91,6 +93,110 @@ bool FTSTSSJobTableReadbackTest::RunTest(const FString& Parameters)
             Ender, Definitions, Scholar->JobId, NAME_None, Output));
     TestEqual(TEXT("data-driven rejection keeps caller output unchanged"),
         Output.CharacterId, FName(TEXT("NeverOverwrite")));
+
+    // The creator-selected class has a checked-in, source-locked authoring
+    // row. This import never changes a production asset or grants a skill.
+    const FString SlicePath = FPaths::Combine(
+        FPaths::ProjectDir(),
+        TEXT("DataSource/Jobs/Resonator.vertical_slice.review.json"));
+    FString SliceJson;
+    if (!TestTrue(TEXT("Resonator authoring file present"),
+        FFileHelper::LoadFileToString(SliceJson, *SlicePath)))
+    {
+        return false;
+    }
+    UDataTable* SliceJobTable = NewObject<UDataTable>(GetTransientPackage());
+    SliceJobTable->CreateTableFromRawData(
+        NoInitialRows, FTSTSSJobDefinitionRow::StaticStruct());
+    const TArray<FString> SliceImportProblems =
+        SliceJobTable->CreateTableFromJSONString(SliceJson);
+    for (const FString& Problem : SliceImportProblems)
+    {
+        AddError(FString::Printf(TEXT("Resonator review JSON import: %s"), *Problem));
+    }
+    if (!TestEqual(TEXT("Resonator import has no errors"),
+        SliceImportProblems.Num(), 0)
+        || !TestEqual(TEXT("one authored Resonator job row"),
+        SliceJobTable->GetRowMap().Num(), 1))
+    {
+        return false;
+    }
+    TMap<FName, FTSTSSJobDefinitionRow> SliceJobDefinitions;
+    if (!TestTrue(TEXT("strict Resonator catalog readback"),
+        FTSTSSJobClassSystem::TryReadJobDefinitionsForReview(
+            *SliceJobTable, SliceJobDefinitions)))
+    {
+        return false;
+    }
+    const FTSTSSJobDefinitionRow* ReadBackResonator =
+        SliceJobDefinitions.Find(FName(TEXT("Resonator")));
+    if (!TestNotNull(TEXT("Resonator curriculum row found"), ReadBackResonator))
+    {
+        return false;
+    }
+    TestEqual(TEXT("four class curriculum families"),
+        ReadBackResonator->CurriculumFamilies.Num(), 4);
+    TestTrue(TEXT("harmonic curriculum included"),
+        ReadBackResonator->CurriculumFamilies.Contains(TEXT("ResonanceHarmonic")));
+    TestTrue(TEXT("correspondence curriculum included"),
+        ReadBackResonator->CurriculumFamilies.Contains(TEXT("Correspondence")));
+    TestTrue(TEXT("psionic curriculum included"),
+        ReadBackResonator->CurriculumFamilies.Contains(TEXT("PsychicPsion")));
+    TestTrue(TEXT("synergy curriculum included"),
+        ReadBackResonator->CurriculumFamilies.Contains(TEXT("Synergy")));
+    TestTrue(TEXT("job is review-selectable, not executable"),
+        ReadBackResonator->ReviewStatus == ETSTSSJobReviewStatus::ReviewSelectable);
+
+    FTSTSSJobLoadoutState SliceEnder = Ender;
+    SliceEnder.PrimaryJob = NAME_None;
+    FTSTSSJobLoadoutState SliceOutput;
+    SliceOutput.CharacterId = TEXT("PreserveNoAutoJob");
+    TestFalse(TEXT("creator choice cannot bypass explicit character job unlock"),
+        FTSTSSJobClassSystem::TrySelectJobs(
+            SliceEnder, SliceJobDefinitions, TEXT("Resonator"), NAME_None, SliceOutput));
+    TestEqual(TEXT("unlock denial preserves output"),
+        SliceOutput.CharacterId, FName(TEXT("PreserveNoAutoJob")));
+
+    SliceEnder.ExplicitlyUnlockedJobs.Add(TEXT("Resonator"));
+    FTSTSSJobLoadoutState SliceSelected;
+    if (!TestTrue(TEXT("explicit unlocked Resonator primary job selected"),
+        FTSTSSJobClassSystem::TrySelectJobs(
+            SliceEnder, SliceJobDefinitions, TEXT("Resonator"), NAME_None,
+            SliceSelected)))
+    {
+        return false;
+    }
+    TestEqual(TEXT("Resonator is selected primary job"),
+        SliceSelected.PrimaryJob, FName(TEXT("Resonator")));
+    TestEqual(TEXT("profession preserved independent of job"),
+        SliceSelected.NativeProfession, FName(TEXT("Harmonic Resonance Engineer")));
+    TestTrue(TEXT("no invented secondary specialization"),
+        SliceSelected.SecondaryJob.IsNone());
+    TestTrue(TEXT("Psychic mastery not invented by class selection"),
+        !SliceSelected.SchoolMasteryById.Contains(TEXT("Psychic")));
+    TestTrue(TEXT("no learned skill granted by class selection"),
+        SliceSelected.LearnedSkillIds.IsEmpty());
+    TestTrue(TEXT("initial state not mutated by selection"),
+        SliceEnder.PrimaryJob.IsNone());
+
+    FTSTSSJobSkillPolicy UnlearnedPsion;
+    UnlearnedPsion.SkillId = TEXT("ReviewPsychicUnlearned");
+    UnlearnedPsion.TrainedJobId = TEXT("Resonator");
+    TestFalse(TEXT("Resonator does not grant an unlearned Psion spell"),
+        FTSTSSJobClassSystem::IsSkillEligibleForReview(
+            SliceSelected, UnlearnedPsion));
+
+    FTSTSSJobDefinitionRow Disabled = *ReadBackResonator;
+    Disabled.ReviewStatus = ETSTSSJobReviewStatus::DesignOnly;
+    SliceJobDefinitions.Add(TEXT("Resonator"), Disabled);
+    FTSTSSJobLoadoutState RevokedOutput;
+    RevokedOutput.CharacterId = TEXT("Unchanged");
+    TestFalse(TEXT("review approval revocation fails closed"),
+        FTSTSSJobClassSystem::TrySelectJobs(
+            SliceEnder, SliceJobDefinitions, TEXT("Resonator"), NAME_None,
+            RevokedOutput));
+    TestEqual(TEXT("revocation leaves output unchanged"),
+        RevokedOutput.CharacterId, FName(TEXT("Unchanged")));
 
     // A DataTable row can have a distinct key and in-row JobId. Reject the
     // whole catalog instead of silently overwriting the first definition.
