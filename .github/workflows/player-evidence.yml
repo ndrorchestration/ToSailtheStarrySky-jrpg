@@ -42,4 +42,4 @@ jobs:
           name: aetherwake-player-evidence-${{ github.sha }}
           path: evidence/player-acceptance/
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 1
