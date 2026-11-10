@@ -39,3 +39,15 @@ Verification boundary: static/source-level review is not native Win64 or playabl
 Ender's canonical native profession is now **Harmonic Resonance Engineer**, superseding the previously authored Rift Scholar identity. He retains four innate magical specialties **Aether, Resonance/Harmonic, Correspondence, and Lumen**, separate from his **Spirit** Five Lights affinity. **Rift Scholar** remains in the setting as the unnamed **Wise Woman's NPC profession**, not an explicitly unlocked or automatically playable class. Her exact magic, plot beats and first encounter remain open.
 
 The guarded **FTSTSSJobClassSystem** native-profession contract and fixtures were revised as a follow-on source candidate. All five protagonists still retain their separately unlocked, swappable primary/secondary combat jobs. This is a source-level narrative identity correction, not an actual implemented Wise Woman actor, new spell or class-menu feature. Fresh same-head Unreal build and automation remain required.
+
+## Creator-selected Ender vertical-slice primary class — November 10, 2026
+
+The creator has selected **Resonator** for Ender's equipped primary combat job in the vertical slice. This is distinct from his fixed trade **Harmonic Resonance Engineer** and from the Wise Woman NPC's Rift Scholar profession.
+
+The class includes a **complete eligible curriculum scope** across **Resonance/Harmonic, Correspondence, Psion/Psychic, and Synergy/combination** magic. Historical catalog shorthand ("Resonance + Technomancy") is superseded for this vertical-slice class. His four **innate** magic affinities remain **Aether, Resonance/Harmonic, Correspondence, Lumen**. Spirit remains his Five Lights story affiliation.
+
+**Source slice:** `FTSTSSJobDefinitionRow::CurriculumFamilies` supplies authored curriculum family metadata without granting spells, school mastery or combat authority. The transient in-memory `TSTSS.Design.HybridJobTableReadback` fixture now checks all four Resonator families, rejects DesignOnly class selection even if nominally unlocked, and rejects unlearned Psychic spell use. It does not auto-equip a production default or create saved DataTables/Content assets.
+
+**Next actual gameplay gates:** add creator-approved starting skills and explicit primary job assignment, executable class permission row, three-active combat and stable save/load; test C++/UHT in Unreal 5.8.4 at the current exact head. No silent job-lock, granted Psion mastery, global synergy permission, Shine changes, production merge or hidden vessel gate changes.
+
+Authority: [Notion Resonator vertical-slice class contract](https://app.notion.com/p/414f5bad238b8114a732c153578fd190).

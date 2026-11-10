@@ -92,6 +92,68 @@ bool FTSTSSJobTableReadbackTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("data-driven rejection keeps caller output unchanged"),
         Output.CharacterId, FName(TEXT("NeverOverwrite")));
 
+    // Creator-selected slice job: RESONATOR. This is a design-only curriculum
+    // declaration, not a class unlock or a spell-granting runtime row.
+    UDataTable* SliceJobTable = NewObject<UDataTable>(GetTransientPackage());
+    SliceJobTable->CreateTableFromRawData(
+        NoInitialRows, FTSTSSJobDefinitionRow::StaticStruct());
+    FTSTSSJobDefinitionRow ResonatorRow;
+    ResonatorRow.JobId = TEXT("Resonator");
+    ResonatorRow.DisplayName = FText::FromString(TEXT("Resonator"));
+    ResonatorRow.ReviewStatus = ETSTSSJobReviewStatus::DesignOnly;
+    ResonatorRow.CurriculumFamilies.Add(TEXT("ResonanceHarmonic"));
+    ResonatorRow.CurriculumFamilies.Add(TEXT("Correspondence"));
+    ResonatorRow.CurriculumFamilies.Add(TEXT("PsychicPsion"));
+    ResonatorRow.CurriculumFamilies.Add(TEXT("Synergy"));
+    SliceJobTable->AddRow(TEXT("Resonator"), ResonatorRow);
+    TMap<FName, FTSTSSJobDefinitionRow> SliceJobDefinitions;
+    if (!TestTrue(TEXT("review slice class catalog accepted"),
+        FTSTSSJobClassSystem::TryReadJobDefinitionsForReview(
+            *SliceJobTable, SliceJobDefinitions)))
+    {
+        return false;
+    }
+    const FTSTSSJobDefinitionRow* ReadBackResonator =
+        SliceJobDefinitions.Find(FName(TEXT("Resonator")));
+    if (!TestNotNull(TEXT("Resonator curriculum row present"),
+        ReadBackResonator))
+    {
+        return false;
+    }
+    TestEqual(TEXT("four complete Resonator curriculum families authored"),
+        ReadBackResonator->CurriculumFamilies.Num(), 4);
+    TestTrue(TEXT("harmonic curriculum included"),
+        ReadBackResonator->CurriculumFamilies.Contains(TEXT("ResonanceHarmonic")));
+    TestTrue(TEXT("correspondence curriculum included"),
+        ReadBackResonator->CurriculumFamilies.Contains(TEXT("Correspondence")));
+    TestTrue(TEXT("psionic curriculum included"),
+        ReadBackResonator->CurriculumFamilies.Contains(TEXT("PsychicPsion")));
+    TestTrue(TEXT("synergy curriculum included"),
+        ReadBackResonator->CurriculumFamilies.Contains(TEXT("Synergy")));
+    TestTrue(TEXT("creator job choice does not confer executable admission"),
+        ReadBackResonator->ReviewStatus == ETSTSSJobReviewStatus::DesignOnly);
+
+    FTSTSSJobLoadoutState SliceEnder = Ender;
+    SliceEnder.ExplicitlyUnlockedJobs.Add(TEXT("Resonator"));
+    FTSTSSJobLoadoutState SliceOutput;
+    SliceOutput.CharacterId = TEXT("PreserveNoAutoJob");
+    TestFalse(TEXT("design-only Resonator cannot be selected for runtime"),
+        FTSTSSJobClassSystem::TrySelectJobs(
+            SliceEnder, SliceJobDefinitions, TEXT("Resonator"),
+            NAME_None, SliceOutput));
+    TestEqual(TEXT("unadmitted slice choice does not mutate caller"),
+        SliceOutput.CharacterId, FName(TEXT("PreserveNoAutoJob")));
+
+    FTSTSSJobSkillPolicy UnlearnedPsion;
+    UnlearnedPsion.SkillId = TEXT("ReviewPsychicUnlearned");
+    UnlearnedPsion.TrainedJobId = TEXT("Resonator");
+    SliceEnder.PrimaryJob = TEXT("Resonator");
+    TestFalse(TEXT("resonator curriculum grants no unlearned psion spell"),
+        FTSTSSJobClassSystem::IsSkillEligibleForReview(
+            SliceEnder, UnlearnedPsion));
+    TestFalse(TEXT("innate magic profile unaffected by curriculum metadata"),
+        SliceEnder.SchoolMasteryById.Contains(TEXT("Psychic")));
+
     // A DataTable row can have a distinct key and in-row JobId. Reject the
     // whole catalog instead of silently overwriting the first definition.
     FTSTSSJobDefinitionRow Alias = Definitions.FindChecked(FName(TEXT("ReviewScholar")));
