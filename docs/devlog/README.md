@@ -12,6 +12,15 @@ Limitations: first 100 records per API category; this repository only; default-b
 
 The dedicated Notion [To Sail the Starry Sky — Game Development Log](https://app.notion.com/p/bec804bcc2874f4f961d6bbe1cfba3e7) is the game-specific human-facing journal. The [ecosystem overview](https://app.notion.com/p/b43e97712d2642c988704fdcf113a45f) is only an index/projection, not a second independent source of truth. The Notion log is not automatically populated by this repository-local workflow. Private gameplay spoilers and local native receipts are not imported into this public repository.
 
+## AI From Zero content idea funnel
+
+Each generated daily GitHub report now includes **AFZ story lead suggestions — review only** when a failed CI check, research/prototype PR, draft PR, or successful CI run provides a bounded prompt. These are rule-based suggestions (not a claim that a feature works or the AI has watched footage).
+
+- The project-specific Notion game log exposes **AFZ Content Potential**, **AFZ Content Hook**, and a relation to **AFZ Story Leads**.
+- The shared [AI From Zero — Dream Games Story & Episode Idea Pipeline](https://app.notion.com/p/3bcc35ed8f72418f9ed258368d624b70) captures ideas for separate **future** game-build diary playlists and general educational episodes.
+- Review/transfer of suggestions to Notion is **manual** at present. Neither the scheduled reporter nor the draft PR creates a YouTube playlist, assigns an AFZ episode number, films footage, publishes content, or changes the game.
+- Public-safe footage and exact source/native verification are required before recording any claim about a working or completed feature.
+
 ## Verification and activation
 
 1. Run the unit tests in the draft PR and inspect the exact-head CI result.

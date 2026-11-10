@@ -26,3 +26,18 @@ test("Fix prefix remains qualified",()=>{
     commits:[{sha:"abc123456789",commit:{committer:{date:"2026-11-10T03:00:00Z"},message:"fix: input collision"},html_url:"https://github.com/owner/game/commit/abc123456789"}]});
   assert.match(report,/fix-labeled changes, not automatically independently verified/);
 });
+
+test("AFZ story lead retains source link and draft qualification",()=>{
+  const report=summarize({day:"2026-11-09",repo:"owner/game",branch:"main",commits:[],issues:[],runs:[],
+    prs:[{number:8,title:"prototype new map",updated_at:"2026-11-10T03:00:00Z",html_url:"https://github.com/owner/game/pull/8",draft:true,state:"open",head:{sha:"abcdef12345"}}]});
+  assert.match(report,/AFZ story lead suggestions — review only/);
+  assert.match(report,/Prototype diary candidate/);
+  assert.match(report,/github.com\/owner\/game\/pull\/8/);
+  assert.match(report,/not scripts, assigned episodes/);
+});
+test("No GitHub activity does not fabricate an episode idea",()=>{
+  const report=summarize({day:"2026-11-09",repo:"owner/game",branch:"main",commits:[],prs:[],issues:[],runs:[]});
+  assert.match(report,/AFZ story lead suggestions — review only/);
+  assert.match(report,/No entries found in the bounded GitHub sample/);
+  assert.doesNotMatch(report,/Failure diary candidate/);
+});

@@ -19,6 +19,12 @@ function summarize({day,repo,branch,commits,prs,issues,runs}){
   const xp=dp.filter(p=>/\b(?:experiment|prototype|trial|spike|research|try)\b/i.test(p.title||""));
   const failed=dr.filter(r=>["failure","timed_out","cancelled","action_required"].includes(r.conclusion));
   const open=di.filter(i=>i.state==="open");
+  const afz=[];
+  if(failed.length)afz.push("**Failure diary candidate:** What failed in "+link(failed[0].name+" #"+failed[0].run_number,failed[0].html_url)+" and how I plan to verify the repair. A failed run is not evidence that the defect was fixed.");
+  if(xp.length)afz.push("**Prototype diary candidate:** What I tried with "+link("#"+xp[0].number+" "+xp[0].title,xp[0].html_url)+" and what remains unverified.");
+  const draft=dp.find(p=>p.draft);
+  if(draft && !xp.some(p=>p.number===draft.number))afz.push("**Beginner progress candidate:** Why "+link("draft PR #"+draft.number+" "+draft.title,draft.html_url)+" isn't yet proof I have a playable feature.");
+  if(!afz.length && dr.some(r=>r.conclusion==="success")){const ok=dr.find(r=>r.conclusion==="success");afz.push("**Testing lesson candidate:** What a green "+link(ok.name+" CI run",ok.html_url)+" does and does not prove about playing the game.");}
   const short=s=>String(s||"").slice(0,12);
   const pr=p=>link("#"+p.number+" "+p.title,p.html_url)+" — "+(p.merged_at?"merged":p.draft?"draft, unmerged":p.state+", unmerged")+"; head "+short(p.head?.sha);
   return [
@@ -38,6 +44,9 @@ function summarize({day,repo,branch,commits,prs,issues,runs}){
     "## Problems and open blockers",bullets(failed,r=>link(r.name+" #"+r.run_number,r.html_url)+" — "+r.conclusion),"",
     "**Open issues updated that day** (updates do not prove a new issue arose):",
     bullets(open,i=>link("#"+i.number+" "+i.title,i.html_url)),"",
+    "## AFZ story lead suggestions — review only",
+    "These are optional beginner-build-diary editorial hooks from public GitHub activity, not scripts, assigned episodes, approved game footage, or published YouTube playlists. Verify source dates, spoilers, native evidence and rights before using. Submit selected leads to the relevant AFZ game story pipeline in Notion.",
+    bullets(afz,x=>x),"",
     "## Evidence boundaries / next review",
     "- This is a source-activity index, not an accepted-feature changelog or a complete work-session record.",
     "- Coverage is limited to the latest 100 records per GitHub endpoint and this repository; local work, unpushed branches, private receipts, Notion-only work, and cross-repo activity are not included.",
