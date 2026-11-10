@@ -81,7 +81,7 @@ bool FTSTSSJobTableReadbackTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("strict catalog contains two rows"), Definitions.Num(), 2);
     FTSTSSJobLoadoutState Ender;
     Ender.CharacterId = TEXT("Ender");
-    Ender.NativeProfession = TEXT("Rift Scholar");
+    Ender.NativeProfession = TEXT("Harmonic Resonance Engineer");
     Ender.ExplicitlyUnlockedJobs.Add(Scholar->JobId);
     Ender.ExplicitlyUnlockedJobs.Add(Guard->JobId);
     FTSTSSJobLoadoutState Output;

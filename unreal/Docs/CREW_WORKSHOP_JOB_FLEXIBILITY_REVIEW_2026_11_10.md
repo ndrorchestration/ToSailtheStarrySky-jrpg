@@ -7,7 +7,7 @@ Engine: Unreal 5.8.4. Do not implement forward development in Godot.
 ## Creator-approved rules respected
 
 - **All five protagonists** retain native story/profession identity plus independently selectable, explicitly unlocked primary/secondary combat jobs. Existing `FTSTSSJobClassSystem::TrySelectJobs` remains the only reviewed job-selection guard; this change does not duplicate, weaken or bypass its fail-closed rules.
-- Ender is Rift Scholar, harmonic-engine expert, Spirit-aligned, highest initial MAG/MP and second-lowest HP. The ship challenges his real expertise. Its anomalous instruments should be investigated, not diagnosed by fiat; apparent awareness remains ambiguous.
+- Ender is Harmonic Resonance Engineer, harmonic-engine expert, Spirit-aligned, highest initial MAG/MP and second-lowest HP. The ship challenges his real expertise. Its anomalous instruments should be investigated, not diagnosed by fiat; apparent awareness remains ambiguous.
 - Ionia remains Earth-aligned captain, owner and operational authority; her combat class is flexible.
 - Lyra is Water-aligned, the second-strongest starting magic user with lowest HP, and a **default healer**, never a permanently locked healer. She may equip other admitted jobs.
 - Reson is Fire-aligned **Armsmaster and ace pilot**; these are persistent aptitudes, not an exclusive warrior-job lock. Being an ace pilot does not transfer captaincy.
@@ -33,3 +33,9 @@ Existing `TSTSS.Design.HybridCharacterJobs` automation covers all-five class swi
 - Advanced crew-and-ship resonance and concealed form implementation remain restricted, separately gated and outside public source. No main merge or release.
 
 Verification boundary: static/source-level review is not native Win64 or playable proof. Remote Unreal device availability must be independently checked before claiming execution.
+
+## Creator canon correction — November 10, 2026
+
+Ender's canonical native profession is now **Harmonic Resonance Engineer**, superseding the previously authored Rift Scholar identity. He retains four innate magical specialties **Aether, Resonance/Harmonic, Correspondence, and Lumen**, separate from his **Spirit** Five Lights affinity. **Rift Scholar** remains in the setting as the unnamed **Wise Woman's NPC profession**, not an explicitly unlocked or automatically playable class. Her exact magic, plot beats and first encounter remain open.
+
+The guarded **FTSTSSJobClassSystem** native-profession contract and fixtures were revised as a follow-on source candidate. All five protagonists still retain their separately unlocked, swappable primary/secondary combat jobs. This is a source-level narrative identity correction, not an actual implemented Wise Woman actor, new spell or class-menu feature. Fresh same-head Unreal build and automation remain required.

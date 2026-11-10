@@ -59,7 +59,8 @@ struct FTSTSSJobSkillPolicy
 class TOSAILTHESTARRYSKY_API FTSTSSJobClassSystem
 {
 public:
-    // Only Ender's Rift Scholar profession has a creator-approved name.
+    // Ender's permanent trade is Harmonic Resonance Engineer; combat job remains flexible.
+    // Rift Scholar remains a distinct supporting-NPC profession (Wise Woman), not Ender's.
     // A missing profession for other protagonists is intentionally not invented.
     static bool IsProtagonist(FName CharacterId);
     static FName CanonicalNativeProfession(FName CharacterId);

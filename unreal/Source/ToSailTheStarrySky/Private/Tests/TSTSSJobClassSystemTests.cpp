@@ -13,9 +13,9 @@ bool FTSTSSHybridCharacterJobContractTest::RunTest(const FString& Parameters)
         FTSTSSJobClassSystem::IsProtagonist(TEXT("Aepex")));
     TestFalse(TEXT("invented identity rejected"),
         FTSTSSJobClassSystem::IsProtagonist(TEXT("TestSixth")));
-    TestEqual(TEXT("Ender native profession remains Rift Scholar"),
+    TestEqual(TEXT("Ender native profession remains Harmonic Resonance Engineer"),
         FTSTSSJobClassSystem::CanonicalNativeProfession(TEXT("Ender")),
-        FName(TEXT("Rift Scholar")));
+        FName(TEXT("Harmonic Resonance Engineer")));
     TestTrue(TEXT("Ionia job remains unnamed"),
         FTSTSSJobClassSystem::CanonicalNativeProfession(TEXT("Ionia")).IsNone());
 
@@ -38,7 +38,7 @@ bool FTSTSSHybridCharacterJobContractTest::RunTest(const FString& Parameters)
 
     FTSTSSJobLoadoutState Ender;
     Ender.CharacterId = TEXT("Ender");
-    Ender.NativeProfession = TEXT("Rift Scholar");
+    Ender.NativeProfession = TEXT("Harmonic Resonance Engineer");
     Ender.PrimaryJob = TEXT("ReviewScholar");
     Ender.CharacterLevel = 9;
     Ender.JobProficiencyById.Add(TEXT("ReviewScholar"), 3);
@@ -84,7 +84,7 @@ bool FTSTSSHybridCharacterJobContractTest::RunTest(const FString& Parameters)
     }
 
     TestEqual(TEXT("native identity immutable"),
-        Output.NativeProfession, FName(TEXT("Rift Scholar")));
+        Output.NativeProfession, FName(TEXT("Harmonic Resonance Engineer")));
     TestEqual(TEXT("character level unchanged"), Output.CharacterLevel, 9);
     TestEqual(TEXT("job proficiency preserved"),
         Output.JobProficiencyById.FindRef(TEXT("ReviewScholar")), 3);
@@ -254,6 +254,17 @@ bool FTSTSSHybridCharacterJobContractTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("invalid workshop target fails closed"),
         FTSTSSCrewWorkshopReview::TryInstallReviewUpgrade(
             Installed, GearUpgrade, Crew));
+
+    // Regression: the former protagonist title belongs to the Wise Woman NPC,
+    // not Ender's current profession, and cannot pass native identity checks.
+    Ender.NativeProfession = TEXT("Rift Scholar");
+    FTSTSSJobLoadoutState FormerProfessionRejected;
+    FormerProfessionRejected.CharacterId = TEXT("PreserveSentinel");
+    TestFalse(TEXT("superseded Rift Scholar identity must not equip Ender jobs"),
+        FTSTSSJobClassSystem::TrySelectJobs(
+            Ender, Jobs, TEXT("ReviewGuard"), NAME_None, FormerProfessionRejected));
+    TestEqual(TEXT("old-profession rejection preserves output"),
+        FormerProfessionRejected.CharacterId, FName(TEXT("PreserveSentinel")));
 
     Ender.NativeProfession = TEXT("InventedClass");
     FTSTSSJobLoadoutState Rejected;
