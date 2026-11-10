@@ -6,6 +6,7 @@ const ROOT = path.resolve(__dirname, '..');
 const scriptPath = path.join(ROOT, 'scripts', 'capture-player-evidence.js');
 const packagePath = path.join(ROOT, 'package.json');
 const smokeWorkflowPath = path.join(ROOT, '.github', 'workflows', 'smoke.yml');
+const smokeProgramPath = path.join(ROOT, 'tests', 'smoke-playwright.js');
 const developmentPath = path.join(ROOT, 'docs', 'DEVELOPMENT.md');
 
 assert(fs.existsSync(scriptPath), 'player evidence capture script must exist');
@@ -13,6 +14,7 @@ assert(fs.existsSync(scriptPath), 'player evidence capture script must exist');
 const source = fs.readFileSync(scriptPath, 'utf8');
 const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
 const smokeWorkflow = fs.readFileSync(smokeWorkflowPath, 'utf8');
+const smokeProgram = fs.readFileSync(smokeProgramPath, 'utf8');
 const development = fs.readFileSync(developmentPath, 'utf8');
 
 assert.strictEqual(
@@ -31,6 +33,25 @@ assert.strictEqual(
   smokeWorkflow.split(/\r?\n/, 1)[0],
   'name: To Sail the Starry Sky smoke',
   'smoke workflow must display the canonical To Sail the Starry Sky project name'
+);
+
+// Only human-facing smoke log labels are rebranded. Keep historical
+// environment/config and package identities until compatibility is tested.
+assert(
+  smokeProgram.includes("console.log('To Sail the Starry Sky smoke test: PASS');"),
+  'smoke success log must display the current game title'
+);
+assert(
+  smokeProgram.includes("console.error('To Sail the Starry Sky smoke test: FAIL');"),
+  'smoke failure log must display the current game title'
+);
+assert(
+  !smokeProgram.includes('Aetherwake smoke test:'),
+  'smoke output must not mislabel current test runs as Aetherwake'
+);
+assert(
+  smokeProgram.includes('process.env.AETHERWAKE_TEST_PORT'),
+  'legacy test-port override must remain compatible'
 );
 
 assert(
