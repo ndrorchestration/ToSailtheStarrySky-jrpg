@@ -51,3 +51,20 @@ The class includes a **complete eligible curriculum scope** across **Resonance/H
 **Next actual gameplay gates:** add creator-approved starting skills and explicit primary job assignment, executable class permission row, three-active combat and stable save/load; test C++/UHT in Unreal 5.8.4 at the current exact head. No silent job-lock, granted Psion mastery, global synergy permission, Shine changes, production merge or hidden vessel gate changes.
 
 Authority: [Notion Resonator vertical-slice class contract](https://app.notion.com/p/414f5bad238b8114a732c153578fd190).
+
+## Source-locked Resonator DataTable and selection boundary — 2026-11-10
+
+Added `unreal/DataSource/Jobs/Resonator.vertical_slice.review.json` as the
+authoring source for the creator-selected Ender primary combat job. It contains
+exactly four curriculum families without starting abilities or innate-affinity
+changes. The existing native `TSTSS.Design.HybridJobTableReadback` now loads
+the exact on-disk JSON through the Unreal DataTable importer, checks a successful
+**review-only** selection when explicitly unlocked, and proves denied paths for
+missing unlock, unlearned Psychic ability, and revoked job approval. A Python
+test is separately wired into engine-free GitHub CI and can detect JSON drift.
+
+`ReviewSelectable` is not executable skill authorization. This does not add a
+production DataTable Content asset, initialize the live character roster, create
+a class menu or persist jobs/learned skills. The next gate is a fresh native UE
+5.8.4 Editor build and exact-head automation, then explicitly authorized slice
+initialization, combat permission and save/load with real rendered gameplay.
