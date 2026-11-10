@@ -1,4 +1,5 @@
 """Synthetic parser controls only; not actual Unreal physics verification."""
+import re
 import unittest
 import verify_first_wake_water_frame_trace as validator
 
@@ -62,6 +63,39 @@ class FailClosedWaterFrameValidatorTest(unittest.TestCase):
         self.assertEqual(result["window_seconds_elapsed_world"], 2.0)
         self.assertEqual(result["window_seconds_sum_dt"], 2.0)
         self.assertEqual(result["stable_seconds_at_transition"], 2.0)
+
+    def test_first_qualified_contact_frame_can_anchor_two_second_window(self):
+        # Actual source records Launched -> SeaContact at first immersion.
+        lines = sample_log(count=9, period=0.25).splitlines()
+        for index, line in enumerate(lines):
+            if "phase=PHYSICS" in line:
+                lines[index] = line.replace("beat_before=5 beat_after=5",
+                                            "beat_before=4 beat_after=5")
+                break
+        result = validator.analyze("\n".join(lines))
+        self.assertEqual(result["window_seconds_elapsed_world"], 2.0)
+
+    def test_prelaunch_frames_cannot_be_passed_off_as_settled_sea_contact(self):
+        # An old validator accepted a trace with >=2s of non-SeaContact
+        # 'physics' samples immediately followed by a 5 -> 6 transition.
+        lines = sample_log().splitlines()
+        for index, line in enumerate(lines):
+            if "phase=PHYSICS" in line and "beat_after=6" not in line:
+                lines[index] = line.replace("beat_before=5 beat_after=5",
+                                            "beat_before=4 beat_after=4")
+        with self.assertRaisesRegex(ValueError, "incomplete or discontinuous"):
+            validator.analyze("\n".join(lines))
+
+    def test_forged_native_stability_jump_fails_closed(self):
+        # A full observed water span with a frozen native timer and a jump
+        # at the transition is not evidence of consecutive gate samples.
+        lines = sample_log().splitlines()
+        for index, line in enumerate(lines):
+            if "phase=PHYSICS" in line and "beat_after=6" not in line:
+                lines[index] = re.sub(
+                    r"stable_sec=[0-9.]+", "stable_sec=0.0000", line)
+        with self.assertRaisesRegex(ValueError, "native stable timer progression"):
+            validator.analyze("\n".join(lines))
 
     def test_clock_delta_disagreement_fails_closed(self):
         with self.assertRaisesRegex(ValueError, "incomplete or discontinuous"):
