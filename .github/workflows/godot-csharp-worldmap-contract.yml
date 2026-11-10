@@ -1,0 +1,43 @@
+name: Proposed Godot C# world-map contract (independent .NET)
+on:
+  pull_request:
+    paths:
+      - 'native-csharp/**'
+      - '.github/workflows/godot-csharp-worldmap-contract.yml'
+      - 'docs/C_SHARP_WORLD_MAP_PRODUCT_DIRECTION.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  engine-neutral-csharp-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - name: Checkout exact PR SHA without write credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up .NET SDK for proposed contracts
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Confirm toolchain
+        run: |
+          set -euo pipefail
+          dotnet --version
+          echo "CS_WORLDMAP_PRODUCT_LAYOUT=PROPOSAL_ONLY"
+          echo "CS_WORLDMAP_GODOT_NET_ENGINE_IMPORT=NOT_TESTED"
+      - name: Build with compiler warnings as errors
+        run: |
+          set -euo pipefail
+          dotnet restore native-csharp/WorldMap.ContractChecks/WorldMap.ContractChecks.csproj
+          dotnet build -c Release --no-restore native-csharp/WorldMap.ContractChecks/WorldMap.ContractChecks.csproj
+      - name: Independent spherical/authorization/budget contract checks
+        run: |
+          set -euo pipefail
+          dotnet run --no-build -c Release --project native-csharp/WorldMap.ContractChecks/WorldMap.ContractChecks.csproj
+      - name: Preserve truthful scope
+        run: |
+          echo "CS_WORLDMAP_NATIVE_GODOT_MONO=NOT_VERIFIED"
+          echo "CS_WORLDMAP_CSHARP_GAME_SCENE=NOT_CREATED"
+          echo "CS_WORLDMAP_RELEASE=NOT_AUTHORIZED"
