@@ -1,0 +1,53 @@
+name: Daily development evidence log
+
+on:
+  schedule:
+    # Runs after New York midnight in all seasons.
+    - cron: "0 11 * * *"
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Optional activity date in New York (YYYY-MM-DD)"
+        required: false
+        type: string
+  pull_request:
+    paths:
+      - ".github/workflows/daily-devlog.yml"
+      - "tools/devlog/**"
+      - "docs/devlog/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: daily-devlog
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Test pure reporter logic
+        run: node --test tools/devlog/daily_devlog.test.cjs
+
+  publish:
+    needs: validate
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+      issues: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish source-evidence report on separate branch
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const reporter = require(process.env.GITHUB_WORKSPACE + "/tools/devlog/daily_devlog.cjs");
+            await reporter.collectAndPublish({github, context, core});
