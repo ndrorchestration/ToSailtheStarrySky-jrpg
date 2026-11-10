@@ -10,7 +10,7 @@ Inspect generated records using the branch selector in GitHub (automation/daily-
 
 Limitations: first 100 records per API category; this repository only; default-branch commits only; updated PRs are not necessarily completed work; CI is not Unreal native build, PIE, GPU, creator approval, or playable-slice evidence. GitHub-only logs cannot capture unpushed workstation activity or Notion-only work. No private sources should be published here.
 
-The Notion [Daily Development Log — Ecosystem](https://app.notion.com/p/b43e97712d2642c988704fdcf113a45f) is a separate human-facing cross-project summary and remains a projection of source evidence. Other repositories need their own workflow or an explicitly authorized separate aggregation credential. Do not expose private repository metadata in the public game repository.
+The dedicated Notion [To Sail the Starry Sky — Game Development Log](https://app.notion.com/p/bec804bcc2874f4f961d6bbe1cfba3e7) is the game-specific human-facing journal. The [ecosystem overview](https://app.notion.com/p/b43e97712d2642c988704fdcf113a45f) is only an index/projection, not a second independent source of truth. The Notion log is not automatically populated by this repository-local workflow. Private gameplay spoilers and local native receipts are not imported into this public repository.
 
 ## Verification and activation
 
