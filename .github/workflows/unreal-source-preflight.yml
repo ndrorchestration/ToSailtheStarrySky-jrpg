@@ -180,3 +180,5 @@ jobs:
             'unreal/Tools/Start-FirstWakeAssetReview.ps1', [ref]$tokens, [ref]$errors
           ) | Out-Null
           if ($errors.Count -gt 0) { throw "Asset review launcher PowerShell parse failed: $($errors -join '; ')" }
+      - name: Verify complete source regression suite for F6 save and F7 Continue (no Unreal)
+        run: python3 -m unittest discover -s unreal/Tools -p 'test_*.py'

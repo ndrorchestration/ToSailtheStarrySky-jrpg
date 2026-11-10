@@ -155,7 +155,10 @@ int main() {
         expect(hud.text[2].value.find("INSPECTIONS") != FString::npos,
                "review HUD must identify three engineer systems");
         expect(hud.text[3].value.find("E: interact") != FString::npos &&
-               hud.text[3].value.find("F5/F9") != FString::npos,
+               hud.text[3].value.find("PIE F6: save") != FString::npos &&
+               hud.text[3].value.find("F9: load") != FString::npos &&
+               hud.text[3].value.find("F7: Continue preview/confirm") != FString::npos &&
+               hud.text[3].value.find("F5/F9") == FString::npos,
                "review controls must remain discoverable");
         expect(hud.text[4].value.find("no launch") != FString::npos,
                "HUD must not imply launch, sea landing or chapter approval");
