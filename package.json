@@ -48,6 +48,7 @@
     "package:windows": "npm run stage:desktop && nwbuild --mode=build --glob=false --platform=win --arch=x64 --version=0.116.0 --outDir=../aetherwake-dist --app.icon=.desktop-runtime/www/icon.ico .desktop-runtime",
     "package:windows:clean": "npm run package:windows",
     "test:desktop-package": "node tests/desktop-package-contract.test.js",
+    "test:desktop-stage-isolation": "node tests/desktop-stage-isolation.test.js",
     "test:magic-mastery": "node tests/magic-mastery-contract.test.js",
     "test:character-magic-profile": "node tests/character-magic-profile-contract.test.js",
     "test:party-magic-profile": "node tests/party-magic-profile-contract.test.js",
