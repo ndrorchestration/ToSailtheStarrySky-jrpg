@@ -91,6 +91,17 @@ void ATSTSSFootstepAudioDirector::Tick(float DeltaSeconds)
     if (DistanceAccumulatorCm < StepDistanceCm) return;
     DistanceAccumulatorCm = FMath::Fmod(DistanceAccumulatorCm, StepDistanceCm);
 
+    // With no loaded/approved footstep bank, never issue redundant ground traces.
+    UTSTSSAudioSubsystem* Audio = World->GetSubsystem<UTSTSSAudioSubsystem>();
+    if (!Audio || Audio->IsMuted() ||
+        !(Audio->HasCue(FName(TEXT("foley.footstep.wood"))) ||
+          Audio->HasCue(FName(TEXT("foley.footstep.sand"))) ||
+          Audio->HasCue(FName(TEXT("foley.footstep.stone"))) ||
+          Audio->HasCue(FName(TEXT("foley.footstep.metal")))))
+    {
+        return;
+    }
+
     FCollisionQueryParams Params(SCENE_QUERY_STAT(TSTSSGroundFootstep), false, Pawn);
     Params.bReturnPhysicalMaterial = true;
     FHitResult Hit;
@@ -105,7 +116,7 @@ void ATSTSSFootstepAudioDirector::Tick(float DeltaSeconds)
         StoneSurface.GetValue(), MetalSurface.GetValue());
     if (Event.IsNone()) return;
 
-    if (UTSTSSAudioSubsystem* Audio = World->GetSubsystem<UTSTSSAudioSubsystem>())
+    if (Audio->HasCue(Event))
     {
         Audio->EmitCue(Event, Hit.ImpactPoint);
     }
