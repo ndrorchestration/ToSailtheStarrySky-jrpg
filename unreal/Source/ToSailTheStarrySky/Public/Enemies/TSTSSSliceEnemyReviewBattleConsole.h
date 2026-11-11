@@ -11,6 +11,7 @@ class UTextRenderComponent;
 class UTSTSSSliceEnemyReviewHUD;
 class ATSTSSSliceEnemyActor;
 class USoundBase;
+class UStaticMeshComponent;
 
 // Only for a neutral sandbox .umap. No First Wake or shipping placement.
 // In PIE: F7 Ender, F8 with recruited Ionia, F9 post-splashdown Lyra;
@@ -48,6 +49,11 @@ public:
     UFUNCTION(BlueprintCallable, Category="TSTSS|Enemy Review")
     void SetReviewHUDVisible(bool bVisible);
 
+    // Three inexpensive review-only figures that cheer after a confirmed
+    // combat-manager victory; they never represent approved party character art.
+    UFUNCTION(BlueprintCallable, Category="TSTSS|Enemy Review")
+    void SetVictoryCelebrationActive(bool bActive);
+
     // V2 walking director owns all input while its battle ticket is active;
     // the V1 console remains standalone when this flag is not set.
     void SetReviewHostedByEncounterDirector(bool bHosted);
@@ -84,6 +90,24 @@ private:
     UPROPERTY(EditAnywhere, Category="TSTSS|Enemy Review|Audio")
     TObjectPtr<USoundBase> ReviewVictorySound;
 
+    UPROPERTY(VisibleAnywhere, Category="TSTSS|Enemy Review|Celebration")
+    TObjectPtr<UStaticMeshComponent> EnderVictoryProxy;
+
+    UPROPERTY(VisibleAnywhere, Category="TSTSS|Enemy Review|Celebration")
+    TObjectPtr<UStaticMeshComponent> IoniaVictoryProxy;
+
+    UPROPERTY(VisibleAnywhere, Category="TSTSS|Enemy Review|Celebration")
+    TObjectPtr<UStaticMeshComponent> LyraVictoryProxy;
+
+    UPROPERTY(VisibleAnywhere, Category="TSTSS|Enemy Review|Celebration")
+    TObjectPtr<UTextRenderComponent> EnderVictoryLabel;
+
+    UPROPERTY(VisibleAnywhere, Category="TSTSS|Enemy Review|Celebration")
+    TObjectPtr<UTextRenderComponent> IoniaVictoryLabel;
+
+    UPROPERTY(VisibleAnywhere, Category="TSTSS|Enemy Review|Celebration")
+    TObjectPtr<UTextRenderComponent> LyraVictoryLabel;
+
     UPROPERTY(Transient)
     TArray<TObjectPtr<ATSTSSSliceEnemyActor>> GalleryActors;
 
@@ -92,6 +116,8 @@ private:
 
     FString LastActionText;
     bool bHostedByEncounterDirector = false;
+    bool bVictoryCelebrating = false;
+    float VictoryCelebrationTime = 0.f;
 
     void StartEnderOnly();
     void StartIoniaRecruited();

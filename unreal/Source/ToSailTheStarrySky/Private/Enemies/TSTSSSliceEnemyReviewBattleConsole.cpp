@@ -3,6 +3,8 @@
 #include "Enemies/TSTSSSliceEnemyActor.h"
 #include "Camera/CameraComponent.h"
 #include "Components/InputComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
 #include "Components/SceneComponent.h"
 #include "Components/TextRenderComponent.h"
 #include "Engine/Engine.h"
@@ -57,6 +59,43 @@ ATSTSSSliceEnemyReviewBattleConsole::ATSTSSSliceEnemyReviewBattleConsole()
              "Q/E change waves | F7 Ender | F8 +Ionia | F9 +Lyra\n"
              "J strike foe 1 | K strike foe 2 | R reset")));
     ReviewSign->SetTextRenderColor(FColor(150, 226, 244, 255));
+    // Lightweight named actors for review-only victory choreography.
+    // These are not canonical Ender/Ionia/Lyra meshes or rigged animations.
+    EnderVictoryProxy=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("VictoryEnderProxy"));
+    IoniaVictoryProxy=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("VictoryIoniaProxy"));
+    LyraVictoryProxy=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("VictoryLyraProxy"));
+    EnderVictoryProxy->SetupAttachment(ReviewRoot);
+    IoniaVictoryProxy->SetupAttachment(ReviewRoot);
+    LyraVictoryProxy->SetupAttachment(ReviewRoot);
+    EnderVictoryProxy->SetRelativeLocation(FVector(-450.f,-310.f,75.f));
+    IoniaVictoryProxy->SetRelativeLocation(FVector(-240.f,-310.f,75.f));
+    LyraVictoryProxy->SetRelativeLocation(FVector(-30.f,-310.f,75.f));
+    EnderVictoryLabel=CreateDefaultSubobject<UTextRenderComponent>(TEXT("VictoryEnderName"));
+    IoniaVictoryLabel=CreateDefaultSubobject<UTextRenderComponent>(TEXT("VictoryIoniaName"));
+    LyraVictoryLabel=CreateDefaultSubobject<UTextRenderComponent>(TEXT("VictoryLyraName"));
+    EnderVictoryLabel->SetupAttachment(EnderVictoryProxy);
+    IoniaVictoryLabel->SetupAttachment(IoniaVictoryProxy);
+    LyraVictoryLabel->SetupAttachment(LyraVictoryProxy);
+    EnderVictoryLabel->SetRelativeLocation(FVector(0.f,0.f,125.f));
+    IoniaVictoryLabel->SetRelativeLocation(FVector(0.f,0.f,125.f));
+    LyraVictoryLabel->SetRelativeLocation(FVector(0.f,0.f,125.f));
+    EnderVictoryLabel->SetWorldSize(30.f);
+    IoniaVictoryLabel->SetWorldSize(30.f);
+    LyraVictoryLabel->SetWorldSize(30.f);
+    EnderVictoryLabel->SetText(FText::FromString(TEXT("ENDER")));
+    IoniaVictoryLabel->SetText(FText::FromString(TEXT("IONIA")));
+    LyraVictoryLabel->SetText(FText::FromString(TEXT("LYRA")));
+    EnderVictoryLabel->SetTextRenderColor(FColor(112,228,183));
+    IoniaVictoryLabel->SetTextRenderColor(FColor(255,213,107));
+    LyraVictoryLabel->SetTextRenderColor(FColor(112,193,255));
+    for (UStaticMeshComponent* Proxy : {EnderVictoryProxy.Get(),
+         IoniaVictoryProxy.Get(),LyraVictoryProxy.Get()})
+    {
+        Proxy->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        Proxy->SetGenerateOverlapEvents(false);
+        Proxy->SetRelativeScale3D(FVector(.6f,.6f,1.3f));
+        Proxy->SetVisibility(false,true);
+    }
     SetActorEnableCollision(false);
 }
 
@@ -71,7 +110,17 @@ void ATSTSSSliceEnemyReviewBattleConsole::BeginPlay()
     {
         if (World->IsGameWorld())
         {
+
             CaptureReviewActors();
+            UStaticMesh* ReviewCapsule=LoadObject<UStaticMesh>(
+                nullptr,TEXT("/Engine/BasicShapes/Capsule.Capsule"));
+            if (IsValid(ReviewCapsule))
+            {
+                EnderVictoryProxy->SetStaticMesh(ReviewCapsule);
+                IoniaVictoryProxy->SetStaticMesh(ReviewCapsule);
+                LyraVictoryProxy->SetStaticMesh(ReviewCapsule);
+            }
+            SetVictoryCelebrationActive(false);
             if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
             {
                 PC->SetViewTargetWithBlend(this);
@@ -231,6 +280,29 @@ ETSS_CombatPhase ATSTSSSliceEnemyReviewBattleConsole::GetReviewBattlePhase() con
 #endif
 }
 
+void ATSTSSSliceEnemyReviewBattleConsole::SetVictoryCelebrationActive(
+    bool bActive)
+{
+#if !UE_BUILD_SHIPPING
+    bVictoryCelebrating = bActive && IsValid(Session.Get()) &&
+        IsValid(Session->GetReviewManager()) &&
+        Session->GetReviewManager()->GetCurrentPhase()==ETSS_CombatPhase::Victory;
+    VictoryCelebrationTime=0.f;
+    const TArray<FName> Members=bVictoryCelebrating
+        ? Session->GetReviewActivePartyIds() : TArray<FName>();
+    EnderVictoryProxy->SetVisibility(Members.Contains(TEXT("Ender")),true);
+    IoniaVictoryProxy->SetVisibility(Members.Contains(TEXT("Ionia")),true);
+    LyraVictoryProxy->SetVisibility(Members.Contains(TEXT("Lyra")),true);
+    for(UStaticMeshComponent* Marker : {EnderVictoryProxy.Get(),
+        IoniaVictoryProxy.Get(),LyraVictoryProxy.Get()})
+    {
+        const FVector Loc=Marker->GetRelativeLocation();
+        Marker->SetRelativeLocation(FVector(Loc.X,Loc.Y,75.f));
+        Marker->SetRelativeRotation(FRotator::ZeroRotator);
+    }
+#endif
+}
+
 void ATSTSSSliceEnemyReviewBattleConsole::SetReviewHostedByEncounterDirector(
     bool bHosted)
 {
@@ -273,6 +345,7 @@ bool ATSTSSSliceEnemyReviewBattleConsole::TryChangeReviewWave(int32 Delta)
 void ATSTSSSliceEnemyReviewBattleConsole::ResetReviewArena()
 {
 #if !UE_BUILD_SHIPPING
+    SetVictoryCelebrationActive(false);
     if (IsValid(Session.Get()) && IsValid(Session->GetReviewManager()))
     {
         Session->GetReviewManager()->OnSkillAccepted.RemoveDynamic(
@@ -410,6 +483,25 @@ void ATSTSSSliceEnemyReviewBattleConsole::Tick(float DeltaSeconds)
     Super::Tick(DeltaSeconds);
 #if !UE_BUILD_SHIPPING
     StatusAge+=DeltaSeconds;
+    if(bVictoryCelebrating && IsValid(Session.Get()) &&
+       IsValid(Session->GetReviewManager()) &&
+       Session->GetReviewManager()->GetCurrentPhase()==ETSS_CombatPhase::Victory)
+    {
+        VictoryCelebrationTime+=FMath::Max(0.f,DeltaSeconds);
+        UStaticMeshComponent* Proxies[]={
+            EnderVictoryProxy.Get(),IoniaVictoryProxy.Get(),LyraVictoryProxy.Get()};
+        for(int32 Index=0;Index<3;++Index)
+        {
+            UStaticMeshComponent* Marker=Proxies[Index];
+            if (!IsValid(Marker) || !Marker->IsVisible()) continue;
+            const float T=VictoryCelebrationTime*6.5f+Index*1.7f;
+            const float Jump=FMath::Max(0.f,FMath::Sin(T))*42.f;
+            const float Cheer=FMath::Sin(T*.6f)*12.f;
+            const FVector Loc=Marker->GetRelativeLocation();
+            Marker->SetRelativeLocation(FVector(Loc.X,Loc.Y,75.f+Jump));
+            Marker->SetRelativeRotation(FRotator(0.f,Cheer,0.f));
+        }
+    }
     if(StatusAge>=2.0f) RefreshStatus();
 #endif
 }
