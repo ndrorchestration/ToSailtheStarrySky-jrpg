@@ -33,7 +33,7 @@ ENUM_TO_SHOT = {
 }
 
 CASE_PATTERN = re.compile(
-    r"case ETSTSSPresentationMoment::(?P<moment>\w+):\s*"
+    r"case ETSTSSPresentationMoment::(?P<moment>\w+):\s*(?://[^\n]*\n\s*)*"
     r"return \{TEXT\(\"(?P<map>[^\"]+)\"\),\s*TEXT\(\"(?P<shot>[^\"]+)\"\),\s*"
     r"(?:(?:TEXT\(\"(?P<look>[^\"]+)\"\))|(?P<unbound>nullptr)),\s*"
     r"TEXT\(\"(?P<audio>[^\"]+)\"\),\s*"
@@ -85,8 +85,8 @@ def validate_cpp(source: str, header: str, bindings: dict, focus: dict):
            "#if WITH_EDITOR" in source, "PIE-only review boundary missing")
     demand("World->GetMapName()" in source and
            "DENIED_WRONG_NATIVE_MAP" in source, "real world map check absent")
-    demand("StoryState->GetCurrentBeat()" not in source or
-           "GetCurrentBeat()" in source, "story getter missing")
+    demand("GetCurrentBeat()" in source and "AreInspectionsComplete()" in source,
+           "story read-only getters missing")
     demand("HasStoryPrerequisite(StoryState, Moment)" in source and
            "DENIED_AUTHORITATIVE_STORY_PREREQUISITE" in source,
            "accepted story guard missing")
