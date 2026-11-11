@@ -23,7 +23,7 @@ class AudioReviewIntegrationSourceTests(unittest.TestCase):
             generated = generate(Path(temp) / "sound_review")
             self.assertEqual(set(DURATIONS),
                              {p.name for p in importer.verify_source(Path(temp) / "sound_review")})
-            self.assertEqual(len(generated["files"]), 6)
+            self.assertEqual(len(generated["files"]), 10)
 
     def test_tampered_wav_is_denied(self):
         with tempfile.TemporaryDirectory() as temp:
