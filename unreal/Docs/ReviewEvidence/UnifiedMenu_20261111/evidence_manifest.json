@@ -1,0 +1,69 @@
+{
+  "source_parent_commit": "70ba58fd8f4b6530ccb4ab7e37f7a7000d524008",
+  "game_project": "C:\\TSTSS_PartyEquipment_20261110\\unreal\\ToSailTheStarrySky.uproject",
+  "review_map": "/Game/TSTSS/Review/FirstWake_PreludeInteraction_V2",
+  "engine": "Unreal Engine 5.8.4 Win64 Development; native game runtime",
+  "capture": "PIL ImageGrab of HWND game's client viewport 1280x720; actual interactive window pixels; not generative art or mockup",
+  "source_status": "draft and unmerged; no production ship or inventory promotion",
+  "verified_interactions": [
+    "M opens character menu",
+    "Aureate Wake sidebar navigation",
+    "ship Modes and Engineering tabs",
+    "Ender weapon review ledger toggles ResonanceStaff to UNEQUIPPED",
+    "Return to Voyage and M re-open exercised"
+  ],
+  "not_verified": [
+    "cinematic art approval",
+    "persistent inventory and gameplay power",
+    "full independent PIE regression",
+    "live HP/MP without validated save",
+    "Starbourne transformation authority",
+    "packaged game build"
+  ],
+  "files": [
+    {
+      "filename": "00_native_menu_approval_contact_sheet.png",
+      "caption": "Four-screen contact sheet derived from genuine game captures",
+      "bytes": 445892,
+      "sha256": "a08f187c194762eb687f64aa33ac2301c3303c4394e8f310e4e992f5f8ca018b"
+    },
+    {
+      "filename": "01_character_status_native_1280x720.png",
+      "caption": "Party / Status",
+      "bytes": 75442,
+      "sha256": "c2ebb0c4b22af87e2a25515ec583f07f58de336795dddd02d08f845f8a8eba91"
+    },
+    {
+      "filename": "02_equipment_loadout_native_1280x720.png",
+      "caption": "Equipment / Loadout",
+      "bytes": 64352,
+      "sha256": "4defa3cafce2bd0b9b3fc924d54ac6b7c7803690c3a2080e50fd1430f21acbc6"
+    },
+    {
+      "filename": "03_ender_weapon_unequipped_native_1280x720.png",
+      "caption": "Ender weapon state change",
+      "bytes": 64884,
+      "sha256": "535ba0b4c47e071048dce86c76ed37cba738bd109d1c47bac6b20a7a9b6ae748"
+    },
+    {
+      "filename": "04_ship_overview_native_1280x720.png",
+      "caption": "Aureate Wake / Status",
+      "bytes": 65861,
+      "sha256": "3a21dace00be5decc3975ac3f8a0016b59190f1ecb53a2b26492b2595a4e5525"
+    },
+    {
+      "filename": "05_ship_configurations_native_1280x720.png",
+      "caption": "Ship / Configurations",
+      "bytes": 76068,
+      "sha256": "1ce76deae54e96d1b4b425956f98afb9cc46d940d67b3afe4b2544f90f328589"
+    },
+    {
+      "filename": "06_ship_engineering_native_1280x720.png",
+      "caption": "Ship / Engineering",
+      "bytes": 67526,
+      "sha256": "94a7bddc8dbda1fb6be1add62c46845c77d9e244ec1abc7d87e1e4f35d5f1526"
+    }
+  ],
+  "graphics_runtime": "LogRHI: Using Default RHI: D3D12; highest feature level D3D12 SM5; LogD3D12RHI: chosen adapter 0 Intel Iris Xe Graphics",
+  "graphics_source_log": "unreal/Saved/Logs/ToSailTheStarrySky.log (local untracked runtime log; not shipped with evidence)"
+}

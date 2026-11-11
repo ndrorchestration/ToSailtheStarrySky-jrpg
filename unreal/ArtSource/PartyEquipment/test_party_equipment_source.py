@@ -187,4 +187,25 @@ class TestPartyEquipmentSource(unittest.TestCase):
   self.assertIn("malformed HP cannot be shown as verified stats",test)
   self.assertNotIn("SaveProgress(",cpp)
 
+ def test_approval_native_menu_layout_and_hud_lifecycle(self):
+  unreal=HERE.parents[1]
+  cpp=(unreal/"Source"/"ToSailTheStarrySky"/"Private"/"TSTSSPartyGearMenuReviewWidget.cpp").read_text(encoding="utf-8")
+  head=(unreal/"Source"/"ToSailTheStarrySky"/"Public"/"TSTSSPartyGearMenuReviewWidget.h").read_text(encoding="utf-8")
+  pawn=(unreal/"Source"/"ToSailTheStarrySky"/"Private"/"TSTSSExplorerCharacter.cpp").read_text(encoding="utf-8")
+  for contract in ("Backdrop->SetBrushColor", "BackgroundSlot->SetZOrder(0)",
+                   "PanelSlot->SetZOrder(1)", "NavigationButtons.Add(NavButton)",
+                   "ActiveShipPage", "AddPageHeading", "RowPanel->SetPadding",
+                   "SuspendReviewScreenWarnings", "bEnableOnScreenDebugMessagesDisplay",
+                   "bSuppressMapWarnings", "bRestoreOnScreenMessagesAfterClose",
+                   "bRestoreMapWarningsAfterClose"):
+   self.assertIn(contract,cpp)
+  self.assertIn("bHUDHiddenByReview",head)
+  self.assertIn("HUD->bShowHUD = true",cpp)
+  self.assertIn("ReviewHUD->bShowHUD = false",pawn)
+  self.assertIn("EquipmentReviewMenu->SuspendReviewScreenWarnings()",pawn)
+  self.assertIn("EquipmentReviewMenu->AddToViewport(30)",pawn)
+  self.assertIn("CloseReview()",cpp)
+  self.assertNotIn("SaveProgress(",cpp)
+  self.assertNotIn("SaveGameToSlot(",cpp)
+
 if __name__=="__main__":unittest.main()

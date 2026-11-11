@@ -17,6 +17,8 @@
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/HUD.h"
+#include "Engine/Engine.h"
 
 namespace
 {
@@ -251,46 +253,75 @@ void UTSTSSPartyGearMenuReviewWidget::ChangeShipPage(
     RenderReviewPage();
 }
 
+void UTSTSSPartyGearMenuReviewWidget::SuspendReviewScreenWarnings()
+{
+#if !UE_BUILD_SHIPPING
+    // Engine developer overlays render AFTER UMG and otherwise obscure
+    // the user's menu. Restore both process-local flags on close.
+    if (!GEngine) return;
+    if (GEngine->bEnableOnScreenDebugMessagesDisplay)
+    {
+        bRestoreOnScreenMessagesAfterClose = true;
+        GEngine->bEnableOnScreenDebugMessagesDisplay = false;
+    }
+    if (!GEngine->bSuppressMapWarnings)
+    {
+        bRestoreMapWarningsAfterClose = true;
+        GEngine->bSuppressMapWarnings = true;
+    }
+#endif
+}
+
 void UTSTSSPartyGearMenuReviewWidget::NativeOnInitialized()
 {
     Super::NativeOnInitialized();
     if (!WidgetTree) return;
 
     UCanvasPanel* Canvas = WidgetTree->ConstructWidget<UCanvasPanel>();
+    UBorder* Backdrop = WidgetTree->ConstructWidget<UBorder>();
     UBorder* Panel = WidgetTree->ConstructWidget<UBorder>();
     UHorizontalBox* Layout = WidgetTree->ConstructWidget<UHorizontalBox>();
     UVerticalBox* NavigationColumn = WidgetTree->ConstructWidget<UVerticalBox>();
     UScrollBox* Scroll = WidgetTree->ConstructWidget<UScrollBox>();
     ContentColumn = WidgetTree->ConstructWidget<UVerticalBox>();
-    if (!Canvas || !Panel || !Layout || !NavigationColumn || !Scroll || !ContentColumn)
+    if (!Canvas || !Backdrop || !Panel || !Layout ||
+        !NavigationColumn || !Scroll || !ContentColumn)
         return;
     WidgetTree->RootWidget = Canvas;
-    Panel->SetBrushColor(FLinearColor(0.008f, 0.020f, 0.035f, 0.96f));
-    Panel->SetPadding(FMargin(20.f));
+    // Full-screen, deliberately opaque menu canvas: the world HUD and
+    // debug placeholders must never bleed through player-owned UI.
+    Backdrop->SetBrushColor(FLinearColor(0.008f, 0.018f, 0.028f, 1.f));
+    UCanvasPanelSlot* BackgroundSlot = Canvas->AddChildToCanvas(Backdrop);
+    BackgroundSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+    BackgroundSlot->SetOffsets(FMargin(0.f));
+    BackgroundSlot->SetZOrder(0);
+    Panel->SetBrushColor(FLinearColor(0.020f, 0.043f, 0.058f, 1.f));
+    Panel->SetPadding(FMargin(30.f));
     Panel->AddChild(Layout);
     UCanvasPanelSlot* PanelSlot = Canvas->AddChildToCanvas(Panel);
-    PanelSlot->SetAnchors(FAnchors(0.035f, 0.045f, 0.965f, 0.955f));
+    PanelSlot->SetAnchors(FAnchors(0.026f, 0.032f, 0.974f, 0.968f));
     PanelSlot->SetOffsets(FMargin(0.f));
+    PanelSlot->SetZOrder(1);
 
     USizeBox* NavigationWidth = WidgetTree->ConstructWidget<USizeBox>();
     if (!NavigationWidth) return;
-    NavigationWidth->SetWidthOverride(208.f);
+    NavigationWidth->SetWidthOverride(246.f);
     NavigationWidth->AddChild(NavigationColumn);
     Layout->AddChildToHorizontalBox(NavigationWidth)->
-        SetPadding(FMargin(0.f, 0.f, 18.f, 0.f));
+        SetPadding(FMargin(0.f, 0.f, 28.f, 0.f));
     Layout->AddChildToHorizontalBox(Scroll)->
         SetSize(FSlateChildSize(ESlateSizeRule::Fill));
     Scroll->AddChild(ContentColumn);
 
     AddReviewText(WidgetTree, NavigationColumn,
-        TEXT("TO SAIL THE\nSTARRY SKY"), 22,
-        FLinearColor(0.96f, 0.88f, 0.66f, 1.f), 11.f);
+        TEXT("TO SAIL THE\nSTARRY SKY"), 26,
+        FLinearColor(0.97f, 0.86f, 0.62f, 1.f), 14.f);
     AddReviewText(WidgetTree, NavigationColumn,
-        TEXT("VOYAGE / REVIEW"), 12,
-        FLinearColor(0.43f, 0.76f, 0.82f, 1.f), 13.f);
+        TEXT("VOYAGE  /  FIELD MANUAL"), 14,
+        FLinearColor(0.47f, 0.81f, 0.83f, 1.f), 12.f);
     StageLabel = AddReviewText(WidgetTree, NavigationColumn,
-        TEXT("FIRST WAKE"), 12,
-        FLinearColor::White, 15.f);
+        TEXT("FIRST WAKE"), 14,
+        FLinearColor(0.87f, 0.90f, 0.87f, 1.f), 21.f);
 
     const TCHAR* Titles[] = {
         TEXT("PARTY / STATUS"), TEXT("ITEMS"),
@@ -299,6 +330,7 @@ void UTSTSSPartyGearMenuReviewWidget::NativeOnInitialized()
         TEXT("FORMATION"), TEXT("JOURNAL"),
         TEXT("AUREATE WAKE"), TEXT("SYSTEM")
     };
+    NavigationButtons.Reset();
     for (int32 I=0; I<10; ++I)
     {
         UButton* NavButton = WidgetTree->ConstructWidget<UButton>();
@@ -306,11 +338,17 @@ void UTSTSSPartyGearMenuReviewWidget::NativeOnInitialized()
         if (!NavButton || !NavText) return;
         NavText->SetText(FText::FromString(Titles[I]));
         FSlateFontInfo Font = NavText->GetFont();
-        Font.Size = 14;
+        Font.Size = 17;
         NavText->SetFont(Font);
+        NavText->SetColorAndOpacity(FSlateColor(
+            FLinearColor(0.94f, 0.94f, 0.90f, 1.f)));
+        NavText->SetJustification(ETextJustify::Left);
         NavButton->SetContent(NavText);
+        NavButton->SetBackgroundColor(
+            FLinearColor(0.10f, 0.25f, 0.31f, 1.f));
+        NavigationButtons.Add(NavButton);
         NavigationColumn->AddChildToVerticalBox(NavButton)->
-            SetPadding(FMargin(0.f, 0.f, 0.f, 4.f));
+            SetPadding(FMargin(0.f, 0.f, 0.f, 7.f));
         switch (I)
         {
         case 0: NavButton->OnClicked.AddDynamic(this, &UTSTSSPartyGearMenuReviewWidget::OpenStatusTab); break;
@@ -326,13 +364,21 @@ void UTSTSSPartyGearMenuReviewWidget::NativeOnInitialized()
         }
     }
     StatusLabel = AddReviewText(WidgetTree, NavigationColumn,
-        TEXT("REVIEW ONLY - NO STORY OR ITEM GRANT"), 12,
-        FLinearColor(0.62f, 0.86f, 0.80f, 1.f), 12.f);
+        TEXT("REVIEW BUILD  /  NO STORY OR ITEM GRANTS"), 12,
+        FLinearColor(0.64f, 0.87f, 0.80f, 1.f), 12.f);
     UButton* CloseButton = WidgetTree->ConstructWidget<UButton>();
     UTextBlock* CloseText = WidgetTree->ConstructWidget<UTextBlock>();
     if (!CloseButton || !CloseText) return;
     CloseText->SetText(FText::FromString(TEXT("RETURN TO VOYAGE")));
+    FSlateFontInfo CloseFont = CloseText->GetFont();
+    CloseFont.Size = 16;
+    CloseText->SetFont(CloseFont);
+    CloseText->SetJustification(ETextJustify::Center);
+    CloseText->SetColorAndOpacity(FSlateColor(
+        FLinearColor(0.95f, 0.94f, 0.87f, 1.f)));
     CloseButton->SetContent(CloseText);
+    CloseButton->SetBackgroundColor(
+        FLinearColor(0.17f, 0.47f, 0.50f, 1.f));
     CloseButton->OnClicked.AddDynamic(
         this, &UTSTSSPartyGearMenuReviewWidget::OnCloseClicked);
     NavigationColumn->AddChildToVerticalBox(CloseButton);
@@ -342,13 +388,43 @@ void UTSTSSPartyGearMenuReviewWidget::NativeOnInitialized()
 void UTSTSSPartyGearMenuReviewWidget::AddPageLine(
     const FString& Value, int32 Size, FLinearColor Color, float Gap)
 {
-    if (ContentColumn && WidgetTree)
-        AddReviewText(WidgetTree, ContentColumn, Value, Size, Color, Gap);
+    if (!ContentColumn || !WidgetTree) return;
+    // Readable row treatment for roster and item records; this does not
+    // imply an equipped, learned or unlocked progression authority.
+    if (Value.Contains(TEXT(" | ")) && Size >= 16)
+    {
+        UBorder* RowPanel = WidgetTree->ConstructWidget<UBorder>();
+        UTextBlock* RowLabel = WidgetTree->ConstructWidget<UTextBlock>();
+        if (!RowPanel || !RowLabel) return;
+        RowPanel->SetBrushColor(
+            FLinearColor(0.045f, 0.099f, 0.122f, 1.f));
+        RowPanel->SetPadding(FMargin(15.f, 12.f, 15.f, 12.f));
+        RowLabel->SetText(FText::FromString(Value));
+        RowLabel->SetColorAndOpacity(FSlateColor(Color));
+        FSlateFontInfo Font = RowLabel->GetFont();
+        Font.Size = Size;
+        RowLabel->SetFont(Font);
+        RowLabel->SetAutoWrapText(true);
+        RowPanel->AddChild(RowLabel);
+        ContentColumn->AddChildToVerticalBox(RowPanel)->
+            SetPadding(FMargin(0.f, 0.f, 0.f, Gap));
+        return;
+    }
+    AddReviewText(WidgetTree, ContentColumn, Value, Size, Color, Gap);
 }
 
 void UTSTSSPartyGearMenuReviewWidget::AddPageHeading(const FString& Value)
 {
-    AddPageLine(Value, 20, FLinearColor(0.94f, 0.84f, 0.59f, 1.f), 13.f);
+    AddPageLine(Value, 25, FLinearColor(0.97f, 0.86f, 0.62f, 1.f), 15.f);
+    if (!WidgetTree || !ContentColumn) return;
+    UBorder* Rule = WidgetTree->ConstructWidget<UBorder>();
+    USizeBox* RuleHeight = WidgetTree->ConstructWidget<USizeBox>();
+    if (!Rule || !RuleHeight) return;
+    Rule->SetBrushColor(FLinearColor(0.54f, 0.44f, 0.27f, 1.f));
+    RuleHeight->SetHeightOverride(2.f);
+    RuleHeight->AddChild(Rule);
+    ContentColumn->AddChildToVerticalBox(RuleHeight)->
+        SetPadding(FMargin(0.f, 0.f, 0.f, 23.f));
 }
 
 void UTSTSSPartyGearMenuReviewWidget::RenderReviewPage()
@@ -357,6 +433,18 @@ void UTSTSSPartyGearMenuReviewWidget::RenderReviewPage()
     ContentColumn->ClearChildren();
     SlotLabels.Reset();
     SlotButtons.Reset();
+    for (int32 I = 0; I < NavigationButtons.Num(); ++I)
+    {
+        if (UButton* Nav = NavigationButtons[I])
+        {
+            Nav->SetBackgroundColor(
+                static_cast<int32>(ActivePage) == I
+                    ? FLinearColor(0.57f, 0.42f, 0.20f, 1.f)
+                    : FLinearColor(0.10f, 0.25f, 0.31f, 1.f));
+        }
+    }
+    AddPageLine(TEXT("VOYAGE SYSTEMS  /  FIRST WAKE REVIEW"), 13,
+        FLinearColor(0.45f, 0.79f, 0.82f, 1.f), 18.f);
     if (StageLabel)
     {
         StageLabel->SetText(FText::FromString(
@@ -595,10 +683,16 @@ void UTSTSSPartyGearMenuReviewWidget::RenderShipPage()
         if (!Button || !Text) return;
         Text->SetText(FText::FromString(Names[I]));
         FSlateFontInfo Font = Text->GetFont();
-        Font.Size = 12;
+        Font.Size = 15;
         Text->SetFont(Font);
+        Text->SetColorAndOpacity(FSlateColor(
+            FLinearColor(0.94f, 0.94f, 0.88f, 1.f)));
         Button->SetContent(Text);
-        Tabs->AddChildToHorizontalBox(Button)->SetPadding(FMargin(0.f,0.f,5.f,0.f));
+        Button->SetBackgroundColor(
+            static_cast<int32>(ActiveShipPage) == I
+                ? FLinearColor(0.57f, 0.42f, 0.20f, 1.f)
+                : FLinearColor(0.12f, 0.28f, 0.32f, 1.f));
+        Tabs->AddChildToHorizontalBox(Button)->SetPadding(FMargin(0.f,0.f,9.f,0.f));
         switch (I)
         {
         case 0: Button->OnClicked.AddDynamic(this, &UTSTSSPartyGearMenuReviewWidget::OpenShipOverview); break;
@@ -751,8 +845,25 @@ bool UTSTSSPartyGearMenuReviewWidget::TryToggleSlot(int32 Index)
 void UTSTSSPartyGearMenuReviewWidget::CloseReview()
 {
     RemoveFromParent();
+#if !UE_BUILD_SHIPPING
+    if (GEngine)
+    {
+        if (bRestoreOnScreenMessagesAfterClose)
+            GEngine->bEnableOnScreenDebugMessagesDisplay = true;
+        if (bRestoreMapWarningsAfterClose)
+            GEngine->bSuppressMapWarnings = false;
+    }
+    bRestoreOnScreenMessagesAfterClose = false;
+    bRestoreMapWarningsAfterClose = false;
+#endif
     if (APlayerController* Controller = GetOwningPlayer())
     {
+        if (bHUDHiddenByReview)
+        {
+            if (AHUD* HUD = Controller->GetHUD())
+                HUD->bShowHUD = true;
+            bHUDHiddenByReview = false;
+        }
         Controller->bShowMouseCursor = false;
         Controller->SetInputMode(FInputModeGameOnly());
     }

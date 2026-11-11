@@ -470,6 +470,13 @@ void ATSTSSExplorerCharacter::ToggleEquipmentReview()
     }
 
     EquipmentReviewMenu->AddToViewport(30);
+    EquipmentReviewMenu->SuspendReviewScreenWarnings();
+    if (AHUD* ReviewHUD = PC->GetHUD();
+        ReviewHUD && ReviewHUD->bShowHUD)
+    {
+        ReviewHUD->bShowHUD = false;
+        EquipmentReviewMenu->MarkWorldHUDHiddenForReview();
+    }
     PC->bShowMouseCursor = true;
     FInputModeGameAndUI Mode;
     Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);

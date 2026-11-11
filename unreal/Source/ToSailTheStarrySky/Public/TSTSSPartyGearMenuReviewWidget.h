@@ -64,6 +64,10 @@ public:
 
     // Navigable character/system/ship menu. Equipment is the G shortcut.
     void OpenPageForReview(ETSTSSReviewMenuPage Page);
+    // Hide only the First Wake review HUD that this menu itself obscures;
+    // do not alter HUD visibility across other worlds or title screens.
+    void MarkWorldHUDHiddenForReview() { bHUDHiddenByReview = true; }
+    void SuspendReviewScreenWarnings();
 
     // The review menu has no executable ship transformation authority.
     static bool IsShipConfigurationSelectableForReview(FName ConfigurationId);
@@ -81,6 +85,9 @@ private:
     ETSTSSPartySliceReviewStage ActiveStage = ETSTSSPartySliceReviewStage::FirstWake;
     FTSTSSReviewGearState ReviewState;
     bool bInitialized = false;
+    bool bHUDHiddenByReview = false;
+    bool bRestoreOnScreenMessagesAfterClose = false;
+    bool bRestoreMapWarningsAfterClose = false;
 
     UPROPERTY(Transient)
     TObjectPtr<UTextBlock> StageLabel;
@@ -93,6 +100,8 @@ private:
 
     UPROPERTY(Transient)
     TArray<TObjectPtr<UButton>> SlotButtons;
+    UPROPERTY(Transient)
+    TArray<TObjectPtr<UButton>> NavigationButtons;
 
     UPROPERTY(Transient)
     TObjectPtr<UVerticalBox> ContentColumn;
