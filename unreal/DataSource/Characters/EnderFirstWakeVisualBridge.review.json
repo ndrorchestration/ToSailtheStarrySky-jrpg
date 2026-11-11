@@ -111,6 +111,12 @@
     "accepted_hair": "TOUSLED_DARK_COPPER_BROWN_FULL_VOLUME",
     "accepted_face": "YOUTHFUL_EXPRESSIVE_WITH_LIGHT_STUBBLE",
     "accepted_outfit": "OLIVE_SLEEVES_LEATHER_HARNESS_BRASS_TEAL_GADGETS",
-    "accepted_goggles": "BRASS_TEAL_LENSES_ON_HEAD"
+    "accepted_goggles": "BRASS_TEAL_LENSES_ON_HEAD",
+    "original_filename": "1000009325.png",
+    "source_sha256": "b48954f09cbc8ee738a170373dc2e1949a8280c46ad45425d16a0bffb3c8dd67",
+    "image_width_px": 1536,
+    "image_height_px": 1024,
+    "image_bytes": 805243,
+    "source_binary_committed": false
   }
 }
