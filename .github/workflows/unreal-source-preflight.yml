@@ -214,5 +214,11 @@ jobs:
           python3 unreal/Tools/verify_first_wake_cinematic_plan.py
           python3 unreal/Tools/verify_first_wake_shot_handoffs.py
           python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_shot_handoffs.py' -v
+      - name: Validate Ender Centering and Pulse source, review sound safety and executable hold policy
+        run: |
+          python3 unreal/Tools/test_ender_resonator_magic_source.py -v
+          python3 unreal/Tools/build_ender_focus_sfx.py --validate
+          python3 -m unittest discover -s unreal/Tools -p 'test_ender_focus_sfx.py' -v
+          python3 -m unittest discover -s unreal/Tools -p 'test_ender_focus_native_source.py' -v
       - name: Verify complete source regression suite for F6 save and F7 Continue (no Unreal)
         run: python3 -m unittest discover -s unreal/Tools -p 'test_*.py'
