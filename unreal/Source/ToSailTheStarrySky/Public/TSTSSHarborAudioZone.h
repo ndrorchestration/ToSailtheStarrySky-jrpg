@@ -17,6 +17,7 @@ public:
     ATSTSSHarborAudioZone();
 
     virtual void BeginPlay() override;
+    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
     UPROPERTY(EditInstanceOnly, BlueprintReadWrite, Category="TSTSS|Audio|Zone")
     TObjectPtr<ATSTSSAudioEnvironmentDirector> HarborAudio;
