@@ -1,0 +1,35 @@
+{
+  "by_owner": {
+    "Ender": [
+      "ResonanceStaff",
+      "EngineersVest",
+      "SealedAviatorGoggles",
+      "HarmonicCalibrationKit"
+    ],
+    "Ionia": [
+      "CaptainSaber",
+      "CaptainsCoat",
+      "EarthCompass",
+      "ChartCase"
+    ],
+    "Lyra": [
+      "WaterFocus",
+      "TravelCoat",
+      "WaterPendant",
+      "HealersSatchel"
+    ],
+    "Shared": [
+      "RestorativeVial",
+      "ResonanceCapacitor"
+    ]
+  },
+  "expected_models": 14,
+  "gameplay_actors": 0,
+  "lyra_available_during_first_wake": false,
+  "map_package": "/Game/TSTSS/Review/PartyEquipment/TSTSS_ThreePartyGearGallery_REVIEW",
+  "native_gameplay_test": false,
+  "placed_models": 14,
+  "playable_character_actors": 0,
+  "review_only": true,
+  "status": "NATIVE_REVIEW_GALLERY_MAP_PASS_NO_VISUAL_PROOF"
+}

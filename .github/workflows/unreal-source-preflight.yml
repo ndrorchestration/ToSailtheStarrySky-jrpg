@@ -6,6 +6,11 @@ on:
   pull_request:
     paths:
       - 'unreal/Source/**'
+      - 'unreal/DataSource/**'
+      - 'unreal/Content/TSTSS/Review/VerticalSlice/**'
+      - 'unreal/ArtSource/VerticalSliceObjectsV1/**'
+      - 'unreal/ArtSource/PartyEquipment/**'
+      - 'unreal/Content/TSTSS/Review/PartyEquipment/**'
       - 'unreal/Config/**'
       - 'unreal/Tools/**'
       - 'unreal/Docs/**'
@@ -38,10 +43,16 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+      - name: Validate Ender Resonator review magic contract (source-only)
+        run: |
+          python3 -m unittest discover -s unreal/Tools -p 'test_ender_resonator_magic_source.py' -v
+          python3 -m py_compile unreal/Tools/build_ender_resonator_preview.py
       - name: Verify checker self-tests
         run: python3 unreal/Tools/test_automation_registry.py
       - name: Compare expected and registered Unreal tests
         run: python3 unreal/Tools/check_automation_registry.py
+      - name: Verify three-character party equipment GLBs and plot-stage gates (source only)
+        run: python3 unreal/ArtSource/PartyEquipment/test_party_equipment_source.py -v
       - name: Assert prior UE 5.8 native compatibility corrections (source-only)
         run: python3 -m unittest discover -s unreal/Tools -p 'test_ue58_composed_compatibility.py' -v
       - name: Validate seven-stop First Wake Prelude review authoring plan (source only)
@@ -116,6 +127,7 @@ jobs:
             'unreal/Tools/Verify-Unreal.ps1',
             'unreal/Tools/Assert-NativeAutomationReport.ps1',
             'unreal/Tools/Test-NativeAutomationReportFixtures.ps1',
+            'unreal/Tools/Test-NativeBuildOverlapFixtures.ps1',
             'unreal/Tools/Invoke-NativePreludeMapQA.ps1',
             'unreal/Tools/Assert-NativePreludeMapReceipt.ps1',
             'unreal/Tools/Test-NativePreludeMapReceiptFixtures.ps1'
@@ -127,7 +139,10 @@ jobs:
               throw "PowerShell parser rejected ${file}: $($parseErrors -join '; ')"
             }
           }
-          Write-Output "PASS: 6 PowerShell verification scripts parse (no engine launched)"
+          Write-Output "PASS: 7 PowerShell verification scripts parse (no engine launched)"
+      - name: Reject other native Unreal builds using isolated process fixtures
+        shell: pwsh
+        run: ./unreal/Tools/Test-NativeBuildOverlapFixtures.ps1
       - name: Exercise actual native report validator with positive and negative PowerShell fixtures
         shell: pwsh
         run: ./unreal/Tools/Test-NativeAutomationReportFixtures.ps1
@@ -175,7 +190,7 @@ jobs:
         run: |
           python3 unreal/Tools/check_first_wake_input_binding_compiled.py --self-test
           python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_input_binding_compiled.py' -v
-      - name: Keep #769 29-native-name and sandboxed Editor admission fail-closed (source only)
+      - name: Keep combined 35-name native Editor admission fail-closed (source only)
         run: python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_combined_native_admission.py' -v
       - name: Test read-only exact-head UE readiness refusal paths (NO Unreal started)
         run: python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_native_readiness.py' -v

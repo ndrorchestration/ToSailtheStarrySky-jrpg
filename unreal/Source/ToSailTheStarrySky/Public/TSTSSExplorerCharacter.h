@@ -39,6 +39,7 @@ private:
     void ShowObjectiveReview();
 #if WITH_EDITOR
     void ReviewContinue();
+    void ReviewShoreTravel();
     bool SaveReviewContinueBinding(const FString& Slot);
     bool bPendingReviewContinue = false;
     FString PendingReviewContinueDigest;

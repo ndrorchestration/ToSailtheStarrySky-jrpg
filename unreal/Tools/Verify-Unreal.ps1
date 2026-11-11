@@ -41,6 +41,19 @@ if ($ExpectedHead -ne '' -and $GitHead -ne $ExpectedHead) {
 $WorkingTree = @(git -C (Join-Path $PSScriptRoot '../..') status --porcelain)
 if ($LASTEXITCODE -ne 0) { throw 'Unable to inspect working tree' }
 if ($WorkingTree.Count -gt 0) { throw 'Working tree has uncommitted changes; evidence cannot be bound to HEAD' }
+# Reject another agent's active UnrealBuildTool/Build.bat BEFORE entering
+# UE's global Build.bat wait queue. Inspect process command lines only in memory;
+# never print or persist command-line arguments (they may contain credentials).
+function Assert-NoOtherUnrealBuild([string]$Phase) {
+    $Candidates = @(Get-CimInstance Win32_Process -Filter "Name='cmd.exe' OR Name='dotnet.exe' OR Name='UnrealBuildTool.exe'" -ErrorAction Stop)
+    $OtherBuilds = @($Candidates | Where-Object {
+        $_.CommandLine -match '(?i)(?:UnrealBuildTool(?:\.dll|\.exe)?|[\\/]Build\.bat)'
+    })
+    if ($OtherBuilds.Count -gt 0) {
+        throw "Native $Phase admission HOLD: another UnrealBuildTool or Build.bat is already active"
+    }
+}
+Assert-NoOtherUnrealBuild -Phase 'initial'
 # Do not compete with an active Editor/Live Coding session in this Windows
 # review lane. This also prevents wasteful multi-minute UBT failures.
 # Name-only checks: never collect or disclose Editor command-line credentials.
@@ -57,6 +70,33 @@ $Disk = Get-PSDrive -Name C -ErrorAction Stop
 if ($null -eq $Disk.Free -or $Disk.Free -lt (14 * 1GB)) {
     throw 'Insufficient free disk for native build: require at least 14 GiB'
 }
+# A second exact-head/source/resource admission protects the boundary after UBT:
+# a competing Editor, Live Coding, low RAM or low disk must never be followed
+# by a second UnrealEditor-Cmd automation launch. This is not a global lock;
+# other agents can still start later, so operators must also coordinate.
+function Assert-TSTSSNativeSessionStillSafe([string]$Phase) {
+    Assert-NoOtherUnrealBuild -Phase $Phase
+    $Active = @(Get-Process -Name 'UnrealEditor','UnrealEditor-Cmd','LiveCodingConsole' -ErrorAction SilentlyContinue)
+    if ($Active.Count -gt 0) {
+        throw "Native $Phase admission HOLD: another Unreal Editor or Live Coding process appeared"
+    }
+    $CurrentFreeKiB = (Get-CimInstance Win32_OperatingSystem -ErrorAction Stop).FreePhysicalMemory
+    if ($null -eq $CurrentFreeKiB -or $CurrentFreeKiB -lt 5242880) {
+        throw "Native $Phase admission HOLD: less than 5 GiB free physical RAM"
+    }
+    $CurrentDisk = Get-PSDrive -Name C -ErrorAction Stop
+    if ($null -eq $CurrentDisk.Free -or $CurrentDisk.Free -lt (14 * 1GB)) {
+        throw "Native $Phase admission HOLD: less than 14 GiB free C: disk"
+    }
+    $NowHead = (git -C (Join-Path $PSScriptRoot '../..') rev-parse HEAD)
+    if ($LASTEXITCODE -ne 0 -or $NowHead -ne $GitHead) {
+        throw "Native $Phase admission HOLD: source commit moved"
+    }
+    $Dirty = @(git -C (Join-Path $PSScriptRoot '../..') status --porcelain)
+    if ($LASTEXITCODE -ne 0 -or $Dirty.Count -gt 0) {
+        throw "Native $Phase admission HOLD: source worktree became dirty"
+    }
+}
 # Every verification attempt receives a fresh, non-overwriting receipt folder.
 # Keep previous success AND failure logs for head-specific review and debugging.
 $RunId = ('{0}-{1}-{2}' -f $GitHead.Substring(0, 12),
@@ -69,9 +109,11 @@ if (Test-Path $Evidence) { throw "Evidence folder already exists; refusing overw
 New-Item -Path $Evidence -ItemType Directory -ErrorAction Stop | Out-Null
 $GitHead | Set-Content (Join-Path $Evidence 'head.txt')
 Write-Host "Review evidence directory (unique; retained on failure): $Evidence"
+Assert-TSTSSNativeSessionStillSafe -Phase 'immediately-before-build'
 & $BuildTool ToSailTheStarrySkyEditor Win64 Development "-Project=$Project" -WaitMutex 2>&1 |
     Tee-Object (Join-Path $Evidence 'build.log')
 if ($LASTEXITCODE -ne 0) { throw "Unreal editor build failed ($LASTEXITCODE)" }
+Assert-TSTSSNativeSessionStillSafe -Phase 'after-build-before-native-tests'
 if ($SkipTests) {
     # Build-only evidence still requires a stable, clean checkout.
     $BuildHead = (git -C (Join-Path $PSScriptRoot '../..') rev-parse HEAD)
@@ -101,12 +143,49 @@ $ReportDirectory = Join-Path $Evidence 'AutomationReport'
 if (Test-Path $ReportDirectory) { throw 'Review automation evidence collision; refusing overwrite' }
 New-Item -Path $ReportDirectory -ItemType Directory -ErrorAction Stop | Out-Null
 $ExportArgument = '-ReportExportPath=' + $ReportDirectory
-& $EditorCmd $Project -unattended -nop4 -nullrhi '-ExecCmds=Automation RunTests TSTSS; Quit' $ExportArgument -log 2>&1 |
-    Tee-Object (Join-Path $Evidence 'automation.log')
-if ($LASTEXITCODE -ne 0) { throw "Unreal automation command failed ($LASTEXITCODE)" }
+# UE Editor startup may serialize input defaults and persist plugin-generated
+# settings (including transient local values). Never permit the commandlet to
+# rewrite tracked source configs merely to produce an automation report.
+$ProtectedConfigPaths = @(
+    (Join-Path $PSScriptRoot '../Config/DefaultEngine.ini'),
+    (Join-Path $PSScriptRoot '../Config/DefaultInput.ini')
+)
+$ConfigGuards = @()
+foreach ($Path in $ProtectedConfigPaths) {
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { throw "Missing protected Unreal source config: $Path" }
+    $File = Get-Item -LiteralPath $Path -ErrorAction Stop
+    $ConfigGuards += [pscustomobject]@{
+        Path = $Path
+        OldReadOnly = $File.IsReadOnly
+        BeforeSha256 = (Get-FileHash -LiteralPath $Path -Algorithm SHA256 -ErrorAction Stop).Hash
+    }
+}
+$EditorExitCode = $null
+try {
+    foreach ($Guard in $ConfigGuards) {
+        (Get-Item -LiteralPath $Guard.Path -ErrorAction Stop).IsReadOnly = $true
+    }
+    & $EditorCmd $Project -unattended -nop4 -nullrhi '-ExecCmds=Automation RunTests TSTSS; Quit' $ExportArgument -log 2>&1 |
+        Tee-Object (Join-Path $Evidence 'automation.log')
+    $EditorExitCode = $LASTEXITCODE
+} finally {
+    foreach ($Guard in $ConfigGuards) {
+        # Restore original file attributes on every outcome, including failure.
+        (Get-Item -LiteralPath $Guard.Path -ErrorAction Stop).IsReadOnly = $Guard.OldReadOnly
+    }
+}
+if ($null -eq $EditorExitCode -or $EditorExitCode -ne 0) {
+    throw "Unreal automation command failed ($EditorExitCode)"
+}
+foreach ($Guard in $ConfigGuards) {
+    $After = (Get-FileHash -LiteralPath $Guard.Path -Algorithm SHA256 -ErrorAction Stop).Hash
+    if ($After -ne $Guard.BeforeSha256) {
+        throw "Tracked Unreal source config changed during native automation: $($Guard.Path)"
+    }
+}
 $ReportPath = Join-Path $Evidence 'AutomationReport/index.json'
 if (-not (Test-Path $ReportPath)) { throw 'No automation JSON evidence; refusing to mark PASS' }
-# Keep the 29-name registry local; a separate read-only PowerShell function
+# Keep the 35-name registry local; a separate read-only PowerShell function
 # checks that JSON summary and distinct per-test paths genuinely agree.
 $RequiredTests = @(
     'TSTSS.Combat.TransactionalActions',
@@ -114,6 +193,7 @@ $RequiredTests = @(
     'TSTSS.Combat.TurnOrderAndAtomicity',
     'TSTSS.Combat.AbilityAuthorization',
     'TSTSS.Combat.MagicAndWeaponTechniques',
+    'TSTSS.Magic.ResonatorCueContract',
     'TSTSS.Combat.InitiativeAndActiveParty',
     'TSTSS.Combat.TurnManagerTerminalOutcomes',
     'TSTSS.CombatData.ProtagonistContracts',
@@ -126,9 +206,14 @@ $RequiredTests = @(
     'TSTSS.Design.HybridCharacterJobs',
     'TSTSS.Design.HybridJobTableReadback',
     'TSTSS.CombatIntegration.DesignOnlyTurnManagerDenial',
+    'TSTSS.Atmosphere.PresetsAndNightContinuity',
     'TSTSS.FirstWake.InteractionCameraBoomReach',
     'TSTSS.FirstWake.ReviewObjectivesAreReadOnly',
     'TSTSS.CombatIntegration.EnderGearSpellBattleReview',
+    'TSTSS.Equipment.PartySliceStageGate',
+    'TSTSS.Slice.Enemies.RegistryAndAdmission',
+    'TSTSS.Slice.Enemies.RealTurnManagerBoundary',
+    'TSTSS.Slice.Enemies.AuthorizedAIAndFallback',
     'TSTSS.Combat.EncounterCompletion',
     'TSTSS.FirstWake.RequiresOrderedMilestones',
     'TSTSS.FirstWake.InteractionToSplashdown',
@@ -155,4 +240,19 @@ $FinalWorkingTree = @(git -C (Join-Path $PSScriptRoot '../..') status --porcelai
 if ($LASTEXITCODE -ne 0 -or $FinalWorkingTree.Count -gt 0) {
     throw 'Working tree changed during verification; refusing to bind PASS to a dirty checkout'
 }
+# The visual-staging handoff must consume a concrete exact-head native receipt,
+# not an earlier branch's source CI, build-only receipt or aggregate green label.
+$AcceptedReceipt = Join-Path $Evidence 'verified-native.json'
+if (Test-Path -LiteralPath $AcceptedReceipt) { throw 'Refuse overwriting native acceptance receipt' }
+$NativeAcceptance = [ordered]@{
+    status = 'WIN64_EDITOR_BUILD_AND_NATIVE_AUTOMATIONS_PASS_CLEAN_SOURCE'
+    source_sha = $GitHead
+    unreal_version = '5.8.4'
+    required_native_tests = $RequiredTests.Count
+    report_sha256 = (Get-FileHash -LiteralPath $ReportPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    pie_player_input = 'NOT_TESTED'
+    visual_approval = 'NOT_TESTED'
+}
+$NativeAcceptance | ConvertTo-Json -Depth 4 |
+    Set-Content -LiteralPath $AcceptedReceipt -Encoding UTF8
 Write-Host "Native build and reported automation checks passed at $GitHead. Evidence retained at $Evidence. Visual acceptance remains separate."
