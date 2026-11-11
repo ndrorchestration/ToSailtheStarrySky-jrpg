@@ -18,6 +18,19 @@ class FirstWakeInputBindingProbeContracts(unittest.TestCase):
         self.assertIn('BindAction(TEXT("QuickSave"), IE_Pressed', src)
         self.assertIsNone(config_guard(self.config))
 
+    def test_scene_travel_k_only_bound_for_playing_worlds(self):
+        src = method_from(self.character)
+        self.assertIn('BindAction(TEXT("ReviewShoreTravel"), IE_Pressed', src)
+        self.assertIn('InputWorld->WorldType == EWorldType::Game', src)
+        self.assertIn('InputWorld->WorldType == EWorldType::PIE', src)
+        self.assertIsNone(config_guard(self.config))
+        with self.assertRaises(ValueError):
+            config_guard(self.config.replace(
+                'ActionName="ReviewShoreTravel",Key=K',
+                'ActionName="ReviewShoreTravel",Key=F5', 1))
+        with self.assertRaises(ValueError):
+            config_guard(self.config + '\n+ActionMappings=(ActionName="ReviewShoreTravel",Key=F7)\n')
+
     def test_ambiguous_method_boundaries_rejected(self):
         with self.assertRaises(ValueError):
             method_from(self.character.replace(
