@@ -115,6 +115,22 @@ class CrossPathReviewContract(unittest.TestCase):
     def test_all_nine_lanes_and_native_registry(self):
         self.assertEqual([], validate(self.data))
 
+    def test_refuses_another_agent_build_before_wait_mutex_queue(self):
+        source = (UNREAL / "Tools/Verify-Unreal.ps1").read_text(encoding="utf-8")
+        self.assertIn("function Assert-NoOtherUnrealBuild", source)
+        self.assertIn("Assert-NoOtherUnrealBuild -Phase 'initial'", source)
+        self.assertIn("Assert-NoOtherUnrealBuild -Phase $Phase", source)
+        self.assertIn("UnrealBuildTool", source)
+        self.assertIn("Build\\.bat", source)
+        self.assertIn("Get-CimInstance Win32_Process", source)
+        self.assertIn("already active", source)
+        self.assertLess(source.index("Assert-NoOtherUnrealBuild -Phase 'initial'"),
+                        source.index("& $BuildTool ToSailTheStarrySkyEditor"))
+        workflow = (UNREAL.parent / ".github/workflows/unreal-source-preflight.yml").read_text(encoding="utf-8")
+        self.assertIn("run: ./unreal/Tools/Test-NativeBuildOverlapFixtures.ps1", workflow)
+        self.assertIn("7 PowerShell verification scripts parse", workflow)
+        self.assertTrue((UNREAL / "Tools/Test-NativeBuildOverlapFixtures.ps1").is_file())
+
     def test_native_build_rechecks_race_and_disk_before_automation(self):
         # A second Editor/UBT lane started after the initial admission on
         # 2026-11-10; no build-only/source pass may bypass this second gate.

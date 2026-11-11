@@ -41,6 +41,19 @@ if ($ExpectedHead -ne '' -and $GitHead -ne $ExpectedHead) {
 $WorkingTree = @(git -C (Join-Path $PSScriptRoot '../..') status --porcelain)
 if ($LASTEXITCODE -ne 0) { throw 'Unable to inspect working tree' }
 if ($WorkingTree.Count -gt 0) { throw 'Working tree has uncommitted changes; evidence cannot be bound to HEAD' }
+# Reject another agent's active UnrealBuildTool/Build.bat BEFORE entering
+# UE's global Build.bat wait queue. Inspect process command lines only in memory;
+# never print or persist command-line arguments (they may contain credentials).
+function Assert-NoOtherUnrealBuild([string]$Phase) {
+    $Candidates = @(Get-CimInstance Win32_Process -Filter "Name='cmd.exe' OR Name='dotnet.exe' OR Name='UnrealBuildTool.exe'" -ErrorAction Stop)
+    $OtherBuilds = @($Candidates | Where-Object {
+        $_.CommandLine -match '(?i)(?:UnrealBuildTool(?:\.dll|\.exe)?|[\\/]Build\.bat)'
+    })
+    if ($OtherBuilds.Count -gt 0) {
+        throw "Native $Phase admission HOLD: another UnrealBuildTool or Build.bat is already active"
+    }
+}
+Assert-NoOtherUnrealBuild -Phase 'initial'
 # Do not compete with an active Editor/Live Coding session in this Windows
 # review lane. This also prevents wasteful multi-minute UBT failures.
 # Name-only checks: never collect or disclose Editor command-line credentials.
@@ -62,6 +75,7 @@ if ($null -eq $Disk.Free -or $Disk.Free -lt (14 * 1GB)) {
 # by a second UnrealEditor-Cmd automation launch. This is not a global lock;
 # other agents can still start later, so operators must also coordinate.
 function Assert-TSTSSNativeSessionStillSafe([string]$Phase) {
+    Assert-NoOtherUnrealBuild -Phase $Phase
     $Active = @(Get-Process -Name 'UnrealEditor','UnrealEditor-Cmd','LiveCodingConsole' -ErrorAction SilentlyContinue)
     if ($Active.Count -gt 0) {
         throw "Native $Phase admission HOLD: another Unreal Editor or Live Coding process appeared"
