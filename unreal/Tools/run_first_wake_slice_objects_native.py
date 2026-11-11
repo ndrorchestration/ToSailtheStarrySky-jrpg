@@ -18,6 +18,7 @@ import sys
 import time
 
 import stage_first_wake_slice_objects as stage
+import prepare_first_wake_editor_module as native_module
 
 ROOT=Path(__file__).resolve().parents[2]
 PROJECT=ROOT/"unreal"
@@ -27,7 +28,7 @@ NATIVE=PROJECT/stage.DEST_RECEIPT_REL
 HOST=OUTPUT/"host_objects_stage.json"
 LOG=OUTPUT/"objects_native.log"
 CONSOLE=OUTPUT/"objects_console.log"
-BRANCH="review/ue58-vslice-objects-20261110"
+BRANCH="review/ue58-vslice-objects-native-v2-20261110"
 MIN_RAM_GIB=5.0
 MIN_DISK_GIB=14.0
 MAX_RUNTIME_SECONDS=300
@@ -69,6 +70,10 @@ def prerequisites():
     if list((PROJECT/"Saved/SaveGames").glob("*.sav")):
         raise RuntimeError("HOLD: user/review save exists, will not touch")
     stages=stage.validate_source()
+    # The isolated worktree must possess a source-parity-checked UE Editor DLL
+    # from an independently read-back native source revision. Never pretend
+    # that a bare .uproject can load a missing C++ game module.
+    native_module.verify_module()
     process_listing=subprocess.run(["tasklist","/FO","CSV"],capture_output=True,
                                    text=True,check=True,timeout=20).stdout.lower()
     if any(p in process_listing for p in

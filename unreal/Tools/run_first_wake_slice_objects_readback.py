@@ -68,6 +68,7 @@ def preflight():
         raise RuntimeError("HOLD: dirty/rebased source branch")
     if not EDITOR.is_file() or not VERIFIER.is_file():
         raise RuntimeError("HOLD: native Editor/verifier unavailable")
+    guarded.native_module.verify_module()
     version=json.loads((EDITOR.parents[2]/"Build/Build.version").read_text(encoding="utf-8"))
     if tuple(version.get(x) for x in ("MajorVersion","MinorVersion","PatchVersion"))!=(5,8,4):
         raise RuntimeError("HOLD: native Unreal version mismatch")

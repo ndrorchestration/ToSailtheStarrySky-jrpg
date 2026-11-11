@@ -17,7 +17,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import generate_first_wake_slice_objects as objects
 
-ROOT_NAME = "TSTSS_VSliceObjects_20261110"
+ROOT_NAME = "TSTSS_VSliceObjectsNativeV2_20261110"
 SOURCE_MAP = "/Game/TSTSS/Review/Scenes/FirstWake_HarborEnvironment_20261104_REVIEW_V1"
 NEW_MAP = "/Game/TSTSS/Review/Scenes/FirstWake_SliceObjects_20261110_REVIEW_V1"
 SOURCE_MAP_REL = "Content/TSTSS/Review/Scenes/FirstWake_HarborEnvironment_20261104_REVIEW_V1.umap"
