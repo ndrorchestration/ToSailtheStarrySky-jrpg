@@ -102,11 +102,12 @@ def generate(root:Path):
     root.mkdir(parents=True,exist_ok=True)
     for name in NAMES:
         path=root/(name+".wav")
-        with wave.open(str(path),"xb") as f:
-            f.setnchannels(1)
-            f.setsampwidth(2)
-            f.setframerate(RATE)
-            f.writeframes(build_pcm(name))
+        with path.open("xb") as raw:
+            with wave.open(raw,"wb") as f:
+                f.setnchannels(1)
+                f.setsampwidth(2)
+                f.setframerate(RATE)
+                f.writeframes(build_pcm(name))
         result["assets"][name]={
             "sha256":hashlib.sha256(path.read_bytes()).hexdigest(),
             "bytes":path.stat().st_size,
