@@ -82,5 +82,7 @@ private:
     UPROPERTY(VisibleAnywhere, Category="TSTSS|Slice Review")
     TObjectPtr<UTextRenderComponent> ReviewLabel;
 
+    UStaticMeshComponent* MakePiece(const TCHAR* Name);
+
     float IdleTime = 0.f;
 };
