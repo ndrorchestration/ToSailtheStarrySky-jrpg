@@ -1,0 +1,27 @@
+{
+  "actual_tested_scope": [
+    "Lyra splashdown versus explicit recruitment",
+    "nine native wearable StaticMesh packages load",
+    "native actor three-slot mesh mount",
+    "in-memory owner-checked unequip and re-equip",
+    "excluded party denial"
+  ],
+  "all_30_strict_tests": "NOT_RUN; separate Editor and LiveCodingConsole sessions active; strict script prohibits concurrent execution",
+  "build": "ToSailTheStarrySkyEditor Win64 Development PASS; isolated worktree",
+  "creator_approved": false,
+  "duration_seconds": 0.09780450165271759,
+  "engine_version": "5.8.4",
+  "errors": 0,
+  "evidence_type": "UNREAL_NATIVE_TARGETED_TEST_DIAGNOSTIC",
+  "production_authorized": false,
+  "project_config_status": "Editor commandlet regenerated DefaultEngine.ini and DefaultInput.ini; both restored to exact HEAD, verified clean",
+  "rendering": "NullRHI; no D3D12 visual or skeletal rig-fitting proof",
+  "report_generated_on": "2026.11.11-03.39.12",
+  "reported_test_count": 1,
+  "runtime_save_or_story_modified": false,
+  "source_custody": "executed on uncommitted isolated branch; not an exact-head clean-source receipt; code staged for commit without post-test C++ edits",
+  "test_name": "TSTSS.Equipment.PartySliceStageGate",
+  "test_report_local": "unreal/Saved/PartyEquipmentNativeDiagnostic_20261111T033818Z/Report/index.json",
+  "test_state": "Success",
+  "warnings": 0
+}

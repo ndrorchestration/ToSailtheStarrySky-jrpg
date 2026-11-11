@@ -23,10 +23,10 @@ This is **authored low-to-mid complexity static 3D geometry** for editor inspect
 
 ## Review-only C++ equipment ledger wiring
 
-The new `FTSTSSPartySliceReviewEquipment` stage gate returns only Ender and Ionia in `FirstWake`, and Ender, Ionia, Lyra in `AfterSplashdown`. It constructs explicitly requested in-memory test gear with weapon, armor, accessory slots and passes it to the existing `FTSTSSReviewEquipment::TryEquip` ownership/slot validation. The fixture does not mint persistent inventory, grant loot, update SaveGame, or spawn assets automatically.
+The review stage gate admits Ender and Ionia in FirstWake and AfterSplashdown. Lyra is admitted ONLY at the separate LyraRecruited stage, never on splashdown alone.
 
 - Opening fixture: **2 owners, 6 equipped instances**.
-- Post-splashdown fixture: **3 owners, 9 equipped instances**.
+- After-Lyra-recruitment fixture: **3 owners, 9 equipped instances**. Immediate post-splashdown (before recruitment) remains two owners and six equipped instances.
 - Prototype-only stat bonuses (not approved balance): Ender staff +3 ATK, vest +3 DEF, goggles +1 DEF; Ionia saber +2 ATK, coat +3 DEF, compass +1 DEF; Lyra focus +1 ATK, coat +2 DEF, pendant +1 DEF.
 - Non-equippable props have no combat or consumable authority.
 - The new mandatory native automation `TSTSS.Equipment.PartySliceStageGate` checks valid and invalid ownership, stage progression, excluded protagonists, atomicity, and use of the existing battle-start stat/weapon-class projection. It is not an in-game party UI or a runtime unlock.
@@ -46,7 +46,7 @@ The 84 native `.uasset` files (14 meshes plus generated material assets; 6,463,4
 
 A content-only native **showroom** level was then authored via `native_build_gallery_review.py` and **saved** at `/Game/TSTSS/Review/PartyEquipment/TSTSS_ThreePartyGearGallery_REVIEW`: 14 StaticMesh actors (four per party member plus two shared props), 14 review pedestals, key/fill light actors and owner/item actor labels. The source `.umap` was SHA-256 matched to the isolated target worktree copy. Native headless report status `NATIVE_REVIEW_GALLERY_MAP_PASS_NO_VISUAL_PROOF` is tracked in `unreal/Docs/PartyEquipment_NativeGallery_2026_11_10.report.json`. This is **NOT** a character rig-fitting level or proof of visual quality, hand sockets, pickup interactions, recruitment story binding, real UI, combat activation, or gameplay.
 
-The target Unreal 5.8 Editor build attempt on this worktree encountered `Unable to build while Live Coding is active` because another Editor session was running. Source test successes and imported assets do not establish native C++ compilation, rigging, screenshots, gameplay equipment interaction, class mastery, or creative art approval.
+The initial target C++ build was blocked by an active Live Coding session. A subsequent isolated Windows UE 5.8.4 UBT/UHT build succeeded. Full native automation execution, rig fitting and visual acceptance remain separate gates.
 
 ## Next admission gates
 
@@ -57,3 +57,15 @@ The target Unreal 5.8 Editor build attempt on this worktree encountered `Unable 
 5. Integrate through actual recruitment state, 3-active party UI, owned inventory and player-controlled gameplay; keep Lyra gated and Reson/Aepex excluded.
 
 **Do not merge or represent this as approved, playable or release-ready without the missing evidence.**
+
+## Continued integration ? separate recruitment and native mount interfaces
+
+The authored GLB manifest retains post_splashdown as an ASSET CHRONOLOGY TAG, not evidence that Lyra was recruited. It now includes lyra_unlock_requires: LyraRecruited, and an explicit review_availability_gate on each entry. Regeneration must reproduce the manifest fields and all 14 existing GLB hashes.
+
+The developer-review-only UTSTSSPartyGearReviewMountComponent is a Blueprint-callable bridge between the atomic gear ledger and three caller-owned native UStaticMeshComponent mounts (weapon, armor, accessory). The caller authors the physical mount placements. The component rejects excluded characters, Lyra before explicit review recruitment, duplicate/foreign-owner components, missing native assets and failed ledger swaps before mutating the view. TrySetReviewSlotEquipped swaps both the transient ledger and native mounted mesh. It does not mint items, advance the plot, unlock abilities or persist SaveGame.
+
+No skeletal rig or socket names are presumed: exact weapon grips, cloth and goggles attachment points must be supplied and visually verified on the actual approved character rigs. This component does not force loose torso-shell study meshes onto an unapproved player body.
+
+The existing mandatory TSTSS.Equipment.PartySliceStageGate Editor automation has been extended to cover splashdown versus recruitment, native loading of the nine wearable mesh packages and a disposable actor-based mount / equip / unequip / denied-access test. These new assertions must be executed under UE 5.8.4 and reported SUCCESS before dynamic behavior is called verified. Seven engine-free checks independently cover geometry, source provenance, stage gating, asset allowlists and Unreal import path consistency.
+
+Remaining: exact-head native test report; owner and story-state wiring to a player UI; actual skeleton/socket fit and cinematics; D3D12 screenshots; animation; combat; explicit creator art approval. This review-only component is not a shipping gameplay feature.

@@ -19,6 +19,7 @@ class TestPartyEquipmentSource(unittest.TestCase):
   m=self.manifest
   self.assertEqual(m["available_party"],["Ender","Ionia"])
   self.assertEqual(m["joins_post_splashdown"],["Lyra"])
+  self.assertEqual(m["lyra_unlock_requires"],"LyraRecruited")
   self.assertEqual(m["excluded_party"],["Reson","Aepex"])
   self.assertFalse(m["automatic_item_grants"])
   self.assertFalse(m["creator_approved"])
@@ -31,6 +32,8 @@ class TestPartyEquipmentSource(unittest.TestCase):
    self.assertEqual(got,slots,owner)
   for i in entries:
    self.assertNotIn(i["owner"],("Reson","Aepex"))
+   self.assertEqual(i["review_availability_gate"],"LyraRecruited" if i["owner"]=="Lyra"
+                    else "FirstWake" if i["owner"] in ("Ender","Ionia") else "scene_prop_only")
    self.assertEqual(i["stage"],"post_splashdown" if i["owner"]=="Lyra"
                     or i["id"]=="Shared.RestorativeVial" else "prelude")
    self.assertFalse(i["runtime_equippable"])
@@ -66,4 +69,42 @@ class TestPartyEquipmentSource(unittest.TestCase):
   self.assertEqual(i["sha256"],
      "0ceb1955bcc8053dc306f564bbe3a6647b36a3d9aa09f49fcff5752e7d89e307")
   self.assertTrue(1.70 < i["bounds_m"][1][1]-i["bounds_m"][1][0] < 1.75)
+
+ def test_splashdown_does_not_equal_recruitment(self):
+  root=HERE.parents[1]/"Source"/"ToSailTheStarrySky"
+  header=(root/"Public"/"TSTSSPartySliceReviewEquipment.h").read_text(encoding="utf-8-sig")
+  impl=(root/"Private"/"TSTSSPartySliceReviewEquipment.cpp").read_text(encoding="utf-8-sig")
+  tests=(root/"Private"/"Tests"/"TSTSSPartySliceEquipmentTests.cpp").read_text(encoding="utf-8-sig")
+  self.assertIn("AfterSplashdown",header)
+  self.assertIn("LyraRecruited",header)
+  self.assertIn('CharacterId == TEXT("Lyra")',impl)
+  self.assertIn("Stage == ETSTSSPartySliceReviewStage::LyraRecruited",impl)
+  self.assertIn("splashdown is not proof Lyra has joined",tests)
+  self.assertIn("splashdown alone grants no Lyra equipment",tests)
+  self.assertIn('After.EquippedByCharacter.Num(), 3',tests)
+ def test_review_mount_is_allowlisted_and_nonpersistent(self):
+  root=HERE.parents[1]/"Source"/"ToSailTheStarrySky"
+  h=(root/"Public"/"TSTSSPartyGearReviewMountComponent.h").read_text(encoding="utf-8-sig")
+  impl=(root/"Private"/"TSTSSPartyGearReviewMountComponent.cpp").read_text(encoding="utf-8-sig")
+  self.assertIn("TryInitializeReviewDisplay",h)
+  self.assertIn("TrySetReviewSlotEquipped",h)
+  self.assertIn("FTSTSSReviewEquipment::TryEquip(",impl)
+  self.assertIn("IsMemberAvailable(Stage, CharacterId)",impl)
+  self.assertIn("IsOwnedMount(GetOwner(), WeaponMount)",impl)
+  self.assertIn("WeaponMount == ArmorMount",impl)
+  self.assertIn("ReviewState = MoveTemp(Candidate)",impl)
+  self.assertNotIn("SaveGame",impl)
+  for i in self.manifest["entries"]:
+   if i["slot"] in {"weapon","armor","accessory"}:
+    self.assertIn('TEXT("'+i["id"].split(".")[1]+'")',impl,i["id"])
+ def test_native_path_contract_for_review_mount(self):
+  report=HERE.parents[1]/"Docs"/"PartyEquipment_NativeStaticImport_2026_11_10.report.json"
+  entries=json.loads(report.read_text(encoding="utf-8"))["entries"]
+  for i in entries:
+   if i["owner"]=="Shared":continue
+   owner,suffix=i["id"].split(".")
+   asset=owner+"_"+suffix+"_REVIEW"
+   expected="/Game/TSTSS/Review/PartyEquipment/"+owner+"/"+asset+"/StaticMeshes/"+asset+"."+asset
+   self.assertEqual(i["mesh_path"],expected,i["id"])
+
 if __name__=="__main__":unittest.main()

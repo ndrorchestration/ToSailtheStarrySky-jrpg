@@ -277,12 +277,14 @@ def main():
   "review_only":True,"creator_approved":False,
   "automatic_item_grants":False,"spells_granted":False,
   "available_party":["Ender","Ionia"],"joins_post_splashdown":["Lyra"],
-  "excluded_party":["Reson","Aepex"],"entries":[]}
+  "excluded_party":["Reson","Aepex"],"lyra_unlock_requires":"LyraRecruited","entries":[]}
  for owner,name,slot,shape,stage,note in ITEMS:
   filename=f"{owner}_{name}_REVIEW.glb"
   path=OUT/filename
   record={"owner":owner,"id":f"{owner}.{name}","slot":slot,
    "stage":stage,"notes":note,"relative_path":f"Generated/{filename}",
+   "review_availability_gate":("LyraRecruited" if owner=="Lyra" else
+                              "FirstWake" if owner in ("Ender","Ionia") else "scene_prop_only"),
    "rig_attached":False,"collision_tested":False,"creator_approved":False,
    "runtime_equippable":False,"is_full_character_outfit":False}
   if shape=="existing_staff":
