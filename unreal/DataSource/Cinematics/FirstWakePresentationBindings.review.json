@@ -1,0 +1,281 @@
+{
+  "schema": "tstss.firstwake.presentation.bindings.review.v1",
+  "status": "SOURCE_CONTRACT_ONLY_NOT_RUNTIME_CONNECTED",
+  "engine": "Unreal Engine 5.8.4",
+  "expected_focus_profile": "unreal/DataSource/Cinematics/FirstWakeFocusProfiles.review.json",
+  "external_dependencies": {
+    "lighting_look_library": {
+      "pr": 796,
+      "commit": "b77268695a156a7a6684c081abfd1993fb29619c",
+      "path": "unreal/Tools/tstss_lighting_review.py",
+      "status": "SEPARATE_UNMERGED_REVIEW_SOURCE"
+    },
+    "world_weather_source": {
+      "pr": 798,
+      "commit": "fbe149d2612bd21fd52679f02988d7382fa5b715",
+      "weather_modes": [
+        "Clear",
+        "CoastalMist",
+        "Rain",
+        "Storm",
+        "Snow",
+        "Blizzard",
+        "AuroralVeil"
+      ],
+      "status": "SEPARATE_UNMERGED_REVIEW_SOURCE"
+    },
+    "focus_profile_source": {
+      "pr": 815,
+      "status": "CURRENT_REVIEW_BRANCH_ONLY"
+    },
+    "playable_convergence": {
+      "pr": 813,
+      "commit": "76268b8975ec3ce7b7644b6223c09d4889b658a2",
+      "status": "UNMERGED_REVIEW"
+    },
+    "route_traversal": {
+      "pr": 814,
+      "status": "SEPARATE_UNMERGED_REVIEW_SOURCE"
+    },
+    "audio": {
+      "pr": 804,
+      "status": "UNVERIFIED_RUNTIME_BINDING_NO_EVENT_ASSERTED"
+    }
+  },
+  "valid_lighting_look_ids": [
+    "harbor_day",
+    "harbor_dusk",
+    "harbor_night_review",
+    "engineering",
+    "bridge",
+    "ascent",
+    "auroral_twilight",
+    "phase_drift",
+    "storm_descent",
+    "sea_contact",
+    "shore_aftermath"
+  ],
+  "maps": [
+    "VS01_DenithHarbor",
+    "VS02_AureateInteriors",
+    "VS03_FirstWakeSky",
+    "VS04_SplashdownSea",
+    "VS05_DenithFuelShanty",
+    "VS06_SplashdownShore"
+  ],
+  "proposed_single_owner": {
+    "world_time_weather_sky_fog": "Atmosphere source #798 ONCE INTEGRATED; lighting look #796 only parameters, no duplicate sky/light actors",
+    "shot_focus_and_dof": "CineCamera/Focus #815, never progression",
+    "tone_exposure_bloom": "ONE postprocess channel reconciled with lighting/atmosphere; no independent unbounded PPV from focus branch",
+    "audio_playback_and_mix": "Audio owner #804 ONCE NATIVE_VERIFIED; receives semantic presentation intent only",
+    "navigation_and_progression": "Gameplay/story/physics, independently of all view intents",
+    "magic_vfx": "Existing gameplay-authorized cue source; presentation may scale only visual intensity, not casting or resource costs"
+  },
+  "proposed_arbitration_priority": [
+    "ACCESSIBILITY_AND_SAFE_READABILITY",
+    "ACTIVE_GAMEPLAY_NAVIGATION_COMBAT_INTERACTION",
+    "VERIFIED_STORY_AUTHORED_CINEMATIC",
+    "WORLD_ENVIRONMENT_AND_SPATIAL_DEPTH",
+    "OPTIONAL_AESTHETIC_LOOKDEV"
+  ],
+  "data_flow": {
+    "inputs": "Read-only committed story beat, map, actor/camera transforms, world time/weather, owned lights, verified physics flags, graphics/accessibility preferences",
+    "output": "Desired camera focus, exposure/look intent, audio mix intent, optional VFX intensity; never gameplay actions",
+    "commit_or_save_game_mutation": false,
+    "cinematics_can_unlock_story": false,
+    "bokeh_can_fake_distance_scattering": false,
+    "visuals_can_replace_physical_sea_contact": false
+  },
+  "procedural_safeguards": {
+    "review_only": true,
+    "production_content_modified": false,
+    "render_admission": "NOT_RUN",
+    "allowed_party_members": [
+      "Ender",
+      "Ionia",
+      "Lyra_POST_SPLASHDOWN_ONLY"
+    ],
+    "starbourne_gated": true,
+    "no_global_postprocess_edits": true,
+    "no_extra_lighting_actor_spawns": true,
+    "source_validation_required": true,
+    "native_approval_required": true
+  },
+  "unresolved_for_integration": [
+    "Missing authentic night-shore lighting preset for FW09",
+    "No verified cross-PR native unity of #796 lighting and #798 weather actor ownership",
+    "No runtime binding or exact event IDs for authored audio",
+    "No runtime presentation arbiter, actor-attention tracking, or camera-to-PIE authority",
+    "No creator-approved screenshot/perf or stable low-memory staging evidence"
+  ],
+  "bindings": [
+    {
+      "focus_shot": "FW01_Dock_Establish",
+      "map": "VS01_DenithHarbor",
+      "lighting_look": "harbor_dusk",
+      "lighting_bind_status": "EXTERNAL_DRAFT_REFERENCE_NOT_INTEGRATED",
+      "story_phase_semantic_only": "PRELAUNCH",
+      "camera_mode": "EXPLORATION",
+      "allowed_weather_modes": [
+        "Clear",
+        "CoastalMist",
+        "Rain"
+      ],
+      "audio_intent": "harbor_rope_wind_waves",
+      "audio_binding_status": "SEMANTIC_UNBOUND_NO_AUDIO_EVENT_ASSERTED",
+      "accessibility_and_gameplay_gate": "dock_edge_readability",
+      "native_provenance": "NOT_ESTABLISHED",
+      "output_authority": "PRESENTATION_INTENT_ONLY"
+    },
+    {
+      "focus_shot": "FW02_Ionia_Conversation",
+      "map": "VS01_DenithHarbor",
+      "lighting_look": "harbor_dusk",
+      "lighting_bind_status": "EXTERNAL_DRAFT_REFERENCE_NOT_INTEGRATED",
+      "story_phase_semantic_only": "IONIA_HIRING_AUTHORED",
+      "camera_mode": "DIALOGUE",
+      "allowed_weather_modes": [
+        "Clear",
+        "CoastalMist",
+        "Rain"
+      ],
+      "audio_intent": "intimate_dialogue_harbor_lanterns",
+      "audio_binding_status": "SEMANTIC_UNBOUND_NO_AUDIO_EVENT_ASSERTED",
+      "accessibility_and_gameplay_gate": "dialogue_and_eye_focus",
+      "native_provenance": "NOT_ESTABLISHED",
+      "output_authority": "PRESENTATION_INTENT_ONLY"
+    },
+    {
+      "focus_shot": "FW03_Engine_Inspection",
+      "map": "VS02_AureateInteriors",
+      "lighting_look": "engineering",
+      "lighting_bind_status": "EXTERNAL_DRAFT_REFERENCE_NOT_INTEGRATED",
+      "story_phase_semantic_only": "ENGINE_INSPECTION_AUTHORED",
+      "camera_mode": "INSPECT",
+      "allowed_weather_modes": [
+        "Clear",
+        "CoastalMist",
+        "Rain",
+        "Storm"
+      ],
+      "audio_intent": "mechanical_hum_gauge_resonance",
+      "audio_binding_status": "SEMANTIC_UNBOUND_NO_AUDIO_EVENT_ASSERTED",
+      "accessibility_and_gameplay_gate": "actual_inspection_objective",
+      "native_provenance": "NOT_ESTABLISHED",
+      "output_authority": "PRESENTATION_INTENT_ONLY"
+    },
+    {
+      "focus_shot": "FW04_Engine_Awakening",
+      "map": "VS02_AureateInteriors",
+      "lighting_look": "engineering",
+      "lighting_bind_status": "EXTERNAL_DRAFT_REFERENCE_NOT_INTEGRATED",
+      "story_phase_semantic_only": "ENGINE_RESPONSE_AUTHORED",
+      "camera_mode": "REVEAL",
+      "allowed_weather_modes": [
+        "Clear",
+        "CoastalMist",
+        "Rain",
+        "Storm"
+      ],
+      "audio_intent": "subtle_harmonic_response",
+      "audio_binding_status": "SEMANTIC_UNBOUND_NO_AUDIO_EVENT_ASSERTED",
+      "accessibility_and_gameplay_gate": "no_unearned_ship_awareness_claim",
+      "native_provenance": "NOT_ESTABLISHED",
+      "output_authority": "PRESENTATION_INTENT_ONLY"
+    },
+    {
+      "focus_shot": "FW05_FirstWake_Liftoff",
+      "map": "VS03_FirstWakeSky",
+      "lighting_look": "ascent",
+      "lighting_bind_status": "EXTERNAL_DRAFT_REFERENCE_NOT_INTEGRATED",
+      "story_phase_semantic_only": "LAUNCH_AUTHORIZED",
+      "camera_mode": "ESTABLISH",
+      "allowed_weather_modes": [
+        "Clear",
+        "CoastalMist",
+        "Rain",
+        "Storm"
+      ],
+      "audio_intent": "hull_wind_rigging_engine_ascent",
+      "audio_binding_status": "SEMANTIC_UNBOUND_NO_AUDIO_EVENT_ASSERTED",
+      "accessibility_and_gameplay_gate": "no_camera_authored_launch",
+      "native_provenance": "NOT_ESTABLISHED",
+      "output_authority": "PRESENTATION_INTENT_ONLY"
+    },
+    {
+      "focus_shot": "FW06_Emergency_Splashdown",
+      "map": "VS04_SplashdownSea",
+      "lighting_look": "sea_contact",
+      "lighting_bind_status": "EXTERNAL_DRAFT_REFERENCE_NOT_INTEGRATED",
+      "story_phase_semantic_only": "PHYSICAL_SEA_CONTACT_REQUIRED",
+      "camera_mode": "ACTION",
+      "allowed_weather_modes": [
+        "Clear",
+        "CoastalMist",
+        "Rain",
+        "Storm"
+      ],
+      "audio_intent": "storm_spray_hull_water_impact",
+      "audio_binding_status": "SEMANTIC_UNBOUND_NO_AUDIO_EVENT_ASSERTED",
+      "accessibility_and_gameplay_gate": "physical_contact_and_waterline_visible",
+      "native_provenance": "NOT_ESTABLISHED",
+      "output_authority": "PRESENTATION_INTENT_ONLY"
+    },
+    {
+      "focus_shot": "FW07_Shore_Exploration",
+      "map": "VS06_SplashdownShore",
+      "lighting_look": "shore_aftermath",
+      "lighting_bind_status": "EXTERNAL_DRAFT_REFERENCE_NOT_INTEGRATED",
+      "story_phase_semantic_only": "POST_SPLASHDOWN_EXPLORATION",
+      "camera_mode": "EXPLORATION",
+      "allowed_weather_modes": [
+        "Clear",
+        "CoastalMist",
+        "Rain",
+        "Storm"
+      ],
+      "audio_intent": "shore_surf_wind_distant_settlement",
+      "audio_binding_status": "SEMANTIC_UNBOUND_NO_AUDIO_EVENT_ASSERTED",
+      "accessibility_and_gameplay_gate": "shore_collision_and_traversal",
+      "native_provenance": "NOT_ESTABLISHED",
+      "output_authority": "PRESENTATION_INTENT_ONLY"
+    },
+    {
+      "focus_shot": "FW08_Lyra_Introduction",
+      "map": "VS06_SplashdownShore",
+      "lighting_look": "shore_aftermath",
+      "lighting_bind_status": "EXTERNAL_DRAFT_REFERENCE_NOT_INTEGRATED",
+      "story_phase_semantic_only": "POST_SPLASHDOWN_LYRA_INTRO_ONLY",
+      "camera_mode": "DIALOGUE",
+      "allowed_weather_modes": [
+        "Clear",
+        "CoastalMist",
+        "Rain",
+        "Storm"
+      ],
+      "audio_intent": "human_conversation_and_soft_surf",
+      "audio_binding_status": "SEMANTIC_UNBOUND_NO_AUDIO_EVENT_ASSERTED",
+      "accessibility_and_gameplay_gate": "no_early_lyra_recruitment",
+      "native_provenance": "NOT_ESTABLISHED",
+      "output_authority": "PRESENTATION_INTENT_ONLY"
+    },
+    {
+      "focus_shot": "FW09_NightSky_Wonder",
+      "map": "VS06_SplashdownShore",
+      "lighting_look": null,
+      "lighting_bind_status": "BLOCKED_MISSING_SHORE_NIGHT_LOOK",
+      "story_phase_semantic_only": "NIGHT_SKY_AWE_NO_STARBOURNE",
+      "camera_mode": "AWE",
+      "allowed_weather_modes": [
+        "Clear",
+        "CoastalMist",
+        "AuroralVeil"
+      ],
+      "audio_intent": "quiet_night_wind_distant_sea",
+      "audio_binding_status": "SEMANTIC_UNBOUND_NO_AUDIO_EVENT_ASSERTED",
+      "accessibility_and_gameplay_gate": "starfield_remains_deep_focus",
+      "native_provenance": "NOT_ESTABLISHED",
+      "output_authority": "PRESENTATION_INTENT_ONLY"
+    }
+  ]
+}
