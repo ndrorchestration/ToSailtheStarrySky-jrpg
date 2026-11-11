@@ -104,7 +104,7 @@ void UTSTSSSliceEnemyReviewHUD::UpdateReviewHUD(
     Instruction->SetText(FText::FromString(bHybridReviewInput
         ? TEXT("WALKING ENCOUNTER /  J/K TARGET 1/2\n"
                "ESC FLEE (DURING TURN) / ENTER RETURN AFTER BATTLE\n"
-               "NO REWARDS OR STORY PROGRESSION")
+               "REVIEW GOLD / ITEMS / XP ON VICTORY (NO SAVEGAME)")
         : TEXT("F7 Ender  F8 +Ionia  F9 +Lyra (post-splashdown)\n"
                "Q/E change wave (before battle)  R reset\n"
                "J/K attack foe 1/2  |  REVIEW ONLY")));

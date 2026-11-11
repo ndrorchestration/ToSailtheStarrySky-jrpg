@@ -97,6 +97,7 @@ def build():
                      "native_asset_package":DEST_PACKAGE+"/"+name,
                      "bytes":disk.stat().st_size}
     result.update(status="FOUR_NATIVE_SOUNDWAVES_IMPORTED_NOT_PIE_AUDIO_PLAYBACK",
+                  native_import_proven=True,
                   exact_head=head,assets=saved,native_sound_waves=4)
     receipt=project/RECEIPT
     receipt.parent.mkdir(parents=True,exist_ok=True)
