@@ -65,6 +65,8 @@ def validate(data):
     probe = data.get("shore_review_probe") or {}
     if (probe.get("package") != "/Game/TSTSS/Review/MultipathV1/L_VS06_ShoreMagicEnemyGear_Review"
             or probe.get("source_map") != "/Game/TSTSS/Review/VerticalSlice/VS06_SplashdownShore"
+            or probe.get("native_stage_process_count") != 2
+            or probe.get("native_map_copy_method") != "EditorLoadingAndSavingUtils.save_map"
             or probe.get("requires_verified_exact_head_35_native_tests") is not True
             or probe.get("independent_native_readback") != "unreal/Tools/verify_first_wake_multipath_shore.py"
             or any(probe.get(k) is not False for k in ("native_staged", "independent_readback_established", "pie_verified", "creator_approved"))

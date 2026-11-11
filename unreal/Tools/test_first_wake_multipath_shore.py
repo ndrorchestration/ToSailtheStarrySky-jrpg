@@ -37,6 +37,88 @@ class FirstWakeMultiPathShoreSourceTests(unittest.TestCase):
              "native_staged")))
         self.assertTrue(p["review_only"])
 
+    def test_ue_python_enemy_enum_drops_cpp_e_prefix(self):
+        from types import SimpleNamespace
+        choices = SimpleNamespace(HARMONIC_SHEAR="shear", AETHER_LEAK_WISP="wisp",
+                                  DOCK_SKITTER="skitter")
+        ue = SimpleNamespace(TSTSSSliceEnemyKind=choices)
+        values = stage.resolve_native_enemy_kinds(ue)
+        self.assertEqual({"HarmonicShear":"shear", "AetherLeakWisp":"wisp",
+                          "DockSkitter":"skitter"}, values)
+        # The earlier real UE 5.8.4 stage failed here because it requested
+        # the C++ E-prefixed name, which is not the Python export.
+        with self.assertRaisesRegex(RuntimeError, "not exposed to Python"):
+            stage.resolve_native_enemy_kinds(SimpleNamespace(
+                ETSTSSSliceEnemyKind=choices))
+        with self.assertRaisesRegex(RuntimeError, "missing DOCK_SKITTER"):
+            stage.resolve_native_enemy_kinds(SimpleNamespace(
+                TSTSSSliceEnemyKind=SimpleNamespace(
+                    HARMONIC_SHEAR="shear", AETHER_LEAK_WISP="wisp")))
+        with self.assertRaisesRegex(RuntimeError, "duplicated"):
+            stage.resolve_native_enemy_kinds(SimpleNamespace(
+                TSTSSSliceEnemyKind=SimpleNamespace(
+                    HARMONIC_SHEAR="shear", AETHER_LEAK_WISP="wisp",
+                    DOCK_SKITTER="shear")))
+
+    def test_native_review_boolean_setter_is_explicit_and_fail_closed(self):
+        class FakeActor:
+            def __init__(self, supported):
+                self.supported = supported
+                self.data = {name: False for name in supported}
+            def get_editor_property(self, name):
+                if name not in self.data:
+                    raise AttributeError(name)
+                return self.data[name]
+            def set_editor_property(self, name, value):
+                if name not in self.data:
+                    raise AttributeError(name)
+                self.data[name] = value
+        actor = FakeActor({"b_loop_review"})
+        self.assertEqual("b_loop_review",
+                         stage.set_required_review_bool(actor, "loop_review", True))
+        self.assertTrue(actor.data["b_loop_review"])
+        actor = FakeActor({"reduced_motion"})
+        self.assertEqual("reduced_motion",
+                         stage.set_required_review_bool(actor, "reduced_motion", True))
+        with self.assertRaisesRegex(RuntimeError, "boolean missing"):
+            stage.set_required_review_bool(FakeActor(set()), "loop_review", True)
+        class BrokenActor(FakeActor):
+            def set_editor_property(self, name, value):
+                pass
+        with self.assertRaisesRegex(RuntimeError, "did not stick"):
+            stage.set_required_review_bool(BrokenActor({"b_loop_review"}), "loop_review", True)
+
+    def test_source_locked_material_helper_requires_absolute_file(self):
+        source = Path(stage.__file__).read_text(encoding="utf-8")
+        self.assertIn('spec_from_file_location("tstss_review_material_source", helper)', source)
+        self.assertIn('module.make_material()', source)
+        self.assertIn('spec.loader.exec_module(module)', source)
+        self.assertNotIn('from build_ender_resonator_preview import make_material', source)
+        self.assertTrue((stage.PROJECT / "Tools/build_ender_resonator_preview.py").is_file())
+
+    def test_two_process_map_duplication_avoids_ue_world_leak(self):
+        source = Path(stage.__file__).read_text(encoding="utf-8")
+        runner = Path(host.__file__).read_text(encoding="utf-8")
+        self.assertIn('def build_native_shore(phase: str)', source)
+        self.assertIn('if phase == "prepare":', source)
+        self.assertIn('if not u.EditorLoadingAndSavingUtils.save_map(source_world, DEST_MAP):', source)
+        self.assertIn('source_world = u.EditorLoadingAndSavingUtils.load_map(SOURCE_PACKAGE)', source)
+        self.assertNotIn('u.EditorAssetLibrary.duplicate_asset(SOURCE_PACKAGE, DEST_MAP)', source)
+        self.assertIn('PREPARE_RECEIPT.open("x"', source)
+        self.assertIn("REVIEW_ASSETS_AND_BASE_MAP_PREPARED_NOT_PIE", source)
+        self.assertIn('if phase == "compose" and (not PREPARE_RECEIPT.is_file()', source)
+        self.assertIn('if phase == "compose" and not u.EditorAssetLibrary.does_directory_exist', source)
+        self.assertLess(source.index("return receipt\n    # Phase two"),
+                        source.index("world = u.EditorLoadingAndSavingUtils.load_map(DEST_MAP)"))
+        self.assertIn('for phase in ("prepare", "compose"):', runner)
+        self.assertIn('env["TSTSS_MP_PHASE"] = phase', runner)
+        self.assertIn("PREPARE_LOG", runner)
+        self.assertIn("PREPARE_STDOUT", runner)
+        self.assertIn('if not stage.PREPARE_RECEIPT.is_file():', runner)
+        self.assertIn("if current_editor_processes() or current_ubt_build_running():", runner)
+        self.assertIn("separate composition process produced no native stage receipt", runner)
+        self.assertIn("with HOST_RECEIPT.open(\"x\"", runner)
+
     def test_all_three_visual_groups_and_26_new_actors(self):
         self.assertEqual((22, 8), (self.plan["original_object_imports"],
                                    self.plan["showcase_object_actors"]))
@@ -91,7 +173,7 @@ class FirstWakeMultiPathShoreSourceTests(unittest.TestCase):
         def clean_git(*arguments):
             return {("branch", "--show-current"): stage.BRANCH,
                     ("rev-parse", "HEAD"): sha,
-                    ("status", "--porcelain"): ""}[arguments]
+                    ("status", "--porcelain", "-uall"): ""}[arguments]
 
         with mock.patch.object(stage, "ROOT", Path("C:/" + stage.WORKTREE)), \
              mock.patch.object(stage.sys, "platform", "win32"), \
@@ -102,7 +184,7 @@ class FirstWakeMultiPathShoreSourceTests(unittest.TestCase):
                     stage.check_native_custody()
 
             def dirty_git(*arguments):
-                if arguments == ("status", "--porcelain"):
+                if arguments == ("status", "--porcelain", "-uall"):
                     return " M unreal/Config/DefaultInput.ini"
                 return clean_git(*arguments)
 
@@ -110,8 +192,27 @@ class FirstWakeMultiPathShoreSourceTests(unittest.TestCase):
                 os.environ, {"TSTSS_MP_EXPECTED_HEAD": sha,
                              "TSTSS_MP_STAGE_EXPLICIT": "1"}
             ):
-                with self.assertRaisesRegex(RuntimeError, "dirty or changed"):
+                with self.assertRaisesRegex(RuntimeError, "entirely clean source"):
                     stage.check_native_custody()
+
+    def test_native_compose_allows_only_generated_review_artifacts(self):
+        allowed = (
+            "?? unreal/Content/TSTSS/Magic/M_ResonatorGlow.uasset\n"
+            "?? unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/Prop/Prop.uasset\n"
+            "?? unreal/Content/TSTSS/Review/MultipathV1/L_VS06_ShoreMagicEnemyGear_Review.umap"
+        )
+        with mock.patch.object(stage, "git", return_value=allowed):
+            stage.assert_source_custody_for_phase("compose")
+            with self.assertRaisesRegex(RuntimeError, "entirely clean source"):
+                stage.assert_source_custody_for_phase("prepare")
+        for drift in (
+            allowed + "\n M unreal/Config/DefaultInput.ini",
+            allowed + "\n?? unreal/Content/TSTSS/Review/VerticalSlice/Another.umap",
+            "?? unreal/Content/TSTSS/Magic/OtherMaterial.uasset",
+        ):
+            with mock.patch.object(stage, "git", return_value=drift):
+                with self.assertRaisesRegex(RuntimeError, "unexpected tracked/untracked"):
+                    stage.assert_source_custody_for_phase("compose")
 
     def test_host_rejects_unsafe_sha_and_does_not_start_ue(self):
         with mock.patch.object(host.sys, "platform", "win32"), \
@@ -262,7 +363,7 @@ class FirstWakeMultiPathShoreSourceTests(unittest.TestCase):
         source = Path(stage.__file__).read_text(encoding="utf-8")
         runner = Path(host.__file__).read_text(encoding="utf-8")
         for term in ("get_dirty_map_packages", "get_dirty_content_packages",
-                     "does_directory_exist(DEST_ROOT)", "duplicate_asset(SOURCE_PACKAGE, DEST_MAP)",
+                     "does_directory_exist(DEST_ROOT)", "save_map(source_world, DEST_MAP)",
                      "get_all_level_actors", "save_map(world, DEST_MAP)",
                      "get_editor_property", "set_actor_enable_collision(False)",
                      "configs_unchanged"):
