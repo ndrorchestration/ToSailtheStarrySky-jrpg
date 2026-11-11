@@ -58,8 +58,14 @@ def preflight(project_dir: Path):
         raise RuntimeError("Missing exact TSTSS Unreal project")
     if _git(root, "rev-parse", "HEAD").lower() != expected_sha:
         raise RuntimeError("Local source differs from explicit expected commit")
-    if _git(root, "symbolic-ref", "-q", "HEAD"):
+    ref_check = subprocess.run(
+        ["git", "-C", str(root), "symbolic-ref", "-q", "HEAD"],
+        text=True, capture_output=True, timeout=20, check=False,
+    )
+    if ref_check.returncode == 0:
         raise RuntimeError("Staging requires a detached review worktree")
+    if ref_check.returncode != 1:
+        raise RuntimeError("Could not establish detached source custody")
     if _git(root, "status", "--porcelain", "--untracked-files=no"):
         raise RuntimeError("Tracked source is dirty; refused")
     if available_ram_bytes() < MIN_RAM_BYTES:
@@ -159,14 +165,14 @@ def stage():
     # Ambience fields remain empty rather than pretending the ten review
     # samples contain real surf/gulls/market loops or cleared music.
 
-    if not level.save_current_level():
-        raise RuntimeError("QA map save failed; no native playable claim")
-
-    # Persistent assets are allowed only in the *disposable* QA worktree.
+    # Save only QA audio source packages before their referring map package.
+    # This avoids saving a map referencing still-unsaved SoundWaves.
     for filename in sorted(CUES):
         path = DESTINATION + "/QA_" + Path(filename).stem
         if not assets.save_asset(path):
             raise RuntimeError("QA-only SoundWave save failed: " + filename)
+    if not level.save_current_level():
+        raise RuntimeError("QA map save failed; no native playable claim")
     receipt = {
         "status": "STAGED_QA_UNAUDITIONED_NOT_RELEASE_AUTHORIZED",
         "source_sha": sha,
