@@ -25,7 +25,7 @@ ENV_SHA = "TSTSS_ENEMY_GALLERY_EXPECTED_HEAD"
 # 15 independent actor identities. Five category aisles, three plinths each.
 # Each y-coordinate is a separate gallery bay; x is the camera-facing spread.
 GALLERY_FAMILIES = (
-    ("Anomaly", 0.0),
+    ("Baseline", 0.0),
     ("Bandit", 850.0),
     ("Flora", 1700.0),
     ("Aquatic", 2550.0),
