@@ -43,6 +43,8 @@
     "source_map": "/Game/TSTSS/Review/VerticalSlice/VS06_SplashdownShore",
     "compositor": "unreal/Tools/stage_first_wake_multipath_shore.py",
     "host_gate": "unreal/Tools/run_first_wake_multipath_native.py",
+    "independent_native_readback": "unreal/Tools/verify_first_wake_multipath_shore.py",
+    "independent_readback_established": false,
     "requires_verified_exact_head_35_native_tests": true,
     "native_staged": false,
     "pie_verified": false,

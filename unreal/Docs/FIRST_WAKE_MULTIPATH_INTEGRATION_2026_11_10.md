@@ -107,3 +107,11 @@ Unreal 5.8.4 execution on exact head `fd1a07742b384100abefba7029012d09517f4492` 
 After confirming the two files were the entire tracked diff and no native process still used this dedicated review checkout, the files were restored **only in this isolated worktree** from the precise committed contents. No production, other-agent, user-save or shared configurations were touched.
 
 The native verifier now records each tracked config's SHA-256 and read-only state, makes both configs read-only **only while the editor automation child is running**, restores their original attributes in `finally`, and rejects any hash drift even if Unreal itself returns success. This is a source-level prevention measure, pending actual same-head native validation. It neither alters expected input controls nor approves visuals, PIE or a release.
+
+## Independent shoreline native map readback (new source-only gate)
+
+Added `unreal/Tools/verify_first_wake_multipath_shore.py` as an independently executable **read-only** checker for the proposed combined scene. Its `--plan` path operates without Unreal and verifies 26 deterministic review actor labels and expected actor classes: one coastal atmosphere actor, eight original props, three non-equipped party gear props, three enemy-only silhouettes, nine Ender cue visualization actors, one review camera, and one unapproved-art warning.
+
+Its `--native` path remains **NOT RUN / NOT ACCEPTED**. Only after exact-head native-stage receipt exists, it independently reopens `/Game/TSTSS/Review/MultipathV1/L_VS06_ShoreMagicEnemyGear_Review`, compares saved-world actor identity, class and collision against the expected source list, verifies staged map and original map SHA-256 and actor totals, and writes an isolated, non-overwriting `Saved/MultipathV1/shore_independent_readback.json` with `pie_verified=false`, `gpu_render_verified=false`, `creator_approved=false`. It cannot spawn actors, save maps, grant spells, change equipment, create encounters or approve gameplay/art.
+
+The separate engine-free `test_first_wake_multipath_readback.py` provides synthetic negative checks for missing/malformed/stale native stage receipts, false creator/PIE approvals, changed map hashes, and actor-count disagreement. No native map readback, playable encounter, render or visual approval has occurred.
