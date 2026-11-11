@@ -12,7 +12,7 @@ SKILLS = UE / "Source/ToSailTheStarrySky/Private/TSTSSBattleSkillSystem.cpp"
 JOBS = UE / "DataSource/Jobs/Resonator.vertical_slice.review.json"
 FAMILIES = {"ResonanceHarmonic", "Correspondence", "PsychicPsion"}
 EXPECTED_IDS = {
-    "Ender_ResonantPulse", "Ender_TuningLance", "Ender_EchoMend",
+    "Ender_ResonantPulse", "Ender_Centering", "Ender_TuningLance", "Ender_EchoMend",
     "Ender_CorrespondenceThread", "Ender_LatticeBreak", "Ender_MindRipple",
     "Ender_FocusHarmonic", "Ender_ConcordanceBurst", "Ender_ThoughtChord",
 }
@@ -21,7 +21,7 @@ def validate(rows):
     errors = []
     names, cues = set(), set()
     if len(rows) != len(EXPECTED_IDS):
-        errors.append("not exactly nine reviewed Ender spells")
+        errors.append("not exactly ten review candidate Ender spells")
     for r in rows:
         sid, cue = r.get("SkillId"), r.get("VfxCueId")
         if not isinstance(sid, str) or sid not in EXPECTED_IDS or sid in names:
@@ -31,8 +31,26 @@ def validate(rows):
         if not isinstance(cue, str) or not cue.startswith("VFX.Ender.") or cue in cues:
             errors.append("invalid/duplicated visual cue")
         cues.add(cue)
-        if r.get("Kind") != "Spell" or r.get("Admission") != "ReviewExecutable":
-            errors.append("invalid isolated review admission")
+        if r.get("Kind") != "Spell":
+            errors.append("invalid spell type")
+        # All other spells (including Correspondence) are on hold here.
+        admitted = sid in {"Ender_ResonantPulse", "Ender_Centering"}
+        if r.get("Admission") != ("ReviewExecutable" if admitted else "DesignOnly"):
+            errors.append("focus-only review admission drift")
+        if sid == "Ender_Centering":
+            if (r.get("Target")!="Self" or r.get("Power") != 0 or
+                r.get("bHealing") is not False or
+                r.get("ResourceCost") != 5 or
+                r.get("bPartyPhysicalDefenseBuff") is not True or
+                r.get("PhysicalDefenseBuffPercent") != 15 or
+                r.get("BuffDurationRounds") != 3 or
+                r.get("RequiredSchool") != "ResonanceHarmonic" or
+                r.get("RequiredMasteryRank") != 1):
+                errors.append("Centering combat contract drift")
+        elif (r.get("bPartyPhysicalDefenseBuff",False) or
+              r.get("PhysicalDefenseBuffPercent",0) or
+              r.get("BuffDurationRounds",0)):
+            errors.append("unauthorized party-defense buff")
         if r.get("RequiredSchool") not in FAMILIES:
             errors.append("school out of creator Resonator curriculum")
         if type(r.get("RequiredMasteryRank")) is not int or not 1 <= r["RequiredMasteryRank"] <= 5:
@@ -52,7 +70,7 @@ def validate(rows):
         elif r.get("RequiredSecondaryRank", 0) != 0:
             errors.append("orphan secondary rank")
     if names != EXPECTED_IDS: errors.append("missing or extra spell IDs")
-    if len(cues) != 9: errors.append("not nine distinct cues")
+    if len(cues) != 10: errors.append("not ten distinct cues")
     return errors
 
 class ResonatorReviewTests(unittest.TestCase):
@@ -76,6 +94,9 @@ class ResonatorReviewTests(unittest.TestCase):
         secondaries = {r["RequiredSecondarySchool"] for r in self.rows
                        if r.get("RequiredSecondarySchool")}
         self.assertEqual(FAMILIES, schools)
+        self.assertEqual(
+            {"Ender_Centering","Ender_ResonantPulse"},
+            {r["SkillId"] for r in self.rows if r["Admission"]=="ReviewExecutable"})
         self.assertIn("Correspondence", secondaries)
         self.assertIn("PsychicPsion", secondaries)
 

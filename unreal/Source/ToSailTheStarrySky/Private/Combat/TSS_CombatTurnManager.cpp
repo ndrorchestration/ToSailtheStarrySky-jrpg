@@ -167,6 +167,30 @@ FName UTSS_CombatTurnManager::GetActiveParticipantId() const
     return FTSTSSCombatTurns::CurrentActor(BattleState.Combat);
 }
 
+int32 UTSS_CombatTurnManager::GetCenteringRoundsRemaining(FName PartyMember) const
+{
+    if (CurrentPhase == ETSS_CombatPhase::NotStarted ||
+        CurrentPhase == ETSS_CombatPhase::Victory ||
+        CurrentPhase == ETSS_CombatPhase::Defeat ||
+        CurrentPhase == ETSS_CombatPhase::Draw) return 0;
+    const FTSTSSPhysicalDefenseBuff* Status =
+        BattleState.ActivePhysicalDefenseBuffs.Find(PartyMember);
+    return Status && Status->Percent == 15
+        ? FMath::Max(0, Status->ExpiresAtRound-BattleState.Combat.Round) : 0;
+}
+
+int32 UTSS_CombatTurnManager::GetCenteringEffectiveDefense(FName PartyMember) const
+{
+    const FTSTSSCombatant* Unit=BattleState.Combat.Roster.FindByPredicate(
+        [PartyMember](const FTSTSSCombatant& X){return X.CharacterId==PartyMember;});
+    if (!Unit) return 0;
+    if (GetCenteringRoundsRemaining(PartyMember)==0) return Unit->Defense;
+    const int64 Bonus=FMath::Max<int64>(
+        1,(static_cast<int64>(Unit->Defense)*15+99)/100);
+    return static_cast<int32>(FMath::Min<int64>(MAX_int32,
+        static_cast<int64>(Unit->Defense)+Bonus));
+}
+
 bool UTSS_CombatTurnManager::SubmitCommand(const FTSS_CombatCommand& Command)
 {
     if (CurrentPhase != ETSS_CombatPhase::TurnSelection ||

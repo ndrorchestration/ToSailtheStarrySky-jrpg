@@ -7,7 +7,11 @@ bool UTSTSSCombatRules::TryApplyAction(const TArray<FTSTSSCombatant>& Roster,
     int32 ActorIndex = INDEX_NONE;
     int32 TargetIndex = INDEX_NONE;
     if (Action.ActorId.IsNone() || Action.TargetId.IsNone() ||
-        Action.ResourceCost < 0 || Action.Power < 0)
+        Action.ResourceCost < 0 || Action.Power < 0 ||
+        Action.PhysicalDefenseBonus < 0 ||
+        (Action.PhysicalDefenseBonus > 0 && !Action.bPhysicalDamage) ||
+        (Action.bSupportOnly && (Action.bHealing || Action.Power != 0 ||
+          Action.bPhysicalDamage || Action.PhysicalDefenseBonus != 0)))
     {
         return false;
     }
@@ -50,7 +54,13 @@ bool UTSTSSCombatRules::TryApplyAction(const TArray<FTSTSSCombatant>& Roster,
     TArray<FTSTSSCombatant> Next = Roster;
     Next[ActorIndex].Resource -= Action.ResourceCost;
     const int64 Strength = static_cast<int64>(Action.Power) + Actor.Attack;
-    if (Action.bHealing)
+    if (Action.bSupportOnly)
+    {
+        // An admitted action, not a free 'wait': the normal turn controller
+        // advances and MP has already been charged. Status is applied only
+        // after this transaction succeeds in FTSTSSBattleSkillSystem.
+    }
+    else if (Action.bHealing)
     {
         const int64 NewHealth = static_cast<int64>(Next[TargetIndex].Health) + Strength;
         Next[TargetIndex].Health = static_cast<int32>(FMath::Min<int64>(
@@ -59,7 +69,8 @@ bool UTSTSSCombatRules::TryApplyAction(const TArray<FTSTSSCombatant>& Roster,
     else
     {
         const int64 RawDamage = FMath::Max<int64>(
-            1, Strength - Next[TargetIndex].Defense);
+            1, Strength - static_cast<int64>(Next[TargetIndex].Defense) -
+               (Action.bPhysicalDamage ? Action.PhysicalDefenseBonus : 0));
         Next[TargetIndex].Health = static_cast<int32>(FMath::Max<int64>(
             0, static_cast<int64>(Next[TargetIndex].Health) - RawDamage));
     }

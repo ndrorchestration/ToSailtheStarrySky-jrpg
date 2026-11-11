@@ -44,6 +44,12 @@ struct TOSAILTHESTARRYSKY_API FTSTSSBattleSkillRow : public FTableRowBase
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Gameplay") int32 ResourceCost = 0;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Gameplay") int32 CooldownActorTurns = 0;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Gameplay") bool bHealing = false;
+    // These opt-in fields are currently admitted ONLY for Ender_Centering.
+    // They do not confer job mastery, add unrecruited allies, or make a
+    // generic no-damage support ability executable without permission.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Gameplay") bool bPartyPhysicalDefenseBuff = false;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Gameplay") int32 PhysicalDefenseBuffPercent = 0;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Gameplay") int32 BuffDurationRounds = 0;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Access") FName RequiredSchool = NAME_None;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Access") int32 RequiredMasteryRank = 0;
     // One additional cross-school requirement; complex multi-school syntheses stay DesignOnly.
@@ -63,6 +69,13 @@ struct FTSTSSBattleSkillKnowledge
     TMap<FName, FName> WeaponClassByActor;
 };
 
+// A bounded defensive status on the participant, not a permanent stat edit.
+struct FTSTSSPhysicalDefenseBuff
+{
+    int32 Percent = 0;
+    int32 ExpiresAtRound = 0;  // exclusive; round-based, not wall-clock
+};
+
 // Transactional counters. All combat actions must flow through this system for cooldowns
 // to advance correctly. Persist/migrate this state before integrating into production saves.
 struct FTSTSSBattleSkillState
@@ -70,6 +83,7 @@ struct FTSTSSBattleSkillState
     FTSTSSCombatTurnState Combat;
     TMap<FName, int32> AcceptedTurnsByActor;
     TMap<FName, TMap<FName, int32>> NextAllowedTurnByActorAndSkill;
+    TMap<FName, FTSTSSPhysicalDefenseBuff> ActivePhysicalDefenseBuffs;
 };
 
 struct FTSTSSBattleSkillCue

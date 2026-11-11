@@ -108,6 +108,12 @@ public:
     UFUNCTION(BlueprintPure, Category="TSTSS|Combat")
     int32 GetCurrentRound() const { return BattleState.Combat.Round; }
 
+    UFUNCTION(BlueprintPure, Category="TSTSS|Combat|Status")
+    int32 GetCenteringRoundsRemaining(FName PartyMember) const;
+
+    UFUNCTION(BlueprintPure, Category="TSTSS|Combat|Status")
+    int32 GetCenteringEffectiveDefense(FName PartyMember) const;
+
     UPROPERTY(BlueprintAssignable, Category="TSTSS|Combat|Events")
     FTSSOnCombatPhaseChanged OnPhaseChanged;
 

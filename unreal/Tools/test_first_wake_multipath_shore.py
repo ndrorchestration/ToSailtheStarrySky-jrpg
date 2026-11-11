@@ -130,7 +130,7 @@ class FirstWakeMultiPathShoreSourceTests(unittest.TestCase):
         self.assertEqual({"HarmonicShear", "AetherLeakWisp", "DockSkitter"},
                          set(stage.ENEMY_KINDS))
         self.assertEqual(9, len(set(
-            row["VfxCueId"] for row in json.loads(stage.MAGIC.read_text(encoding="utf-8"))
+            row["VfxCueId"] for row in stage.legacy_magic_preview_rows()
         )))
 
     def test_all_three_review_equipment_assets_are_native_static_mesh_files(self):
