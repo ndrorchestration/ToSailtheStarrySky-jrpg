@@ -5,6 +5,8 @@
 #include "Enemies/TSTSSSliceEnemyReviewBattleConsole.h"
 #include "Encounter/TSTSSJRPGEncounterDirector.h"
 #include "Encounter/TSTSSJRPGEncounterFieldReview.h"
+#include "Encounter/TSTSSJRPGReviewPresentation.h"
+#include "Encounter/TSTSSJRPGReviewRewards.h"
 #include <limits>
 
 #if WITH_DEV_AUTOMATION_TESTS
@@ -327,6 +329,150 @@ bool FTSTSSSliceEnemyReviewAIProbe::RunTest(const FString& Parameters)
     Region.Rate=ETSTSSJRPGEncounterRate::Off;
     TestFalse(TEXT("accessibility off disables encounters"),
         Director->TryRecordWalking(300.f,Region,Selected));
+
+    // Full ordered audiovisual/reward sequence is a separate deterministic
+    // control-plane gate, independent of random selection or narrative state.
+    UTSTSSJRPGReviewPresentation* Sequence=
+        NewObject<UTSTSSJRPGReviewPresentation>(GetTransientPackage());
+    TestFalse(TEXT("cannot enter unstarted battle"),
+        Sequence->TryEnterCombat(51));
+    TestTrue(TEXT("encounter intro flashes before battle"),
+        Sequence->TryBegin(51));
+    TestFalse(TEXT("same encounter cannot begin twice"),Sequence->TryBegin(51));
+    TestEqual(TEXT("encounter flash first"),
+        Sequence->GetPhase(),ETSTSSJRPGReviewSequencePhase::EncounterFlash);
+    TestFalse(TEXT("battle may not skip audiovisual cue"),
+        Sequence->TryEnterCombat(51));
+    TestFalse(TEXT("wrong ticket cannot abort"),
+        Sequence->TryAbortBeforeCombat(52));
+    TestTrue(TEXT("valid flash frame"),
+        Sequence->Advance(.21f));
+    TestFalse(TEXT("nonfinite progress denied"),
+        Sequence->Advance(std::numeric_limits<float>::quiet_NaN()));
+    TestTrue(TEXT("flash completes"),Sequence->Advance(.21f));
+    TestEqual(TEXT("battle reveal after encounter flash"),
+        Sequence->GetPhase(),ETSTSSJRPGReviewSequencePhase::BattleReveal);
+    TestFalse(TEXT("battle reveal cannot be cut short"),
+        Sequence->TryEnterCombat(51));
+    TestTrue(TEXT("battle reveal frame one"),Sequence->Advance(.18f));
+    TestTrue(TEXT("battle reveal frame two"),Sequence->Advance(.18f));
+    TestTrue(TEXT("battle admission at transition boundary"),
+        Sequence->TryEnterCombat(51));
+    TestEqual(TEXT("authoritative battle phase"),
+        Sequence->GetPhase(),ETSTSSJRPGReviewSequencePhase::Combat);
+    TestFalse(TEXT("cannot confirm victory on wrong ticket"),
+        Sequence->TryResolveVictory(52));
+    TestFalse(TEXT("cannot dismiss unfinished battle"),
+        Sequence->TryDismissResult(51));
+    TestTrue(TEXT("authoritative victory starts fanfare"),
+        Sequence->TryResolveVictory(51));
+    TestEqual(TEXT("victory fanfare precedes celebration"),
+        Sequence->GetPhase(),ETSTSSJRPGReviewSequencePhase::VictoryFanfare);
+    TestFalse(TEXT("victory cannot award repeatedly through phase replay"),
+        Sequence->TryResolveVictory(51));
+    for(int32 I=0;I<8;++I) Sequence->Advance(.2f);
+    TestEqual(TEXT("party celebration occurs after fanfare"),
+        Sequence->GetPhase(),ETSTSSJRPGReviewSequencePhase::Celebration);
+    TestFalse(TEXT("rewards cannot be dismissed during celebration"),
+        Sequence->TryDismissResult(51));
+    for(int32 I=0;I<7;++I) Sequence->Advance(.2f);
+    TestEqual(TEXT("victory celebration precedes loot screen"),
+        Sequence->GetPhase(),ETSTSSJRPGReviewSequencePhase::Rewards);
+
+    UTSTSSJRPGReviewRewards* Ledger=
+        NewObject<UTSTSSJRPGReviewRewards>(GetTransientPackage());
+    FTSTSSJRPGReviewReward Receipt;
+    Receipt.TicketSerial=9876;
+    const TArray<FName> ReviewParty={TEXT("Ender"),TEXT("Ionia")};
+    TestFalse(TEXT("unknown wave has no reward"),
+        Ledger->TryAwardOnce(51,TEXT("Review_UnknownWave"),ReviewParty,Receipt));
+    TestFalse(TEXT("unrecruited-only party has no reward"),
+        Ledger->TryAwardOnce(51,TEXT("Review_HarborBanditPatrol"),
+            {TEXT("Lyra")},Receipt));
+    TestEqual(TEXT("failed reward leaves caller receipt alone"),
+        Receipt.TicketSerial,9876);
+    TestEqual(TEXT("unauthorized reward never changes gold"),
+        Ledger->GetGoldBalance(),0);
+    TestTrue(TEXT("verified victory review reward awarded"),
+        Ledger->TryAwardOnce(51,TEXT("Review_HarborBanditPatrol"),
+            ReviewParty,Receipt));
+    TestEqual(TEXT("received review gold"),Receipt.GoldEarned,18);
+    TestEqual(TEXT("received review XP per active member"),
+        Receipt.XpEachPartyMember,12);
+    TestEqual(TEXT("received an inventory object"),Receipt.Items.Num(),1);
+    TestEqual(TEXT("review wallet updated exactly once"),
+        Ledger->GetGoldBalance(),18);
+    TestEqual(TEXT("Ender XP ledger updated"),Ledger->GetExperienceTotal(TEXT("Ender")),12);
+    TestEqual(TEXT("Ionia XP ledger updated"),Ledger->GetExperienceTotal(TEXT("Ionia")),12);
+    TestEqual(TEXT("Lyra never silently awarded"),
+        Ledger->GetExperienceTotal(TEXT("Lyra")),0);
+    TestEqual(TEXT("loot tracked in inventory ledger"),
+        Ledger->GetItemCount(TEXT("Review_SalvagedRope")),1);
+    TestFalse(TEXT("same victory ticket cannot be farmed"),
+        Ledger->TryAwardOnce(51,TEXT("Review_HarborBanditPatrol"),
+            ReviewParty,Receipt));
+    TestEqual(TEXT("duplicate reward leaves gold unchanged"),
+        Ledger->GetGoldBalance(),18);
+
+    TestTrue(TEXT("Enter only after rewards"),
+        Sequence->TryDismissResult(51));
+    TestFalse(TEXT("return fade cannot be skipped"),
+        Sequence->TryFinishReturn(51));
+    for(int32 I=0;I<3;++I) Sequence->Advance(.2f);
+    TestEqual(TEXT("return flash before overworld"),
+        Sequence->GetPhase(),ETSTSSJRPGReviewSequencePhase::ReturnReady);
+    TestTrue(TEXT("finish returns to the exploration state"),
+        Sequence->TryFinishReturn(51));
+    TestEqual(TEXT("state reset for second encounter"),
+        Sequence->GetPhase(),ETSTSSJRPGReviewSequencePhase::Exploration);
+    TestFalse(TEXT("old ticket cannot dismiss twice"),
+        Sequence->TryDismissResult(51));
+
+    UTSTSSJRPGReviewPresentation* Denied=
+        NewObject<UTSTSSJRPGReviewPresentation>(GetTransientPackage());
+    TestTrue(TEXT("abort path begins"),Denied->TryBegin(72));
+    TestTrue(TEXT("aborting before battle allowed"),
+        Denied->TryAbortBeforeCombat(72));
+    TestFalse(TEXT("aborted encounter cannot enter combat"),
+        Denied->TryEnterCombat(72));
+    TestTrue(TEXT("aborted control returns idle"),
+        Denied->GetPhase()==ETSTSSJRPGReviewSequencePhase::Exploration);
+
+    UTSTSSJRPGReviewPresentation* Flee=
+        NewObject<UTSTSSJRPGReviewPresentation>(GetTransientPackage());
+    TestTrue(TEXT("flee scenario begins"),Flee->TryBegin(73));
+    Flee->Advance(.21f);Flee->Advance(.21f);
+    Flee->Advance(.18f);Flee->Advance(.18f);
+    TestTrue(TEXT("flee scenario enters combat"),Flee->TryEnterCombat(73));
+    TestTrue(TEXT("explicit flee begins return without rewards"),
+        Flee->TryFlee(73));
+    TestEqual(TEXT("flee never passes fanfare/reward screen"),
+        Flee->GetPhase(),ETSTSSJRPGReviewSequencePhase::ReturnFlash);
+    TestFalse(TEXT("flee cannot be promoted to victory"),
+        Flee->TryResolveVictory(73));
+    Flee->Advance(.2f);Flee->Advance(.2f);Flee->Advance(.2f);
+    TestTrue(TEXT("flee ends with exploration return"),
+        Flee->TryFinishReturn(73));
+    TestFalse(TEXT("flee never awarded gold"),Ledger->WasTicketAwarded(73));
+
+    UTSTSSJRPGReviewPresentation* Defeated=
+        NewObject<UTSTSSJRPGReviewPresentation>(GetTransientPackage());
+    TestTrue(TEXT("defeat begins"),Defeated->TryBegin(74));
+    Defeated->Advance(.21f);Defeated->Advance(.21f);
+    Defeated->Advance(.18f);Defeated->Advance(.18f);
+    TestTrue(TEXT("defeat combat admitted"),Defeated->TryEnterCombat(74));
+    TestTrue(TEXT("defeat enters result without victory rewards"),
+        Defeated->TryResolveDefeat(74));
+    TestEqual(TEXT("defeat result screen"),Defeated->GetPhase(),
+        ETSTSSJRPGReviewSequencePhase::Defeat);
+    TestFalse(TEXT("defeat cannot become victory"),
+        Defeated->TryResolveVictory(74));
+    TestFalse(TEXT("defeat does not generate reward ticket"),
+        Ledger->WasTicketAwarded(74));
+    TestTrue(TEXT("defeat can return without rewards"),
+        Defeated->TryDismissResult(74));
+    Defeated->Advance(.2f);Defeated->Advance(.2f);Defeated->Advance(.2f);
+    TestTrue(TEXT("defeat return resolves"),Defeated->TryFinishReturn(74));
 
     return true;
 }
