@@ -11,5 +11,6 @@ class TOSAILTHESTARRYSKY_API ATSTSSResonatorFocusGameMode : public AGameModeBase
     GENERATED_BODY()
 public:
     ATSTSSResonatorFocusGameMode();
+    bool IsFocusSpectatorStartEnabled() const { return bStartPlayersAsSpectators; }
     virtual void BeginPlay() override;
 };

@@ -63,7 +63,7 @@ bool FTSTSSResonatorCueContractTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("focus review never draws First Wake objective HUD"),
         FocusMode->HUDClass==AHUD::StaticClass());
     TestTrue(TEXT("focus starts players as spectators"),
-        FocusMode->bStartPlayersAsSpectators);
+        FocusMode->IsFocusSpectatorStartEnabled());
 
     // Focused, ACTUAL turn-authority tests for the two playable Resonator
     // review spells. No arbitrary review light/animation grants a skill.
