@@ -123,3 +123,20 @@ Each archetype has HP, resource, attack, defense, agility, family, proposed habi
 `tstss_slice_enemy_gallery.py` now authors five gallery aisles, three enemies in each, with per-family review cameras, floor stages, labels, and low-resource point/directional lighting. It remains opt-in and still refuses dirty or foreign workspaces, overwrites, missing native build evidence, or an active editor session.
 
 **Native build hold:** On Neontic the free disk measurement was roughly **9.09 GiB**, below the existing **14 GiB** gate, so no native build/gallery authoring will be attempted until resources recover; do not weaken the gate or delete another worker's files.
+
+## Neutral encounter recipe bank (C++ source only)
+
+Eight two-enemy encounter compositions can now be instantiated as detached roster data through `FTSTSSSliceEnemyCatalog::TryMakeReviewWave`. These are neutral **test fixtures**, not level spawns or creator-approved Chapter I encounters.
+
+| Preset ID | Review-only opponents |
+|---|---|
+| `Review_HarborBanditPatrol` | Cutpurse + Slinger |
+| `Review_HarborBanditCaptain` | Bandit Captain + Cutpurse |
+| `Review_WoodlandSporeline` | Thornvine + Sporecap |
+| `Review_WoodlandSentinel` | Root Sentinel + Thornvine |
+| `Review_CoastalHunters` | Reef Eel + Tidefin Hunter |
+| `Review_CoastalShellbacks` | Shellback Crab + Reef Eel |
+| `Review_HighlandStalkers` | Cliff Lynx + Night Glider |
+| `Review_HighlandBristle` | Bristleboar + Cliff Lynx |
+
+Unknown preset IDs fail without changing output. Shipping builds deny this API. Callers must separately authorize the current player roster, encounter initialization, and skill admission in the existing combat turn manager. No quest, reward, SaveGame, world placement, faction override or player spell grant is introduced. The eight-preset positive and negative validation assertions live in the already-registered enemy catalog native automation and remain **NOT NATIVE-TESTED** until the latest exact Git HEAD is built and the UE automation executes.
