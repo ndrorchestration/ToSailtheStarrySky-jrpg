@@ -102,6 +102,12 @@ bool UTSTSSAudioSubsystem::EmitCue(FName EventId, FVector Location)
         LastReceipt = FString::Printf(TEXT("ALREADY_PLAYING:%s"), *EventId.ToString());
         return true;
     }
+    // If a non-looping or previously stopped sound occupies a loop slot,
+    // discard its stale handle. Spawned components auto-destroy on stop/end.
+    if (Cue->bLooping && Existing)
+    {
+        ActiveLoops.Remove(EventId);
+    }
     const double Now = FPlatformTime::Seconds();
     if (const double* Last = LastPlayedSeconds.Find(EventId))
     {
@@ -117,9 +123,9 @@ bool UTSTSSAudioSubsystem::EmitCue(FName EventId, FVector Location)
         UAudioComponent* Component = Cue->bSpatial
             ? UGameplayStatics::SpawnSoundAtLocation(this, Cue->Sound.Get(), Location,
                                                       FRotator::ZeroRotator, Volume, 1.f, 0.f,
-                                                      nullptr, nullptr, false)
+                                                      nullptr, nullptr, true)
             : UGameplayStatics::SpawnSound2D(this, Cue->Sound.Get(), Volume,
-                                              1.f, 0.f, nullptr, false, false);
+                                              1.f, 0.f, nullptr, false, true);
         if (!IsValid(Component))
         {
             LastReceipt = FString::Printf(TEXT("SILENT_SPAWN_FAILURE:%s"), *EventId.ToString());
