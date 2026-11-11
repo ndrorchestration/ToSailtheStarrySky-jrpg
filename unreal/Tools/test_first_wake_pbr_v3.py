@@ -197,6 +197,27 @@ class TestFirstWakePBR(unittest.TestCase):
             with self.subTest(key=key),self.assertRaisesRegex(RuntimeError,"HOLD"):
                 independent.receipt_check(dict(good,**{key:bad}),"map")
 
+    def test_png_semantic_pixels_independent_of_deflate_encoding(self):
+        filename=pbr.OUT/"TX_FWV3_quay_stone_BaseColor.png"
+        original=filename.read_bytes()
+        raw,count=pbr.raw_png_pixels(original)
+        self.assertEqual(3,count)
+        self.assertEqual(512*512*3,len(raw))
+        scan=b"".join(b"\x00"+raw[y*512*3:(y+1)*512*3]
+                      for y in range(512))
+        # Deliberately use a different zlib level: source PNG binary hashes
+        # differ while image pixel data are still exactly identical.
+        packed=(b"\x89PNG\r\n\x1a\n"+
+                pbr.chunk(b"IHDR",struct.pack(">IIBBBBB",512,512,8,2,0,0,0))+
+                pbr.chunk(b"IDAT",zlib.compress(scan,0))+
+                pbr.chunk(b"IEND",b""))
+        self.assertNotEqual(original,packed)
+        self.assertEqual(raw,pbr.raw_png_pixels(packed)[0])
+        damaged=bytearray(packed)
+        damaged[50]^=1
+        with self.assertRaisesRegex(RuntimeError,"CRC"):
+            pbr.raw_png_pixels(damaged)
+
     def test_source_manifest_is_reproducibly_proven(self):
         # Expensive deterministic byte regeneration is done by --verify,
         # but this validation runs only once across the focused local suite.

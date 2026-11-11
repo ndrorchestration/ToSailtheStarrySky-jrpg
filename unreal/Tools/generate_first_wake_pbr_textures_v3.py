@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Original, source-locked procedural PBR review textures for First Wake.
 
-Pure Python stdlib; deterministic PNG byte and SHA-256 outputs across Windows
-and hosted Linux. Source *lookdev*, not final photogrammetric/AAA materials.
+Pure Python stdlib; deterministic decompressed pixel values across operating
+systems. Original compressed source PNG bytes are SHA256-locked independently
+because native zlib versions may encode equivalent pixels differently.
+Source *lookdev*, not final photogrammetric/AAA materials.
 No remote image/texture licenses, Unreal changes, or production map mutations.
 """
 from __future__ import annotations
@@ -164,18 +166,97 @@ def save():
         json.dump(manifest,out,indent=2,sort_keys=True)
     return manifest
 
+def raw_png_pixels(data):
+    """Validate CRC/chunk geometry, inflate and return canonical RGB/gray pixels.
+
+    PNG's compressed IDAT stream is allowed to differ across zlib versions;
+    source file SHA-256 must still match its pinned original manifest hash.
+    """
+    if not data.startswith(b"\x89PNG\r\n\x1a\n"):
+        raise RuntimeError("HOLD: source material PNG signature invalid")
+    offset=8;dims=None;channel_count=None;compressed=bytearray()
+    ended=False
+    while offset<len(data):
+        if len(data)-offset<12:
+            raise RuntimeError("HOLD: truncated source PNG chunk")
+        length=struct.unpack_from(">I",data,offset)[0]
+        kind=data[offset+4:offset+8]
+        end=offset+12+length
+        if end>len(data):
+            raise RuntimeError("HOLD: source PNG chunk overflow")
+        piece=data[offset+8:offset+8+length]
+        crc=struct.unpack_from(">I",data,offset+8+length)[0]
+        if zlib.crc32(kind+piece)!=crc:
+            raise RuntimeError("HOLD: source PNG CRC differs")
+        if dims is None:
+            if kind!=b"IHDR" or length!=13:
+                raise RuntimeError("HOLD: source PNG missing IHDR")
+            width,height,bitdepth,ctype,compression,filtermethod,interlace=struct.unpack(
+                ">IIBBBBB",piece)
+            if (width,height,bitdepth,compression,filtermethod,interlace)!=(
+                    DIM,DIM,8,0,0,0) or ctype not in (0,2):
+                raise RuntimeError("HOLD: source PNG unexpected pixel layout")
+            dims=(width,height);channel_count=1 if ctype==0 else 3
+        if kind==b"IDAT":compressed.extend(piece)
+        if kind==b"IEND":
+            if length or end!=len(data) or not compressed:
+                raise RuntimeError("HOLD: source PNG missing image bytes/IEND")
+            ended=True
+        offset=end
+    if not ended:
+        raise RuntimeError("HOLD: source PNG unfinished")
+    try:
+        scan=zlib.decompress(compressed)
+    except zlib.error as e:
+        raise RuntimeError("HOLD: invalid source PNG deflate payload") from e
+    stride=DIM*channel_count
+    if len(scan)!=DIM*(stride+1):
+        raise RuntimeError("HOLD: source PNG inflated byte count mismatch")
+    if any(scan[y*(stride+1)]!=0 for y in range(DIM)):
+        raise RuntimeError("HOLD: unexpected source PNG row filter")
+    return b"".join(scan[y*(stride+1)+1:(y+1)*(stride+1)]
+                    for y in range(DIM)),channel_count
+
 def verify():
     file=OUT/"manifest.json"
     if not file.is_file():raise RuntimeError("HOLD: missing source material manifest")
-    expected,blobs=inventory()
     actual=json.loads(file.read_text(encoding="utf-8"))
-    if actual!=expected:raise RuntimeError("HOLD: source material metadata drift")
-    for name,blob in blobs.items():
-        disk=OUT/name
-        if not disk.is_file() or disk.read_bytes()!=blob:
-            raise RuntimeError("HOLD: source material texture bytes drift: "+name)
-    return {"status":"SOURCE_PBR_TEXTURE_SHA256_PASS_NOT_NATIVE",
-            "texture_count":len(blobs),"roles":len(ROLES),
+    metadata={k:v for k,v in actual.items() if k!="textures"}
+    expected_meta={
+        "version":3,"status":"SOURCE_TEXTURES_NOT_NATIVE_RENDERED",
+        "resolution":[DIM,DIM],"roles":len(ROLES),
+        "asset_authority":"CUSTOM_PROCEDURAL_REVIEW_ONLY_NOT_APPROVED",
+        "normal_authority":"SOURCE_TANGENT_PROXY_NOT_VERIFIED_NATIVE_TANGENT_SPACE",
+        "contains_licensed_assets":False}
+    if metadata!=expected_meta:
+        raise RuntimeError("HOLD: source material authority/geometry metadata drift")
+    rows=actual.get("textures",[])
+    if len(rows)!=len(ROLES)*len(CHANNELS):
+        raise RuntimeError("HOLD: source material manifest texture inventory incomplete")
+    known={r["name"]:r for r in rows}
+    if len(known)!=len(rows):
+        raise RuntimeError("HOLD: duplicate source material asset")
+    for role in sorted(ROLES):
+        source=bytes_for_role(role)
+        for channel in CHANNELS:
+            filename=f"TX_FWV3_{role}_{channel}.png"
+            row=known.get(filename)
+            if not row or {k:v for k,v in row.items() if k not in ("sha256","bytes")}!={
+                    "name":filename,"material":role,"channel":channel,
+                    "dimensions":[DIM,DIM],
+                    "status":"SOURCE_ONLY_PBR_TEXTURE_NOT_NATIVE_IMPORTED"}:
+                raise RuntimeError("HOLD: PBR source-role metadata not canonical "+filename)
+            png=OUT/filename
+            if not png.is_file():
+                raise RuntimeError("HOLD: missing original source PNG "+filename)
+            payload=png.read_bytes()
+            if len(payload)!=row["bytes"] or hashlib.sha256(payload).hexdigest()!=row["sha256"]:
+                raise RuntimeError("HOLD: original PNG byte hash drift "+filename)
+            pixels,channels=raw_png_pixels(payload)
+            if channels!=(1 if channel=="Roughness" else 3) or pixels!=source[channel]:
+                raise RuntimeError("HOLD: regenerated source pixels differ "+filename)
+    return {"status":"SOURCE_PBR_TEXTURE_SHA256_AND_CROSS_PLATFORM_PIXELS_PASS_NOT_NATIVE",
+            "texture_count":len(rows),"roles":len(ROLES),
             "source_files_unchanged":True}
 
 def main():
