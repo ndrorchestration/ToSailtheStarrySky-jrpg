@@ -6,6 +6,8 @@
 #include "TSTSSReviewShoreTravelSubsystem.h"
 #include "Engine/GameInstance.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Engine/SkeletalMesh.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/TextRenderActor.h"
 #include "Components/TextRenderComponent.h"
@@ -175,6 +177,21 @@ ATSTSSExplorerCharacter::ATSTSSExplorerCharacter()
     FollowCamera->bUsePawnControlRotation = false;
     bUseControllerRotationYaw = false;
     GetCharacterMovement()->bOrientRotationToMovement = true;
+#if WITH_EDITOR
+    // Existing native player pawn; review appearance is hidden/opt-in by default.
+    EnderReviewGogglesComponent = CreateDefaultSubobject<UStaticMeshComponent>(
+        TEXT("EnderSliceGoggles_REVIEW_ONLY"));
+    EnderReviewGogglesComponent->SetupAttachment(GetMesh());
+    EnderReviewGogglesComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    EnderReviewGogglesComponent->SetGenerateOverlapEvents(false);
+    EnderReviewGogglesComponent->SetVisibility(false);
+    EnderReviewStaffComponent = CreateDefaultSubobject<UStaticMeshComponent>(
+        TEXT("EnderSliceStaff_REVIEW_ONLY"));
+    EnderReviewStaffComponent->SetupAttachment(GetMesh());
+    EnderReviewStaffComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    EnderReviewStaffComponent->SetGenerateOverlapEvents(false);
+    EnderReviewStaffComponent->SetVisibility(false);
+#endif
 }
 
 void ATSTSSExplorerCharacter::BeginPlay()
@@ -182,6 +199,7 @@ void ATSTSSExplorerCharacter::BeginPlay()
     Super::BeginPlay();
     FirstWakeState = NewObject<UTSTSSFirstWakeState>(this);
 #if WITH_EDITOR
+    ApplyEnderSliceReviewAppearance();
     if (UWorld* World = GetWorld())
     {
         if (UGameInstance* GameInstance = World->GetGameInstance())
@@ -259,6 +277,76 @@ void ATSTSSExplorerCharacter::BeginPlay()
 #endif
     ShowObjectiveReview();
 }
+
+#if WITH_EDITOR
+void ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance()
+{
+    // No packaged-game effect. The default review body is unset.
+    const UWorld* World = GetWorld();
+    if (!World || World->WorldType != EWorldType::PIE ||
+        EnderSliceReviewBody.IsNull() || !IsValid(GetMesh()))
+    {
+        return;
+    }
+
+    USkeletalMesh* Candidate = EnderSliceReviewBody.LoadSynchronous();
+    if (!IsValid(Candidate) || !IsValid(Candidate->GetSkeleton()))
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_ENDER_SLICE_VISUAL_HOLD missing candidate/skeleton; original pawn unchanged"));
+        return;
+    }
+    const FReferenceSkeleton& Bones = Candidate->GetRefSkeleton();
+    if (Bones.GetNum() < 80 || Bones.GetNum() > 450 ||
+        Bones.FindBoneIndex(EnderReviewHeadBone) == INDEX_NONE ||
+        Bones.FindBoneIndex(EnderReviewGripBone) == INDEX_NONE)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_ENDER_SLICE_VISUAL_HOLD invalid bone hierarchy; original pawn unchanged"));
+        return;
+    }
+
+    // Set only the spawned pawn's component mesh. No source asset, map,
+    // gameplay abilities, recruitment, inventory, or story state changes.
+    USkeletalMeshComponent* Body = GetMesh();
+    Body->SetSkeletalMeshAsset(Candidate);
+    Body->SetVisibility(true);
+    UE_LOG(LogTemp, Display,
+        TEXT("TSTSS_ENDER_SLICE_REVIEW_MESH_BOUND bones=%d animation_and_cloth_NOT_VERIFIED"),
+        Bones.GetNum());
+
+    const auto PreviewAttachment = [Body](UStaticMeshComponent* Preview,
+        const TSoftObjectPtr<UStaticMesh>& Asset, bool bEnabled,
+        FName Bone, const FTransform& LocalOffset, const TCHAR* Label)
+    {
+        if (!IsValid(Preview) || !bEnabled || Asset.IsNull() ||
+            !IsValid(Body) || !Body->DoesSocketExist(Bone))
+        {
+            return; // Fail closed: never float a prop at the actor origin.
+        }
+        UStaticMesh* Mesh = Asset.LoadSynchronous();
+        if (!IsValid(Mesh))
+        {
+            UE_LOG(LogTemp, Warning, TEXT("TSTSS_ENDER_ACCESSORY_HOLD %s"), Label);
+            return;
+        }
+        Preview->AttachToComponent(Body,
+            FAttachmentTransformRules::SnapToTargetNotIncludingScale, Bone);
+        Preview->SetStaticMesh(Mesh);
+        Preview->SetRelativeTransform(LocalOffset);
+        Preview->SetVisibility(true);
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_ENDER_ACCESSORY_REVIEW_ATTACHED %s fit_NOT_APPROVED"), Label);
+    };
+
+    PreviewAttachment(EnderReviewGogglesComponent, EnderSliceReviewGoggles,
+        bShowEnderReviewGoggles, EnderReviewHeadBone,
+        EnderReviewGogglesLocalOffset, TEXT("GOGGLES"));
+    PreviewAttachment(EnderReviewStaffComponent, EnderSliceReviewStaff,
+        bShowEnderReviewStaff, EnderReviewGripBone,
+        EnderReviewStaffLocalOffset, TEXT("STAFF"));
+}
+#endif
 
 void ATSTSSExplorerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
