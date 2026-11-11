@@ -2,6 +2,7 @@
 #include "TSTSSFirstWakeState.h"
 #include "TSTSSMilestoneActor.h"
 #include "TSTSSWaterLandingGate.h"
+#include "TSTSSReviewRouteSession.h"
 #include "TSTSSSaveGame.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/World.h"
@@ -325,6 +326,70 @@ bool FTSTSSFirstWakeInteractionSplashdownTest::RunTest(const FString& Parameters
     }
     ReviewWorld->DestroyWorld(false);
 #endif
+
+    // Every proposed cross-level transition is a read-only gate on the
+    // actual story state, not a shortcut granting launch, water or crew.
+    UTSTSSFirstWakeState* RouteState =
+        NewObject<UTSTSSFirstWakeState>(GetTransientPackage());
+    TestFalse(TEXT("No route for a new unstarted story"),
+        UTSTSSReviewRouteSession::IsEligible(
+            ETSTSSReviewMap::DenithHarbor, RouteState));
+    TestTrue(TEXT("Valid Ionia hiring restore"),
+        RouteState->Restore(true, ETSTSSFirstWakeBeat::IoniaHired, 0));
+    TestFalse(TEXT("Ionia hired is not yet ship boarding"),
+        UTSTSSReviewRouteSession::IsEligible(
+            ETSTSSReviewMap::DenithHarbor, RouteState));
+    TestTrue(TEXT("Valid boarding restore"),
+        RouteState->Restore(true, ETSTSSFirstWakeBeat::BoardedAureateWake, 0));
+    TestTrue(TEXT("Boarded Ender may reach ship review"),
+        UTSTSSReviewRouteSession::IsEligible(
+            ETSTSSReviewMap::DenithHarbor, RouteState));
+    TestFalse(TEXT("Boarding is not a launch"),
+        UTSTSSReviewRouteSession::IsEligible(
+            ETSTSSReviewMap::AureateInteriors, RouteState));
+    TestTrue(TEXT("Complete engineering restore"),
+        RouteState->Restore(true, ETSTSSFirstWakeBeat::EngineeringChecked, 0x07));
+    TestFalse(TEXT("Engineering signoff alone cannot depart to the sky"),
+        UTSTSSReviewRouteSession::IsEligible(
+            ETSTSSReviewMap::AureateInteriors, RouteState));
+    TestTrue(TEXT("Valid launch restore"),
+        RouteState->Restore(true, ETSTSSFirstWakeBeat::Launched, 0x07));
+    TestTrue(TEXT("Launched ship can enter sky corridor"),
+        UTSTSSReviewRouteSession::IsEligible(
+            ETSTSSReviewMap::AureateInteriors, RouteState));
+    TestTrue(TEXT("Launched flight can enter water observation lab"),
+        UTSTSSReviewRouteSession::IsEligible(
+            ETSTSSReviewMap::FirstWakeSky, RouteState));
+    TestFalse(TEXT("Launch cannot skip physical flotation"),
+        UTSTSSReviewRouteSession::IsEligible(
+            ETSTSSReviewMap::SplashdownSea, RouteState));
+    TestTrue(TEXT("Valid contact restore"),
+        RouteState->Restore(true, ETSTSSFirstWakeBeat::SeaContact, 0x07));
+    TestFalse(TEXT("Contact alone does not unlock post-Splashdown fuel stop"),
+        UTSTSSReviewRouteSession::IsEligible(
+            ETSTSSReviewMap::SplashdownSea, RouteState));
+    TestTrue(TEXT("Valid flotation restore"),
+        RouteState->Restore(true, ETSTSSFirstWakeBeat::FlotationConfirmed, 0x07));
+    TestTrue(TEXT("Confirmed flotation opens Denith shanty"),
+        UTSTSSReviewRouteSession::IsEligible(
+            ETSTSSReviewMap::SplashdownSea, RouteState));
+    TestFalse(TEXT("Flotation alone does not open shore"),
+        UTSTSSReviewRouteSession::IsEligible(
+            ETSTSSReviewMap::DenithFuelShanty, RouteState));
+    TestTrue(TEXT("Valid reserve inspection restore"),
+        RouteState->Restore(true, ETSTSSFirstWakeBeat::EmptyReserveInspected, 0x07));
+    TestTrue(TEXT("Post-contact inspection opens shore"),
+        UTSTSSReviewRouteSession::IsEligible(
+            ETSTSSReviewMap::DenithFuelShanty, RouteState));
+    TestFalse(TEXT("There is no implicit extra stage or Starbourne transition"),
+        UTSTSSReviewRouteSession::IsEligible(
+            ETSTSSReviewMap::SplashdownShore, RouteState));
+    TestFalse(TEXT("Unknown stage cannot grant travel"),
+        UTSTSSReviewRouteSession::IsEligible(
+            static_cast<ETSTSSReviewMap>(255), RouteState));
+    TestEqual(TEXT("No map lookup for unknown stage"),
+        UTSTSSReviewRouteSession::GetReviewLevelName(
+            static_cast<ETSTSSReviewMap>(255)), FString());
 
     // No player save slot is written; do not alter any gameplay session.
     World->DestroyWorld(false);

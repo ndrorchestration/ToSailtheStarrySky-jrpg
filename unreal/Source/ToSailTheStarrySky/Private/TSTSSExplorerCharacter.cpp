@@ -3,6 +3,8 @@
 #include "TSTSSPersistence.h"
 #include "TSTSSInteractionReach.h"
 #include "TSTSSSaveGame.h"
+#include "TSTSSReviewRouteSession.h"
+#include "TSTSSReviewRouteGate.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -10,6 +12,7 @@
 #include "InputCoreTypes.h"
 #include "Components/InputComponent.h"
 #include "Engine/World.h"
+#include "Engine/GameInstance.h"
 #include "Engine/Engine.h"
 #include "Kismet/GameplayStatics.h"
 #include "CollisionQueryParams.h"
@@ -105,6 +108,26 @@ void ATSTSSExplorerCharacter::BeginPlay()
     Super::BeginPlay();
     FirstWakeState = NewObject<UTSTSSFirstWakeState>(this);
     bPIEReviewQuickSlotOwned = false;
+#if WITH_EDITOR
+    // Only a pending in-memory handoff from the previous exact review map
+    // can restore this new pawn's story; never adopt disk saves implicitly.
+    UWorld* ArrivalWorld = GetWorld();
+    UGameInstance* Instance = ArrivalWorld ? ArrivalWorld->GetGameInstance() : nullptr;
+    if (ArrivalWorld && ArrivalWorld->WorldType == EWorldType::PIE && Instance)
+    {
+        if (UTSTSSReviewRouteSession* Session =
+                Instance->GetSubsystem<UTSTSSReviewRouteSession>())
+        {
+            if (Session->ConsumeArrival(ArrivalWorld, FirstWakeState))
+            {
+                UE_LOG(LogTemp, Display,
+                    TEXT("TSTSS_REVIEW_TRAVEL_ARRIVAL beat=%d mask=%u"),
+                    static_cast<int32>(FirstWakeState->GetCurrentBeat()),
+                    static_cast<uint32>(FirstWakeState->GetInspectionMask()));
+            }
+        }
+    }
+#endif
     ShowFirstWakeReviewObjective(FirstWakeState);
 }
 
@@ -235,6 +258,16 @@ void ATSTSSExplorerCharacter::Interact()
                         InteractionDistance, *FirstWakeState->GetReviewObjectiveText());
                 }
 #endif
+            }
+        }
+        else if (ATSTSSReviewRouteGate* RouteGate = Cast<ATSTSSReviewRouteGate>(Hit.GetActor()))
+        {
+            // A gate consumes the same pawn-distance constraint as milestones;
+            // camera boom reach cannot enlarge its interaction radius.
+            if (TSTSSInteractionReach::IsInsidePlayerReach(
+                    PawnLocation, Hit.ImpactPoint, InteractionDistance))
+            {
+                RouteGate->TryTraverse(this);
             }
         }
         else
