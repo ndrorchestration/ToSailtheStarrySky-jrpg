@@ -1,6 +1,6 @@
 # TSTSS Unreal 3D slice enemy roster — initial implementation
 
-**Status:** SOURCE IMPLEMENTED / DRAFT / NATIVE UE BUILD NOT TESTED / VISUAL QA NOT TESTED / STORY PLACEMENT NOT APPROVED / NO MERGE.
+**Status:** SOURCE IMPLEMENTED / DRAFT / NATIVE UBT/UHT BLOCKED BY ACTIVE LIVE CODING / VISUAL QA NOT TESTED / STORY PLACEMENT NOT APPROVED / NO MERGE.
 **Engine:** Unreal Engine 5.8 project (UE 5.8.4 Windows validation required).
 **Source of truth for current proposed review numbers:** `Public/Enemies/TSTSSSliceEnemyCatalog.h` and `Private/Enemies/TSTSSSliceEnemyCatalog.cpp`.
 **Baseline:** main `f4e44544c3c7d7803a964cd1c9435dab8a8aff16`.
@@ -37,3 +37,9 @@ These are balance **placeholders**, not final difficulty, canon stats or player-
 - Check performance, lighting, camera blocking, colorblind-readable attacks, and reduced-motion presentation before raising visual quality status.
 
 **Do not merge from a source-only result.** All production, creative, placement, native-validation and release gates remain separate.
+
+## Windows source-locked attempt, November 10, 2026
+On the isolated clean checkout `C:\\Users\\Admin\\work\\TSTSS-Slice-Enemies-20261110`, exact commit `ece4aa6b6b5920a5f976bcec2b2e7875f35d3214`, UnrealBuildTool started, but returned **exit code 6** with `Unable to build while Live Coding is active`. A separate Unreal Editor and LiveCodingConsole were subsequently observed on the workstation, so these sessions were not terminated or bypassed. This is a **BLOCKED build**, not native success and not evidence of a C++ compile defect. The checkout remained clean. The two tracked INI files' original read-only attributes were restored after the attempt. All native automation and visual QA remain untested; retry at the final PR head only when the machine is idle.
+
+## Optional enemy-turn AI
+`UTSTSSSliceEnemyReviewAI::TryActReviewEnemy` is a BlueprintCallable non-shipping helper. It checks exact instance/archetype state, chooses the lowest-HP living canonical protagonist (stable lexical tie-break), attempts the stronger attack, then a free basic action when denied or under-resourced. Every action goes through `UTSS_CombatTurnManager::SubmitCommand`—including skill admission, learned membership, cooldown, faction targeting and atomic HP effects. It cannot autonomously create encounters, grant player actions or mutate saves. A third native Editor test covers denial, archetype spoofing, stronger attack, turn ownership and resource fallback. **These are implementation/test definitions, not native pass claims.**
