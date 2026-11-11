@@ -107,6 +107,11 @@ class SourceOnlyGalleryTests(TestCase):
             with self.assertRaisesRegex(RuntimeError,"aisle"):
                 gallery.validate_plan()
 
+    def test_native_light_color_uses_color_struct(self):
+        source=Path(gallery.__file__).read_text(encoding="utf-8")
+        self.assertIn('set_editor_property("light_color", unreal.Color(',source)
+        self.assertNotIn('set_editor_property("light_color", unreal.LinearColor(',source)
+
     def test_source_catalog_and_gallery_kind_parity(self):
         import re
         root=Path(gallery.__file__).resolve().parents[1]
