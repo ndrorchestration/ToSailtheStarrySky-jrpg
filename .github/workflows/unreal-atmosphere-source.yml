@@ -1,0 +1,36 @@
+name: First Wake atmosphere source QA (no native claim)
+
+on:
+  pull_request:
+    paths:
+      - 'unreal/Source/ToSailTheStarrySky/**/TSTSSAtmosphereDirector*'
+      - 'unreal/Tools/build_first_wake_atmosphere_review.py'
+      - 'unreal/Tools/test_first_wake_atmosphere_review.py'
+      - 'unreal/Tools/Verify-Unreal.ps1'
+      - 'unreal/Docs/FIRST_WAKE_ATMOSPHERE_REVIEW_V1.md'
+      - '.github/workflows/unreal-atmosphere-source.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  atmospheric-source-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check Python syntax and source-only atmosphere plan
+        run: |
+          python3 -m py_compile unreal/Tools/build_first_wake_atmosphere_review.py unreal/Tools/test_first_wake_atmosphere_review.py
+          python3 unreal/Tools/build_first_wake_atmosphere_review.py --validate
+      - name: Exercise fail-closed source contract
+        run: python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_atmosphere_review.py' -v
+      - name: Ensure new native automation is in mandatory registry
+        run: |
+          python3 unreal/Tools/check_automation_registry.py
+          python3 unreal/Tools/check_unreal_test_inventory.py
+      - name: State the unverified native boundaries
+        run: echo "Source QA only - no UE build, material HLSL compile, D3D captures, PIE or creator art acceptance."
