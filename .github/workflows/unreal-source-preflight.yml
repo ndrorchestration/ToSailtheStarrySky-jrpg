@@ -7,6 +7,7 @@ on:
     paths:
       - 'unreal/Source/**'
       - 'unreal/ArtSource/PartyEquipment/**'
+      - 'unreal/Content/TSTSS/Review/PartyEquipment/**'
       - 'unreal/Config/**'
       - 'unreal/Tools/**'
       - 'unreal/Docs/**'

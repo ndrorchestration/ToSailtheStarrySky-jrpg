@@ -17,7 +17,7 @@
 | **Lyra** | Water focus (provisional) | Travel coat shell | Water pendant | Healer's satchel |
 | **Shared** | — | — | — | Restorative vial and resonance capacitor, decorative/quest props only |
 
-The authoring generator `unreal/ArtSource/PartyEquipment/generate_party_equipment.py` creates individual meter-scale, Y-up glTF2 binary GLBs with separate material primitives, vertex normals, and glTF metallic/roughness PBR definitions. Every model has a SHA-256, dimensions, slot, owner, stage, and noncanonical state in `party_equipment_manifest.review.json`.
+The authoring generator `unreal/ArtSource/PartyEquipment/generate_party_equipment.py` creates individual meter-scale, Y-up glTF2 binary GLBs with separate material primitives, vertex normals, and glTF metallic/roughness PBR definitions. Every model has a SHA-256, dimensions, slot, owner, stage, and noncanonical state in `party_equipment_manifest.review.json`. The preserved original staff GLB is independently retained in `Sources/` with a required SHA-256; a clean-room regeneration from this tracked source was executed and reproduced **all 14 GLB hashes plus the exact manifest bytes**.
 
 This is **authored low-to-mid complexity static 3D geometry** for editor inspection, blockout, proportions and loadout testing; it is **not** final AAA sculpting, cloth simulation, photogrammetric texturing, LODs, collisions, animation, IK sockets, approved rigging, or production character likeness. Armor/coats are standalone torso-shell preview models, not approved body-fitting wearables. The goggles require sealed facial-fit confirmation. All generated art is **creator_approved=false**.
 
@@ -40,15 +40,19 @@ python unreal/Tools/test_automation_registry.py
 python unreal/Tools/check_automation_registry.py
 ```
 
-Static native import script: `unreal/ArtSource/PartyEquipment/native_import_party_equipment.py`. It only writes under `/Game/TSTSS/Review/PartyEquipment` and emits `Saved/PartyEquipmentReview/native_import_report.json`. The exact project path is guarded. Native asset import, asset-editor viewport review, socket/grip measurement, tested collision and native C++ automation must each have their **own evidence** before being claimed.
+Native static import script: `unreal/ArtSource/PartyEquipment/native_import_party_equipment.py`. Its direct target-project route is explicitly guarded; during the concurrent Live Coding blocker, a separate **Unreal 5.8.4 content-only sandbox** at `C:\TSTSS_PartyEquipmentContentQA_20261110` was used by copying the script and replacing only the expected isolated root and external source manifest path. The script imported all **14 of 14** reviewed static meshes at `/Game/TSTSS/Review/PartyEquipment`, validated their real Unreal dimensions/material slots, and emitted status `NATIVE_STATIC_MESH_IMPORT_PASS_REVIEW_ONLY`. Its unaltered report is tracked as `unreal/Docs/PartyEquipment_NativeStaticImport_2026_11_10.report.json`.
 
-The Unreal 5.8 Editor build attempt on this worktree encountered `Unable to build while Live Coding is active` because another Editor session was running. Source test successes do not establish native compilation.
+The 84 native `.uasset` files (14 meshes plus generated material assets; 6,463,462 bytes) were then copied into this branch's **otherwise empty, isolated** `unreal/Content/TSTSS/Review/PartyEquipment` directory; all 84 source-vs-target hashes matched. Native assets were created by genuine UE 5.8.4 static import, not an invented `uasset` conversion. The C++ target project has **not** loaded or PIE-tested these assets: **content-only sandbox native import is narrower than a successful game-target integration.**
+
+A content-only native **showroom** level was then authored via `native_build_gallery_review.py` and **saved** at `/Game/TSTSS/Review/PartyEquipment/TSTSS_ThreePartyGearGallery_REVIEW`: 14 StaticMesh actors (four per party member plus two shared props), 14 review pedestals, key/fill light actors and owner/item actor labels. The source `.umap` was SHA-256 matched to the isolated target worktree copy. Native headless report status `NATIVE_REVIEW_GALLERY_MAP_PASS_NO_VISUAL_PROOF` is tracked in `unreal/Docs/PartyEquipment_NativeGallery_2026_11_10.report.json`. This is **NOT** a character rig-fitting level or proof of visual quality, hand sockets, pickup interactions, recruitment story binding, real UI, combat activation, or gameplay.
+
+The target Unreal 5.8 Editor build attempt on this worktree encountered `Unable to build while Live Coding is active` because another Editor session was running. Source test successes and imported assets do not establish native C++ compilation, rigging, screenshots, gameplay equipment interaction, class mastery, or creative art approval.
 
 ## Next admission gates
 
-1. Imported static mesh `.uasset` source SHA and UE world-scale bounds checked (separate native import receipt).
+1. Open the copied `.uasset` meshes and the saved gallery map in the **actual C++ game project**, inspect visuals with D3D12 RHI and capture real rendered screenshots; source-only/native content sandbox results are not target-gameproof.
 2. Exact-head UE 5.8.4 UBT/UHT/MSVC build, mandatory native automation registration and pass including `TSTSS.Equipment.PartySliceStageGate`.
-3. Disposable review level where Ender, Ionia and post-splashdown Lyra can be visually equipped; explicit mesh sockets, rig, skin/clipping, animated grips and equip/unequip verified.
+3. Add a separate gameplay review level where Ender, Ionia and post-splashdown Lyra can be actually equipped; verify explicit mesh sockets, rig, skin/clipping, animated grips and equip/unequip.
 4. Character creative approval for all provisional items, material texture polish, fit and lookdev.
 5. Integrate through actual recruitment state, 3-active party UI, owned inventory and player-controlled gameplay; keep Lyra gated and Reson/Aepex excluded.
 

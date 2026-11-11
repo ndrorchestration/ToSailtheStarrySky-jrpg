@@ -287,10 +287,13 @@ def main():
    "runtime_equippable":False,"is_full_character_outfit":False}
   if shape=="existing_staff":
    # Deterministic provenance-checked existing reviewed model; do not regenerate/copy here.
-   src=Path(r"C:\TSTSS_EnderStaffV1_20261104\private_generated\Ender_DoubleFerrule_CenteredWrap_Staff_V1_NONCANONICAL.glb")
+   src=HERE/"Sources"/"Ender_DoubleFerrule_CenteredWrap_Staff_V1_NONCANONICAL.glb"
    if not src.exists():raise FileNotFoundError("Missing reviewed original staff: "+str(src))
+   original=src.read_bytes()
+   if hashlib.sha256(original).hexdigest()!="0ceb1955bcc8053dc306f564bbe3a6647b36a3d9aa09f49fcff5752e7d89e307":
+    raise ValueError("Preserved staff source hash mismatch")
    if path.exists():raise FileExistsError(str(path))
-   path.write_bytes(src.read_bytes())
+   path.write_bytes(original)
    record["reused_prior_review_staff"]=True
    record["static_import_only"]=True
   else:

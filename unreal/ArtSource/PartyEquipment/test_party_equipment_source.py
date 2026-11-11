@@ -61,6 +61,8 @@ class TestPartyEquipmentSource(unittest.TestCase):
  def test_ender_staff_provenance(self):
   i=next(x for x in self.manifest["entries"] if x["id"]=="Ender.ResonanceStaff")
   self.assertTrue(i["reused_prior_review_staff"])
+  original=HERE/"Sources"/"Ender_DoubleFerrule_CenteredWrap_Staff_V1_NONCANONICAL.glb"
+  self.assertEqual(hashlib.sha256(original.read_bytes()).hexdigest(),i["sha256"])
   self.assertEqual(i["sha256"],
      "0ceb1955bcc8053dc306f564bbe3a6647b36a3d9aa09f49fcff5752e7d89e307")
   self.assertTrue(1.70 < i["bounds_m"][1][1]-i["bounds_m"][1][0] < 1.75)
