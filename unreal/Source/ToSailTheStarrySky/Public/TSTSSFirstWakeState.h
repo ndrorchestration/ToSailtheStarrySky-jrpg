@@ -27,11 +27,19 @@ enum class ETSTSSInspectionStation : uint8
     Reserve
 };
 
+// Non-persistent observer signal; fired only after an accepted transition,
+ // inspection, Reset or Restore. It never grants permission to advance.
+DECLARE_MULTICAST_DELEGATE(FTSTSSFirstWakeStateChanged);
+
 UCLASS(BlueprintType)
 class TOSAILTHESTARRYSKY_API UTSTSSFirstWakeState : public UObject
 {
     GENERATED_BODY()
 public:
+    // Native read-only observers (cinematic/audio/UI) can invalidate their
+    // cached projections without polling or changing canonical progression.
+    FTSTSSFirstWakeStateChanged& OnAcceptedChange() { return AcceptedChange; }
+
     UFUNCTION(BlueprintCallable, Category="TSTSS|First Wake")
     bool AdvanceTo(ETSTSSFirstWakeBeat RequestedBeat);
 
@@ -94,4 +102,7 @@ private:
 
     UPROPERTY(Transient)
     uint64 RestoreGeneration = 0;
+
+    // No UPROPERTY: a native observer registry, not SaveGame state.
+    FTSTSSFirstWakeStateChanged AcceptedChange;
 };
