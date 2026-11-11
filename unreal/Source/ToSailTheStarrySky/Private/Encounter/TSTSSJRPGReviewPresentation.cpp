@@ -54,6 +54,20 @@ bool UTSTSSJRPGReviewPresentation::Advance(float DeltaSeconds)
 #endif
 }
 
+bool UTSTSSJRPGReviewPresentation::TryAbortBeforeCombat(int32 TicketSerial)
+{
+#if UE_BUILD_SHIPPING
+    return false;
+#else
+    if (ActiveTicket!=TicketSerial || TicketSerial<=0 ||
+        (Phase!=ETSTSSJRPGReviewSequencePhase::EncounterFlash &&
+         Phase!=ETSTSSJRPGReviewSequencePhase::BattleReveal)) return false;
+    ActiveTicket=0;
+    SetPhase(ETSTSSJRPGReviewSequencePhase::Exploration);
+    return true;
+#endif
+}
+
 bool UTSTSSJRPGReviewPresentation::TryEnterCombat(int32 TicketSerial)
 {
 #if UE_BUILD_SHIPPING

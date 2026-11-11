@@ -33,6 +33,10 @@ public:
     UFUNCTION(BlueprintCallable, Category="TSTSS|Review Sequence")
     bool Advance(float DeltaSeconds);
 
+    // Roll back an encounter if map/battle admission is denied before combat.
+    UFUNCTION(BlueprintCallable, Category="TSTSS|Review Sequence")
+    bool TryAbortBeforeCombat(int32 TicketSerial);
+
     UFUNCTION(BlueprintCallable, Category="TSTSS|Review Sequence")
     bool TryEnterCombat(int32 TicketSerial);
 
