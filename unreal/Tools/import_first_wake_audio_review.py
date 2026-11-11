@@ -95,7 +95,7 @@ def main():
     import unreal
     if shutil.disk_usage(unreal.Paths.project_dir()).free < MIN_DISK_BYTES:
         raise RuntimeError("Below minimum 14 GiB project disk; abort")
-    library = unreal.EditorAssetLibrary
+    library = unreal.get_editor_subsystem(unreal.EditorAssetSubsystem)
     tasks = []
     for file in sorted(paths):
         name = "QA_" + file.stem
