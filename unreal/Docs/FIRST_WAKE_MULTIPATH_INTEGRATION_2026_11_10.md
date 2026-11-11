@@ -41,3 +41,27 @@ All import paths remain in the review namespace. Original PRs remain open/draft.
 `powershell -NoProfile -ExecutionPolicy Bypass -File unreal/Tools/Test-NativeAutomationReportFixtures.ps1`
 
 The `test_first_wake_multipath_review.py` guard additionally verifies all nine lane sources, registered native-test inventory, 6 maps, 22 GLBs, 14 equipment GLBs, player order, input isolation and strictly unapproved evidence states, with negative mutation tests.
+
+
+## 2026-11-10 continuation — isolated integrated shore probe
+
+**Implementation staged in source, Unreal Editor execution NOT RUN.**
+The additive plan `unreal/Tools/stage_first_wake_multipath_shore.py --plan` verifies the actual six-map receipt, SHA-256 of the saved VS06 shore map, all 22 original object GLB sources, 14 three-party static equipment GLBs, and all nine Ender VFX cues. No user process is launched by `--plan`.
+
+When native C++ modules are actually built at this **exact integrated commit**, the guarded native launcher can generate one separate review scene:
+
+`/Game/TSTSS/Review/MultipathV1/L_VS06_ShoreMagicEnemyGear_Review`
+
+It duplicates VS06 instead of changing it, creates an isolated folder per GLB import, imports all 22 source prop meshes, displays eight curated prop actors and three non-equipped equipment props (Ender staff, Ionia saber, Lyra water focus), spawns three distinct enemy visual proxies, nine independent *review-only* Ender cue loops, the native atmosphere director, a camera, and a conspicuous review-only warning. It replaces only known duplicate-owned sky/sun/fog actors inside the **duplicate map**, disables added actor collision, and verifies counts, identities, source-map hash and config hashes. This is an additive visual *showcase*, not an encounter, cast, runtime map transition, native animation, story/authority progression, gameplay proof or finished cinematic.
+
+### Fail-closed exact-head execution sequence (not yet executed)
+
+1. Ensure the user's existing Unreal Editor and Live Coding sessions are closed **without terminating or interfering with them**. Confirm 5 GiB free physical RAM minimum for native build and 14 GiB free disk, and that the isolated integration branch has a clean full 40-character HEAD.
+2. Run existing `unreal/Tools/Verify-Unreal.ps1` with `-EngineRoot "C:\Program Files\Epic Games\UE_5.8" -ExpectedHead "<current 40-hex integration SHA>"`. A successful full native build **and all 35** registered UE native tests now produce `Saved/MigrationEvidence/<unique>/verified-native.json` (with report digest, head and explicit PIE/visual NOT_TESTED). Build-only `-SkipTests` does not satisfy this gate.
+3. Read-only host check: `python unreal/Tools/run_first_wake_multipath_native.py --check --expected-head <same SHA>`. It must return `HOST_PREFLIGHT_PASS_NO_UNREAL_LAUNCH`. It explicitly rejects active Editor/LiveCoding processes, missing exact-head native receipt, fewer than **6.5 GiB physical RAM**, fewer than 14 GiB disk, dirty/rebased HEAD, existing saves or an occupied output.
+4. Explicit host-only stage: `python unreal/Tools/run_first_wake_multipath_native.py --stage --expected-head <same SHA>`. Exactly one own, capped, low-priority UE headless NullRHI child is launched; no foreign process is killed. The stage writes separate `Saved/MultipathV1/` evidence and refuses to overwrite previous receipts.
+5. If the map was successfully saved and its map hash verified, perform independent Editor readback, Lit D3D camera review, actor/visibility/layout checks, performance, combat admission review, real controlled Prelude PIE, input/sea/save checks, and creator art approval. **NullRHI output is not a rendered GPU image or proof that the sequence is playable.**
+
+**Partial-failure semantics:** A failed native import may leave new unapproved assets inside its unique review namespace. The workflow intentionally refuses a second overwrite attempt; inspect the failed run and use a fresh disposable namespace/worktree for remediation rather than silently deleting evidence or assets.
+
+**Source-only QA:** `python -m unittest discover -s unreal/Tools -p "test_first_wake_multipath_shore.py"` checks the map/GLB/gear hashes, no automatic grants, exact native receipt binding, stale/forged receipt denial, no implicit Unreal launch, conflict-free map destination, unique actor counts, and fail-closed process/resource boundaries.

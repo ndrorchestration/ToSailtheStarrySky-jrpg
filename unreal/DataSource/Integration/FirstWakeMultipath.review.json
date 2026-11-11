@@ -38,6 +38,16 @@
     "source_review_only": true,
     "key_file": "unreal/DataSource/Cinematics/FirstWakeRuntimeShotHandoffs.review.json"
   },
+  "shore_review_probe": {
+    "package": "/Game/TSTSS/Review/MultipathV1/L_VS06_ShoreMagicEnemyGear_Review",
+    "source_map": "/Game/TSTSS/Review/VerticalSlice/VS06_SplashdownShore",
+    "compositor": "unreal/Tools/stage_first_wake_multipath_shore.py",
+    "host_gate": "unreal/Tools/run_first_wake_multipath_native.py",
+    "requires_verified_exact_head_35_native_tests": true,
+    "native_staged": false,
+    "pie_verified": false,
+    "creator_approved": false
+  },
   "source_tracks": [
     {
       "id": "gameplay",

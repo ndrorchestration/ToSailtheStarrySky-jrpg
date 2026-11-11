@@ -62,6 +62,14 @@ def validate(data):
         handoff.get("key_file") != "unreal/DataSource/Cinematics/FirstWakeRuntimeShotHandoffs.review.json" or
         not (UNREAL.parent / str(handoff.get("key_file", ""))).is_file()):
         errors.append("convergence-handoff-binding")
+    probe = data.get("shore_review_probe") or {}
+    if (probe.get("package") != "/Game/TSTSS/Review/MultipathV1/L_VS06_ShoreMagicEnemyGear_Review"
+            or probe.get("source_map") != "/Game/TSTSS/Review/VerticalSlice/VS06_SplashdownShore"
+            or probe.get("requires_verified_exact_head_35_native_tests") is not True
+            or any(probe.get(k) is not False for k in ("native_staged", "pie_verified", "creator_approved"))
+            or any(not (UNREAL.parent / str(probe.get(k, ""))).is_file()
+                   for k in ("compositor", "host_gate"))):
+        errors.append("shore-probe-authority-or-source")
     tracks = data.get("source_tracks") or []
     if len(tracks) != len(EXPECTED_TRACKS) or {x.get("id") for x in tracks} != EXPECTED_TRACKS:
         errors.append("track-coverage")
@@ -132,6 +140,9 @@ class CrossPathReviewContract(unittest.TestCase):
         changed = copy.deepcopy(self.data)
         changed["convergence_handoff_update"]["source_review_only"] = False
         self.assertIn("convergence-handoff-binding", validate(changed))
+        changed = copy.deepcopy(self.data)
+        changed["shore_review_probe"]["native_staged"] = True
+        self.assertIn("shore-probe-authority-or-source", validate(changed))
         changed = copy.deepcopy(self.data)
         changed["source_tracks"].pop()
         self.assertIn("track-coverage", validate(changed))

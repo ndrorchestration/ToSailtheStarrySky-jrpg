@@ -161,4 +161,19 @@ $FinalWorkingTree = @(git -C (Join-Path $PSScriptRoot '../..') status --porcelai
 if ($LASTEXITCODE -ne 0 -or $FinalWorkingTree.Count -gt 0) {
     throw 'Working tree changed during verification; refusing to bind PASS to a dirty checkout'
 }
+# The visual-staging handoff must consume a concrete exact-head native receipt,
+# not an earlier branch's source CI, build-only receipt or aggregate green label.
+$AcceptedReceipt = Join-Path $Evidence 'verified-native.json'
+if (Test-Path -LiteralPath $AcceptedReceipt) { throw 'Refuse overwriting native acceptance receipt' }
+$NativeAcceptance = [ordered]@{
+    status = 'WIN64_EDITOR_BUILD_AND_NATIVE_AUTOMATIONS_PASS_CLEAN_SOURCE'
+    source_sha = $GitHead
+    unreal_version = '5.8.4'
+    required_native_tests = $RequiredTests.Count
+    report_sha256 = (Get-FileHash -LiteralPath $ReportPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    pie_player_input = 'NOT_TESTED'
+    visual_approval = 'NOT_TESTED'
+}
+$NativeAcceptance | ConvertTo-Json -Depth 4 |
+    Set-Content -LiteralPath $AcceptedReceipt -Encoding UTF8
 Write-Host "Native build and reported automation checks passed at $GitHead. Evidence retained at $Evidence. Visual acceptance remains separate."
