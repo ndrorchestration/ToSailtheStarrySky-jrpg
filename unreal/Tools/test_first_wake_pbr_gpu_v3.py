@@ -28,7 +28,7 @@ class TestPBRNativeGPU(unittest.TestCase):
         self.assertEqual((1280,720),capture.SIZE)
         self.assertEqual("Quay_Paving_Study",capture.CAMERAS[3][0])
         self.assertEqual("Engineering_OpenQuay",capture.CAMERAS[1][0])
-        self.assertEqual("D3D11_PBR_V3_20261111",capture.OUTPUT.name)
+        self.assertEqual("D3D11_PBR_V3_20261111_R1",capture.OUTPUT.name)
         code=Path(capture.__file__).read_text(encoding="utf-8")
         self.assertNotIn("save_current_level",code)
         self.assertNotIn("destroy_actor",code)
@@ -41,6 +41,20 @@ class TestPBRNativeGPU(unittest.TestCase):
         self.assertTrue(capture.WORLD_FILE.name.endswith("REVIEW_V3.umap"))
         self.assertIn("FIRSTWAKE_PBR_GPU_NATIVE_RECEIPT",
                       Path(capture.__file__).read_text(encoding="utf-8"))
+
+    def test_native_visibility_uses_actor_hidden_property_not_nonexistent_method(self):
+        code=Path(signs.__file__).read_text(encoding="utf-8")
+        self.assertNotIn(".is_hidden()",code)
+        self.assertIn('get_editor_property("hidden")',code)
+        self.assertIn('set_actor_hidden_in_game(True)',code)
+        self.assertEqual(7,len(signs.MILESTONES))
+
+    def test_retry_receipts_never_overwrite_failed_original(self):
+        self.assertTrue(capture.OUTPUT.name.endswith("_R1"))
+        self.assertTrue(host.LOG.name.endswith("_R1.log"))
+        self.assertTrue(host.HOST.name.endswith("_R1.json"))
+        self.assertTrue(host.REPORT.name.endswith("_R1"))
+        self.assertNotEqual(capture.OUTPUT.parent/"PBR_V3_GPU_UE584_D3D11_HostReceipt_20261111.json",host.HOST)
 
     def test_cinematic_sign_gate_only_hides_signs(self):
         self.assertEqual(7,len(signs.MILESTONES))

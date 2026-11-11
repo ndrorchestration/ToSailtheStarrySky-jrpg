@@ -17,7 +17,7 @@ from capture_first_wake_slice_objects_d3d11 import validate_png,alignment,SIZE
 PROJECT=source.DEST/"unreal"
 WORLD_MAP="/Game/TSTSS/Review/Scenes/FirstWake_MaterialLookdev_20261111_REVIEW_V3"
 WORLD_FILE=source.DEST/source.WORLD_REL
-OUTPUT=PROJECT/"Saved/FirstWakeMaterialLookdevV3/D3D11_PBR_V3_20261111"
+OUTPUT=PROJECT/"Saved/FirstWakeMaterialLookdevV3/D3D11_PBR_V3_20261111_R1"
 NATIVE_RECEIPT=OUTPUT/"native_gpu_capture_receipt.json"
 STATUS="NATIVE_PBR_V3_D3D11_PNG_TASKS_PASS_VISUAL_QA_PENDING"
 CAMERAS=(

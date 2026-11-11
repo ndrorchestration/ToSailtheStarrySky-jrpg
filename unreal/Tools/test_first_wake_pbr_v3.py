@@ -25,7 +25,9 @@ class Actor:
     def get_actor_label(self):return self.label
     def set_actor_hidden_in_game(self,flag):
         self.hidden=bool(flag);self.touches+=1
-    def is_hidden(self):return self.hidden
+    def get_editor_property(self,name):
+        if name!="hidden":raise RuntimeError("Unsupported fake native actor property")
+        return self.hidden
 
 class TextSign(Actor):pass
 
