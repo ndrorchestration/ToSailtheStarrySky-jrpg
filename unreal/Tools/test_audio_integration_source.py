@@ -18,7 +18,7 @@ SOURCES = UNREAL_ROOT / "Source" / "ToSailTheStarrySky"
 
 
 class AudioReviewIntegrationSourceTests(unittest.TestCase):
-    def test_original_review_receipt_allows_only_exact_six_files(self):
+    def test_original_review_receipt_allows_only_exact_ten_files(self):
         with tempfile.TemporaryDirectory() as temp:
             generated = generate(Path(temp) / "sound_review")
             self.assertEqual(set(DURATIONS),
