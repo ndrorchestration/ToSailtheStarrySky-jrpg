@@ -2,6 +2,7 @@
 #include "Review/TSTSSResonatorFocusHUD.h"
 #include "TSTSSResonatorVfxActor.h"
 #include "Camera/CameraComponent.h"
+#include "Components/PointLightComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -94,6 +95,25 @@ ATSTSSResonatorFocusReviewActor::ATSTSSResonatorFocusReviewActor()
     Ground->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     Ground->SetRelativeLocation(FVector(220.f,-145.f,-75.f));
     Ground->SetRelativeScale3D(FVector(12.f,9.f,.1f));
+    // The original empty review map had no direct lights. These opt-in,
+    // collision-free lights make the GREYBOX battlefield visible without
+    // making any artistic or canonical material claim.
+    ArenaKeyLight=CreateDefaultSubobject<UPointLightComponent>(
+        TEXT("FocusWarmKeyLight"));
+    ArenaKeyLight->SetupAttachment(ReviewRoot);
+    ArenaKeyLight->SetRelativeLocation(FVector(180.f,-200.f,440.f));
+    ArenaKeyLight->SetIntensity(30000.f);
+    ArenaKeyLight->SetAttenuationRadius(2000.f);
+    ArenaKeyLight->SetLightColor(FLinearColor(1.f,.81f,.59f));
+    ArenaKeyLight->SetCastShadows(false);
+    ArenaFillLight=CreateDefaultSubobject<UPointLightComponent>(
+        TEXT("FocusTealFillLight"));
+    ArenaFillLight->SetupAttachment(ReviewRoot);
+    ArenaFillLight->SetRelativeLocation(FVector(430.f,100.f,340.f));
+    ArenaFillLight->SetIntensity(18000.f);
+    ArenaFillLight->SetAttenuationRadius(1700.f);
+    ArenaFillLight->SetLightColor(FLinearColor(.25f,.81f,1.f));
+    ArenaFillLight->SetCastShadows(false);
     EnderProxy=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("EnderReviewProxy"));
     IoniaProxy=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("IoniaReviewProxy"));
     FoeProxy=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("FoeReviewProxy"));
@@ -134,25 +154,31 @@ void ATSTSSResonatorFocusReviewActor::BeginPlay()
     if (!bEnableFocusReview || !ActorHasTag(TEXT("TSTSSReviewOnly")) ||
         !GetWorld() || !GetWorld()->IsGameWorld() || !IsValid(CombatManager.Get()))
     {
+        UE_LOG(LogTemp,Warning,TEXT("TSTSS_FOCUS_BEGINPLAY_DENIED: optin/tag/world/manager missing"));
         SetActorTickEnabled(false);
         SetActorHiddenInGame(true);
         return;
     }
-    UStaticMesh* Capsule=LoadObject<UStaticMesh>(nullptr,
-        TEXT("/Engine/BasicShapes/Capsule.Capsule"));
+    // Capsule does not exist at /Engine/BasicShapes/Capsule.Capsule on this
+    // exact Windows UE5.8.4 installation. Use a verified Engine Cube for all
+    // visible provisional proxies until approved sculpt/rig assets are ready.
     UStaticMesh* Cube=LoadObject<UStaticMesh>(nullptr,
         TEXT("/Engine/BasicShapes/Cube.Cube"));
-    if(Capsule)
+    if(!Cube)
     {
-        EnderProxy->SetStaticMesh(Capsule);
-        IoniaProxy->SetStaticMesh(Capsule);
-        FoeProxy->SetStaticMesh(Capsule);
+        UE_LOG(LogTemp,Error,TEXT("TSTSS_FOCUS_BEGINPLAY_DENIED: Engine Cube mesh missing"));
+        SetActorTickEnabled(false);
+        return;
     }
-    if(Cube) Ground->SetStaticMesh(Cube);
+    Ground->SetStaticMesh(Cube);
+    EnderProxy->SetStaticMesh(Cube);
+    IoniaProxy->SetStaticMesh(Cube);
+    FoeProxy->SetStaticMesh(Cube);
     IoniaProxy->SetVisibility(bIoniaRecruitedForReview);
     if(!TryInitArena())
     {
         LastReviewEvent=TEXT("FOCUS REVIEW ADMISSION DENIED / NO SPELL GRANTS");
+        UE_LOG(LogTemp,Error,TEXT("TSTSS_FOCUS_BEGINPLAY_DENIED: skill/party admission"));
         SetActorTickEnabled(false);
         return;
     }
@@ -161,18 +187,43 @@ void ATSTSSResonatorFocusReviewActor::BeginPlay()
     PulseSfx=LoadObject<USoundBase>(nullptr,
         TEXT("/Game/TSTSS/Review/ResonatorFocus/Audio/SFX_ResonantPulse.SFX_ResonantPulse"));
     LastReviewEvent=TEXT("READY: CAST CENTERING OR RESONANT PULSE");
-    if(APlayerController* PC=UGameplayStatics::GetPlayerController(this,0))
+    UE_LOG(LogTemp,Display,TEXT("TSTSS_FOCUS_COMBAT_ADMITTED: two spells Ender/Ionia and one review enemy"));
+    TryAttachReviewPlayer();
+    RefreshHUD();
+#endif
+}
+
+void ATSTSSResonatorFocusReviewActor::TryAttachReviewPlayer()
+{
+#if !UE_BUILD_SHIPPING
+    if(!bReviewReady || bInputBound || !GetWorld() || !GetWorld()->IsGameWorld())
+        return;
+    APlayerController* PC=UGameplayStatics::GetPlayerController(this,0);
+    if(!PC) return; // BeginPlay may occur before the first local controller.
+    if(!IsValid(ReviewHUD.Get()))
     {
-        PC->SetViewTargetWithBlend(this,.35f);
         ReviewHUD=CreateWidget<UTSTSSResonatorFocusHUD>(
             PC,UTSTSSResonatorFocusHUD::StaticClass());
-        if(IsValid(ReviewHUD.Get())) ReviewHUD->AddToViewport(150);
-        EnableInput(PC);
-        InputComponent->BindKey(EKeys::One,IE_Pressed,this,
-            &ATSTSSResonatorFocusReviewActor::CastCenteringKey);
-        InputComponent->BindKey(EKeys::Two,IE_Pressed,this,
-            &ATSTSSResonatorFocusReviewActor::CastPulseKey);
+        if(!IsValid(ReviewHUD.Get()))
+        {
+            UE_LOG(LogTemp,Error,TEXT("TSTSS_FOCUS_UI_DENIED: UMG widget creation failed"));
+            return;
+        }
+        ReviewHUD->AddToViewport(150);
     }
+    EnableInput(PC);
+    if(!InputComponent)
+    {
+        UE_LOG(LogTemp,Error,TEXT("TSTSS_FOCUS_UI_DENIED: actor input component missing"));
+        return;
+    }
+    InputComponent->BindKey(EKeys::One,IE_Pressed,this,
+        &ATSTSSResonatorFocusReviewActor::CastCenteringKey);
+    InputComponent->BindKey(EKeys::Two,IE_Pressed,this,
+        &ATSTSSResonatorFocusReviewActor::CastPulseKey);
+    PC->SetViewTargetWithBlend(this,.35f);
+    bInputBound=true;
+    UE_LOG(LogTemp,Display,TEXT("TSTSS_FOCUS_INPUT_AND_HUD_BOUND: keys 1 and 2"));
     RefreshHUD();
 #endif
 }
@@ -185,13 +236,26 @@ bool ATSTSSResonatorFocusReviewActor::TryInitArena()
     UDataTable* Source=LoadObject<UDataTable>(nullptr,TEXT(
         "/Game/TSTSS/Review/ResonatorFocus/DT_EnderResonatorFocusReview."
         "DT_EnderResonatorFocusReview"));
-    if(!IsValid(Source) || Source->GetRowStruct()!=FTSTSSBattleSkillRow::StaticStruct() ||
-       Source->GetRowMap().Num()!=10) return false;
+    if(!IsValid(Source))
+    {
+        UE_LOG(LogTemp,Error,TEXT("TSTSS_FOCUS_INIT_DENIED: native spell table missing"));
+        return false;
+    }
+    if(Source->GetRowStruct()!=FTSTSSBattleSkillRow::StaticStruct() ||
+       Source->GetRowMap().Num()!=10)
+    {
+        UE_LOG(LogTemp,Error,TEXT("TSTSS_FOCUS_INIT_DENIED: spell table struct/row count mismatch"));
+        return false;
+    }
     const FTSTSSBattleSkillRow* C=Source->FindRow<FTSTSSBattleSkillRow>(
         FocusCenteringSkill,TEXT("focus review Centering"),false);
     const FTSTSSBattleSkillRow* P=Source->FindRow<FTSTSSBattleSkillRow>(
         FocusPulseSkill,TEXT("focus review Pulse"),false);
-    if(!AcceptedFocusRow(C,FocusCenteringSkill) || !AcceptedFocusRow(P,FocusPulseSkill)) return false;
+    if(!AcceptedFocusRow(C,FocusCenteringSkill) || !AcceptedFocusRow(P,FocusPulseSkill))
+    {
+        UE_LOG(LogTemp,Error,TEXT("TSTSS_FOCUS_INIT_DENIED: Centering/Pulse row contract mismatch"));
+        return false;
+    }
     // A future contributor cannot enable unapproved Correspondence or other
     // spells merely by adding them to the DataTable.
     for(const auto& Pair:Source->GetRowMap())
@@ -201,7 +265,10 @@ bool ATSTSSResonatorFocusReviewActor::TryInitArena()
             Pair.Value);
         if(Id!=FocusCenteringSkill && Id!=FocusPulseSkill &&
            (!Row || Row->Admission!=ETSTSSBattleSkillAdmission::DesignOnly))
+        {
+            UE_LOG(LogTemp,Error,TEXT("TSTSS_FOCUS_INIT_DENIED: unselected spell executable"));
             return false;
+        }
     }
     AcceptedReviewTable=NewObject<UDataTable>(this);
     if(!AcceptedReviewTable) return false;
@@ -229,6 +296,8 @@ bool ATSTSSResonatorFocusReviewActor::TryInitArena()
     CombatManager->OnSkillAccepted.AddDynamic(this,
         &ATSTSSResonatorFocusReviewActor::OnAcceptedSkill);
     bReviewReady=CombatManager->InitializeEncounter(Crew,Active,{F});
+    if(!bReviewReady)
+        UE_LOG(LogTemp,Error,TEXT("TSTSS_FOCUS_INIT_DENIED: combat manager rejected roster"));
     return bReviewReady;
 #endif
 }
@@ -281,6 +350,8 @@ void ATSTSSResonatorFocusReviewActor::OnAcceptedSkill(
 #if !UE_BUILD_SHIPPING
     LastReviewEvent=FString::Printf(TEXT("%s USED %s"),
         *ActorId.ToString(),*SkillId.ToString());
+    UE_LOG(LogTemp,Display,TEXT("TSTSS_FOCUS_ACTION_ACCEPTED actor=%s skill=%s target=%s"),
+        *ActorId.ToString(),*SkillId.ToString(),*TargetId.ToString());
     if(ActorId!=TEXT("Ender") ||
        (SkillId!=FocusCenteringSkill && SkillId!=FocusPulseSkill)) return;
     FTSTSSBattleSkillCue Accepted;
@@ -306,6 +377,7 @@ void ATSTSSResonatorFocusReviewActor::Tick(float DeltaSeconds)
 #if !UE_BUILD_SHIPPING
     if(!bReviewReady || !IsValid(CombatManager.Get()) ||
        !GetWorld() || !GetWorld()->IsGameWorld())return;
+    if(!bInputBound) TryAttachReviewPlayer();
     const ETSS_CombatPhase Phase=CombatManager->GetCurrentPhase();
     if(Phase==ETSS_CombatPhase::TurnSelection)
     {

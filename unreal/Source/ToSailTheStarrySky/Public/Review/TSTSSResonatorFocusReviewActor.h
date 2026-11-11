@@ -6,6 +6,7 @@
 #include "TSTSSResonatorFocusReviewActor.generated.h"
 
 class UCameraComponent;
+class UPointLightComponent;
 class USceneComponent;
 class UStaticMeshComponent;
 class UTextRenderComponent;
@@ -49,6 +50,8 @@ private:
     UPROPERTY(VisibleAnywhere) TObjectPtr<USceneComponent> ReviewRoot;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UCameraComponent> ReviewCamera;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UStaticMeshComponent> Ground;
+    UPROPERTY(VisibleAnywhere) TObjectPtr<UPointLightComponent> ArenaKeyLight;
+    UPROPERTY(VisibleAnywhere) TObjectPtr<UPointLightComponent> ArenaFillLight;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UStaticMeshComponent> EnderProxy;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UStaticMeshComponent> IoniaProxy;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UStaticMeshComponent> FoeProxy;
@@ -61,11 +64,13 @@ private:
     UPROPERTY(Transient) TObjectPtr<USoundBase> PulseSfx;
 
     bool bReviewReady=false;
+    bool bInputBound=false;
     float AutoTurnCountdown=.5f;
     float UiRefreshCountdown=0.f;
     FString LastReviewEvent;
 
     bool TryInitArena();
+    void TryAttachReviewPlayer();
     bool TryCast(FName Skill,FName Target);
     void RefreshHUD();
     void PlaySound(USoundBase* Cue);
