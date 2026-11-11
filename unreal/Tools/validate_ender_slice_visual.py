@@ -42,6 +42,13 @@ def validate_contract(row: dict) -> None:
     approved = row.get("appearance_reference", {})
     require(approved.get("status") == "CREATOR_APPROVED_VISUAL_REFERENCE_ONLY",
             "Ender approved source identity missing")
+    require(approved.get("source_sha256") ==
+            "b48954f09cbc8ee738a170373dc2e1949a8280c46ad45425d16a0bffb3c8dd67",
+            "approved source image fingerprint changed")
+    require((approved.get("image_width_px"), approved.get("image_height_px")) ==
+            (1536, 1024), "source image dimensions changed")
+    require(approved.get("source_binary_committed") is False,
+            "reference binary provenance misrepresented")
     require(approved.get("approved_on") == "2026-11-11",
             "Ender latest creator approval not bound")
     require("SECOND PANEL FROM LEFT (ENDER)" in approved.get("source", ""),
