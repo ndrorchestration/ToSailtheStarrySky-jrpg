@@ -39,6 +39,26 @@ def validate_contract(row: dict) -> None:
     for key in ("face", "eyes", "hair", "costume", "goggles", "staff"):
         require(isinstance(authority.get(key), str) and authority[key].strip(),
                 "missing visual canon: " + key)
+    approved = row.get("appearance_reference", {})
+    require(approved.get("status") == "CREATOR_APPROVED_VISUAL_REFERENCE_ONLY",
+            "Ender approved source identity missing")
+    require(approved.get("approved_on") == "2026-11-11",
+            "Ender latest creator approval not bound")
+    require("SECOND PANEL FROM LEFT (ENDER)" in approved.get("source", ""),
+            "approved Ender portrait locator lost")
+    require(approved.get("prior_hair_reference") == "VERY_SHORT_AUBURN_BUZZ_CUT_SUPERSEDED",
+            "old buzz-cut direction improperly restored")
+    require(approved.get("accepted_hair") == "TOUSLED_DARK_COPPER_BROWN_FULL_VOLUME",
+            "tousled copper hair lock altered")
+    require("tousled" in authority.get("hair", "").lower() and
+            "very short" not in authority.get("hair", "").lower(),
+            "historical buzz-cut hair direction returned")
+    require(approved.get("accepted_goggles") == "BRASS_TEAL_LENSES_ON_HEAD",
+            "approved goggle reference drift")
+    for name in ("avatar_model_approved", "mesh_rig_animation_approved",
+                 "game_stats_and_job_redefined"):
+        require(approved.get(name) is False,
+                "visual reference approval was confused with production/model approval: " + name)
     rig = row.get("source_review", {})
     require(rig.get("observed_bones") == 152 and rig.get("observed_material_slots") == 25,
             "unreconciled source rig evidence")
