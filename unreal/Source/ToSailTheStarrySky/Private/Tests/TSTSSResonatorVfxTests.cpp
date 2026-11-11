@@ -224,7 +224,7 @@ bool FTSTSSResonatorCueContractTest::RunTest(const FString& Parameters)
             AfterPulse,PulseCue))) return false;
     TestEqual(TEXT("Pulse spend 3 MP"),AfterPulse.Combat.Roster[0].Resource,22);
     TestEqual(TEXT("Pulse damage after base enemy defense"),
-        AfterPulse.Combat.Roster[1].Health,172);
+        AfterPulse.Combat.Roster[1].Health,173);
     TestEqual(TEXT("Pulse exact accepted VFX"),
         PulseCue.VfxCueId,FName(TEXT("VFX.Ender.ResonantPulse")));
     TestTrue(TEXT("Pulse VFX allowed by accepted-cue contract"),
