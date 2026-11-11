@@ -175,7 +175,90 @@ class FirstWakeMultiPathShoreSourceTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, "no accepted exact-head"):
                     host.verified_native_receipt(stale_head)
 
+    def test_visual_stage_ubt_check_holds_busy_or_unreadable_process_state(self):
+        from types import SimpleNamespace
+        with mock.patch.object(host.subprocess, "run") as run:
+            run.return_value = SimpleNamespace(returncode=0, stdout="IDLE\n")
+            self.assertFalse(host.current_ubt_build_running())
+            self.assertEqual("powershell", run.call_args.args[0][0])
+            self.assertIn("UnrealBuildTool", run.call_args.args[0][-1])
+            run.return_value = SimpleNamespace(returncode=0, stdout="BUSY\n")
+            self.assertTrue(host.current_ubt_build_running())
+            run.return_value = SimpleNamespace(returncode=1, stdout="IDLE\n")
+            with self.assertRaisesRegex(RuntimeError, "unable to reliably inspect"):
+                host.current_ubt_build_running()
+            run.return_value = SimpleNamespace(returncode=0, stdout="UNKNOWN\n")
+            with self.assertRaisesRegex(RuntimeError, "unable to reliably inspect"):
+                host.current_ubt_build_running()
+
+    def test_secondary_receipt_requires_exact_total_and_all_successful_rows(self):
+        import hashlib
+        import re
+        import tempfile
+        expected = "a" * 40
+        required_source = (stage.PROJECT / "Tools/Verify-Unreal.ps1").read_text(encoding="utf-8")
+        required = re.findall(r"^\s*'(TSTSS\.[^']+)'", required_source, re.M)
+        self.assertEqual(35, len(required))
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "Tools").mkdir()
+            (root / "Tools/Verify-Unreal.ps1").write_text(required_source, encoding="utf-8")
+            folder = root / "Saved/MigrationEvidence/fixture"
+            (folder / "AutomationReport").mkdir(parents=True)
+            (folder / "head.txt").write_text(expected + "\n", encoding="utf-8")
+            (folder / "build.log").write_text("synthetic, NOT a real native build", encoding="utf-8")
+            (folder / "automation.log").write_text("synthetic, NOT real UE", encoding="utf-8")
+            report_file = folder / "AutomationReport/index.json"
+            receipt_file = folder / "verified-native.json"
+            data = {
+                "succeeded": 35, "failed": 0, "notRun": 0,
+                "tests": [{"fullTestPath": name, "state": "Success"} for name in required],
+            }
+            receipt = {
+                "status": "WIN64_EDITOR_BUILD_AND_NATIVE_AUTOMATIONS_PASS_CLEAN_SOURCE",
+                "source_sha": expected, "unreal_version": "5.8.4",
+                "required_native_tests": 35, "report_sha256": "",
+                "pie_player_input": "NOT_TESTED", "visual_approval": "NOT_TESTED",
+            }
+
+            def write_synthetic_result(value):
+                report_file.write_text(json.dumps(value), encoding="utf-8")
+                receipt["report_sha256"] = hashlib.sha256(report_file.read_bytes()).hexdigest()
+                receipt_file.write_text(json.dumps(receipt), encoding="utf-8")
+
+            with mock.patch.object(host, "PROJECT", root):
+                write_synthetic_result(data)
+                self.assertEqual(str(receipt_file), host.verified_native_receipt(expected)["receipt"])
+                # Even with a matching report hash, inflated successes cannot
+                # be used to admit the disposable UE map author.
+                mutated = json.loads(json.dumps(data))
+                mutated["succeeded"] = 36
+                write_synthetic_result(mutated)
+                with self.assertRaisesRegex(RuntimeError, "no accepted exact-head"):
+                    host.verified_native_receipt(expected)
+
+                mutated = json.loads(json.dumps(data))
+                mutated["tests"].append({"fullTestPath": "Extra.Invented", "state": "Failure"})
+                mutated["succeeded"] = 36
+                write_synthetic_result(mutated)
+                with self.assertRaisesRegex(RuntimeError, "no accepted exact-head"):
+                    host.verified_native_receipt(expected)
+
+                mutated = json.loads(json.dumps(data))
+                mutated["tests"].append({"fullTestPath": "", "state": "Success"})
+                mutated["succeeded"] = 36
+                write_synthetic_result(mutated)
+                with self.assertRaisesRegex(RuntimeError, "no accepted exact-head"):
+                    host.verified_native_receipt(expected)
+
+                mutated = json.loads(json.dumps(data))
+                mutated["tests"][0]["state"] = "Failed"
+                write_synthetic_result(mutated)
+                with self.assertRaisesRegex(RuntimeError, "no accepted exact-head"):
+                    host.verified_native_receipt(expected)
+
     def test_source_holds_all_review_runtime_boundaries(self):
+
         source = Path(stage.__file__).read_text(encoding="utf-8")
         runner = Path(host.__file__).read_text(encoding="utf-8")
         for term in ("get_dirty_map_packages", "get_dirty_content_packages",

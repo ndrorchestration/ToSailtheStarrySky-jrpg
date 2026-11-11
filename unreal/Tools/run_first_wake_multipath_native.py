@@ -56,6 +56,28 @@ def current_editor_processes() -> list[str]:
                             capture_output=True, text=True, timeout=20).stdout.lower()
     return [name for name in ACTIVE_NAMES if name in output]
 
+def current_ubt_build_running() -> bool:
+    """Refuse another agent's UBT before spawning our review Editor child.
+
+    Returns only busy/idle; does not log other agents' command lines.
+    """
+    query = (
+        "$p=@(Get-CimInstance Win32_Process "
+        "-Filter \"Name='cmd.exe' OR Name='dotnet.exe' OR Name='UnrealBuildTool.exe'\" "
+        "-ErrorAction Stop | Where-Object { $_.CommandLine -match "
+        "'(?i)(?:UnrealBuildTool(?:\\.dll|\\.exe)?|[\\\\/]Build\\.bat)' });"
+        "if($p.Count -gt 0){'BUSY'}else{'IDLE'}"
+    )
+    result = subprocess.run(
+        ["powershell", "-NoProfile", "-NonInteractive", "-Command", query],
+        capture_output=True, text=True, timeout=20, check=False,
+    )
+    status = result.stdout.strip()
+    if result.returncode != 0 or status not in ("BUSY", "IDLE"):
+        raise RuntimeError("HOLD: unable to reliably inspect concurrent Unreal native builds")
+    return status == "BUSY"
+
+
 def required_engine_version() -> None:
     version_file = Path("C:/Program Files/Epic Games/UE_5.8/Engine/Build/Build.version")
     if not EDITOR.is_file() or not version_file.is_file():
@@ -94,16 +116,24 @@ def verified_native_receipt(expected_head: str) -> dict:
                 continue
             if not all(type(report.get(field)) is int for field in ("succeeded", "failed", "notRun")):
                 continue
-            if report["failed"] or report["notRun"] or report["succeeded"] < 35:
+            if report["failed"] != 0 or report["notRun"] != 0 or report["succeeded"] < 35:
                 continue
             tests = report.get("tests")
-            if not isinstance(tests, list) or not all(isinstance(entry, dict) for entry in tests):
+            if not isinstance(tests, list) or len(tests) < 35:
                 continue
-            names = [entry.get("fullTestPath") for entry in tests]
-            if len(names) != len(set(names)):
+            # Keep this secondary consumer equivalent to the authoritative
+            # PowerShell validator: EVERY per-test row must be a successful,
+            # named, unique result and the total must match exactly.
+            if not all(isinstance(entry, dict)
+                       and isinstance(entry.get("fullTestPath"), str)
+                       and bool(entry["fullTestPath"].strip())
+                       and entry.get("state") == "Success"
+                       for entry in tests):
                 continue
-            states = {entry["fullTestPath"]: entry.get("state") for entry in tests}
-            if any(states.get(name) != "Success" for name in required):
+            names = [entry["fullTestPath"] for entry in tests]
+            if len(names) != len(set(names)) or report["succeeded"] != len(tests):
+                continue
+            if not set(required).issubset(set(names)):
                 continue
             if not ((folder / "build.log").is_file() and (folder / "automation.log").is_file()):
                 continue
@@ -134,6 +164,8 @@ def prerequisites(expected_head: str) -> dict:
     processes = current_editor_processes()
     if processes:
         raise RuntimeError("HOLD: concurrent UE/LiveCoding activity: " + ", ".join(processes))
+    if current_ubt_build_running():
+        raise RuntimeError("HOLD: another agent's UnrealBuildTool/Build.bat is active")
     ram = free_ram_gib()
     disk = shutil.disk_usage(ROOT).free / (1024 ** 3)
     if ram < MIN_FREE_RAM_GIB or disk < MIN_FREE_DISK_GIB:
