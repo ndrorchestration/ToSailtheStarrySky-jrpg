@@ -115,6 +115,20 @@ class CrossPathReviewContract(unittest.TestCase):
     def test_all_nine_lanes_and_native_registry(self):
         self.assertEqual([], validate(self.data))
 
+    def test_native_build_rechecks_race_and_disk_before_automation(self):
+        # A second Editor/UBT lane started after the initial admission on
+        # 2026-11-10; no build-only/source pass may bypass this second gate.
+        source = (UNREAL / "Tools/Verify-Unreal.ps1").read_text(encoding="utf-8")
+        self.assertIn("function Assert-TSTSSNativeSessionStillSafe", source)
+        self.assertIn("Assert-TSTSSNativeSessionStillSafe -Phase 'immediately-before-build'", source)
+        self.assertIn("Assert-TSTSSNativeSessionStillSafe -Phase 'after-build-before-native-tests'", source)
+        self.assertLess(source.index("Assert-TSTSSNativeSessionStillSafe -Phase 'after-build-before-native-tests'"),
+                        source.index("if ($SkipTests)"))
+        self.assertIn("$CurrentDisk.Free -lt (14 * 1GB)", source)
+        self.assertIn("$CurrentFreeKiB -lt 5242880", source)
+        self.assertIn("$NowHead -ne $GitHead", source)
+        self.assertIn("$Dirty.Count -gt 0", source)
+
     def test_native_compile_regression_restore_and_f7_confirmation(self):
         # Exact errors witnessed by UE 5.8.4 UBT at bb6855e (not merely
         # theoretical lint rules). Keep the restored public declaration unique.

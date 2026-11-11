@@ -57,6 +57,32 @@ $Disk = Get-PSDrive -Name C -ErrorAction Stop
 if ($null -eq $Disk.Free -or $Disk.Free -lt (14 * 1GB)) {
     throw 'Insufficient free disk for native build: require at least 14 GiB'
 }
+# A second exact-head/source/resource admission protects the boundary after UBT:
+# a competing Editor, Live Coding, low RAM or low disk must never be followed
+# by a second UnrealEditor-Cmd automation launch. This is not a global lock;
+# other agents can still start later, so operators must also coordinate.
+function Assert-TSTSSNativeSessionStillSafe([string]$Phase) {
+    $Active = @(Get-Process -Name 'UnrealEditor','UnrealEditor-Cmd','LiveCodingConsole' -ErrorAction SilentlyContinue)
+    if ($Active.Count -gt 0) {
+        throw "Native $Phase admission HOLD: another Unreal Editor or Live Coding process appeared"
+    }
+    $CurrentFreeKiB = (Get-CimInstance Win32_OperatingSystem -ErrorAction Stop).FreePhysicalMemory
+    if ($null -eq $CurrentFreeKiB -or $CurrentFreeKiB -lt 5242880) {
+        throw "Native $Phase admission HOLD: less than 5 GiB free physical RAM"
+    }
+    $CurrentDisk = Get-PSDrive -Name C -ErrorAction Stop
+    if ($null -eq $CurrentDisk.Free -or $CurrentDisk.Free -lt (14 * 1GB)) {
+        throw "Native $Phase admission HOLD: less than 14 GiB free C: disk"
+    }
+    $NowHead = (git -C (Join-Path $PSScriptRoot '../..') rev-parse HEAD)
+    if ($LASTEXITCODE -ne 0 -or $NowHead -ne $GitHead) {
+        throw "Native $Phase admission HOLD: source commit moved"
+    }
+    $Dirty = @(git -C (Join-Path $PSScriptRoot '../..') status --porcelain)
+    if ($LASTEXITCODE -ne 0 -or $Dirty.Count -gt 0) {
+        throw "Native $Phase admission HOLD: source worktree became dirty"
+    }
+}
 # Every verification attempt receives a fresh, non-overwriting receipt folder.
 # Keep previous success AND failure logs for head-specific review and debugging.
 $RunId = ('{0}-{1}-{2}' -f $GitHead.Substring(0, 12),
@@ -69,9 +95,11 @@ if (Test-Path $Evidence) { throw "Evidence folder already exists; refusing overw
 New-Item -Path $Evidence -ItemType Directory -ErrorAction Stop | Out-Null
 $GitHead | Set-Content (Join-Path $Evidence 'head.txt')
 Write-Host "Review evidence directory (unique; retained on failure): $Evidence"
+Assert-TSTSSNativeSessionStillSafe -Phase 'immediately-before-build'
 & $BuildTool ToSailTheStarrySkyEditor Win64 Development "-Project=$Project" -WaitMutex 2>&1 |
     Tee-Object (Join-Path $Evidence 'build.log')
 if ($LASTEXITCODE -ne 0) { throw "Unreal editor build failed ($LASTEXITCODE)" }
+Assert-TSTSSNativeSessionStillSafe -Phase 'after-build-before-native-tests'
 if ($SkipTests) {
     # Build-only evidence still requires a stable, clean checkout.
     $BuildHead = (git -C (Join-Path $PSScriptRoot '../..') rev-parse HEAD)

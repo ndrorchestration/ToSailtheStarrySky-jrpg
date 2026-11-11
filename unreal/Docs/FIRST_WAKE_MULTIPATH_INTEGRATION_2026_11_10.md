@@ -77,3 +77,11 @@ Three compiler diagnostics reduced to two source defects:
 Smallest reversible source repairs have been applied ONLY on this integration branch, with one new test `test_native_compile_regression_restore_and_f7_confirmation` in `test_first_wake_multipath_review.py`. Source-only regression: **438/438 PASS**. These repairs do not prove that the next native build passes. The failed exact-head evidence stays in place and must not be promoted as native acceptance.
 
 Disk reserve after initial UBT compile: 14.1 GiB. Existing `unreal/Intermediate` (~2.48 GiB) is preserved for the incremental retry; no shared build/cache or other agent session was deleted or terminated.
+
+## Native verifier cross-agent race safeguard (source-only)
+
+During the second native attempt, `Build.bat` was already held by an independently launched Unreal build and a separate `UnrealEditor.exe` appeared after the initial preflight. Our waiting verifier process was stopped, not the other agent's processes. This revealed a concurrency boundary: a preflight at entry does **not** prove that native automation is safe after a long compile or lock wait.
+
+`Verify-Unreal.ps1` now calls `Assert-TSTSSNativeSessionStillSafe` **immediately before the build** and **after the build, before build-only evidence or a second UnrealEditor-Cmd launch**. The gate checks active Editor/LiveCoding, 5 GiB free physical RAM, 14 GiB free C: disk, exact HEAD and clean source. It does not globally reserve Unreal, and cannot prevent another actor starting after the check; outside operators must coordinate concurrent native sessions.
+
+At this point C: free disk was 9.09 GiB. Only the failed multipath integration checkout's disposable `unreal/Intermediate` (2.48 GiB) was deleted, after verifying no process referenced the isolated worktree and its original negative native build log persisted. Disk free increased to 11.57 GiB but is **still BELOW 14 GiB**. No other agent assets, caches, worktrees, active Editor, user saves or production maps were modified. **Native build/PIE remains BLOCKED** until resource gates genuinely pass. The additional verifier source guard is a safety repair, not a native test pass.
