@@ -428,15 +428,15 @@ bool FTSTSSSliceEnemyReviewAIProbe::RunTest(const FString& Parameters)
     TestFalse(TEXT("old ticket cannot dismiss twice"),
         Sequence->TryDismissResult(51));
 
-    UTSTSSJRPGReviewPresentation* Denied=
+    UTSTSSJRPGReviewPresentation* AbortedPresentation=
         NewObject<UTSTSSJRPGReviewPresentation>(GetTransientPackage());
-    TestTrue(TEXT("abort path begins"),Denied->TryBegin(72));
+    TestTrue(TEXT("abort path begins"),AbortedPresentation->TryBegin(72));
     TestTrue(TEXT("aborting before battle allowed"),
-        Denied->TryAbortBeforeCombat(72));
+        AbortedPresentation->TryAbortBeforeCombat(72));
     TestFalse(TEXT("aborted encounter cannot enter combat"),
-        Denied->TryEnterCombat(72));
+        AbortedPresentation->TryEnterCombat(72));
     TestTrue(TEXT("aborted control returns idle"),
-        Denied->GetPhase()==ETSTSSJRPGReviewSequencePhase::Exploration);
+        AbortedPresentation->GetPhase()==ETSTSSJRPGReviewSequencePhase::Exploration);
 
     UTSTSSJRPGReviewPresentation* Flee=
         NewObject<UTSTSSJRPGReviewPresentation>(GetTransientPackage());
