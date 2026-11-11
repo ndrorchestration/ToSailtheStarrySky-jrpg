@@ -19,8 +19,8 @@ UTextBlock* MakeLine(UWidgetTree* Tree,UVerticalBox* Stack,const TCHAR* Name,
     Line->SetFont(Font);
     Line->SetAutoWrapText(true);
     Line->SetColorAndOpacity(FSlateColor(Color));
-    if(UVerticalBoxSlot* Slot=Stack->AddChildToVerticalBox(Line))
-        FocusCanvasSlot->SetPadding(FMargin(15.f,7.f));
+    if(UVerticalBoxSlot* VerticalSlot=Stack->AddChildToVerticalBox(Line))
+        VerticalSlot->SetPadding(FMargin(15.f,7.f));
     return Line;
 }
 }
