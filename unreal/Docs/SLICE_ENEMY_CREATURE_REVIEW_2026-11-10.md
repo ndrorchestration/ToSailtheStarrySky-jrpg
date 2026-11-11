@@ -43,3 +43,25 @@ On the isolated clean checkout `C:\\Users\\Admin\\work\\TSTSS-Slice-Enemies-2026
 
 ## Optional enemy-turn AI
 `UTSTSSSliceEnemyReviewAI::TryActReviewEnemy` is a BlueprintCallable non-shipping helper. It checks exact instance/archetype state, chooses the lowest-HP living canonical protagonist (stable lexical tie-break), attempts the stronger attack, then a free basic action when denied or under-resourced. Every action goes through `UTSS_CombatTurnManager::SubmitCommand`—including skill admission, learned membership, cooldown, faction targeting and atomic HP effects. It cannot autonomously create encounters, grant player actions or mutate saves. A third native Editor test covers denial, archetype spoofing, stronger attack, turn ownership and resource fallback. **These are implementation/test definitions, not native pass claims.**
+
+## Phase 2 — source-controlled Unreal enemy gallery authoring
+
+Added \`Tools/tstss_slice_enemy_gallery.py\`, the explicit Editor runner
+\`Tools/run_tstss_slice_enemy_gallery.py\`, and portable negative tests.
+A *new* review map at \`/Game/TSTSS/Review/SliceEnemyGallery_V0\` is staged
+only when the **actual UE 5.8.4 C++ module** has compiled and the disposable
+\`TSTSS-Slice-Enemies-20261110\` worktree has the exact pinned clean head.
+
+The script creates exactly three source-backed actors, neutral plinths,
+separate readable captions, a neutral stage, a camera, and key/fill lights.
+An explicit \`RefreshReviewGeometry\` C++ BlueprintCallable function ensures
+that changing a kind in Editor Python regenerates the corresponding silhouette
+rather than displaying the default vortex three times. The gallery **does
+not** add the actors to First Wake, create actual enemy encounters, add
+SaveGame records or edit a canonical map.
+
+Portable plan/tests passing is not a generated \`.umap\`, not rendered 3D,
+not a native test PASS, and not approval of art/lore/balance. The map remains
+unmaterialized until the machine's separate Live Coding Editor session ends
+and a new source-locked native build succeeds. Generated map is intentionally
+untracked review evidence until inspected; do not add to main.

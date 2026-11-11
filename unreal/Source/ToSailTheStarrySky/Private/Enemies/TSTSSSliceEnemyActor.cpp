@@ -86,6 +86,13 @@ bool ATSTSSSliceEnemyActor::TryGetReviewDescriptor(
     return FTSTSSSliceEnemyCatalog::TryDescribe(Kind, Out);
 }
 
+void ATSTSSSliceEnemyActor::RefreshReviewGeometry()
+{
+#if !UE_BUILD_SHIPPING
+    OnConstruction(GetActorTransform());
+#endif
+}
+
 void ATSTSSSliceEnemyActor::OnConstruction(const FTransform& Transform)
 {
     Super::OnConstruction(Transform);

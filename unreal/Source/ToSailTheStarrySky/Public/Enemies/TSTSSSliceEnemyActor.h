@@ -39,6 +39,11 @@ public:
     UFUNCTION(BlueprintCallable, Category="TSTSS|Slice Review")
     bool TryGetReviewDescriptor(FTSTSSSliceEnemyDescriptor& Out) const;
 
+    // Explicitly refresh the correct per-kind C++ mesh after Python/Editor
+    // property assignment; this is presentation only, never game progression.
+    UFUNCTION(BlueprintCallable, CallInEditor, Category="TSTSS|Slice Review")
+    void RefreshReviewGeometry();
+
     virtual void OnConstruction(const FTransform& Transform) override;
     virtual void Tick(float DeltaSeconds) override;
 
