@@ -281,6 +281,72 @@ bool FTSTSSSliceEnemyCatalog::TryMakeReviewParticipant(
 #endif
 }
 
+bool FTSTSSSliceEnemyCatalog::TryMakeReviewWave(
+    FName PresetId, TArray<FTSS_CombatParticipant>& OutWave)
+{
+#if UE_BUILD_SHIPPING
+    return false;
+#else
+    ETSTSSSliceEnemyKind First;
+    ETSTSSSliceEnemyKind Second;
+    if (PresetId == TEXT("Review_HarborBanditPatrol"))
+    {
+        First = ETSTSSSliceEnemyKind::BanditCutpurse;
+        Second = ETSTSSSliceEnemyKind::BanditSlinger;
+    }
+    else if (PresetId == TEXT("Review_HarborBanditCaptain"))
+    {
+        First = ETSTSSSliceEnemyKind::BanditCaptain;
+        Second = ETSTSSSliceEnemyKind::BanditCutpurse;
+    }
+    else if (PresetId == TEXT("Review_WoodlandSporeline"))
+    {
+        First = ETSTSSSliceEnemyKind::Thornvine;
+        Second = ETSTSSSliceEnemyKind::Sporecap;
+    }
+    else if (PresetId == TEXT("Review_WoodlandSentinel"))
+    {
+        First = ETSTSSSliceEnemyKind::RootSentinel;
+        Second = ETSTSSSliceEnemyKind::Thornvine;
+    }
+    else if (PresetId == TEXT("Review_CoastalHunters"))
+    {
+        First = ETSTSSSliceEnemyKind::ReefEel;
+        Second = ETSTSSSliceEnemyKind::TidefinRaptor;
+    }
+    else if (PresetId == TEXT("Review_CoastalShellbacks"))
+    {
+        First = ETSTSSSliceEnemyKind::ShellbackCrab;
+        Second = ETSTSSSliceEnemyKind::ReefEel;
+    }
+    else if (PresetId == TEXT("Review_HighlandStalkers"))
+    {
+        First = ETSTSSSliceEnemyKind::CliffLynx;
+        Second = ETSTSSSliceEnemyKind::NightGlider;
+    }
+    else if (PresetId == TEXT("Review_HighlandBristle"))
+    {
+        First = ETSTSSSliceEnemyKind::Bristleboar;
+        Second = ETSTSSSliceEnemyKind::CliffLynx;
+    }
+    else
+    {
+        return false;
+    }
+    FTSS_CombatParticipant A;
+    FTSS_CombatParticipant B;
+    if (!TryMakeReviewParticipant(First, TEXT("SliceReview_Enemy_01"), A) ||
+        !TryMakeReviewParticipant(Second, TEXT("SliceReview_Enemy_02"), B) ||
+        A.ParticipantId == B.ParticipantId)
+        return false;
+    TArray<FTSS_CombatParticipant> Candidate;
+    Candidate.Add(MoveTemp(A));
+    Candidate.Add(MoveTemp(B));
+    OutWave = MoveTemp(Candidate);
+    return true;
+#endif
+}
+
 UDataTable* FTSTSSSliceEnemyCatalog::MakeReviewSkillTable(
     UObject* Outer, bool bExplicitReviewExecution)
 {

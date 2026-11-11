@@ -93,6 +93,11 @@ public:
                                          FName InstanceId,
                                          FTSS_CombatParticipant& Out);
 
+    // Neutral two-foe recipe fixtures. No world spawn or party authority.
+    // Unknown presets preserve OutWave; shipping code denies the operation.
+    static bool TryMakeReviewWave(FName PresetId,
+                                  TArray<FTSS_CombatParticipant>& OutWave);
+
     // Default DesignOnly is non-executable; review execution requires an explicit
     // opt-in and is unavailable in shipping builds. All rows are ENEMY-ONLY.
     // Caller owns the returned transient table and supplies it to SkillTable.

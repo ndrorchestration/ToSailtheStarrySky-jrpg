@@ -123,6 +123,40 @@ bool FTSTSSSliceEnemyReviewCatalogTest::RunTest(const FString& Parameters)
         TestTrue(TEXT("not silently treated as an elemental spell"),
             Row->Kind == ETSTSSBattleSkillKind::JobArt);
     }
+    const FName WavePresets[] = {
+        TEXT("Review_HarborBanditPatrol"),
+        TEXT("Review_HarborBanditCaptain"),
+        TEXT("Review_WoodlandSporeline"),
+        TEXT("Review_WoodlandSentinel"),
+        TEXT("Review_CoastalHunters"),
+        TEXT("Review_CoastalShellbacks"),
+        TEXT("Review_HighlandStalkers"),
+        TEXT("Review_HighlandBristle")
+    };
+    for (const FName Preset : WavePresets)
+    {
+        TArray<FTSS_CombatParticipant> Foes;
+        if (!TestTrue(TEXT("explicit review wave resolves"),
+            FTSTSSSliceEnemyCatalog::TryMakeReviewWave(Preset, Foes))) return false;
+        TestEqual(TEXT("each review wave has exactly two opponents"), Foes.Num(), 2);
+        TestNotEqual(TEXT("enemy instance identities are distinct"),
+                     Foes[0].ParticipantId, Foes[1].ParticipantId);
+        for (const FTSS_CombatParticipant& Foe : Foes)
+        {
+            TestFalse(TEXT("no party member injected into review wave"), Foe.bIsPlayerParty);
+            TestEqual(TEXT("opponent knows exactly two authorized review names"),
+                      Foe.LearnedSkills.Num(), 2);
+        }
+    }
+    TArray<FTSS_CombatParticipant> Unchanged;
+    FTSS_CombatParticipant Marker;
+    Marker.ParticipantId = TEXT("unchanged");
+    Unchanged.Add(Marker);
+    TestFalse(TEXT("unknown wave fails closed"),
+        FTSTSSSliceEnemyCatalog::TryMakeReviewWave(TEXT("UnknownPreset"), Unchanged));
+    TestEqual(TEXT("denied wave preserves size"), Unchanged.Num(), 1);
+    TestEqual(TEXT("denied wave preserves identity"),
+              Unchanged[0].ParticipantId, FName(TEXT("unchanged")));
     TestNotNull(TEXT("actor class available to editor"),
                 ATSTSSSliceEnemyActor::StaticClass());
     return true;
