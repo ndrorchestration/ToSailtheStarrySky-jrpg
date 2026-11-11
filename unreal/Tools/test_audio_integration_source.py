@@ -80,6 +80,13 @@ class AudioReviewIntegrationSourceTests(unittest.TestCase):
         for forbidden in ("AdvanceTo(", "ConfirmWaterContact(", "SaveGameToSlot(", "UnlockStarbourne("):
             self.assertNotIn(forbidden, impl)
 
+    def test_spawned_loop_handles_auto_destroy_on_completion(self):
+        engine = (SOURCES / "Private" / "TSTSSAudioSubsystem.cpp").read_text(encoding="utf-8")
+        self.assertIn("nullptr, nullptr, true)", engine)
+        self.assertIn("nullptr, false, true", engine)
+        self.assertIn("ActiveLoops.Remove(EventId)", engine)
+        self.assertIn("SILENT_SPAWN_FAILURE", engine)
+
     def test_harbor_zone_is_local_player_sound_only(self):
         zone = (SOURCES / "Private" / "TSTSSHarborAudioZone.cpp").read_text(encoding="utf-8")
         head = (SOURCES / "Public" / "TSTSSHarborAudioZone.h").read_text(encoding="utf-8")
