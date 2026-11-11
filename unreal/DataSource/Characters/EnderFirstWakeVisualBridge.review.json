@@ -1,0 +1,102 @@
+{
+  "schema": "tstss.ender.firstwake.visual-bridge.v1",
+  "status": "REVIEW_ONLY__PIE_NOT_TESTED",
+  "engine": "Unreal Engine 5.8.4",
+  "based_on": {
+    "integration_pr": 799,
+    "exact_parent": "2afb4b7ea6cda75dc6068014eb19c06718259539",
+    "equipment_pr": 793,
+    "magic_pr": 810,
+    "lyra_recruitment_repair_pr": 808
+  },
+  "authority": {
+    "current_title": "To Sail the Starry Sky",
+    "hero": "Ender",
+    "affinity": "Spirit",
+    "job": "Resonator",
+    "playable_pre_splashdown": [
+      "Ender",
+      "Ionia"
+    ],
+    "first_recruit_post_splashdown": "Lyra",
+    "unavailable_in_slice": [
+      "Reson",
+      "Aepex"
+    ],
+    "starbourne": "LOCKED",
+    "identity": "Creator-approved reference is authoritative; generic Genesis 9 test face is NOT accepted Ender.",
+    "face": "Lean youthful 22-year-old with light freckles; must match approved portrait, not generic Genesis 9.",
+    "eyes": "Bright green; final eyes require actual textured iris/cornea and native lighting review.",
+    "hair": "Very short dark copper-brown/auburn appearance is the earlier approved lock; procedural longer V9 fringe remains UNAPPROVED until explicit review.",
+    "costume": "Practical field scholar / engineer: olive and green, tan and cream; natural textiles, brass details. Teal generic-shirt study is diagnostic only.",
+    "goggles": "Sealed brass aviator goggles with green lenses, worn on forehead; glasses rejected.",
+    "staff": "Full-length centered-wrap wooden resonance staff with twin brass ferrules; anatomically valid hand grip required."
+  },
+  "source_review": {
+    "daZ_merged_fbx": "Genesis9_BaseShirtShorts_MergedRig_REVIEW.fbx",
+    "provenance": "Private Neontic study; NOT committed because licensed mesh/source rights have not been verified for redistribution.",
+    "observed_skeletal_meshes": 1,
+    "observed_skeletons": 1,
+    "observed_bones": 152,
+    "observed_material_slots": 25,
+    "native_import": "PASSED_IN_DISPOSABLE_SANDBOX_NOT_IN_INTEGRATED_GAME",
+    "native_motion": "HOLD__BONE_MOVES_RENDER_MESH_UNCHANGED",
+    "existing_static_hair": "V9 copper hair, separate unapproved review candidate",
+    "existing_static_goggles": "V2 sealed goggles, separate unapproved review candidate",
+    "existing_staff": "V1 double-ferrule centered wrap, not gripped",
+    "hairdeck": "HOSTED_EXPERIMENT_ONLY_NO_CANDIDATE_GENERATED"
+  },
+  "visual_binding": {
+    "implementation": "ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance",
+    "world_type": "PIE_ONLY",
+    "engine_editor_only": true,
+    "default_candidate_mesh": null,
+    "default_goggles_visible": false,
+    "default_staff_visible": false,
+    "requires_valid_skeleton": true,
+    "required_bones": [
+      "head",
+      "l_hand"
+    ],
+    "skeletal_bones_lower_limit": 80,
+    "skeletal_bones_upper_limit": 450,
+    "editor_blueprint_variables": [
+      "EnderSliceReviewBody",
+      "EnderSliceReviewGoggles",
+      "EnderSliceReviewStaff",
+      "bShowEnderReviewGoggles",
+      "bShowEnderReviewStaff",
+      "EnderReviewGogglesLocalOffset",
+      "EnderReviewStaffLocalOffset"
+    ],
+    "changes_story_state": false,
+    "changes_inventory": false,
+    "changes_savegame": false,
+    "approval_on_asset_binding": false
+  },
+  "native_acceptance": {
+    "source_checks": "RUNNABLE_LOCALLY_WITH_PYTHON",
+    "unreal_build": "NOT_RUN_NEONTIC_OFFLINE",
+    "asset_intake": "NOT_RUN_IN_INTEGRATED_GAME",
+    "pie_player_visual": "NOT_RUN",
+    "animation_deformation": "NOT_VERIFIED",
+    "clothing_tracking": "NOT_VERIFIED",
+    "goggles_clearance": "NOT_VERIFIED",
+    "staff_grip": "NOT_VERIFIED",
+    "head_likeness": "NOT_APPROVED",
+    "cinematic_multiview": "NOT_APPROVED",
+    "creator_signoff": false,
+    "canonical_promotion": false,
+    "test_sequence": [
+      "Verify exact-integrated-head Win64 Editor build plus 35 native automation names",
+      "Import a rights-cleared skinned Ender mesh into unique /Game/TSTSS/Review/Ender... package",
+      "Bind only a disposable PIE pawn subclass; do not assign default mesh to production pawn",
+      "Capture rest→arm-raised→visibility positive control with lit GPU and fixed camera",
+      "Require actual body/shirt pixel change and visible clean elbow/shoulder sleeve contact",
+      "Fit correct head/eye/hair/goggle and costume references with side-by-side review",
+      "Place staff on valid hand socket; prove true grip during idle, walk, attack",
+      "Test real player movement, interaction, save/load and First Wake progression without Lyra early",
+      "Verify first party and Starbourne gates unchanged; request creator approval only after native evidence"
+    ]
+  }
+}
