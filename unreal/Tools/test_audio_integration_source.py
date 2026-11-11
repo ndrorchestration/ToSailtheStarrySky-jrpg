@@ -85,6 +85,9 @@ class AudioReviewIntegrationSourceTests(unittest.TestCase):
         self.assertIn("nullptr, nullptr, true)", engine)
         self.assertIn("nullptr, false, true", engine)
         self.assertIn("ActiveLoops.Remove(EventId)", engine)
+        self.assertIn("const TObjectPtr<UAudioComponent>* Existing = ActiveLoops.Find(EventId);", engine)
+        self.assertIn("Existing->Get()->IsPlaying()", engine)
+        self.assertNotIn("UAudioComponent* const* Existing", engine)
         self.assertIn("SILENT_SPAWN_FAILURE", engine)
 
     def test_harbor_zone_is_local_player_sound_only(self):
