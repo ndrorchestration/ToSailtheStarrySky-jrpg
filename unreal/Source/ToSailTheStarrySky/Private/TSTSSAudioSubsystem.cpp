@@ -96,8 +96,8 @@ bool UTSTSSAudioSubsystem::EmitCue(FName EventId, FVector Location)
         LastReceipt = FString::Printf(TEXT("SILENT_MUTED:%s"), *EventId.ToString());
         return false;
     }
-    UAudioComponent* const* Existing = ActiveLoops.Find(EventId);
-    if (Cue->bLooping && Existing && IsValid(*Existing) && (*Existing)->IsPlaying())
+    const TObjectPtr<UAudioComponent>* Existing = ActiveLoops.Find(EventId);
+    if (Cue->bLooping && Existing && IsValid(Existing->Get()) && Existing->Get()->IsPlaying())
     {
         LastReceipt = FString::Printf(TEXT("ALREADY_PLAYING:%s"), *EventId.ToString());
         return true;
