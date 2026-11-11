@@ -51,21 +51,24 @@ class ReviewObjectiveSourceTests(unittest.TestCase):
         self.assertIn("TSTSSInteractionReach::GetCameraTraceLength(", self.explorer)
 
     def test_quicksave_load_feedback_is_result_bound(self):
-        self.assertIn('const bool bSaved = SaveFirstWake(Slot);', self.explorer)
+        self.assertIn('const bool bSavedStory = SaveFirstWake(Slot);', self.explorer)
+        self.assertIn('bool bSaved = bSavedStory;', self.explorer)
+        self.assertIn('bSaved = SaveReviewContinueBinding(Slot);', self.explorer)
         self.assertIn("ShowFirstWakeReviewSaveLoadStatus(false, bSaved);", self.explorer)
         self.assertIn('const bool bLoaded = LoadFirstWake(Slot);', self.explorer)
         self.assertIn("if (bLoaded)", self.explorer)
         self.assertIn("ShowFirstWakeReviewSaveLoadStatus(true, bLoaded);", self.explorer)
         self.assertIn("load failed; no progress restored", self.explorer)
         self.assertIn("save failed; progress not confirmed", self.explorer)
-        self.assertIn("story progress saved; position not saved", self.explorer)
+        self.assertIn("F9 does not move pawn; F7 Continue can restore position", self.explorer)
         self.assertIn("story progress loaded; position unchanged", self.explorer)
         self.assertIn("bSucceeded ? FColor::Green : FColor::Red", self.explorer)
 
     def test_pie_review_save_namespacing_and_stale_session_protection(self):
         header = (PUBLIC / "TSTSSExplorerCharacter.h").read_text(encoding="utf-8")
         self.assertIn('EWorldType::PIE', self.explorer)
-        self.assertEqual(self.explorer.count('TEXT("tstss_prelude_pie_quick")'), 2)
+        self.assertEqual(self.explorer.count('TEXT("tstss_prelude_pie_quick")'), 3)
+        self.assertIn('TEXT("tstss_prelude_pie_manifest_v1")', self.explorer)
         self.assertEqual(self.explorer.count('TEXT("first_wake_quick")'), 2)
         self.assertIn('bPIEReviewQuickSlotOwned = false;', self.explorer)
         self.assertIn('UPROPERTY(Transient)', header)

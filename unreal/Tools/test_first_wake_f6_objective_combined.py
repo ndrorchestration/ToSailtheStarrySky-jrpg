@@ -22,8 +22,8 @@ def reconcile(pawn: str, config: str, native_test: str, state: str) -> list[str]
     binding = pawn.split(start, 1)[1].split(end, 1)[0]
     pie = "if (InputWorld && InputWorld->WorldType == EWorldType::PIE)"
     game = "else if (InputWorld && InputWorld->WorldType == EWorldType::Game)"
-    if binding.count(pie) != 1 or binding.count(game) != 1:
-        errors.append("Expected one PIE branch and one distinct normal-Game branch")
+    if binding.count(pie) != 2 or binding.count(game) != 1:
+        errors.append("Expected separate PIE F6/F7 branches and one normal-Game branch")
     else:
         before, after = binding.split(pie, 1)[1].split(game, 1)
         pie_save = 'BindAction(TEXT("PIEReviewQuickSave"), IE_Pressed'
@@ -92,9 +92,14 @@ class CombinedF6ObjectiveGuard(unittest.TestCase):
                                        'ActionName="PIEReviewQuickSave",Key=F5', 1)))
 
     def test_existing_slot_protection_removal_is_rejected(self):
-        mutation = self.pawn.replace(
-            'UGameplayStatics::DoesSaveGameExist(Slot, 0)',
-            'false', 1)
+        # Mutate the live QuickSave method, not the separate Continue helper.
+        start = "void ATSTSSExplorerCharacter::QuickSave()"
+        stop = "void ATSTSSExplorerCharacter::QuickLoad()"
+        prefix, tail = self.pawn.split(start, 1)
+        save, suffix = tail.split(stop, 1)
+        guard = 'UGameplayStatics::DoesSaveGameExist(Slot, 0)'
+        self.assertIn(guard, save)
+        mutation = prefix + start + save.replace(guard, 'false', 1) + stop + suffix
         self.assertTrue(self.validate(pawn=mutation))
 
     def test_objective_regression_removed_is_rejected(self):

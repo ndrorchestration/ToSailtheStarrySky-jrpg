@@ -155,8 +155,10 @@ int main() {
         expect(hud.text[2].value.find("INSPECTIONS") != FString::npos,
                "review HUD must identify three engineer systems");
         expect(hud.text[3].value.find("E: interact") != FString::npos &&
-               hud.text[3].value.find("F5/F9") != FString::npos &&
-               hud.text[3].value.find("F6/F9") != FString::npos,
+               hud.text[3].value.find("PIE F6: save") != FString::npos &&
+               hud.text[3].value.find("F9: load") != FString::npos &&
+               hud.text[3].value.find("F7: Continue preview/confirm") != FString::npos &&
+               hud.text[3].value.find("F5/F9") == FString::npos,
                "review controls must remain discoverable");
         expect(hud.text[4].value.find("no launch") != FString::npos,
                "HUD must not imply launch, sea landing or chapter approval");
@@ -185,7 +187,7 @@ int main() {
         expect(hud.rects[hud.rects.size()-4].w == 452.f,
                "review panel must adapt to a smaller valid viewport");
         expect(hud.text[hud.text.size()-2].value.find("E interact") != FString::npos &&
-               hud.text[hud.text.size()-2].value.find("PIE F6/F9") != FString::npos &&
+               hud.text[hud.text.size()-2].value.find("PIE F6 save F9 load F7 Continue") != FString::npos &&
                hud.text.back().value.find("no sea landing") != FString::npos,
                "compact layout must use shortened controls and review disclaimer");
         const auto beforeChapter = hud.text.size();
