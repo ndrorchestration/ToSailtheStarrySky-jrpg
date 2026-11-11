@@ -30,3 +30,13 @@ Source branch: review/ue58-vslice-lookdev-20261111. Named local worktree: C:\TST
 5. Ender/Ionia/ship final approved visual models, animations, performance, cinematic composition, high-quality materials and creator signoff for asset promotion (stage 4).
 
 **Current native status at source authoring:** DO NOT CLAIM the 200-actor map or 30 textures were imported/verified in Unreal merely because source PNGs/plan and private binary custody exist. Neontic measured around 7 GiB free RAM but **12.2 GiB free disk**, below the invariant 14 GiB minimum. Do not delete another worktree, other project cache, protected user SaveGames or original native receipts to make the stage run.
+
+## First native stage attempt and UV-input correction — November 11
+
+To free disk space without deleting any file, 36 older Unreal-generated Intermediate/CachedAssetRegistry binary caches were losslessly compressed using NTFS. **2,744.49 MiB** was recovered and every source/cache SHA-256 stayed identical; zero files removed. A local, untracked audit receipt is in Saved/FirstWakeMaterialLookdevV3/lossless_cache_compaction_receipt.json. No maps, SaveGames or protected source files changed. Before native staging, RAM was ~7.02 GiB and disk free ~15.34 GiB; the full resource/provenance gate passed.
+
+**First real native UE5.8.4 NullRHI Editor attempt, PID 18664:** The host reported **NATIVE_PBR_V3_STAGE_HOLD** despite native Unreal process exit code 0. The engine successfully imported **30 native Texture2D packages**, but authoring failed at the first Material UV connection. No derived 200-actor World was saved, and no native-success receipt was emitted. The exact Unreal log shows a RuntimeError at blue_green_glass BaseColor, because the material graph used an input named Coordinates instead of the UE5.8 TextureSample input named **UVs**.
+
+The source connection is now corrected to use the native TextureSample UVs pin and covered by a new regression test. Preserve all imported assets, first-attempt logs and host receipt in the original isolated worktree; its source 115-actor World hash, original asset assembly and protected Config remained unchanged. The failed attempt is important evidence and must never be relabeled as successful.
+
+**Retry protocol:** Make a fresh isolated worktree using a different local Git branch but the ROOT_NAME basename accepted by the guarded native script. Start from the corrected source commit. Independently copy/re-hash all 321 proven native package dependencies; never overwrite first-attempt packages or logs. Require a new safety preflight, real UE native stage success, second independent native map readback, then GPU and PIE evaluation. A zero UE process exit alone does not prove material import, World save or game readiness.

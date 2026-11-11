@@ -136,6 +136,11 @@ class TestFirstWakePBR(unittest.TestCase):
         self.assertEqual(321,intake.EXPECTED_COUNT)
         self.assertEqual("f47656774d5bb0f163cef550eba09577e2ab8aef",intake.INPUT_HEAD)
 
+    def test_native_uv_link_uses_documented_texture_sample_pin(self):
+        code=Path(__file__).with_name("stage_first_wake_pbr_native_v3.py").read_text(encoding="utf-8")
+        self.assertIn('edit.connect_material_expressions(coord,"",sample,"UVs")',code)
+        self.assertNotIn('edit.connect_material_expressions(coord,"",sample,"Coordinates")',code)
+
     def test_only_safe_native_host_windows(self):
         with mock.patch.object(host.sys,"platform","linux"):
             with self.assertRaisesRegex(RuntimeError,"Windows"):

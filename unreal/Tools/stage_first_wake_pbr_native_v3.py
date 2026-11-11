@@ -170,7 +170,7 @@ def spawn_native():
             ("Roughness",unreal.MaterialProperty.MP_ROUGHNESS,"R",300)):
             sample=edit.create_material_expression(mat,unreal.MaterialExpressionTextureSample,-300,y)
             sample.set_editor_property("texture",textures[(role,channel)])
-            if not edit.connect_material_expressions(coord,"",sample,"Coordinates"):
+            if not edit.connect_material_expressions(coord,"",sample,"UVs"):
                 raise RuntimeError("HOLD: cannot bind native PBR UV "+role+channel)
             if not edit.connect_material_property(sample,output,prop):
                 raise RuntimeError("HOLD: cannot bind native PBR channel "+role+channel)
