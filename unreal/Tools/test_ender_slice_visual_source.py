@@ -28,6 +28,16 @@ class EnderSliceVisualSourceTests(unittest.TestCase):
         gate.validate_contract(self.manifest)
         gate.validate_cpp_guards(self.header, self.source)
 
+    def test_rejects_wrong_reference_image_hash(self):
+        with self.assertRaises(gate.ContractError):
+            gate.validate_contract(self.altered(
+                "appearance_reference", "source_sha256", "0" * 64))
+
+    def test_rejects_false_reference_image_attachment(self):
+        with self.assertRaises(gate.ContractError):
+            gate.validate_contract(self.altered(
+                "appearance_reference", "source_binary_committed", True))
+
     def test_rejects_old_buzz_cut_reintroduction(self):
         with self.assertRaises(gate.ContractError):
             gate.validate_contract(self.altered(
