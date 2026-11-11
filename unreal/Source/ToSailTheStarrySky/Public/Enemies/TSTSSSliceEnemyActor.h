@@ -44,6 +44,11 @@ public:
     UFUNCTION(BlueprintCallable, CallInEditor, Category="TSTSS|Slice Review")
     void RefreshReviewGeometry();
 
+    // Cosmetic-only native hit reaction. No HP, combat damage, inventory,
+    // world collision, SaveGame or ability permission mutations.
+    UFUNCTION(BlueprintCallable, Category="TSTSS|Slice Review")
+    void PlayReviewHitReaction(bool bFatal);
+
     virtual void OnConstruction(const FTransform& Transform) override;
     virtual void Tick(float DeltaSeconds) override;
 
@@ -90,4 +95,6 @@ private:
     UStaticMeshComponent* MakePiece(const TCHAR* Name);
 
     float IdleTime = 0.f;
+    float ReviewHitRemaining = 0.f;
+    bool bReviewFatalHit = false;
 };

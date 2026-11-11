@@ -73,6 +73,7 @@ bool UTSTSSSliceEnemyReviewSession::TryStart(
 
     TMap<FName, ETSTSSSliceEnemyKind> CandidateKinds;
     TArray<FName> CandidateEnemyIds;
+    TArray<ETSTSSSliceEnemyKind> CandidateSlotKinds;
     for (const FTSS_CombatParticipant& Enemy : Wave)
     {
         ETSTSSSliceEnemyKind Kind;
@@ -81,6 +82,7 @@ bool UTSTSSSliceEnemyReviewSession::TryStart(
             CandidateKinds.Contains(Enemy.ParticipantId)) return false;
         CandidateKinds.Add(Enemy.ParticipantId, Kind);
         CandidateEnemyIds.Add(Enemy.ParticipantId);
+        CandidateSlotKinds.Add(Kind);
     }
 
     // The party is authored explicitly, in canonical narrative recruitment
@@ -126,7 +128,21 @@ bool UTSTSSSliceEnemyReviewSession::TryStart(
     EnemyKinds = MoveTemp(CandidateKinds);
     ActivePartyIds = MoveTemp(CandidatePartyIds);
     EnemyIds = MoveTemp(CandidateEnemyIds);
+    EnemySlotKinds = MoveTemp(CandidateSlotKinds);
     TryAdvanceEnemyTurns();
+    return true;
+#endif
+}
+
+bool UTSTSSSliceEnemyReviewSession::TryGetReviewEnemyKind(
+    int32 EnemySlot, ETSTSSSliceEnemyKind& OutKind) const
+{
+#if UE_BUILD_SHIPPING
+    return false;
+#else
+    if (!IsValid(Manager.Get()) || !EnemySlotKinds.IsValidIndex(EnemySlot) ||
+        !EnemyIds.IsValidIndex(EnemySlot)) return false;
+    OutKind = EnemySlotKinds[EnemySlot];
     return true;
 #endif
 }

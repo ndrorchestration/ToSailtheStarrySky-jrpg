@@ -48,6 +48,12 @@ public:
     UFUNCTION(BlueprintPure, Category="TSTSS|Enemy Review")
     TArray<FName> GetReviewEnemyIds() const { return EnemyIds; }
 
+    // Exact slot-kind relation for the review arena; refused before starting,
+    // out of range, and in shipping builds. Output is untouched on denial.
+    UFUNCTION(BlueprintCallable, Category="TSTSS|Enemy Review")
+    bool TryGetReviewEnemyKind(int32 EnemySlot, ETSTSSSliceEnemyKind& OutKind) const;
+
+
 private:
     UPROPERTY(Transient)
     TObjectPtr<UTSS_CombatTurnManager> Manager;
@@ -62,4 +68,7 @@ private:
     TArray<FName> EnemyIds;
 
     TMap<FName, ETSTSSSliceEnemyKind> EnemyKinds;
+
+    UPROPERTY(Transient)
+    TArray<ETSTSSSliceEnemyKind> EnemySlotKinds;
 };

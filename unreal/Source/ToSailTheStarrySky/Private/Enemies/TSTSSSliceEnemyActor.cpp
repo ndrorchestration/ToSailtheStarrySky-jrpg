@@ -342,6 +342,15 @@ void ATSTSSSliceEnemyActor::OnConstruction(const FTransform& Transform)
     VisualRoot->SetRelativeTransform(FTransform::Identity);
 }
 
+void ATSTSSSliceEnemyActor::PlayReviewHitReaction(bool bFatal)
+{
+#if !UE_BUILD_SHIPPING
+    ReviewHitRemaining = 0.42f;
+    bReviewFatalHit = bFatal;
+    Glow->SetIntensity(5100.f);
+#endif
+}
+
 void ATSTSSSliceEnemyActor::BeginPlay()
 {
     Super::BeginPlay();
@@ -355,6 +364,17 @@ void ATSTSSSliceEnemyActor::BeginPlay()
 void ATSTSSSliceEnemyActor::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
+    if (ReviewHitRemaining > 0.f)
+    {
+        ReviewHitRemaining = FMath::Max(0.f, ReviewHitRemaining - DeltaSeconds);
+        const float Alpha = ReviewHitRemaining / 0.42f;
+        Glow->SetIntensity(1700.f + 3400.f * Alpha);
+        if (ReviewHitRemaining <= 0.f && bReviewFatalHit)
+        {
+            // Cosmetic defeat; the combat manager remains sole death authority.
+            SetActorHiddenInGame(true);
+        }
+    }
     if (bReducedMotion)
     {
         VisualRoot->SetRelativeLocation(FVector::ZeroVector);
@@ -371,6 +391,9 @@ void ATSTSSSliceEnemyActor::Tick(float DeltaSeconds)
     const float Hover = bFloating ? 9.f : 2.5f;
     VisualRoot->SetRelativeLocation(
         FVector(0.f, 0.f, FMath::Sin(IdleTime * Speed * 1.7f) * Hover));
+    const float Impact = (ReviewHitRemaining > 0.f)
+        ? FMath::Sin(ReviewHitRemaining * 65.f) *
+          12.f * (ReviewHitRemaining / 0.42f) : 0.f;
     VisualRoot->SetRelativeRotation(
-        FRotator(0.f, FMath::Sin(IdleTime * Speed * .7f) * 11.f, 0.f));
+        FRotator(0.f, FMath::Sin(IdleTime * Speed * .7f) * 11.f, Impact));
 }
