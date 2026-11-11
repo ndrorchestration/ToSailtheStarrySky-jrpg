@@ -17,6 +17,7 @@ import wave
 EXPECTED = frozenset({
     "ui_confirm.wav", "repair_attuned.wav", "engine_warning.wav",
     "mystery_echo.wav", "weather_gust.wav", "splashdown_review.wav",
+    "footstep_wood.wav", "footstep_sand.wav", "footstep_stone.wav", "footstep_metal.wav",
 })
 DESTINATION = "/Game/TSTSS/Audio/QAReview"
 OPT_IN = "I_APPROVE_QA_AUDIO_IMPORT_ONLY"
