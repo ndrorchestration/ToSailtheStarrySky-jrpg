@@ -14,6 +14,14 @@
     "Ionia"
   ],
   "post_splashdown_first_recruit": "Lyra",
+  "post_splashdown_before_recruitment_party": ["Ender", "Ionia"],
+  "lyra_equipment_gate": {
+    "after_sea_contact_stage": "AfterSplashdown",
+    "requires_distinct_recruitment": true,
+    "recruited_stage": "LyraRecruited",
+    "automatic_item_grants": false,
+    "runtime_recruitment_verified": false
+  },
   "disallowed_slice_party": [
     "Reson",
     "Aepex"
