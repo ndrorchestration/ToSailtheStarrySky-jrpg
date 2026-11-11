@@ -4,6 +4,8 @@
 #include "TSTSSFirstWakeState.h"
 #include "TSTSSExplorerCharacter.generated.h"
 
+class UTSTSSPartyGearMenuReviewWidget;
+
 UCLASS()
 class TOSAILTHESTARRYSKY_API ATSTSSExplorerCharacter : public ACharacter
 {
@@ -37,6 +39,10 @@ private:
     void QuickSave();
     void QuickLoad();
     void ShowObjectiveReview();
+    // Opt-in nonshipping UMG preview; never touches actual saved inventory.
+    void ToggleEquipmentReview();
+    UPROPERTY(Transient)
+    TObjectPtr<UTSTSSPartyGearMenuReviewWidget> EquipmentReviewMenu;
     // PIE reviews never inherit another session's quicksave ownership.
     UPROPERTY(Transient)
     bool bPIEReviewQuickSlotOwned = false;

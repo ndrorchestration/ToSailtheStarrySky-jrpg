@@ -112,4 +112,30 @@ class TestPartyEquipmentSource(unittest.TestCase):
    expected="/Game/TSTSS/Review/PartyEquipment/"+owner+"/"+asset+"/StaticMeshes/"+asset+"."+asset
    self.assertEqual(i["mesh_path"],expected,i["id"])
 
+ def test_ingame_review_menu_has_g_key_and_never_auto_recruits_lyra(self):
+  unreal=HERE.parents[1]
+  h=(unreal/"Source"/"ToSailTheStarrySky"/"Public"/"TSTSSPartyGearMenuReviewWidget.h").read_text(encoding="utf-8-sig")
+  impl=(unreal/"Source"/"ToSailTheStarrySky"/"Private"/"TSTSSPartyGearMenuReviewWidget.cpp").read_text(encoding="utf-8-sig")
+  pawn=(unreal/"Source"/"ToSailTheStarrySky"/"Private"/"TSTSSExplorerCharacter.cpp").read_text(encoding="utf-8-sig")
+  test=(unreal/"Source"/"ToSailTheStarrySky"/"Private"/"Tests"/"TSTSSPartySliceEquipmentTests.cpp").read_text(encoding="utf-8-sig")
+  cfg=(unreal/"Config"/"DefaultInput.ini").read_text(encoding="utf-8-sig")
+  self.assertIn('+ActionMappings=(ActionName="ReviewEquipment",Key=G)',cfg)
+  self.assertIn("TryApplyReviewToggle",h)
+  self.assertIn("FTSTSSReviewEquipment::TryEquip(",impl)
+  self.assertIn("FTSTSSPartySliceReviewEquipment::IsMemberAvailable(",impl)
+  self.assertIn("if (!Desired.IsNone()) return false;",impl)
+  self.assertIn("TryBeginEquipmentReview",impl)
+  self.assertIn("TryRefreshStoryStageReview",impl)
+  self.assertIn("TryRefreshStoryStageReview(CurrentStage)",pawn)
+  self.assertIn("LyraRecruited",impl)
+  self.assertIn("Stage",h)
+  self.assertIn("FirstWakeState->IsChapterOneActOne()",pawn)
+  self.assertIn("ETSTSSPartySliceReviewStage::AfterSplashdown",pawn)
+  self.assertNotIn("ETSTSSPartySliceReviewStage::LyraRecruited",pawn)
+  self.assertIn("cannot equip Lyra gear at splashdown",test)
+  self.assertIn("review UI re-equips originally owned staff",test)
+  self.assertIn("PC->SetInputMode(Mode)",pawn)
+  self.assertIn("CloseReview",impl)
+  self.assertNotIn("SaveGame",impl)
+
 if __name__=="__main__":unittest.main()

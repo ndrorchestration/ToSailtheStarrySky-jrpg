@@ -1,6 +1,7 @@
 #include "Misc/AutomationTest.h"
 #include "TSTSSPartySliceReviewEquipment.h"
 #include "TSTSSPartyGearReviewMountComponent.h"
+#include "TSTSSPartyGearMenuReviewWidget.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/StaticMesh.h"
@@ -108,6 +109,66 @@ bool FTSTSSPartySliceEquipmentStageGateTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("invalid stage preserves caller output"), Sentinel.OwnedInstances.Num(), 9);
     TestFalse(TEXT("unknown stage cannot admit any character"),
         FTSTSSPartySliceReviewEquipment::IsMemberAvailable(InvalidStage, Ender));
+
+
+    // Review UI uses the actual atomic ledger but NEVER grants, persists or
+    // promotes equipment. It must reject Lyra in both story-only stages.
+    FTSTSSReviewGearState UIUnequipped, UIEquipped;
+    TestTrue(TEXT("review UI permits removing owned Ender staff"),
+        UTSTSSPartyGearMenuReviewWidget::TryApplyReviewToggle(
+            Before, Opening, Ender, ETSTSSReviewGearSlot::Weapon,
+            false, UIUnequipped));
+    const FTSTSSReviewGearSlots* UIBeforeSlots = Before.EquippedByCharacter.Find(Ender);
+    const FTSTSSReviewGearSlots* UIAfterSlots = UIUnequipped.EquippedByCharacter.Find(Ender);
+    if (!TestNotNull(TEXT("opening Ender ledger"), UIBeforeSlots) ||
+        !TestNotNull(TEXT("UI after Ender ledger"), UIAfterSlots))
+        return false;
+    TestEqual(TEXT("review UI does not mutate source staff ownership"),
+        UIBeforeSlots->WeaponInstance, FName(TEXT("Ender.ResonanceStaff")));
+    TestTrue(TEXT("review UI unequip removes exactly weapon slot"),
+        UIAfterSlots->WeaponInstance.IsNone());
+    TestEqual(TEXT("review UI preserves armor slot"),
+        UIBeforeSlots->ArmorInstance, UIAfterSlots->ArmorInstance);
+    TestEqual(TEXT("review UI preserves accessory slot"),
+        UIBeforeSlots->AccessoryInstance, UIAfterSlots->AccessoryInstance);
+    TestTrue(TEXT("review UI re-equips originally owned staff"),
+        UTSTSSPartyGearMenuReviewWidget::TryApplyReviewToggle(
+            UIUnequipped, Opening, Ender, ETSTSSReviewGearSlot::Weapon,
+            true, UIEquipped));
+    TestEqual(TEXT("review UI restores same staff instance"),
+        UIEquipped.EquippedByCharacter.FindChecked(Ender).WeaponInstance,
+        FName(TEXT("Ender.ResonanceStaff")));
+
+    FTSTSSReviewGearState UIInvalid;
+    UIInvalid.EquippedByCharacter.Add(TEXT("Sentinel"), FTSTSSReviewGearSlots());
+    TestFalse(TEXT("review UI cannot remove unowned Lyra gear in First Wake"),
+        UTSTSSPartyGearMenuReviewWidget::TryApplyReviewToggle(
+            Before, Opening, Lyra, ETSTSSReviewGearSlot::Weapon,
+            false, UIInvalid));
+    TestFalse(TEXT("review UI cannot equip Lyra gear at splashdown"),
+        UTSTSSPartyGearMenuReviewWidget::TryApplyReviewToggle(
+            Sea, Splashdown, Lyra, ETSTSSReviewGearSlot::Weapon,
+            true, UIInvalid));
+    TestFalse(TEXT("review UI cannot equip Aepex at any stage"),
+        UTSTSSPartyGearMenuReviewWidget::TryApplyReviewToggle(
+            After, Recruited, TEXT("Aepex"), ETSTSSReviewGearSlot::Weapon,
+            true, UIInvalid));
+    TestFalse(TEXT("review UI invalid slot fails closed"),
+        UTSTSSPartyGearMenuReviewWidget::TryApplyReviewToggle(
+            After, Recruited, Ionia, static_cast<ETSTSSReviewGearSlot>(99),
+            false, UIInvalid));
+    TestFalse(TEXT("review UI duplicate no-change denied"),
+        UTSTSSPartyGearMenuReviewWidget::TryApplyReviewToggle(
+            Before, Opening, Ender, ETSTSSReviewGearSlot::Weapon,
+            true, UIInvalid));
+    TestTrue(TEXT("review UI rejections preserve output sentinel"),
+        UIInvalid.EquippedByCharacter.Contains(TEXT("Sentinel")));
+    TestTrue(TEXT("review UI permits Lyra only after separate recruitment"),
+        UTSTSSPartyGearMenuReviewWidget::TryApplyReviewToggle(
+            After, Recruited, Lyra, ETSTSSReviewGearSlot::Weapon,
+            false, UIInvalid));
+    TestTrue(TEXT("recruited Lyra's weapon then cleared"),
+        UIInvalid.EquippedByCharacter.FindChecked(Lyra).WeaponInstance.IsNone());
 
     // Native package loading: these are real staged UE assets, not just GLBs.
     const TPair<FName,FString> ReviewedMeshes[] = {

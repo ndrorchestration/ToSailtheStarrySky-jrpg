@@ -3,6 +3,9 @@
 #include "TSTSSPersistence.h"
 #include "TSTSSInteractionReach.h"
 #include "TSTSSSaveGame.h"
+#include "TSTSSPartyGearMenuReviewWidget.h"
+#include "Blueprint/UserWidget.h"
+#include "GameFramework/HUD.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -132,6 +135,9 @@ void ATSTSSExplorerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
     }
     PlayerInputComponent->BindAction(TEXT("QuickLoad"), IE_Pressed, this, &ATSTSSExplorerCharacter::QuickLoad);
     PlayerInputComponent->BindAction(TEXT("ReviewObjective"), IE_Pressed, this, &ATSTSSExplorerCharacter::ShowObjectiveReview);
+#if !UE_BUILD_SHIPPING
+    PlayerInputComponent->BindAction(TEXT("ReviewEquipment"), IE_Pressed, this, &ATSTSSExplorerCharacter::ToggleEquipmentReview);
+#endif
 }
 
 void ATSTSSExplorerCharacter::MoveForward(float Value)
@@ -382,4 +388,52 @@ bool ATSTSSExplorerCharacter::LoadFirstWake(const FString& Slot)
     }
 #endif
     return bRestored;
+}
+
+void ATSTSSExplorerCharacter::ToggleEquipmentReview()
+{
+#if !UE_BUILD_SHIPPING
+    if (!IsValid(FirstWakeState)) return;
+    APlayerController* PC = Cast<APlayerController>(Controller);
+    if (!IsValid(PC) || !IsLocallyControlled()) return;
+    if (AHUD* CurrentHUD = PC->GetHUD(); CurrentHUD && !CurrentHUD->bShowHUD)
+    {
+        // Never overlap the opening movie/title screen.
+        return;
+    }
+
+    if (EquipmentReviewMenu && EquipmentReviewMenu->IsInViewport())
+    {
+        EquipmentReviewMenu->CloseReview();
+        return;
+    }
+    if (!IsValid(EquipmentReviewMenu))
+    {
+        UTSTSSPartyGearMenuReviewWidget* Candidate =
+            CreateWidget<UTSTSSPartyGearMenuReviewWidget>(
+                PC, UTSTSSPartyGearMenuReviewWidget::StaticClass());
+        if (!IsValid(Candidate)) return;
+
+        // Current First Wake save schema contains no Lyra recruitment receipt.
+        // Even after splashdown, Lyra MUST remain locked in this runtime UI.
+        const auto Stage = FirstWakeState->IsChapterOneActOne()
+            ? ETSTSSPartySliceReviewStage::AfterSplashdown
+            : ETSTSSPartySliceReviewStage::FirstWake;
+        if (!Candidate->TryBeginEquipmentReview(Stage)) return;
+        EquipmentReviewMenu = Candidate;
+    }
+
+    const auto CurrentStage = FirstWakeState->IsChapterOneActOne()
+        ? ETSTSSPartySliceReviewStage::AfterSplashdown
+        : ETSTSSPartySliceReviewStage::FirstWake;
+    if (!EquipmentReviewMenu->TryRefreshStoryStageReview(CurrentStage))
+        return;
+
+    EquipmentReviewMenu->AddToViewport(30);
+    PC->bShowMouseCursor = true;
+    FInputModeGameAndUI Mode;
+    Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+    Mode.SetHideCursorDuringCapture(false);
+    PC->SetInputMode(Mode);
+#endif
 }
