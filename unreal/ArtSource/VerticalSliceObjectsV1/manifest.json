@@ -1,0 +1,883 @@
+{
+  "art_approved": false,
+  "glb_units": "meters Y-up",
+  "native_import_verified": false,
+  "original_objects": [
+    {
+      "bounds_glb_m": [
+        [
+          -0.32,
+          0.32
+        ],
+        [
+          0.0,
+          0.68
+        ],
+        [
+          -0.32,
+          0.32
+        ]
+      ],
+      "bytes": 79020,
+      "materials_used": [
+        "brass",
+        "dark_iron"
+      ],
+      "name": "MooringBollard",
+      "sha256": "d2c4a4f4909ea705e42858c286c4298cc9af13843fa8e84dd692a7a5b42679ee",
+      "triangles": 704
+    },
+    {
+      "bounds_glb_m": [
+        [
+          -0.575,
+          0.575
+        ],
+        [
+          0.0,
+          0.465
+        ],
+        [
+          -0.14,
+          0.14
+        ]
+      ],
+      "bytes": 31476,
+      "materials_used": [
+        "brass",
+        "dark_iron"
+      ],
+      "name": "MooringCleat",
+      "sha256": "007b7e10217163b5bd13ea06893e577e23be3e917bc15142cdfe2e91f86df8f0",
+      "triangles": 264
+    },
+    {
+      "bounds_glb_m": [
+        [
+          -0.3,
+          0.3
+        ],
+        [
+          -0.005,
+          3.435
+        ],
+        [
+          -0.3,
+          0.3
+        ]
+      ],
+      "bytes": 58748,
+      "materials_used": [
+        "brass",
+        "dark_iron",
+        "patina",
+        "amber_glass"
+      ],
+      "name": "HarborLantern",
+      "sha256": "be25950f717dc4d9bbc3f3277eae71123b55dc44f858adb1042de5140b3ca967",
+      "triangles": 504
+    },
+    {
+      "bounds_glb_m": [
+        [
+          -0.555,
+          0.555
+        ],
+        [
+          0.0,
+          0.96
+        ],
+        [
+          -0.49,
+          0.505
+        ]
+      ],
+      "bytes": 29972,
+      "materials_used": [
+        "brass",
+        "dark_iron",
+        "wood"
+      ],
+      "name": "CargoCrate",
+      "sha256": "9a13a47f074b0178ca56ad82ecad59847102a453f237d79af6399983e13822a2",
+      "triangles": 244
+    },
+    {
+      "bounds_glb_m": [
+        [
+          -0.43,
+          0.6791
+        ],
+        [
+          0.03,
+          0.4624
+        ],
+        [
+          -0.43,
+          0.43
+        ]
+      ],
+      "bytes": 283152,
+      "materials_used": [
+        "canvas"
+      ],
+      "name": "RopeCoil",
+      "sha256": "f014d1a98b83a2a00495d7cdee8ce4ba0d1651943229142577ab4877e606d7f6",
+      "triangles": 2600
+    },
+    {
+      "bounds_glb_m": [
+        [
+          -0.48,
+          0.48
+        ],
+        [
+          0.0,
+          1.77
+        ],
+        [
+          -0.35,
+          0.35
+        ]
+      ],
+      "bytes": 87672,
+      "materials_used": [
+        "brass",
+        "patina",
+        "wood",
+        "amber_glass"
+      ],
+      "name": "FlyerPodium",
+      "sha256": "f5dc289caf8441713c4a03f80be23f2689005cd6491c754a649669174e016b81",
+      "triangles": 772
+    },
+    {
+      "bounds_glb_m": [
+        [
+          -0.9,
+          0.9
+        ],
+        [
+          0.0,
+          1.3786
+        ],
+        [
+          -0.425,
+          0.455
+        ]
+      ],
+      "bytes": 26332,
+      "materials_used": [
+        "brass",
+        "dark_iron",
+        "wood",
+        "canvas"
+      ],
+      "name": "CaptainDesk",
+      "sha256": "4d7548ae305cfe0d9785051129d1ac0f41525d260ac8cf6d785bf19f0614f434",
+      "triangles": 204
+    },
+    {
+      "bounds_glb_m": [
+        [
+          -0.475,
+          0.475
+        ],
+        [
+          0.0,
+          1.04
+        ],
+        [
+          -0.35,
+          0.35
+        ]
+      ],
+      "bytes": 103432,
+      "materials_used": [
+        "brass",
+        "dark_iron",
+        "patina"
+      ],
+      "name": "GangwayAnchor",
+      "sha256": "62f365ac213673fccadedf23b8effd773b7f9919ad6770ca1281002134fbda4f",
+      "triangles": 924
+    },
+    {
+      "bounds_glb_m": [
+        [
+          -1.0,
+          1.0
+        ],
+        [
+          0.05,
+          1.95
+        ],
+        [
+          -0.45,
+          0.45
+        ]
+      ],
+      "bytes": 26360,
+      "materials_used": [
+        "brass",
+        "dark_iron",
+        "patina",
+        "wood"
+      ],
+      "name": "EngineeringWorkbench",
+      "sha256": "eaf45e41b5dab1da3cff1f41c131fa5054bd09e78e9e8b8970c233b7676a5bea",
+      "triangles": 204
+    },
+    {
+      "bounds_glb_m": [
+        [
+          -0.67,
+          0.67
+        ],
+        [
+          0.0,
+          1.88
+        ],
+        [
+          -0.67,
+          0.67
+        ]
+      ],
+      "bytes": 238304,
+      "materials_used": [
+        "brass",
+        "dark_iron",
+        "patina",
+        "amber_glass",
+        "teal_glass"
+      ],
+      "name": "LiftResonator",
+      "sha256": "3596b33bde8bedbed0de13f0914e28e86011c29c60fc011eeab3e78f5217e7ed",
+      "triangles": 2160
+    },
+    {
+      "bounds_glb_m": [
+        [
+          -0.575,
+          0.575
+        ],
+        [
+          0.0,
+          1.43
+        ],
+        [
+          -0.4,
+          0.6198
+        ]
+      ],
+      "bytes": 164440,
+      "materials_used": [
+        "brass",
+        "dark_iron",
+        "patina",
+        "porcelain",
+        "ruby"
+      ],
+      "name": "PressureRegulator",
+      "sha256": "e864b4c9fc98e8c0191f184c9094a67e8432f7f4de0bae6709090210e59ad1c2",
+      "triangles": 1476
+    },
+    {
+      "bounds_glb_m": [
+        [
+          -0.75,
+          0.5
+        ],
+        [
+          0.1,
+          1.9
+        ],
+        [
+          -0.5,
+          0.63
+        ]
+      ],
+      "bytes": 167428,
+      "materials_used": [
+        "brass",
+        "dark_iron",
+        "patina",
+        "amber_glass",
+        "teal_glass"
+      ],
+      "name": "ReserveTank",
+      "sha256": "e76962a08a1ff89888564ebf80007d3ef42d8588f6437ee58b18c29e76fc718a",
+      "triangles": 1504
+    },
+    {
+      "bounds_glb_m": [
+        [
+          -0.44,
+          0.44
+        ],
+        [
+          0.0,
+          1.585
+        ],
+        [
+          -0.38,
+          0.38
+        ]
+      ],
+      "bytes": 58092,
+      "materials_used": [
+        "brass",
+        "dark_iron",
+        "patina",
+        "amber_glass",
+        "ruby"
+      ],
+      "name": "SignoffPlinth",
+      "sha256": "b3df0d7932965ac4c0adbe4447f10efa6e0519509985916c3d8c9304c3f1add8",
+      "triangles": 492
+    },
+    {
+      "bounds_glb_m": [
+        [
+          -0.86,
+          0.86
+        ],
+        [
+          0.0,
+          2.12
+        ],
+        [
+          -0.86,
+          0.86
+        ]
+      ],
+      "bytes": 270476,
+      "materials_used": [
+        "brass",
+        "dark_iron",
+        "patina",
+        "teal_glass"
+      ],
+      "name": "HarmonicEngineCore",
+      "sha256": "f8c4929f2d7493a298dcb1c79b2c7e0115ed1ddb7bd6af3f1534d39aa4494be8",
+      "triangles": 2464
+    },
+    {
+      "bounds_glb_m": [
+        [
+          -0.71,
+          0.71
+        ],
+        [
+          0.03,
+          1.93
+        ],
+        [
+          -0.1,
+          0.32
+        ]
+      ],
+      "bytes": 60672,
+      "materials_used": [
+        "brass",
+        "dark_iron",
+        "wood"
+      ],
+      "name": "ToolRack",
+      "sha256": "8900e277bbfd60b2f6adc1b23c08d3512ef5d8be51bb230742790b03324a2622",
+      "triangles": 528
+    },
+    {
+      "bounds_glb_m": [
+        [
+          -0.71,
+          0.71
+        ],
+        [
+          0.0,
+          2.76
+        ],
+        [
+          -0.5,
+          0.5
+        ]
+      ],
+      "bytes": 126328,
+      "materials_used": [
+        "brass",
+        "dark_iron",
+        "patina"
+      ],
+      "name": "BridgeHelm",
+      "sha256": "162ff3d63555c2e2e4d08ab48ef7d15171fb4a5cca2037537d987d79e00813d7",
+      "triangles": 1136
+    },
+    {
+      "bounds_glb_m": [
+        [
+          -0.59,
+          0.59
+        ],
+        [
+          0.0,
+          2.2
+        ],
+        [
+          -0.59,
+          0.59
+        ]
+      ],
+      "bytes": 250612,
+      "materials_used": [
+        "brass",
+        "dark_iron",
+        "amber_glass",
+        "teal_glass"
+      ],
+      "name": "BridgeOrrery",
+      "sha256": "91dd84b6f8f644250c6af644de7ba94f623f151a95fe32285dec8f533d95a84c",
+      "triangles": 2280
+    },
+    {
+      "bounds_glb_m": [
+        [
+          -1.05,
+          1.05
+        ],
+        [
+          0.0,
+          1.18
+        ],
+        [
+          -0.09,
+          0.09
+        ]
+      ],
+      "bytes": 75348,
+      "materials_used": [
+        "brass",
+        "dark_iron",
+        "patina"
+      ],
+      "name": "DeckRailModule",
+      "sha256": "0aafd2ac569f3c7f8ea6db7d657c9b4b0543448c3ae9433352b7f93fc56b2d1f",
+      "triangles": 664
+    },
+    {
+      "bounds_glb_m": [
+        [
+          -0.81,
+          0.81
+        ],
+        [
+          -0.2,
+          0.83
+        ],
+        [
+          -0.7162,
+          0.7162
+        ]
+      ],
+      "bytes": 203340,
+      "materials_used": [
+        "brass",
+        "dark_iron",
+        "patina"
+      ],
+      "name": "GeodesicJunction",
+      "sha256": "eb3c15dcbac9cb3401413b2acd7e607ee1b07e77759663271f8899af5fd137b3",
+      "triangles": 1848
+    },
+    {
+      "bounds_glb_m": [
+        [
+          -0.8,
+          0.8
+        ],
+        [
+          -0.48,
+          0.48
+        ],
+        [
+          -0.625,
+          0.625
+        ]
+      ],
+      "bytes": 71024,
+      "materials_used": [
+        "brass",
+        "dark_iron",
+        "patina"
+      ],
+      "name": "WingHinge",
+      "sha256": "4038cacc57f99914cbf3e6485167843902fd5a8d3dc2079e55d3c9dedb073e46",
+      "triangles": 624
+    },
+    {
+      "bounds_glb_m": [
+        [
+          -0.3,
+          0.3
+        ],
+        [
+          0.0,
+          1.525
+        ],
+        [
+          -0.3,
+          0.3
+        ]
+      ],
+      "bytes": 56136,
+      "materials_used": [
+        "brass",
+        "dark_iron",
+        "patina",
+        "amber_glass"
+      ],
+      "name": "EmergencyBeacon",
+      "sha256": "ba0b5a1999b14e3e043b4411361b79ee1e9d700ca75e44daa1f6ddf3821fc0c9",
+      "triangles": 480
+    },
+    {
+      "bounds_glb_m": [
+        [
+          -0.6,
+          0.6
+        ],
+        [
+          -0.14,
+          0.14
+        ],
+        [
+          -0.6,
+          0.6
+        ]
+      ],
+      "bytes": 221472,
+      "materials_used": [
+        "dark_iron",
+        "canvas",
+        "amber_glass"
+      ],
+      "name": "FlotationBuoy",
+      "sha256": "f04263aa9f4c7e8b6c298d655c382adba4dad59d7b0c9552f841509bb151615a",
+      "triangles": 2016
+    }
+  ],
+  "physical_water_verified": false,
+  "placements": [
+    {
+      "asset": "FlyerPodium",
+      "collision": "NoCollision",
+      "interactive": false,
+      "scale": 1,
+      "x": -2200,
+      "y": -245,
+      "yaw": 0,
+      "z": 0
+    },
+    {
+      "asset": "CaptainDesk",
+      "collision": "NoCollision",
+      "interactive": false,
+      "scale": 1,
+      "x": -1550,
+      "y": -270,
+      "yaw": 0,
+      "z": 0
+    },
+    {
+      "asset": "GangwayAnchor",
+      "collision": "NoCollision",
+      "interactive": false,
+      "scale": 1,
+      "x": -900,
+      "y": 260,
+      "yaw": 0,
+      "z": 0
+    },
+    {
+      "asset": "EngineeringWorkbench",
+      "collision": "NoCollision",
+      "interactive": false,
+      "scale": 1,
+      "x": -200,
+      "y": 350,
+      "yaw": 0,
+      "z": 0
+    },
+    {
+      "asset": "LiftResonator",
+      "collision": "NoCollision",
+      "interactive": false,
+      "scale": 0.85,
+      "x": -250,
+      "y": 235,
+      "yaw": 0,
+      "z": 0
+    },
+    {
+      "asset": "PressureRegulator",
+      "collision": "NoCollision",
+      "interactive": false,
+      "scale": 1,
+      "x": 225,
+      "y": 235,
+      "yaw": 0,
+      "z": 0
+    },
+    {
+      "asset": "ReserveTank",
+      "collision": "NoCollision",
+      "interactive": false,
+      "scale": 1,
+      "x": 700,
+      "y": 230,
+      "yaw": 0,
+      "z": 0
+    },
+    {
+      "asset": "SignoffPlinth",
+      "collision": "NoCollision",
+      "interactive": false,
+      "scale": 1,
+      "x": 1175,
+      "y": 220,
+      "yaw": 0,
+      "z": 0
+    },
+    {
+      "asset": "HarmonicEngineCore",
+      "collision": "NoCollision",
+      "interactive": false,
+      "scale": 0.8,
+      "x": 310,
+      "y": 325,
+      "yaw": 0,
+      "z": 0
+    },
+    {
+      "asset": "ToolRack",
+      "collision": "NoCollision",
+      "interactive": false,
+      "scale": 1,
+      "x": 80,
+      "y": 345,
+      "yaw": 0,
+      "z": 0
+    },
+    {
+      "asset": "MooringBollard",
+      "collision": "NoCollision",
+      "interactive": false,
+      "scale": 1,
+      "x": -1870,
+      "y": 510,
+      "yaw": 0,
+      "z": 0
+    },
+    {
+      "asset": "MooringBollard",
+      "collision": "NoCollision",
+      "interactive": false,
+      "scale": 1,
+      "x": -740,
+      "y": 510,
+      "yaw": 0,
+      "z": 0
+    },
+    {
+      "asset": "MooringCleat",
+      "collision": "NoCollision",
+      "interactive": false,
+      "scale": 1,
+      "x": -1120,
+      "y": 520,
+      "yaw": 0,
+      "z": 0
+    },
+    {
+      "asset": "MooringCleat",
+      "collision": "NoCollision",
+      "interactive": false,
+      "scale": 1,
+      "x": 50,
+      "y": 520,
+      "yaw": 0,
+      "z": 0
+    },
+    {
+      "asset": "HarborLantern",
+      "collision": "NoCollision",
+      "interactive": false,
+      "scale": 1,
+      "x": -2350,
+      "y": -515,
+      "yaw": 0,
+      "z": 0
+    },
+    {
+      "asset": "HarborLantern",
+      "collision": "NoCollision",
+      "interactive": false,
+      "scale": 1,
+      "x": -1000,
+      "y": -515,
+      "yaw": 0,
+      "z": 0
+    },
+    {
+      "asset": "HarborLantern",
+      "collision": "NoCollision",
+      "interactive": false,
+      "scale": 1,
+      "x": 500,
+      "y": -515,
+      "yaw": 0,
+      "z": 0
+    },
+    {
+      "asset": "CargoCrate",
+      "collision": "NoCollision",
+      "interactive": false,
+      "scale": 1,
+      "x": -1700,
+      "y": 560,
+      "yaw": 8,
+      "z": 0
+    },
+    {
+      "asset": "CargoCrate",
+      "collision": "NoCollision",
+      "interactive": false,
+      "scale": 0.9,
+      "x": -1800,
+      "y": 650,
+      "yaw": -9,
+      "z": 0
+    },
+    {
+      "asset": "CargoCrate",
+      "collision": "NoCollision",
+      "interactive": false,
+      "scale": 1,
+      "x": 1150,
+      "y": 540,
+      "yaw": 15,
+      "z": 0
+    },
+    {
+      "asset": "RopeCoil",
+      "collision": "NoCollision",
+      "interactive": false,
+      "scale": 1,
+      "x": -1120,
+      "y": 590,
+      "yaw": 0,
+      "z": 0
+    },
+    {
+      "asset": "RopeCoil",
+      "collision": "NoCollision",
+      "interactive": false,
+      "scale": 1,
+      "x": 50,
+      "y": 600,
+      "yaw": 0,
+      "z": 0
+    },
+    {
+      "asset": "BridgeHelm",
+      "collision": "NoCollision",
+      "interactive": false,
+      "scale": 1,
+      "x": -950,
+      "y": 1150,
+      "yaw": 0,
+      "z": 210
+    },
+    {
+      "asset": "BridgeOrrery",
+      "collision": "NoCollision",
+      "interactive": false,
+      "scale": 0.8,
+      "x": -860,
+      "y": 1200,
+      "yaw": 0,
+      "z": 210
+    },
+    {
+      "asset": "DeckRailModule",
+      "collision": "NoCollision",
+      "interactive": false,
+      "scale": 1,
+      "x": -1180,
+      "y": 1150,
+      "yaw": 0,
+      "z": 240
+    },
+    {
+      "asset": "DeckRailModule",
+      "collision": "NoCollision",
+      "interactive": false,
+      "scale": 1,
+      "x": -800,
+      "y": 1150,
+      "yaw": 0,
+      "z": 240
+    },
+    {
+      "asset": "GeodesicJunction",
+      "collision": "NoCollision",
+      "interactive": false,
+      "scale": 1,
+      "x": -950,
+      "y": 1260,
+      "yaw": 0,
+      "z": 450
+    },
+    {
+      "asset": "WingHinge",
+      "collision": "NoCollision",
+      "interactive": false,
+      "scale": 1,
+      "x": -1350,
+      "y": 1800,
+      "yaw": 15,
+      "z": 360
+    },
+    {
+      "asset": "WingHinge",
+      "collision": "NoCollision",
+      "interactive": false,
+      "scale": 1,
+      "x": -560,
+      "y": 1800,
+      "yaw": -15,
+      "z": 360
+    },
+    {
+      "asset": "EmergencyBeacon",
+      "collision": "NoCollision",
+      "interactive": false,
+      "scale": 1,
+      "x": -950,
+      "y": 1500,
+      "yaw": 0,
+      "z": 360
+    },
+    {
+      "asset": "FlotationBuoy",
+      "collision": "NoCollision",
+      "interactive": false,
+      "scale": 1,
+      "x": -550,
+      "y": 1530,
+      "yaw": 0,
+      "z": 255
+    }
+  ],
+  "source_units": "UE centimeters",
+  "version": "FIRST_WAKE_SLICE_OBJECTS_V1"
+}
