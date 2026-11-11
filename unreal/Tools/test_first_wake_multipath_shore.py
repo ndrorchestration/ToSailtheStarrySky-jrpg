@@ -119,6 +119,18 @@ class FirstWakeMultiPathShoreSourceTests(unittest.TestCase):
         self.assertIn("separate composition process produced no native stage receipt", runner)
         self.assertIn("with HOST_RECEIPT.open(\"x\"", runner)
 
+    def test_camera_python_rotator_fields_fail_closed(self):
+        # Unreal Python's Rotator constructor is roll,pitch,yaw; the original
+        # C++-ordered positional arguments created pitch +45, yaw 0, roll -18.
+        stage_source = Path(stage.__file__).read_text(encoding="utf-8")
+        self.assertIn("u.Rotator(roll=0.0, pitch=-18.0, yaw=45.0)", stage_source)
+        self.assertNotIn("u.Rotator(-18, 45, 0)", stage_source)
+        self.assertIn("HOLD: staged camera native pitch/yaw/roll mismatch", stage_source)
+        self.assertIn("actual = camera.get_actor_rotation()", stage_source)
+        self.assertIn("abs(actual.pitch + 18.0) > 0.01", stage_source)
+        self.assertIn("abs(actual.yaw - 45.0) > 0.01", stage_source)
+        self.assertIn("abs(actual.roll) > 0.01", stage_source)
+
     def test_all_three_visual_groups_and_26_new_actors(self):
         self.assertEqual((22, 8), (self.plan["original_object_imports"],
                                    self.plan["showcase_object_actors"]))
