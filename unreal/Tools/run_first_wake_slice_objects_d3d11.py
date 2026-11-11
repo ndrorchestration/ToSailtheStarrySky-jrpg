@@ -29,9 +29,9 @@ REG=PROJECT/"Content/Python/test_first_wake_slice_object_gpu_review.py"
 RUNSCRIPT=PROJECT/"Tools/capture_first_wake_slice_objects_d3d11.py"
 TEST="Editor.Python.ToSailTheStarrySky.test_first_wake_slice_object_gpu_review"
 OUTPUT=capture.RESULT_DIR
-REPORT=OUTPUT.parent/"D3D11_FirstWakeObjects_AutomationReport"
-LOG=OUTPUT.parent/"host_d3d11_unreal.log"
-HOST=OUTPUT.parent/"host_d3d11_capture_receipt.json"
+REPORT=OUTPUT.parent/"D3D11_FirstWakeObjects_AutomationReport_V2"
+LOG=OUTPUT.parent/"host_d3d11_unreal_v2.log"
+HOST=OUTPUT.parent/"host_d3d11_capture_receipt_v2.json"
 MAX_SECONDS=260
 MIN_RAM_GIB=6.5
 MIN_DISK_GIB=14.0
@@ -177,6 +177,7 @@ def run():
         data["frames"]=[{**frame,**gpu_color_quality(OUTPUT/frame["file"])}
                          for frame in actual]
         data["native_controller_pass"]=True
+        data["native_gpu_render_verified"]=True
         data["status"]="REAL_NATIVE_D3D11_FRAMES_PIXEL_QA_PASS_ART_APPROVAL_PENDING"
         state="PASSED"
     except Exception as exc:

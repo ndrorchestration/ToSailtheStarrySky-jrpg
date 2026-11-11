@@ -36,6 +36,23 @@ class GPUReviewSafetyTests(unittest.TestCase):
         self.assertEqual(3,len(set(capture.PICS)))
         self.assertTrue(all("Starbourne" not in n for n,_,_ in capture.SHOT_PLAN))
 
+    def test_engineering_camera_faces_from_open_quay_side(self):
+        name,eye,target=capture.SHOT_PLAN[1]
+        self.assertEqual("Engineering_Close",name)
+        self.assertGreater(eye[1],target[1]+450)
+        self.assertGreater(eye[1],0)
+        self.assertGreater(eye[2],target[2]+200)
+        self.assertTrue(capture.RESULT_DIR.name.endswith("_V2"))
+        self.assertTrue(host.LOG.name.endswith("_v2.log"))
+        self.assertTrue(host.HOST.name.endswith("_v2.json"))
+
+    def test_host_render_verified_flag_requires_pixel_proof(self):
+        source=Path(__file__).with_name("run_first_wake_slice_objects_d3d11.py").read_text(encoding="utf-8")
+        self.assertLess(source.index("evaluate_native_receipt(native,actual"),
+                        source.index('data["native_gpu_render_verified"]=True'))
+        self.assertLess(source.index("gpu_color_quality(OUTPUT/frame"),
+                        source.index('data["native_gpu_render_verified"]=True'))
+
     def test_camera_alignment_accepts_forward_rejects_wrong(self):
         dot=capture.alignment((0,0,0),(0,10,0),(0,1,0))
         self.assertAlmostEqual(1.0,dot)

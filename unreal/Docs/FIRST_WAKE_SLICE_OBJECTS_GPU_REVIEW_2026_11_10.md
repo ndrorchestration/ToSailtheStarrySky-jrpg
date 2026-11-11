@@ -24,3 +24,21 @@ Host: unreal/Tools/run_first_wake_slice_objects_d3d11.py --check returns only wh
 Success requires the named registered UE automation controller result Success plus 3 independent native PNG SHA/CRC/dimension checks matching the native receipt, an unchanged World map/config/source commit, Pillow decode and non-black pixel-diversity analysis. Status REAL_NATIVE_D3D11_FRAMES_PIXEL_QA_PASS_ART_APPROVAL_PENDING remains **review-only**: image aesthetics, gameplay E/WASD/PIE, physics, texturing, performance, realistic lighting, animation, and creator visual approval are not inferred from pixel files.
 
 **No claimed results until actual run**. Hosted Linux source CI only checks the source tests, PNG fixture parser, negative controls and registration syntax; not the native Unreal/D3D11 execution. The Windows screenshot source and private .uasset/.umap are not public art approval. Independent screenshot visual comparison and native gameplay tests are next acceptance gates.
+
+
+## Native D3D11 baseline — actual evidence, not approved visuals
+
+At clean source commit 1e5bb133d1d51260a18bfa9f9bbfe2bb2b13394c, the first disposable GPU runtime mounted **321 private hash-verified asset/receipt/module files** and had only its disposable .uproject modified to enable the PythonAutomationTest plugin. The canonical source worktree passed **313/313** engine-free tests. The first separate UnrealEditor-Cmd process (PID 6228) genuinely ran D3D11, found the registered test, loaded the native 115-actor World and produced **three genuine 1280x720 PNG frames** with native CRC and SHA-256 verification. UE Automation Controller reported Test Completed Result={Success}; exit code 0.
+
+Host receipt status REAL_NATIVE_D3D11_FRAMES_PIXEL_QA_PASS_ART_APPROVAL_PENDING; 3/3 PIL pixel diversity checks PASS, no all-black screenshot. Image names and SHA:
+- FirstWakeObjects_Harbor_Establishing_UE584_D3D11_REVIEW.png — 6e6c3b7dff9fcb6d35a0e13d1a72722f660efa3ec3f21802c630e5d4cd58b5d0
+- FirstWakeObjects_Engineering_Close_UE584_D3D11_REVIEW.png — fbebe955bcd43d5169e5c86e13c1d0c4e81aa6414f5d78a6925bebcd9f65395f
+- FirstWakeObjects_Aureate_Boarding_UE584_D3D11_REVIEW.png — fd55f15c2fb7c1e5e5ca6d2c12922251e62ca59bbec8866c4eb2535ca1a7fd0f
+
+Image quality is not promoted: actual native baseline shows simple blockout building walls/roofs, undeveloped dock materials and water proxy, interim ship art. The initial Engineering camera at (-350,-1550,640) aimed (500,-70,260) is obstructed by a large blank facade in the foreground; the test must not count this as creator-approved framing. First host receipt also inherited a stale native_gpu_render_verified=false field from preflight despite later successful D3D11 status and three validated files. The original receipt remains immutable; new code sets that flag True **only after** matching three native file hashes, UE automation controller success and independent pixel checks.
+
+## V2 framing comparison candidate — separate output, not overwriting baseline
+
+The V2 engineering camera is moved to open-quay side at (470,840,420), aimed at the actual prop cluster centered near (250,270,130) cm, so the EngineeringWorkbench, LiftResonator, PressureRegulator and HarmonicEngineCore can be evaluated without the foreground engineering facade. Harbor and Aureate camera poses are held as controls. Capture v2 uses a distinct new directory D3D11_FirstWakeObjects_20261110_V2 plus distinct host log, report and receipt path. Native map hash, 115 actors, all imported assets and protected Config are unchanged. This framing is a hypothesis until its **own real GPU frames** are produced and inspected. Do not overwrite or remove the first baseline.
+
+The QA frontier after verified native captures remains visual composition, material and PBR improvement, ocean/water physics, and real interactive PIE traversal. D3D11 success does not establish AAA cinematic approval, cast animation, game controls or completed vertical slice.

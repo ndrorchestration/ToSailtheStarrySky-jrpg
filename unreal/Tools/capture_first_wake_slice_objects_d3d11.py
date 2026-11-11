@@ -19,12 +19,12 @@ from intake_first_wake_slice_gpu_review import WORLD_SHA
 PROJECT=Path("C:/TSTSS_VSliceVisualRuntime_20261110/unreal")
 MAP="/Game/TSTSS/Review/Scenes/FirstWake_SliceObjects_20261110_REVIEW_V1"
 WORLD_FILE=PROJECT/"Content/TSTSS/Review/Scenes/FirstWake_SliceObjects_20261110_REVIEW_V1.umap"
-RESULT_DIR=PROJECT/"Saved/FirstWakeSliceVisualQA/D3D11_FirstWakeObjects_20261110"
+RESULT_DIR=PROJECT/"Saved/FirstWakeSliceVisualQA/D3D11_FirstWakeObjects_20261110_V2"
 RECEIPT=RESULT_DIR/"native_capture_receipt.json"
 SIZE=(1280,720)
 SHOT_PLAN=(
     ("Harbor_Establishing",(-2800,-2900,950),(-850,540,190)),
-    ("Engineering_Close",(-350,-1550,640),(500,-70,260)),
+    ("Engineering_Close",(470,840,420),(250,270,130)),
     ("Aureate_Boarding",(-2100,2500,600),(-850,980,185)),
 )
 PICS=tuple(RESULT_DIR/("FirstWakeObjects_"+name+"_UE584_D3D11_REVIEW.png")
