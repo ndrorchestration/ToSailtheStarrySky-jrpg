@@ -152,7 +152,7 @@ def build_in_unreal() -> dict:
         creature = spawn(enemy_class, name, (0,lane,0))
         creature.set_editor_property("kind", enum_member(enum_type, kind))
         creature.set_editor_property("instance_id", unreal.Name(name))
-        creature.set_editor_property("b_reduced_motion", True)
+        creature.set_editor_property("reduced_motion", True)
         creature.refresh_review_geometry()
         creature.set_editor_property("tags",
                                      [unreal.Name("TSTSSReviewOnly"),

@@ -65,3 +65,21 @@ not a native test PASS, and not approval of art/lore/balance. The map remains
 unmaterialized until the machine's separate Live Coding Editor session ends
 and a new source-locked native build succeeds. Generated map is intentionally
 untracked review evidence until inspected; do not add to main.
+
+## Source-locked gallery admission launcher
+
+Run the **source-only** plan checks with
+\`python unreal/Tools/tstss_slice_enemy_gallery.py --validate\` and
+\`python -m unittest discover -s unreal/Tools -p test_tstss_slice_enemy_gallery.py -v\`.
+The runner and portable tests are also registered in the Unreal source-preflight
+CI workflow, without falsely labeling source checks as UE gameplay proof.
+
+To build **only after another Editor/Live Coding session has stopped**, use an
+exact-head clean native Editor build receipt from \`Verify-Unreal.ps1 -SkipTests\`
+and then \`Invoke-SliceEnemyGalleryReview.ps1 -EngineRoot
+'C:\Program Files\Epic Games\UE_5.8' -ExpectedHead '<full SHA>'\`.
+The launcher refuses foreign worktrees, changed HEADs, dirty source, existing
+map, active Unreal Editor, insufficient RAM/disk, wrong UE patch, or missing
+native build receipt before starting. It makes both tracked default INIs
+temporarily read-only, restores attributes, and validates the new map SHA receipt.
+Do not perform this launch in any other worktree.
