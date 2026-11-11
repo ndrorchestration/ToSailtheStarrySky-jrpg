@@ -1,0 +1,1135 @@
+{
+  "schema": "tstss.firstwake.shore-review-native-snapshot.v1",
+  "source_provenance_head": "a7244775e64208be21f04320cc7fe20703704979",
+  "delivered_candidate_head": "NOT_YET_VERIFIED_AFTER_ASSET_COMMIT",
+  "engine": "Unreal Engine 5.8.4",
+  "status": "SAVED_NATIVE_REVIEW_ARTIFACTS_UNMERGED_UNAPPROVED",
+  "assets_are_review_only": true,
+  "native_files": 222,
+  "total_bytes": 15283468,
+  "content_tree_sha256": "70a5eeebc8169ae8f04d6c89a96153c94fa65b7ccd323cb22e2c04b24509c88d",
+  "map_sha256": "fec410d08244ec5ac71965af2df98434411591aa8a280dfefe8ea038ae50357f",
+  "original_map_sha256": "316299925275785494d1ec7b082f20007fa0f889f50ce59ea1c7e977ef942726",
+  "native_test_report_sha256": "503269319f9da1d74c857520cf2c7e92e07792b9858578d3c65c00745a35ee7e",
+  "readback_status": "NATIVE_EDITOR_MAP_REOPENED_SOURCE_LOCKED_NOT_PIE",
+  "prepared_actor_count": 43,
+  "review_actor_count": 26,
+  "pie_verified": false,
+  "player_controls_verified": false,
+  "gpu_render_verified": false,
+  "creator_visual_approved": false,
+  "canon_authorized": false,
+  "main_merge_authorized": false,
+  "files": [
+    {
+      "path": "unreal/Content/TSTSS/Magic/M_ResonatorGlow.uasset",
+      "bytes": 7193,
+      "sha256": "117698d8314f2afecdefa5feacf8778dd443abd61443df8768db234b3d85d20b"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/L_VS06_ShoreMagicEnemyGear_Review.umap",
+      "bytes": 152499,
+      "sha256": "fec410d08244ec5ac71965af2df98434411591aa8a280dfefe8ea038ae50357f"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/BridgeHelm/BridgeHelm/Materials/TSTSS_amber_glass.uasset",
+      "bytes": 64785,
+      "sha256": "6e204523c5bca04b5e00fdeeb46d2e73d9d6da4ec220af2c8f48fbfee715d4e2"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/BridgeHelm/BridgeHelm/Materials/TSTSS_brass.uasset",
+      "bytes": 64713,
+      "sha256": "79c8448d7d1d8cd967eb56e5e2c4f8fe2d94e38de6ce94c590befc98c3b0a647"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/BridgeHelm/BridgeHelm/Materials/TSTSS_canvas.uasset",
+      "bytes": 64725,
+      "sha256": "eeb6d79b0e7f736eec57049fafd6997dba193a0e17321ec54f566b1c09e40f5f"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/BridgeHelm/BridgeHelm/Materials/TSTSS_dark_iron.uasset",
+      "bytes": 64761,
+      "sha256": "3347fb681f537eff1c261ad0b80e60df2e3995b0c6e9253ca4f3ea4742cfea83"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/BridgeHelm/BridgeHelm/Materials/TSTSS_patina.uasset",
+      "bytes": 64725,
+      "sha256": "c94f7e31a490edb84b2c516ec2ae30a459451bae9c984a1c4f88e4452bd6b366"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/BridgeHelm/BridgeHelm/Materials/TSTSS_porcelain.uasset",
+      "bytes": 64761,
+      "sha256": "84cdbcc967a15afebff3ac1c74e07fc05466759a04386012601415d02171b31a"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/BridgeHelm/BridgeHelm/Materials/TSTSS_ruby.uasset",
+      "bytes": 64701,
+      "sha256": "a91e9b950fb678bdf1756a9f553e1289f98fb4c9a0d2bb79f4df38d43915880c"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/BridgeHelm/BridgeHelm/Materials/TSTSS_teal_glass.uasset",
+      "bytes": 64773,
+      "sha256": "39e950aa3f366fda865f5d1b69de6fc9168b2e2233a137decf1277752bae718c"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/BridgeHelm/BridgeHelm/Materials/TSTSS_wood.uasset",
+      "bytes": 64701,
+      "sha256": "1304a684f056ab1660fb480d31fa6f175d3cf7a42e3464404b9e82f6f1b10479"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/BridgeHelm/BridgeHelm/StaticMeshes/BridgeHelm.uasset",
+      "bytes": 105747,
+      "sha256": "49df2c3cc84f87a1a7e2cccf3778ff2bb552e84099fef68fd9060249738c45be"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/BridgeOrrery/BridgeOrrery/Materials/TSTSS_amber_glass.uasset",
+      "bytes": 64825,
+      "sha256": "100158ae67a274bda2a47850b457ac74e021f33858b6c31cd0ad5f92725cefac"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/BridgeOrrery/BridgeOrrery/Materials/TSTSS_brass.uasset",
+      "bytes": 64753,
+      "sha256": "c301964efcbd8a2365551879b1eea9b5c0d578efa84cb84651642cf2dbb807ae"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/BridgeOrrery/BridgeOrrery/Materials/TSTSS_canvas.uasset",
+      "bytes": 64765,
+      "sha256": "b62652a6baf03c8f353c163aa722a696d2f7a3bcc66f44165b81411f4464af3b"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/BridgeOrrery/BridgeOrrery/Materials/TSTSS_dark_iron.uasset",
+      "bytes": 64801,
+      "sha256": "b4c78266f293fa026cc9426564fab47807f076da0378b0e3fbdf05e43bafac45"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/BridgeOrrery/BridgeOrrery/Materials/TSTSS_patina.uasset",
+      "bytes": 64765,
+      "sha256": "c2eb99bb5388b68e61a1bb425ae89f4447d8796b158e67ec347c33973451657c"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/BridgeOrrery/BridgeOrrery/Materials/TSTSS_porcelain.uasset",
+      "bytes": 64801,
+      "sha256": "34084da06581f4f5aa95eba9804760cd194f16a431966840db1b17d2da81af62"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/BridgeOrrery/BridgeOrrery/Materials/TSTSS_ruby.uasset",
+      "bytes": 64741,
+      "sha256": "b0153c1615b3e2df983ea792fc2b092ceef3fb89754715d075cb199368ffaa2e"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/BridgeOrrery/BridgeOrrery/Materials/TSTSS_teal_glass.uasset",
+      "bytes": 64813,
+      "sha256": "e203f348738a7a80aaeb7bbc6355d619aacbabb129bc2e15f77af8bea62e847b"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/BridgeOrrery/BridgeOrrery/Materials/TSTSS_wood.uasset",
+      "bytes": 64741,
+      "sha256": "5791490af8e08e808f24a477dacecf06fbc118364578b1b74dc7e2b16605eb42"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/BridgeOrrery/BridgeOrrery/StaticMeshes/BridgeOrrery.uasset",
+      "bytes": 125849,
+      "sha256": "d22ca3430e2407af77ca5e30e82b2458b0e0dbef304065435c6fe9789951f057"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/CaptainDesk/CaptainDesk/Materials/TSTSS_amber_glass.uasset",
+      "bytes": 64803,
+      "sha256": "ae9673852fa8eb0f84a5a7f09ade00e9a8764c764c7bf1a5c36a9b421712cb4d"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/CaptainDesk/CaptainDesk/Materials/TSTSS_brass.uasset",
+      "bytes": 64731,
+      "sha256": "1ffda431979eb35cbe4a9b15b9e1f7064316af877a761fa9159eb44f2251b55a"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/CaptainDesk/CaptainDesk/Materials/TSTSS_canvas.uasset",
+      "bytes": 64743,
+      "sha256": "5bb5920f17174cd108508f4c990d35ef98c7a22d66a6ed1fa306b19df375db73"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/CaptainDesk/CaptainDesk/Materials/TSTSS_dark_iron.uasset",
+      "bytes": 64779,
+      "sha256": "b01cc45acc85faa5048966cb167ef6a0583292e23b41526a242c8f4c14e81103"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/CaptainDesk/CaptainDesk/Materials/TSTSS_patina.uasset",
+      "bytes": 64743,
+      "sha256": "503e1f3fc3d9429b5039329bc48619e9468028d005139466f86b53398d6c8a4f"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/CaptainDesk/CaptainDesk/Materials/TSTSS_porcelain.uasset",
+      "bytes": 64779,
+      "sha256": "52de983dcc05a8c1a2ff924edd2d2be64137aeacc703bb10ae9b2093edd6bfc4"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/CaptainDesk/CaptainDesk/Materials/TSTSS_ruby.uasset",
+      "bytes": 64719,
+      "sha256": "064315b80a3329bfe67a4a28b3a3714693db04dfc230f7227a32831ccfdee486"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/CaptainDesk/CaptainDesk/Materials/TSTSS_teal_glass.uasset",
+      "bytes": 64791,
+      "sha256": "8f65ca21f29281f8098c00a52a1b346c4925ccc58f34fe33ffc8e073dbd95d2c"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/CaptainDesk/CaptainDesk/Materials/TSTSS_wood.uasset",
+      "bytes": 64719,
+      "sha256": "f3ba766bbe5ecbf7cc05c244915f56005e81279618973db7badcb7014af9586c"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/CaptainDesk/CaptainDesk/StaticMeshes/CaptainDesk.uasset",
+      "bytes": 92508,
+      "sha256": "6fc2bede449b519ac14b95e9f6d8899af69f595874033723a2b0a77c458b0952"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/CargoCrate/CargoCrate/Materials/TSTSS_amber_glass.uasset",
+      "bytes": 64783,
+      "sha256": "f2011424fd7bf7c8f57254a5cddca09de56894356b32f4234bf50ff54e5f0d5f"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/CargoCrate/CargoCrate/Materials/TSTSS_brass.uasset",
+      "bytes": 64711,
+      "sha256": "f7074dcec9d3baa1d564b4cca08162585c45512b184771aefec8c624401559d3"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/CargoCrate/CargoCrate/Materials/TSTSS_canvas.uasset",
+      "bytes": 64723,
+      "sha256": "e3650184f17cf737ac0fe0f42ae7a2e4138ee56cb1e08f46e6ce5a61efbf9d8b"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/CargoCrate/CargoCrate/Materials/TSTSS_dark_iron.uasset",
+      "bytes": 64759,
+      "sha256": "584b4037067c193c6051445a6addea65f41b964de096722afbf6cf5e9e7732a1"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/CargoCrate/CargoCrate/Materials/TSTSS_patina.uasset",
+      "bytes": 64723,
+      "sha256": "49bb9905201b9f6c88b3764757bdb927d8ca9a4617dff81addd85b7ef5af0e2c"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/CargoCrate/CargoCrate/Materials/TSTSS_porcelain.uasset",
+      "bytes": 64759,
+      "sha256": "249ed3539de5eef836b9e9701345fb4b29db436d22f40821bc6e530c535eaf7a"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/CargoCrate/CargoCrate/Materials/TSTSS_ruby.uasset",
+      "bytes": 64699,
+      "sha256": "1e6bd6f43061766217b7c9576563746e4a474e5c40366b55ee1e00248a8ac881"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/CargoCrate/CargoCrate/Materials/TSTSS_teal_glass.uasset",
+      "bytes": 64771,
+      "sha256": "d9d68ee7ff06acfe4ca605596865c759a1f067c4b19739d35a340601de773d7b"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/CargoCrate/CargoCrate/Materials/TSTSS_wood.uasset",
+      "bytes": 64699,
+      "sha256": "45cf2ead48fd675da18ffb67351e64e2c3fad86855a504f89d7cf324cabb9ba5"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/CargoCrate/CargoCrate/StaticMeshes/CargoCrate.uasset",
+      "bytes": 88880,
+      "sha256": "7185207bd6f942ce7ab21f369ffb6855047cd8360306991b69ebd11c64a55a04"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/DeckRailModule/DeckRailModule/Materials/TSTSS_amber_glass.uasset",
+      "bytes": 64865,
+      "sha256": "ef2394efa61e72f06b6a04f046718f38729145cfd653c7ed29d8760870ea0bdd"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/DeckRailModule/DeckRailModule/Materials/TSTSS_brass.uasset",
+      "bytes": 64793,
+      "sha256": "6810b73e180b42e54abd22c5f0cff18d4626b4a726957ca4c6b894849b93c9db"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/DeckRailModule/DeckRailModule/Materials/TSTSS_canvas.uasset",
+      "bytes": 64805,
+      "sha256": "b6d7470201b605b927babfa114e405e7707eb060300aa604d741415bce0698f9"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/DeckRailModule/DeckRailModule/Materials/TSTSS_dark_iron.uasset",
+      "bytes": 64841,
+      "sha256": "25aa4ad3b2fb9c1999f2e8901c43819049781b3ff0b14915a39962a9205a81c0"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/DeckRailModule/DeckRailModule/Materials/TSTSS_patina.uasset",
+      "bytes": 64805,
+      "sha256": "5892f66ebf237eacc231033638444e5cec1efb13f51b0ac10f3b32833eab72ac"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/DeckRailModule/DeckRailModule/Materials/TSTSS_porcelain.uasset",
+      "bytes": 64841,
+      "sha256": "29c3abf5b5ccc149219945ad5b6f96cfe89efcabc6474df812f8b7fde2dd476f"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/DeckRailModule/DeckRailModule/Materials/TSTSS_ruby.uasset",
+      "bytes": 64781,
+      "sha256": "fd2033155857acfa84bdc99f05ecb493835c45ae65cc71a7aaba0f218e156cd1"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/DeckRailModule/DeckRailModule/Materials/TSTSS_teal_glass.uasset",
+      "bytes": 64853,
+      "sha256": "1be3536d6a8559c20edec2632a0cf300356541c0408d5767b47615bd64704b88"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/DeckRailModule/DeckRailModule/Materials/TSTSS_wood.uasset",
+      "bytes": 64781,
+      "sha256": "b803708733c30b316b48a54513f3e470927bb9276406ba1dfe3cf3b8390f1af2"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/DeckRailModule/DeckRailModule/StaticMeshes/DeckRailModule.uasset",
+      "bytes": 94636,
+      "sha256": "e741763da4084cbe85b7bf56879b969a39da551bd8c58e10952e41c48e04aa52"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/EmergencyBeacon/EmergencyBeacon/Materials/TSTSS_amber_glass.uasset",
+      "bytes": 64885,
+      "sha256": "586a70265034138ee72493a65a43e6df9fcd9bc1f04f695a7bcccef1d9533e11"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/EmergencyBeacon/EmergencyBeacon/Materials/TSTSS_brass.uasset",
+      "bytes": 64813,
+      "sha256": "8a39f5c2d3522dbdddea049929d3ecfddc76258c37fa224b9847815ff50700a9"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/EmergencyBeacon/EmergencyBeacon/Materials/TSTSS_canvas.uasset",
+      "bytes": 64825,
+      "sha256": "038d3702b2d2c55394c6a506a8a7d016dcc7b839fcb43bdaa380dde09d8c8b43"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/EmergencyBeacon/EmergencyBeacon/Materials/TSTSS_dark_iron.uasset",
+      "bytes": 64861,
+      "sha256": "1920b0678d6ca44312c0544461aa59f994ec1afb2d9dc7bb07a20ecf74dea0a8"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/EmergencyBeacon/EmergencyBeacon/Materials/TSTSS_patina.uasset",
+      "bytes": 64825,
+      "sha256": "1a9b903756300aff3d2ef4244efa5a8f3d9acbf53a5c3d534641ea559c3d55b6"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/EmergencyBeacon/EmergencyBeacon/Materials/TSTSS_porcelain.uasset",
+      "bytes": 64861,
+      "sha256": "a93b626f22275227056472d23b38dc24ee4560d57dce830687af461a6ecde7a3"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/EmergencyBeacon/EmergencyBeacon/Materials/TSTSS_ruby.uasset",
+      "bytes": 64801,
+      "sha256": "1a403930f7a21dbedbf17265ebfd0083dedd075afb2cfae6cd8f8deeb9db7b50"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/EmergencyBeacon/EmergencyBeacon/Materials/TSTSS_teal_glass.uasset",
+      "bytes": 64873,
+      "sha256": "5428651c99427450acfa684a486f194b7af356024f2e16e0b4fbad8b3808d3cb"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/EmergencyBeacon/EmergencyBeacon/Materials/TSTSS_wood.uasset",
+      "bytes": 64801,
+      "sha256": "c567b39f0b31a0cd8f726b95c63f46f9d5471f03c867eb965ae21bc859d473a5"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/EmergencyBeacon/EmergencyBeacon/StaticMeshes/EmergencyBeacon.uasset",
+      "bytes": 96788,
+      "sha256": "d2795a6c0051b5851678be687a8dab5559c742425d4628d1e6653ca5b507a21c"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/EngineeringWorkbench/EngineeringWorkbench/Materials/TSTSS_amber_glass.uasset",
+      "bytes": 64983,
+      "sha256": "a0474a4b12c6370f63d703e38465530732dc810342bff21d6823320b873f4278"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/EngineeringWorkbench/EngineeringWorkbench/Materials/TSTSS_brass.uasset",
+      "bytes": 64911,
+      "sha256": "467696271b5fefe152039f3034d9196769982dfcbaccdbeb2b7493b703f9f8e4"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/EngineeringWorkbench/EngineeringWorkbench/Materials/TSTSS_canvas.uasset",
+      "bytes": 64923,
+      "sha256": "c0ffd8fdb0c406967a77aef7f53d9084ce9ef0c747a2c5145e95ec128250c89c"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/EngineeringWorkbench/EngineeringWorkbench/Materials/TSTSS_dark_iron.uasset",
+      "bytes": 64959,
+      "sha256": "34c230d5c7c256d526214756b7ea464f8dfb7676b09b5e0c5b6176551deee3a3"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/EngineeringWorkbench/EngineeringWorkbench/Materials/TSTSS_patina.uasset",
+      "bytes": 64923,
+      "sha256": "94a7f486ac9566d32f2b5aa0dce761206bcd994b129b56c912aeb622aeff6f48"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/EngineeringWorkbench/EngineeringWorkbench/Materials/TSTSS_porcelain.uasset",
+      "bytes": 64959,
+      "sha256": "58b5c7f2ca034af27c10d8ce99921740d42592501a49ca0789eb9aa6dba4c655"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/EngineeringWorkbench/EngineeringWorkbench/Materials/TSTSS_ruby.uasset",
+      "bytes": 64899,
+      "sha256": "9774f3446ecad2c17f5e7f579fcda29305be6eecb1e831288965eeb80f6fb200"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/EngineeringWorkbench/EngineeringWorkbench/Materials/TSTSS_teal_glass.uasset",
+      "bytes": 64971,
+      "sha256": "71420d2668fae9d0e8c5a56310274c4ab181abbb56f89aabdf7192d85609a42e"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/EngineeringWorkbench/EngineeringWorkbench/Materials/TSTSS_wood.uasset",
+      "bytes": 64899,
+      "sha256": "8d52793707545e7269ef1673728495e147b551d4290af51f1b569ff481eaa90f"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/EngineeringWorkbench/EngineeringWorkbench/StaticMeshes/EngineeringWorkbench.uasset",
+      "bytes": 92831,
+      "sha256": "e7eab45ace14048678854feed6bedc871841f4c9789ae26039df2863fd411ca2"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/FlotationBuoy/FlotationBuoy/Materials/TSTSS_amber_glass.uasset",
+      "bytes": 64845,
+      "sha256": "d968c47253a7d5c396995653b1c4c90b70cb5ce67d25b99e212bd88e0245b2f0"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/FlotationBuoy/FlotationBuoy/Materials/TSTSS_brass.uasset",
+      "bytes": 64773,
+      "sha256": "4d9b3f27c62dcb49fd110e191d4ca54fa663e978cc7a78c8b3eada5fd9b4e110"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/FlotationBuoy/FlotationBuoy/Materials/TSTSS_canvas.uasset",
+      "bytes": 64785,
+      "sha256": "6575c1264f6969841024eefdd1eadc75dc49cbb89c41b5bd1dc4398eec7a5d8f"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/FlotationBuoy/FlotationBuoy/Materials/TSTSS_dark_iron.uasset",
+      "bytes": 64821,
+      "sha256": "2d27f111627fc73fc7b5afd6fa2b129e8109e0d6cdfd412d31540a97ce547cd6"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/FlotationBuoy/FlotationBuoy/Materials/TSTSS_patina.uasset",
+      "bytes": 64785,
+      "sha256": "d6daf8d1a02c3d74a07346908fb218b84df51ccb5072f9e231da64ff4e5d266d"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/FlotationBuoy/FlotationBuoy/Materials/TSTSS_porcelain.uasset",
+      "bytes": 64821,
+      "sha256": "f5d1510bd2d3f22b49ab711a66a721b42870a43858685d4edb5ce13d474791b8"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/FlotationBuoy/FlotationBuoy/Materials/TSTSS_ruby.uasset",
+      "bytes": 64761,
+      "sha256": "a2091b8edc1fb3132f13dc7d8c5ad5a2938281b95c27d34457d1324803314582"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/FlotationBuoy/FlotationBuoy/Materials/TSTSS_teal_glass.uasset",
+      "bytes": 64833,
+      "sha256": "74665c886874b429937ad6dbb0cd47930f2755765764e5eafb1f2360e5e87606"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/FlotationBuoy/FlotationBuoy/Materials/TSTSS_wood.uasset",
+      "bytes": 64761,
+      "sha256": "fd54a8e0597e31e079c3f0b9afb76afaaec678b39ddf34962955188dc043183a"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/FlotationBuoy/FlotationBuoy/StaticMeshes/FlotationBuoy.uasset",
+      "bytes": 116594,
+      "sha256": "7a624255f3aeefc7e1aeb1fe06b1a27bd47e678e94cd8ab27ddb9478893d152f"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/FlyerPodium/FlyerPodium/Materials/TSTSS_amber_glass.uasset",
+      "bytes": 64803,
+      "sha256": "5b0b279b7130caf7527ad539ce909a236a620b6740a4d230e00b48dc6df43b26"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/FlyerPodium/FlyerPodium/Materials/TSTSS_brass.uasset",
+      "bytes": 64731,
+      "sha256": "601f609d9721b259278c20f9674533948930abfd16b78b8af635750900b9ac8f"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/FlyerPodium/FlyerPodium/Materials/TSTSS_canvas.uasset",
+      "bytes": 64743,
+      "sha256": "08021cceb8d33ce6c5e2c098ed6957e987964e83abc8d9e40902f790c0b31176"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/FlyerPodium/FlyerPodium/Materials/TSTSS_dark_iron.uasset",
+      "bytes": 64779,
+      "sha256": "a9b1909bc5eace663e5a18a414112118d845eaaf1a9ef56b19bacb1ef0794222"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/FlyerPodium/FlyerPodium/Materials/TSTSS_patina.uasset",
+      "bytes": 64743,
+      "sha256": "83f1b604c7002c80320ef1db7fcc3f22d5f1cee8e3b2fa0568064169d5f38a35"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/FlyerPodium/FlyerPodium/Materials/TSTSS_porcelain.uasset",
+      "bytes": 64779,
+      "sha256": "398e0a92fb553638855160971be6c4a5b194e3e7af22c222f577e2f72463ceb6"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/FlyerPodium/FlyerPodium/Materials/TSTSS_ruby.uasset",
+      "bytes": 64719,
+      "sha256": "0e8babeffd2f73615801d8671eed79569325e5d41605891d19bf191e9919f260"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/FlyerPodium/FlyerPodium/Materials/TSTSS_teal_glass.uasset",
+      "bytes": 64791,
+      "sha256": "8acb9eacf4138a5e183d1a55296b8849b4b3c2fcc4064c768e970c7da95c6648"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/FlyerPodium/FlyerPodium/Materials/TSTSS_wood.uasset",
+      "bytes": 64719,
+      "sha256": "067a82db8e8c3a840d47cb4de930183ba3c115699997ee02261664f1d3fd1c85"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/FlyerPodium/FlyerPodium/StaticMeshes/FlyerPodium.uasset",
+      "bytes": 103399,
+      "sha256": "7e3a87f4f3ca3a2938aed969cec9281565c7edbf7a3620646d12f6b5ebb71e84"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/GangwayAnchor/GangwayAnchor/Materials/TSTSS_amber_glass.uasset",
+      "bytes": 64843,
+      "sha256": "4b947c752d611f0c78b1e4b956cd5526233525420a5b561250f50ff6c40ec06c"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/GangwayAnchor/GangwayAnchor/Materials/TSTSS_brass.uasset",
+      "bytes": 64771,
+      "sha256": "255e54d62700b98f530bf9670ea33aaba741b0556322b2cccfd71edbd4d54e48"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/GangwayAnchor/GangwayAnchor/Materials/TSTSS_canvas.uasset",
+      "bytes": 64783,
+      "sha256": "7dd5b0da9ed3491dd9986177401141b7dc6dc853a7b72cff845f201cdb72c291"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/GangwayAnchor/GangwayAnchor/Materials/TSTSS_dark_iron.uasset",
+      "bytes": 64819,
+      "sha256": "f2412543414243a826172efc538167a3bc8f0bac0529c06339e3edd6dac52d0a"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/GangwayAnchor/GangwayAnchor/Materials/TSTSS_patina.uasset",
+      "bytes": 64783,
+      "sha256": "6e825849ede9cb4cdc2976f78e02d2d920561eab52e7c7a57d92acfdcb8e3dac"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/GangwayAnchor/GangwayAnchor/Materials/TSTSS_porcelain.uasset",
+      "bytes": 64819,
+      "sha256": "8f51a60d13642df4a4555a832cdf2a63040cd7a98fc7724368923ec566677258"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/GangwayAnchor/GangwayAnchor/Materials/TSTSS_ruby.uasset",
+      "bytes": 64759,
+      "sha256": "b7618deebb69cea543e497d3ced2a4922e4a6989a8cef18b4a75b8984f156b21"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/GangwayAnchor/GangwayAnchor/Materials/TSTSS_teal_glass.uasset",
+      "bytes": 64831,
+      "sha256": "40daef3b16c0f263182ff0736c26786aedf428f795c303e6622dd6e4db1e7569"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/GangwayAnchor/GangwayAnchor/Materials/TSTSS_wood.uasset",
+      "bytes": 64759,
+      "sha256": "6e4317e9dd19540f6e300a7db4b16f07be665425470d0e76bf179ee400cdef69"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/GangwayAnchor/GangwayAnchor/StaticMeshes/GangwayAnchor.uasset",
+      "bytes": 101065,
+      "sha256": "f2b9f96a1acf5147f5b36b886e5321affcf19d8d87fd5cd8ba03162d794471fb"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/GeodesicJunction/GeodesicJunction/Materials/TSTSS_amber_glass.uasset",
+      "bytes": 64905,
+      "sha256": "74d5655051e995261ab2f1a69a37707035212e74a03d6be58576f8f05fb4d97f"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/GeodesicJunction/GeodesicJunction/Materials/TSTSS_brass.uasset",
+      "bytes": 64833,
+      "sha256": "1b5054e5406bcde947435bada564c1f2f08ae713914e7b2aea8e09f9d4476076"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/GeodesicJunction/GeodesicJunction/Materials/TSTSS_canvas.uasset",
+      "bytes": 64845,
+      "sha256": "dc95507ff561a3440695d354c7c074ccc4697c839c14db1b6df8ae476865ce96"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/GeodesicJunction/GeodesicJunction/Materials/TSTSS_dark_iron.uasset",
+      "bytes": 64881,
+      "sha256": "a6dc812cc110a03471cf7a895731e832d3ffc108fd2aa659244d6b5d200d7e3d"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/GeodesicJunction/GeodesicJunction/Materials/TSTSS_patina.uasset",
+      "bytes": 64845,
+      "sha256": "2b0d301ba4fae1b8f53b38f05912819286e0d2220240c0685bac58f93f06e7ff"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/GeodesicJunction/GeodesicJunction/Materials/TSTSS_porcelain.uasset",
+      "bytes": 64881,
+      "sha256": "5e43c9c235ee958fe8fe9894fec971b81b2dec829b3673aa71ab97cbfab840cf"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/GeodesicJunction/GeodesicJunction/Materials/TSTSS_ruby.uasset",
+      "bytes": 64821,
+      "sha256": "e819d6fbc03b031929d6125057307946342cf2b3dca54e748fc3f1e5376fb91b"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/GeodesicJunction/GeodesicJunction/Materials/TSTSS_teal_glass.uasset",
+      "bytes": 64893,
+      "sha256": "708122df70b18bc96e5427562103a06704a82bbdfda5dee2284f6539f3ad88a1"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/GeodesicJunction/GeodesicJunction/Materials/TSTSS_wood.uasset",
+      "bytes": 64821,
+      "sha256": "5c1bee22943830666529a2d34ba36939ddc4928eaca04b4b6fe567e764e70ee3"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/GeodesicJunction/GeodesicJunction/StaticMeshes/GeodesicJunction.uasset",
+      "bytes": 111457,
+      "sha256": "05d15051b8920e54d14b5b2c5d78f076de1116e77c30ee207f7512feb2f5040d"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/HarborLantern/HarborLantern/Materials/TSTSS_amber_glass.uasset",
+      "bytes": 64834,
+      "sha256": "b53aa0936e3c83de2a73cddedd00a329950c786d015a343e76b6471ede73c508"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/HarborLantern/HarborLantern/Materials/TSTSS_brass.uasset",
+      "bytes": 64762,
+      "sha256": "32523bc075197823cb6ca295e53d88cd535495ee32756f761102f2edf8a37cbf"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/HarborLantern/HarborLantern/Materials/TSTSS_canvas.uasset",
+      "bytes": 64774,
+      "sha256": "1a3222af812526b51bb57943e3de9dd92be5e3c8f11a8a01202328d483ca6fd6"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/HarborLantern/HarborLantern/Materials/TSTSS_dark_iron.uasset",
+      "bytes": 64810,
+      "sha256": "6b2c5b215b546df83907cde15eaa029db33b99d60d9e8212472c277445979b4d"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/HarborLantern/HarborLantern/Materials/TSTSS_patina.uasset",
+      "bytes": 64774,
+      "sha256": "ec1bb6636d2ee128e4ae94424e6fed522ced5fed5356e34d2ad872844b04e6b3"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/HarborLantern/HarborLantern/Materials/TSTSS_porcelain.uasset",
+      "bytes": 64810,
+      "sha256": "bdaeaf7271a8f765cc80969a1c7a460461301f550a23a56da4fe26fae24113fa"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/HarborLantern/HarborLantern/Materials/TSTSS_ruby.uasset",
+      "bytes": 64750,
+      "sha256": "2d274b526a44e9c830dedec557baf965d0d85c751f491ff9505d38f16f1e323c"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/HarborLantern/HarborLantern/Materials/TSTSS_teal_glass.uasset",
+      "bytes": 64822,
+      "sha256": "88a7b38e8663b41e2f51616a910a6fc580d2520eebd3f8dbdf5274680ae8158d"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/HarborLantern/HarborLantern/Materials/TSTSS_wood.uasset",
+      "bytes": 64750,
+      "sha256": "e962b50feffc1c36b8c7d39ceeccca42c1bd4b4eacd5f29ea68f323e91c6757c"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/HarborLantern/HarborLantern/StaticMeshes/HarborLantern.uasset",
+      "bytes": 96499,
+      "sha256": "69ef45c328370a2999c18795dd025ef25632d403757f64d66c094058be9a2140"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/HarmonicEngineCore/HarmonicEngineCore/Materials/TSTSS_amber_glass.uasset",
+      "bytes": 64945,
+      "sha256": "f2a9c001737275975b4542a94a0953f0e259fb36047adef07788bd8c3e7efd6c"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/HarmonicEngineCore/HarmonicEngineCore/Materials/TSTSS_brass.uasset",
+      "bytes": 64873,
+      "sha256": "babd828306184e25ba4233361f363efbf78912b5854bcd7ef458d4baaf540f85"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/HarmonicEngineCore/HarmonicEngineCore/Materials/TSTSS_canvas.uasset",
+      "bytes": 64885,
+      "sha256": "6eee9764c18a8b3b8966636ec886c75678f5d0410b9aff840e99a1c4f0b6eec9"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/HarmonicEngineCore/HarmonicEngineCore/Materials/TSTSS_dark_iron.uasset",
+      "bytes": 64921,
+      "sha256": "d3b1e5d39ab53cdcc8748a9e1097e5bf2b0ea66c0465203c379d2b221b677f07"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/HarmonicEngineCore/HarmonicEngineCore/Materials/TSTSS_patina.uasset",
+      "bytes": 64885,
+      "sha256": "a4bbe1b4401beb4f7eadc06ff428f54fa5c825d3f2fedec6f431448613f5146c"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/HarmonicEngineCore/HarmonicEngineCore/Materials/TSTSS_porcelain.uasset",
+      "bytes": 64921,
+      "sha256": "f83369a2922e6061bc11f4822d53144757d3986975bcd893fff962b10c0fe7d8"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/HarmonicEngineCore/HarmonicEngineCore/Materials/TSTSS_ruby.uasset",
+      "bytes": 64861,
+      "sha256": "638de47b1a9022c2d537b2e500dbc4de2aa2d6eccca986f21f888dc5d5f7a009"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/HarmonicEngineCore/HarmonicEngineCore/Materials/TSTSS_teal_glass.uasset",
+      "bytes": 64933,
+      "sha256": "d45a1365b41b024011e547b1e84e696677759f5b8edd7157ac1550cd2e20accf"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/HarmonicEngineCore/HarmonicEngineCore/Materials/TSTSS_wood.uasset",
+      "bytes": 64861,
+      "sha256": "b315ad03e7bfdec4430764a201e3bd71184ff25f7e49128eb9d360b8d4442d13"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/HarmonicEngineCore/HarmonicEngineCore/StaticMeshes/HarmonicEngineCore.uasset",
+      "bytes": 130925,
+      "sha256": "31db427e9f66d34cee1ef8185fcd1b0727272d272403003ea8093d080cc9841e"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/LiftResonator/LiftResonator/Materials/TSTSS_amber_glass.uasset",
+      "bytes": 64843,
+      "sha256": "75cd6c0e1383c545dcfb6c6da497e0fbbeb8fa148da4c29315ce868d4e267763"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/LiftResonator/LiftResonator/Materials/TSTSS_brass.uasset",
+      "bytes": 64771,
+      "sha256": "51b68d54c652a2ca091a4186398629a0cd01a42dadcbfc3ab83de63d4c9b1c91"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/LiftResonator/LiftResonator/Materials/TSTSS_canvas.uasset",
+      "bytes": 64783,
+      "sha256": "781b3be964fd5cc939b759ab78709672fd71134226982e31fc78bbebe4162005"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/LiftResonator/LiftResonator/Materials/TSTSS_dark_iron.uasset",
+      "bytes": 64819,
+      "sha256": "db0a3fe107a43d26c99be22b2135e856f8d66f32c3be817de556acd20d869651"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/LiftResonator/LiftResonator/Materials/TSTSS_patina.uasset",
+      "bytes": 64783,
+      "sha256": "216702e4874e7f10cc1056b2d9d70412ec9796b47df8c72564f83e6490565801"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/LiftResonator/LiftResonator/Materials/TSTSS_porcelain.uasset",
+      "bytes": 64819,
+      "sha256": "e817f57c6ff37360039d05399001d9c6f2ce7b45f2ac2412488c8d98e056e289"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/LiftResonator/LiftResonator/Materials/TSTSS_ruby.uasset",
+      "bytes": 64759,
+      "sha256": "f5ca15bce737a2326113861b9b341db44cdb5cf67109e6d3799af726584b942b"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/LiftResonator/LiftResonator/Materials/TSTSS_teal_glass.uasset",
+      "bytes": 64831,
+      "sha256": "70e145c7a1283d27150bdfa6ccb2458a14d8c0758fc6b40836efd148fd2cb487"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/LiftResonator/LiftResonator/Materials/TSTSS_wood.uasset",
+      "bytes": 64759,
+      "sha256": "d04324d2e6bf13b6bb90f5188e5e6cb58f2ad7f0fd1e3820fcfceea06879caa6"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/LiftResonator/LiftResonator/StaticMeshes/LiftResonator.uasset",
+      "bytes": 133239,
+      "sha256": "0f263b92420748fb40e98d95c8c0f4e216c8d00bdb116a43242c8d2773caa0c4"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/MooringBollard/MooringBollard/Materials/TSTSS_amber_glass.uasset",
+      "bytes": 64854,
+      "sha256": "f1a1cfe77f49c493f1fb2fd6aa43d9a4c0f2d98938c68812d00d34a2e2ec54ea"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/MooringBollard/MooringBollard/Materials/TSTSS_brass.uasset",
+      "bytes": 64782,
+      "sha256": "f6297162eacab07ac8dcfd516e2a5dfa5c8717b0a721390305eb2e9896cbf230"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/MooringBollard/MooringBollard/Materials/TSTSS_canvas.uasset",
+      "bytes": 64794,
+      "sha256": "de14d55333c0aadc4d9c2644a2cda16f6b8dece817279b60f60fab729b0d0f91"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/MooringBollard/MooringBollard/Materials/TSTSS_dark_iron.uasset",
+      "bytes": 64830,
+      "sha256": "a306bde0682dceffda0fd1623d911079fa9c0de919eb8c30856e76a3ade19f16"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/MooringBollard/MooringBollard/Materials/TSTSS_patina.uasset",
+      "bytes": 64794,
+      "sha256": "08033c4162f05bbb6b5b6253a8a830c911094acd081adf9fa8e259b54176414b"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/MooringBollard/MooringBollard/Materials/TSTSS_porcelain.uasset",
+      "bytes": 64830,
+      "sha256": "09ca2d3d1103d998ac844ca8c8272a606658360d909c4ed8afaf539a532955d0"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/MooringBollard/MooringBollard/Materials/TSTSS_ruby.uasset",
+      "bytes": 64770,
+      "sha256": "adcbccb9f6f4ff4d80ecb745839f0f6ca07fcab40c85dfccae136d75581bc672"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/MooringBollard/MooringBollard/Materials/TSTSS_teal_glass.uasset",
+      "bytes": 64842,
+      "sha256": "8acef3624677826f9c85b6bf7b5b8bc90994b90b21b468f8eb5de57fc5ef0fb4"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/MooringBollard/MooringBollard/Materials/TSTSS_wood.uasset",
+      "bytes": 64770,
+      "sha256": "6d89cd26bc2ee130bbdfaf7882ad1186eb08e44480461bf1d56314b7a95db9da"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/MooringBollard/MooringBollard/StaticMeshes/MooringBollard.uasset",
+      "bytes": 91400,
+      "sha256": "2da452aa765a3f05bc949b616eb67f2f83f174e7d31fa492ff1df6862235b8e8"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/MooringCleat/MooringCleat/Materials/TSTSS_amber_glass.uasset",
+      "bytes": 64814,
+      "sha256": "ab4a11a7332071278d93d6fccf469bc426c15dd3d143c735da101513377337e8"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/MooringCleat/MooringCleat/Materials/TSTSS_brass.uasset",
+      "bytes": 64742,
+      "sha256": "12bcea7e17ea134dbc4c29f274cb51a21225e8f639db24fd5fdee61eea5af4a4"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/MooringCleat/MooringCleat/Materials/TSTSS_canvas.uasset",
+      "bytes": 64754,
+      "sha256": "75db46b2bc1a95da703ca9685b51045f711d34d77294c5a14c615f9ace91efc6"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/MooringCleat/MooringCleat/Materials/TSTSS_dark_iron.uasset",
+      "bytes": 64790,
+      "sha256": "ccd5c3976fafa51f9814c35c47f0b1bd4c22a87cd6a78027f7f4742eaf095e44"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/MooringCleat/MooringCleat/Materials/TSTSS_patina.uasset",
+      "bytes": 64754,
+      "sha256": "4697fce62c0d49e409cb83ba5d1510e474ade46959a98749df37dc8a88136b24"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/MooringCleat/MooringCleat/Materials/TSTSS_porcelain.uasset",
+      "bytes": 64790,
+      "sha256": "f3692991b41b873968e4412b3ba3bb4c32287be923b4e455011cfc6f9299ae14"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/MooringCleat/MooringCleat/Materials/TSTSS_ruby.uasset",
+      "bytes": 64730,
+      "sha256": "f2b3179bd8df139a2c715f0733ae175dc06fbc6c2de906d38aa23db10a48bec9"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/MooringCleat/MooringCleat/Materials/TSTSS_teal_glass.uasset",
+      "bytes": 64802,
+      "sha256": "4b637afdf554db1885ad1d4489694136a68631f9164d21bc517844df9a125d89"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/MooringCleat/MooringCleat/Materials/TSTSS_wood.uasset",
+      "bytes": 64730,
+      "sha256": "000f0713cfdd2f6d04768b50a10bf5ddb91b5783b0054a6cc467e9b025bc64eb"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/MooringCleat/MooringCleat/StaticMeshes/MooringCleat.uasset",
+      "bytes": 84666,
+      "sha256": "a145cfc480e6ddc5587923f72eb0479795a8c8ca75c77e5b73cbeab8a5f11291"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/PressureRegulator/PressureRegulator/Materials/TSTSS_amber_glass.uasset",
+      "bytes": 64925,
+      "sha256": "f4422e4db9a7a404075c55c7cb538d4988943339832c56dcc7c9b07384bf50fc"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/PressureRegulator/PressureRegulator/Materials/TSTSS_brass.uasset",
+      "bytes": 64853,
+      "sha256": "77fa5d359bb4619f4ab2bef25b5983798cbbb2849a63ce212e3f068b1df14f1d"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/PressureRegulator/PressureRegulator/Materials/TSTSS_canvas.uasset",
+      "bytes": 64865,
+      "sha256": "9d356012894e459f379476e9c1c8988e6e29e85724c32212e45b0f9a61e657b5"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/PressureRegulator/PressureRegulator/Materials/TSTSS_dark_iron.uasset",
+      "bytes": 64901,
+      "sha256": "3b54621e13ecc402f19eb83588301f707311ee03b3b6be1d79bdfc441ae2a1ba"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/PressureRegulator/PressureRegulator/Materials/TSTSS_patina.uasset",
+      "bytes": 64865,
+      "sha256": "e19ffc6896f305231077bfd678e770b0c91a2a3f2f193b4ea244aeb607fbf1c6"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/PressureRegulator/PressureRegulator/Materials/TSTSS_porcelain.uasset",
+      "bytes": 64901,
+      "sha256": "bc52fd30d12ebbd4d02f17dfe5ec76f318b8a880b519bb896ca4bf1b46a03b6f"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/PressureRegulator/PressureRegulator/Materials/TSTSS_ruby.uasset",
+      "bytes": 64841,
+      "sha256": "51ac6b2efa063ed0a3a5be584d320f7d45b24f34aad73b413090d113cb47d176"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/PressureRegulator/PressureRegulator/Materials/TSTSS_teal_glass.uasset",
+      "bytes": 64913,
+      "sha256": "1e8b081ba970617fb6a7425b93d4cd5297616f91ac27ed8fe65d0ff12da7e956"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/PressureRegulator/PressureRegulator/Materials/TSTSS_wood.uasset",
+      "bytes": 64841,
+      "sha256": "bb7d81abd34524a04e12ae65c4f33f21ce33f54ee1aa4374b82ff742f6fa379c"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/PressureRegulator/PressureRegulator/StaticMeshes/PressureRegulator.uasset",
+      "bytes": 117517,
+      "sha256": "276a425aa3fdd7a6607a1bb9e88efd6bd6016f57bfb00543b31b78407714d3bc"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/ReserveTank/ReserveTank/Materials/TSTSS_amber_glass.uasset",
+      "bytes": 64805,
+      "sha256": "f9b43fc55a2df8d722eaeb42fab13f67cb01ddb7f687526ac60c02dbe0226dd3"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/ReserveTank/ReserveTank/Materials/TSTSS_brass.uasset",
+      "bytes": 64733,
+      "sha256": "4d94f568a82e11a86aa550586315f00e2f84d25366ac63f5325f9841767c080c"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/ReserveTank/ReserveTank/Materials/TSTSS_canvas.uasset",
+      "bytes": 64745,
+      "sha256": "c0dd4289dd6bda2737359b6421cfc355b3f66a4c14de0b5e66d995e1c8aa1bde"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/ReserveTank/ReserveTank/Materials/TSTSS_dark_iron.uasset",
+      "bytes": 64781,
+      "sha256": "49c5cbf98df94858c91f974d3c1d58ab4006aa130b24185b4795a27043838ab3"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/ReserveTank/ReserveTank/Materials/TSTSS_patina.uasset",
+      "bytes": 64745,
+      "sha256": "bd990a8c088096f02bdcd4c0d5e6d7ff5d5dfd31fd74810d2061ef58d9e20c60"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/ReserveTank/ReserveTank/Materials/TSTSS_porcelain.uasset",
+      "bytes": 64781,
+      "sha256": "5821c37476d1a110d1b9fd6c30de0c9fab8e6e991bb75f8a826fa8f63ebfd9e0"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/ReserveTank/ReserveTank/Materials/TSTSS_ruby.uasset",
+      "bytes": 64721,
+      "sha256": "4bc79b19cef0f4a34888c7473cc694f65e7c875289429faae13b93eb20b71cde"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/ReserveTank/ReserveTank/Materials/TSTSS_teal_glass.uasset",
+      "bytes": 64793,
+      "sha256": "30020232f435d25bcb14048ff7cd8bf9f512445f5466827f87950e4e8b3cd592"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/ReserveTank/ReserveTank/Materials/TSTSS_wood.uasset",
+      "bytes": 64721,
+      "sha256": "5442fbea1934a31ca32c825b66f52275fc65374c1068d1491b2d83fadc118dab"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/ReserveTank/ReserveTank/StaticMeshes/ReserveTank.uasset",
+      "bytes": 114733,
+      "sha256": "5fc8770d187d3576b62351f284f14672f518c833cc899f2195234646fb4cae06"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/RopeCoil/RopeCoil/Materials/TSTSS_amber_glass.uasset",
+      "bytes": 64743,
+      "sha256": "7a0d1e823e19a7875b2a60c7428533f54a644994bda019e82cccd1e6f141ed3c"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/RopeCoil/RopeCoil/Materials/TSTSS_brass.uasset",
+      "bytes": 64671,
+      "sha256": "3a2696c6feff7a507e694717aefb57f13aef9f54a12e331e5592652a0fad2c21"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/RopeCoil/RopeCoil/Materials/TSTSS_canvas.uasset",
+      "bytes": 64683,
+      "sha256": "76498ee20b9eba6dde29e09af1ea81835392a20c477b9127dc4b6d5fbf7f94cf"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/RopeCoil/RopeCoil/Materials/TSTSS_dark_iron.uasset",
+      "bytes": 64719,
+      "sha256": "5591dee4e720a7749fb856cf396abde67b23e4fdd818f7e5d01161a59d5f6f89"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/RopeCoil/RopeCoil/Materials/TSTSS_patina.uasset",
+      "bytes": 64683,
+      "sha256": "3b3c5624821671fa82a5821c23b38a9aaba2b68e41b7554cc202fe40919f48c7"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/RopeCoil/RopeCoil/Materials/TSTSS_porcelain.uasset",
+      "bytes": 64719,
+      "sha256": "5dbb70723d0f62f641ebd4fe3c7a1a82869de661e695319c6dd39fd6ba76820c"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/RopeCoil/RopeCoil/Materials/TSTSS_ruby.uasset",
+      "bytes": 64659,
+      "sha256": "d3d0e9aa181785dd70278699afa8bc2b15e72dfe3ab400ffa7bf4648ffe18edb"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/RopeCoil/RopeCoil/Materials/TSTSS_teal_glass.uasset",
+      "bytes": 64731,
+      "sha256": "1cc2e525839663ab68dd7d2b30dbc0af3b183a4d79ae21d66ff7b49801e9340d"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/RopeCoil/RopeCoil/Materials/TSTSS_wood.uasset",
+      "bytes": 64659,
+      "sha256": "9ada576da94908ecbbf7cf6a0febaed82b38d0e176c6ee1e03467eb82fb61f63"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/RopeCoil/RopeCoil/StaticMeshes/RopeCoil.uasset",
+      "bytes": 109591,
+      "sha256": "4cab1ae665fdfc439c896462a65127852fca41d0cf0dcc734bb008132b437152"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/SignoffPlinth/SignoffPlinth/Materials/TSTSS_amber_glass.uasset",
+      "bytes": 64845,
+      "sha256": "128dcf60aabc66aa5b45d3cf39b10fb4a5557c88b6a4d978e398e52f98b78a11"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/SignoffPlinth/SignoffPlinth/Materials/TSTSS_brass.uasset",
+      "bytes": 64773,
+      "sha256": "62d3c397bf03c123ebf0ed6de83ae3a093c44b77e484ce33b5c361eeb329f0a4"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/SignoffPlinth/SignoffPlinth/Materials/TSTSS_canvas.uasset",
+      "bytes": 64785,
+      "sha256": "fe9afe6228993e2fa1f1e4e597bfcba3cb553a57b3f00bfe12e1c5c3de4f9d7d"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/SignoffPlinth/SignoffPlinth/Materials/TSTSS_dark_iron.uasset",
+      "bytes": 64821,
+      "sha256": "f329419202976770a5c71b92a5fe4067fff1a89f0c3a9154fcb9f3f7f3c83769"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/SignoffPlinth/SignoffPlinth/Materials/TSTSS_patina.uasset",
+      "bytes": 64785,
+      "sha256": "8b831309c49d0b38fbf423e75e81267b9a0dc078340d24e72684d955c7bdcc78"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/SignoffPlinth/SignoffPlinth/Materials/TSTSS_porcelain.uasset",
+      "bytes": 64821,
+      "sha256": "9a90524ea190759f973c75eb2200e31e1615d6b4754f57e2dfb02adf01ae6841"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/SignoffPlinth/SignoffPlinth/Materials/TSTSS_ruby.uasset",
+      "bytes": 64761,
+      "sha256": "4aef2e75835bfe40d367612ddd3a671a46e3d9f28e663be44c3081d9fed75ff3"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/SignoffPlinth/SignoffPlinth/Materials/TSTSS_teal_glass.uasset",
+      "bytes": 64833,
+      "sha256": "9c3817d8c8951996fa5930b5eb2c9cfba25115a8a010e8441e6cafe27c149467"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/SignoffPlinth/SignoffPlinth/Materials/TSTSS_wood.uasset",
+      "bytes": 64761,
+      "sha256": "b161075a84159cdbaa2faa7b5797776404b7dc38b5c78eca4d9f1651c27f8b03"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/SignoffPlinth/SignoffPlinth/StaticMeshes/SignoffPlinth.uasset",
+      "bytes": 100404,
+      "sha256": "a113289c3d82b9ae9b9141f8fbb39167d3a7d8ae35e1b6dd40e41a20835c5978"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/ToolRack/ToolRack/Materials/TSTSS_amber_glass.uasset",
+      "bytes": 64745,
+      "sha256": "d958bfc439344ea412685e2bb674817538c75380b837440322eb3330909ae610"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/ToolRack/ToolRack/Materials/TSTSS_brass.uasset",
+      "bytes": 64673,
+      "sha256": "799b75a2b412e6ba8815d3338610685793bbc5b8c812e4323cd9ad00fa5ef6a8"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/ToolRack/ToolRack/Materials/TSTSS_canvas.uasset",
+      "bytes": 64685,
+      "sha256": "30257094d28909a04b33b6fff49e9400b370a853611c37b79427767ad5cd7c1e"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/ToolRack/ToolRack/Materials/TSTSS_dark_iron.uasset",
+      "bytes": 64721,
+      "sha256": "c81a41f95e22d264cd0f41985e3afddd40d450f428e6fde1da761861845020b4"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/ToolRack/ToolRack/Materials/TSTSS_patina.uasset",
+      "bytes": 64685,
+      "sha256": "3380cec3bba239d1095e57da6e1e4066d36c0efb264230631d4c017b99685a9f"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/ToolRack/ToolRack/Materials/TSTSS_porcelain.uasset",
+      "bytes": 64721,
+      "sha256": "e92f665ab975abbe3e4d49d36eb3197ace0c756c12f72f5e01c0096f84ad1120"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/ToolRack/ToolRack/Materials/TSTSS_ruby.uasset",
+      "bytes": 64661,
+      "sha256": "64deabc10d169c427c7c7e675ce35f20678e7a70e424f0b08d9fac9fcca1c855"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/ToolRack/ToolRack/Materials/TSTSS_teal_glass.uasset",
+      "bytes": 64733,
+      "sha256": "5b5d1cb41913eb576e61c53d56443f908bcc909512ff89c5da9c9307dee4b59a"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/ToolRack/ToolRack/Materials/TSTSS_wood.uasset",
+      "bytes": 64661,
+      "sha256": "4f92784ef4edd5011584ab064c2596a52c029e52f451c1278516964b159f9f33"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/ToolRack/ToolRack/StaticMeshes/ToolRack.uasset",
+      "bytes": 92585,
+      "sha256": "0f8e9efd1fb5aa6a626c2b6c67a3ec355a9ecc123d8c4695cdb63f7e07aadd80"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/WingHinge/WingHinge/Materials/TSTSS_amber_glass.uasset",
+      "bytes": 64765,
+      "sha256": "9af2db21d768ea7b11d742e7fde97b517c18cfe2077d880fec078b398c39d90c"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/WingHinge/WingHinge/Materials/TSTSS_brass.uasset",
+      "bytes": 64693,
+      "sha256": "4c53be8a467ff749a0f8a2bcc46805df52898cc06d600a3bac76c5b9ad71062c"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/WingHinge/WingHinge/Materials/TSTSS_canvas.uasset",
+      "bytes": 64705,
+      "sha256": "01ae725fe945df7c02d22fb98e0aea37946727068e5dd6d466d33eedeb35d4cc"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/WingHinge/WingHinge/Materials/TSTSS_dark_iron.uasset",
+      "bytes": 64741,
+      "sha256": "decccbccb54cbfbd443d24ea4ce84f459378fb891c3317e9106279faa912effb"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/WingHinge/WingHinge/Materials/TSTSS_patina.uasset",
+      "bytes": 64705,
+      "sha256": "781c97bbc42d6ca0442dcfdad15363f02be579e94f23028680a6000ffc254582"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/WingHinge/WingHinge/Materials/TSTSS_porcelain.uasset",
+      "bytes": 64741,
+      "sha256": "4e950ed777c9ecc82628804bca0ce4b0ee14209d06297fde3dab84696b87d514"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/WingHinge/WingHinge/Materials/TSTSS_ruby.uasset",
+      "bytes": 64681,
+      "sha256": "19109a5469618e3ba2e7063c9f688bcacdb238893be3c701365d5f9fdbf8b17b"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/WingHinge/WingHinge/Materials/TSTSS_teal_glass.uasset",
+      "bytes": 64753,
+      "sha256": "fea7b6d8fe7e1895795b5f7fb7a767495b8c072dcfc3cc6da46749977da62936"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/WingHinge/WingHinge/Materials/TSTSS_wood.uasset",
+      "bytes": 64681,
+      "sha256": "1920e133f9270334b7427b7b9032a9a319dfbaef799628331bd21b401745053b"
+    },
+    {
+      "path": "unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/WingHinge/WingHinge/StaticMeshes/WingHinge.uasset",
+      "bytes": 93716,
+      "sha256": "75a7f8cc8ca4154cdb162aac42468592ea39272550a27586c166f33b19581f16"
+    }
+  ]
+}
