@@ -143,7 +143,8 @@ private:
     FTSTSSPresentationIntent CurrentIntent;
 
     // Weak references: never prolong gameplay objects just for a camera look.
-    TWeakObjectPtr<const UTSTSSFirstWakeState> ObservedStory;
+    TWeakObjectPtr<UTSTSSFirstWakeState> ObservedStory;
+    FDelegateHandle StoryChangedHandle;
     TWeakObjectPtr<const ATSTSSAtmosphereDirector> ObservedAtmosphere;
     uint64 ObservedRestoreGeneration = 0;
     ETSTSSFirstWakeBeat ObservedBeat = ETSTSSFirstWakeBeat::FlyerDiscovered;
@@ -153,5 +154,6 @@ private:
     float ObservedClockHours = 0.0f;
 
     void PublishNeutral(const FString& Reason);
+    void HandleAcceptedStoryChange();
     void ClearObservedSource();
 };
