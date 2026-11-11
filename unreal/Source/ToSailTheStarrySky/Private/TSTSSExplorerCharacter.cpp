@@ -108,6 +108,7 @@ void ATSTSSExplorerCharacter::BeginPlay()
     Super::BeginPlay();
     FirstWakeState = NewObject<UTSTSSFirstWakeState>(this);
     bPIEReviewQuickSlotOwned = false;
+    LastLoadedSaveSnapshotForReview = nullptr;
     ShowFirstWakeReviewObjective(FirstWakeState);
 }
 
@@ -385,6 +386,12 @@ bool ATSTSSExplorerCharacter::LoadFirstWake(const FString& Slot)
     if (!Save) return false;
     const bool bRestored = FirstWakeState->Restore(
         Save->bFirstWakeStarted, Save->FirstWakeBeat, Save->InspectionMask);
+    if (bRestored)
+    {
+        // Preserve a read-only reference ONLY from a successful validated
+        // load. The equipment panel never reads arbitrary stale save slots.
+        LastLoadedSaveSnapshotForReview = const_cast<UTSTSSSaveGame*>(Save);
+    }
 #if WITH_EDITOR
     // Previously accepted review cubes have been made transparent to rays
     // and pawn movement. Restoring an earlier story beat must reactivate
@@ -453,6 +460,14 @@ void ATSTSSExplorerCharacter::ToggleEquipmentReview()
         : ETSTSSPartySliceReviewStage::FirstWake;
     if (!EquipmentReviewMenu->TryRefreshStoryStageReview(CurrentStage))
         return;
+    EquipmentReviewMenu->ClearLoadedSaveRosterForReview();
+    if (IsValid(LastLoadedSaveSnapshotForReview))
+    {
+        // This may fail when story has moved on or the save roster includes
+        // unrecruited members. Never widen the party to make it pass.
+        EquipmentReviewMenu->TryBindLoadedSaveRosterForReview(
+            LastLoadedSaveSnapshotForReview);
+    }
 
     EquipmentReviewMenu->AddToViewport(30);
     PC->bShowMouseCursor = true;

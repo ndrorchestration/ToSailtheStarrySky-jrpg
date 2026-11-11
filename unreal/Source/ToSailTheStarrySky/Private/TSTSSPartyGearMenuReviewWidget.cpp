@@ -12,6 +12,7 @@
 #include "TSTSSCombatData.h"
 #include "TSTSSJobClassSystem.h"
 #include "TSTSSFirstWakeState.h"
+#include "TSTSSSaveGame.h"
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
@@ -153,10 +154,67 @@ bool UTSTSSPartyGearMenuReviewWidget::TryRefreshStoryStageReview(
         RequestedStage == ETSTSSPartySliceReviewStage::AfterSplashdown;
     if (!bWasPreviewStage || !bIsPreviewStage) return false;
     ActiveStage = RequestedStage;
+    // A saved snapshot must be rebound only if it still matches story stage.
+    LoadedSavedRosterSnapshot.Reset();
+    bHasValidLoadedRosterSnapshot = false;
     RenderReviewPage();
     return true;
 }
 
+
+bool UTSTSSPartyGearMenuReviewWidget::TryProjectValidatedSavedRosterForReview(
+    const UTSTSSSaveGame* Save,
+    ETSTSSPartySliceReviewStage Stage,
+    TArray<FTSTSSCombatant>& OutRoster)
+{
+    if (!IsValid(Save) || !Save->IsStructurallyValid() ||
+        !Save->bFirstWakeStarted || Save->PartyRoster.IsEmpty() ||
+        (Stage != ETSTSSPartySliceReviewStage::FirstWake &&
+         Stage != ETSTSSPartySliceReviewStage::AfterSplashdown))
+        return false;
+
+    // A splashdown beat is not the separate Lyra recruitment receipt.
+    // Never surface a future-party member from a save in First Wake.
+    const bool bSavedAfterSplashdown =
+        static_cast<uint8>(Save->FirstWakeBeat) >=
+        static_cast<uint8>(ETSTSSFirstWakeBeat::FlotationConfirmed);
+    if (bSavedAfterSplashdown !=
+        (Stage == ETSTSSPartySliceReviewStage::AfterSplashdown))
+        return false;
+    for (const FTSTSSCombatant& Member : Save->PartyRoster)
+    {
+        if (!FTSTSSPartySliceReviewEquipment::IsMemberAvailable(
+                Stage, Member.CharacterId))
+            return false;
+    }
+    OutRoster = Save->PartyRoster;
+    return true;
+}
+
+bool UTSTSSPartyGearMenuReviewWidget::TryBindLoadedSaveRosterForReview(
+    const UTSTSSSaveGame* Save)
+{
+    if (!bInitialized || !IsValid(StoryReviewState) || !IsValid(Save) ||
+        StoryReviewState->HasStarted() != Save->bFirstWakeStarted ||
+        StoryReviewState->GetCurrentBeat() != Save->FirstWakeBeat ||
+        StoryReviewState->GetInspectionMask() != Save->InspectionMask)
+        return false;
+    TArray<FTSTSSCombatant> Candidate;
+    if (!TryProjectValidatedSavedRosterForReview(
+            Save, ActiveStage, Candidate))
+        return false;
+    LoadedSavedRosterSnapshot = MoveTemp(Candidate);
+    bHasValidLoadedRosterSnapshot = true;
+    RenderReviewPage();
+    return true;
+}
+
+void UTSTSSPartyGearMenuReviewWidget::ClearLoadedSaveRosterForReview()
+{
+    LoadedSavedRosterSnapshot.Reset();
+    bHasValidLoadedRosterSnapshot = false;
+    RenderReviewPage();
+}
 
 bool UTSTSSPartyGearMenuReviewWidget::TryBindFirstWakeStoryForReview(
     UTSTSSFirstWakeState* State)
@@ -330,9 +388,50 @@ void UTSTSSPartyGearMenuReviewWidget::RenderReviewPage()
             AddPageLine(FString::Printf(TEXT("%s  |  %s  |  Affinity: %s"),
                 *Member.ToString(), bAvailable ? TEXT("AVAILABLE") : TEXT("LOCKED"),
                 AffinityName), 17);
+            if (bAvailable && bHasValidLoadedRosterSnapshot)
+            {
+                const FTSTSSCombatant* Snapshot = LoadedSavedRosterSnapshot.FindByPredicate(
+                    [Member](const FTSTSSCombatant& Row)
+                    {
+                        return Row.CharacterId == Member;
+                    });
+                if (Snapshot)
+                    AddPageLine(FString::Printf(
+                        TEXT("  SAVED HP %d/%d | RESOURCE %d/%d | ATK %d | DEF %d"),
+                        Snapshot->Health, Snapshot->MaxHealth,
+                        Snapshot->Resource, Snapshot->MaxResource,
+                        Snapshot->Attack, Snapshot->Defense), 15,
+                        FLinearColor(0.64f, 0.85f, 0.78f, 1.f));
+            }
         }
-        AddPageLine(TEXT("HP / MP / Level / XP / combat attributes: awaiting authoritative live character state."));
-        AddPageLine(TEXT("Equipment bonuses are provisional and shown under Equipment / Items."));
+        AddPageLine(bHasValidLoadedRosterSnapshot
+            ? TEXT("These are validated LAST-LOADED SAVE values, NOT live combat stats.")
+            : TEXT("No validated compatible saved party roster loaded; HP/resource/attack/defense unavailable."));
+        AddPageLine(TEXT("Character level, XP and proficiency are not part of the version-2 save roster."));
+        AddPageLine(TEXT("Reviewed gear bonuses are independent of saved base stats; not live combat changes."));
+        for (const FName Member : {FName(TEXT("Ender")), FName(TEXT("Ionia"))})
+        {
+            const FTSTSSReviewGearSlots* Slots =
+                ReviewState.EquippedByCharacter.Find(Member);
+            if (!Slots) continue;
+            int32 AttackBonus = 0, DefenseBonus = 0;
+            for (const FName ItemId : {
+                Slots->WeaponInstance, Slots->ArmorInstance,
+                Slots->AccessoryInstance })
+            {
+                if (ItemId.IsNone()) continue;
+                const FTSTSSReviewGearInstance* Item =
+                    ReviewState.OwnedInstances.Find(ItemId);
+                if (Item && Item->OwnerId == Member)
+                {
+                    AttackBonus += Item->AttackBonus;
+                    DefenseBonus += Item->DefenseBonus;
+                }
+            }
+            AddPageLine(FString::Printf(
+                TEXT("%s REVIEW GEAR: ATK +%d | DEF +%d"),
+                *Member.ToString(), AttackBonus, DefenseBonus));
+        }
         break;
     }
     case ETSTSSReviewMenuPage::Inventory:
@@ -349,9 +448,16 @@ void UTSTSSPartyGearMenuReviewWidget::RenderReviewPage()
         {
             const FTSTSSReviewGearInstance& Item =
                 ReviewState.OwnedInstances.FindChecked(ItemId);
+            const FTSTSSReviewGearSlots* Slots =
+                ReviewState.EquippedByCharacter.Find(Item.OwnerId);
+            const bool bEquipped = Slots &&
+                (Slots->WeaponInstance == ItemId ||
+                 Slots->ArmorInstance == ItemId ||
+                 Slots->AccessoryInstance == ItemId);
             AddPageLine(FString::Printf(
-                TEXT("%s | Owner %s | Attack +%d | Defense +%d"),
-                *ItemId.ToString(), *Item.OwnerId.ToString(),
+                TEXT("%s | %s | ATK +%d | DEF +%d"),
+                *ItemId.ToString(),
+                bEquipped ? TEXT("EQUIPPED") : TEXT("OWNED / NOT EQUIPPED"),
                 Item.AttackBonus, Item.DefenseBonus));
         }
         AddPageLine(TEXT("Restorative Vial / Resonance Capacitor: scene props only; NOT owned items."));
@@ -601,10 +707,17 @@ void UTSTSSPartyGearMenuReviewWidget::RefreshReviewLabels()
         const FTSTSSReviewGearSlots* Slots =
             ReviewState.EquippedByCharacter.Find(Owner);
         const bool bEquipped = Slots && !SlotValue(*Slots, GearSlot).IsNone();
+        FString GearName = TEXT("UNEQUIPPED");
+        if (bEquipped)
+        {
+            const FString FullItemId = SlotValue(*Slots, GearSlot).ToString();
+            FString OwnerPrefix, ItemSuffix;
+            GearName = FullItemId.Split(TEXT("."), &OwnerPrefix, &ItemSuffix)
+                ? ItemSuffix : TEXT("EQUIPPED");
+        }
         SlotLabels[I]->SetText(FText::FromString(FString::Printf(
             TEXT("%s: %s"), SlotName(GearSlot),
-            !bAllowed ? TEXT("LOCKED") :
-            bEquipped ? TEXT("EQUIPPED") : TEXT("UNEQUIPPED"))));
+            !bAllowed ? TEXT("LOCKED") : *GearName)));
     }
 }
 

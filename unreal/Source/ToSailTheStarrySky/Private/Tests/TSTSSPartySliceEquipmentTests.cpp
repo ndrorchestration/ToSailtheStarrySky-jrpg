@@ -2,6 +2,7 @@
 #include "TSTSSPartySliceReviewEquipment.h"
 #include "TSTSSPartyGearReviewMountComponent.h"
 #include "TSTSSPartyGearMenuReviewWidget.h"
+#include "TSTSSSaveGame.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/StaticMesh.h"
@@ -169,6 +170,74 @@ bool FTSTSSPartySliceEquipmentStageGateTest::RunTest(const FString& Parameters)
             false, UIInvalid));
     TestTrue(TEXT("recruited Lyra's weapon then cleared"),
         UIInvalid.EquippedByCharacter.FindChecked(Lyra).WeaponInstance.IsNone());
+
+    // Real SaveGame v2 data may be shown only as a LABELLED last-loaded
+    // snapshot; it cannot act as live combat or recruitment authority.
+    UTSTSSSaveGame* Saved = NewObject<UTSTSSSaveGame>(GetTransientPackage());
+    if (!TestNotNull(TEXT("real version-2 save object"), Saved)) return false;
+    Saved->bFirstWakeStarted = true;
+    Saved->FirstWakeBeat = ETSTSSFirstWakeBeat::IoniaHired;
+    Saved->PartyRoster = {Base, Captain};
+    TestTrue(TEXT("valid actual saved First Wake roster format"),
+        Saved->IsStructurallyValid());
+
+    TArray<FTSTSSCombatant> SavedProjection;
+    TestTrue(TEXT("read-only saved stats for opening party"),
+        UTSTSSPartyGearMenuReviewWidget::TryProjectValidatedSavedRosterForReview(
+            Saved, Opening, SavedProjection));
+    TestEqual(TEXT("two saved party entries only"), SavedProjection.Num(), 2);
+    if (SavedProjection.Num() == 2)
+    {
+        TestEqual(TEXT("real saved Ender HP preserved"),
+            SavedProjection[0].Health, Base.Health);
+        TestEqual(TEXT("real saved Captain resource preserved"),
+            SavedProjection[1].Resource, Captain.Resource);
+    }
+    TestEqual(TEXT("saved object has not been altered by menu projection"),
+        Saved->PartyRoster.Num(), 2);
+    SavedProjection.Add(FTSTSSCombatant());
+    const int32 SentinelSize = SavedProjection.Num();
+    TestFalse(TEXT("First Wake save cannot masquerade as splashdown"),
+        UTSTSSPartyGearMenuReviewWidget::TryProjectValidatedSavedRosterForReview(
+            Saved, Splashdown, SavedProjection));
+    TestEqual(TEXT("wrong stage preserves output snapshot"), SavedProjection.Num(),
+        SentinelSize);
+    TestFalse(TEXT("separate Lyra recruitment never proven by v2 save"),
+        UTSTSSPartyGearMenuReviewWidget::TryProjectValidatedSavedRosterForReview(
+            Saved, Recruited, SavedProjection));
+    TestEqual(TEXT("recruitment denial preserves output"), SavedProjection.Num(),
+        SentinelSize);
+
+    Saved->FirstWakeBeat = ETSTSSFirstWakeBeat::FlotationConfirmed;
+    Saved->InspectionMask = 0x07;
+    TestTrue(TEXT("real splashdown story save still structurally valid"),
+        Saved->IsStructurallyValid());
+    TestTrue(TEXT("splashdown save only projects Ender and Ionia"),
+        UTSTSSPartyGearMenuReviewWidget::TryProjectValidatedSavedRosterForReview(
+            Saved, Splashdown, SavedProjection));
+    TestEqual(TEXT("two party members after splashdown"), SavedProjection.Num(), 2);
+    Saved->PartyRoster.Add(Healer);
+    TestTrue(TEXT("canonical save schema may contain Lyra without proving recruitment"),
+        Saved->IsStructurallyValid());
+    TestFalse(TEXT("no Lyra from saved roster at mere splashdown"),
+        UTSTSSPartyGearMenuReviewWidget::TryProjectValidatedSavedRosterForReview(
+            Saved, Splashdown, SavedProjection));
+    TestEqual(TEXT("unrecruited save denial preserves output"),
+        SavedProjection.Num(), 2);
+
+    Saved->PartyRoster.RemoveAt(2);
+    Saved->SchemaVersion = 999;
+    TestFalse(TEXT("future save version rejected for snapshot"),
+        UTSTSSPartyGearMenuReviewWidget::TryProjectValidatedSavedRosterForReview(
+            Saved, Splashdown, SavedProjection));
+    TestEqual(TEXT("future save denial preserves output"), SavedProjection.Num(), 2);
+    Saved->SchemaVersion = UTSTSSSaveGame::CurrentVersion;
+    Saved->PartyRoster[0].Health = Saved->PartyRoster[0].MaxHealth + 1;
+    TestFalse(TEXT("malformed HP cannot be shown as verified stats"),
+        UTSTSSPartyGearMenuReviewWidget::TryProjectValidatedSavedRosterForReview(
+            Saved, Splashdown, SavedProjection));
+    TestEqual(TEXT("malformed stat denial preserves output"),
+        SavedProjection.Num(), 2);
 
     // The ship console is intentionally non-authoritative. No selection
     // can grant or simulate a vessel transformation by using menu controls.

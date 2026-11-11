@@ -9,6 +9,7 @@ class UButton;
 class UTextBlock;
 class UVerticalBox;
 class UTSTSSFirstWakeState;
+class UTSTSSSaveGame;
 
 enum class ETSTSSReviewMenuPage : uint8
 {
@@ -51,6 +52,16 @@ public:
     // Read-only story source, never authorizes recruitment or ship transitions.
     bool TryBindFirstWakeStoryForReview(UTSTSSFirstWakeState* State);
 
+    // Only caller-supplied, structurally validated loaded save snapshots
+    // matching the active First Wake story may be projected. This is NOT
+    // a live combat state, loot grant or SaveGame write.
+    static bool TryProjectValidatedSavedRosterForReview(
+        const UTSTSSSaveGame* Save,
+        ETSTSSPartySliceReviewStage Stage,
+        TArray<FTSTSSCombatant>& OutRoster);
+    bool TryBindLoadedSaveRosterForReview(const UTSTSSSaveGame* Save);
+    void ClearLoadedSaveRosterForReview();
+
     // Navigable character/system/ship menu. Equipment is the G shortcut.
     void OpenPageForReview(ETSTSSReviewMenuPage Page);
 
@@ -88,6 +99,9 @@ private:
 
     UPROPERTY(Transient)
     TObjectPtr<UTSTSSFirstWakeState> StoryReviewState;
+
+    TArray<FTSTSSCombatant> LoadedSavedRosterSnapshot;
+    bool bHasValidLoadedRosterSnapshot = false;
 
     ETSTSSReviewMenuPage ActivePage = ETSTSSReviewMenuPage::Equipment;
     ETSTSSShipReviewPage ActiveShipPage = ETSTSSShipReviewPage::Overview;

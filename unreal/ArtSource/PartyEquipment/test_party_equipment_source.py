@@ -139,7 +139,10 @@ class TestPartyEquipmentSource(unittest.TestCase):
   self.assertIn("review UI re-equips originally owned staff",test)
   self.assertIn("PC->SetInputMode(Mode)",pawn)
   self.assertIn("CloseReview",impl)
-  self.assertNotIn("SaveGame",impl)
+  self.assertIn("Save->IsStructurallyValid()",impl)
+  self.assertIn("Save->PartyRoster",impl)
+  self.assertNotIn("SaveProgress(",impl)
+  self.assertNotIn("SaveGameToSlot(",impl)
 
  def test_unified_rpg_and_ship_console_contract(self):
   unreal=HERE.parents[1]
@@ -164,6 +167,24 @@ class TestPartyEquipmentSource(unittest.TestCase):
   self.assertIn("TryBindFirstWakeStoryForReview",pawn)
   self.assertNotIn("ETSTSSPartySliceReviewStage::LyraRecruited",pawn)
   self.assertNotIn("AdvanceTo(",cpp)
+  self.assertNotIn("SaveProgress(",cpp)
+
+ def test_saved_party_status_displays_provenance_without_recruitment(self):
+  unreal=HERE.parents[1]
+  cpp=(unreal/"Source"/"ToSailTheStarrySky"/"Private"/"TSTSSPartyGearMenuReviewWidget.cpp").read_text(encoding="utf-8")
+  pawn=(unreal/"Source"/"ToSailTheStarrySky"/"Private"/"TSTSSExplorerCharacter.cpp").read_text(encoding="utf-8")
+  test=(unreal/"Source"/"ToSailTheStarrySky"/"Private"/"Tests"/"TSTSSPartySliceEquipmentTests.cpp").read_text(encoding="utf-8")
+  self.assertIn("TryProjectValidatedSavedRosterForReview",cpp)
+  self.assertIn("bSavedAfterSplashdown",cpp)
+  self.assertIn("FTSTSSPartySliceReviewEquipment::IsMemberAvailable",cpp)
+  self.assertIn("GetCurrentBeat() != Save->FirstWakeBeat",cpp)
+  self.assertIn("GetInspectionMask() != Save->InspectionMask",cpp)
+  self.assertIn("SAVED HP %d/%d | RESOURCE %d/%d",cpp)
+  self.assertIn("NOT live combat stats",cpp)
+  self.assertIn("LastLoadedSaveSnapshotForReview",pawn)
+  self.assertIn("TryBindLoadedSaveRosterForReview(",pawn)
+  self.assertIn("no Lyra from saved roster at mere splashdown",test)
+  self.assertIn("malformed HP cannot be shown as verified stats",test)
   self.assertNotIn("SaveProgress(",cpp)
 
 if __name__=="__main__":unittest.main()
