@@ -25,6 +25,8 @@ PREFIX = r"""
 #include <string>
 #include <vector>
 #define TEXT(s) s
+// Emulate the Win64 Unreal Editor target; F7 is intentionally editor-only.
+#define WITH_EDITOR 1
 #define check(expr) do { if (!(expr)) throw std::runtime_error("Unreal check failed"); } while (false)
 enum class EWorldType { PIE, Game, Editor };
 struct UWorld { EWorldType WorldType; };
@@ -50,7 +52,7 @@ struct ATSTSSExplorerCharacter : TSTSSBaseCharacter {
     void SetupPlayerInputComponent(UInputComponent*);
     void MoveForward(float); void MoveRight(float);
     void Turn(float); void LookUp(float);
-    void Interact(); void QuickSave(); void QuickLoad(); void ShowObjectiveReview();
+    void Interact(); void QuickSave(); void QuickLoad(); void ReviewContinue(); void ShowObjectiveReview();
 };
 // The binder receives real member-function pointers; provide no-op implementations
 // only so the standalone executable links. None of these methods are executed.
@@ -61,6 +63,7 @@ void ATSTSSExplorerCharacter::LookUp(float) {}
 void ATSTSSExplorerCharacter::Interact() {}
 void ATSTSSExplorerCharacter::QuickSave() {}
 void ATSTSSExplorerCharacter::QuickLoad() {}
+void ATSTSSExplorerCharacter::ReviewContinue() {}
 void ATSTSSExplorerCharacter::ShowObjectiveReview() {}
 """
 SUFFIX = r"""
@@ -93,25 +96,32 @@ int main() {
                        "PIE must bind exactly one F6 action");
                 verify(hasExactly(input.actions, "QuickSave", 0),
                        "PIE illegally binds normal F5 QuickSave");
+                verify(hasExactly(input.actions, "ReviewContinue", 1),
+                       "PIE must bind exactly one F7 Continue");
             } else if (type == EWorldType::Game) {
                 verify(hasExactly(input.actions, "QuickSave", 1),
                        "Normal Game must bind F5 QuickSave");
                 verify(hasExactly(input.actions, "PIEReviewQuickSave", 0),
                        "Normal Game illegally binds PIE F6 review save");
+                verify(hasExactly(input.actions, "ReviewContinue", 0),
+                       "Normal Game cannot bind review Continue");
             } else {
                 verify(hasExactly(input.actions, "QuickSave", 0),
                        "Editor world must never bind normal Game QuickSave");
                 verify(hasExactly(input.actions, "PIEReviewQuickSave", 0),
                        "Editor world must never bind review QuickSave");
+                verify(hasExactly(input.actions, "ReviewContinue", 0),
+                       "Editor world must never bind review Continue");
             }
-            verify(input.actions.size() == 4 || (type == EWorldType::Editor && input.actions.size() == 3),
+            verify(input.actions.size() == (type == EWorldType::PIE ? 5u : (type == EWorldType::Game ? 4u : 3u)),
                    "Unexpected extra or duplicated action bindings");
         }
         ATSTSSExplorerCharacter missingWorld;
         UInputComponent noWorldInput;
         missingWorld.SetupPlayerInputComponent(&noWorldInput);
         verify(hasExactly(noWorldInput.actions, "QuickSave", 0) &&
-               hasExactly(noWorldInput.actions, "PIEReviewQuickSave", 0),
+               hasExactly(noWorldInput.actions, "PIEReviewQuickSave", 0) &&
+               hasExactly(noWorldInput.actions, "ReviewContinue", 0),
                "Null world must fail closed for both save bindings");
         std::cout << "PASS: " << cases
                   << " actual-source input binding C++ cases; PIE F6 separated from Game F5\n";
@@ -132,7 +142,7 @@ def method_from(source: str) -> str:
     method = source[beginning:ending]
     for token in ("Super::SetupPlayerInputComponent", "EWorldType::PIE",
                   "EWorldType::Game", 'TEXT("PIEReviewQuickSave")',
-                  'TEXT("QuickSave")', 'TEXT("QuickLoad")'):
+                  'TEXT("QuickSave")', 'TEXT("QuickLoad")', 'TEXT("ReviewContinue")'):
         if token not in method:
             raise ValueError("Source method missing expected selection: " + token)
     return method
@@ -142,12 +152,16 @@ def config_guard(config: str) -> None:
     mappings = re.findall(r'^\+ActionMappings=\(ActionName="([^"]+)",Key=([^)]*)\)',
                           config, re.M)
     required = {("PIEReviewQuickSave", "F6"), ("QuickSave", "F5"),
-                ("QuickLoad", "F9"), ("Interact", "E"), ("ReviewObjective", "J")}
+                ("QuickLoad", "F9"), ("ReviewContinue", "F7"),
+                ("Interact", "E"), ("ReviewObjective", "J")}
     if len(mappings) != len(set(mappings)) or not required.issubset(mappings):
         raise ValueError("DefaultInput.ini lacks unique F6 PIE / F5 Game / F9 load")
-    if any(name in ("PIEReviewQuickSave", "QuickSave") and (name, key) not in required
+    if any(name in ("PIEReviewQuickSave", "QuickSave", "QuickLoad", "ReviewContinue") and (name, key) not in required
            for name, key in mappings):
-        raise ValueError("Multiple or unsafe save key declarations")
+        raise ValueError("Multiple or unsafe save/continue key declarations")
+    if len({key for name, key in mappings if name in
+            ("PIEReviewQuickSave", "QuickSave", "QuickLoad", "ReviewContinue")}) != 4:
+        raise ValueError("Save/load/Continue keyboard collision")
 
 
 def compile_and_run(compiler: str, body: str) -> subprocess.CompletedProcess[str]:

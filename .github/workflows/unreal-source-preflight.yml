@@ -105,6 +105,8 @@ jobs:
           python3 -m unittest discover -s unreal/Tools -p 'test_integrated_review_contract.py' -v
       - name: Verify native receipt retention and exact-source assertion (source-only)
         run: python3 -m unittest discover -s unreal/Tools -p 'test_native_evidence_safety.py' -v
+      - name: Enforce First Wake graphical review RAM boundary (source-only)
+        run: python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_ram_gate.py' -v
       - name: Parse native verifier using PowerShell 7 (no Unreal execution)
         shell: pwsh
         run: |
@@ -177,5 +179,20 @@ jobs:
         run: python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_combined_native_admission.py' -v
       - name: Test read-only exact-head UE readiness refusal paths (NO Unreal started)
         run: python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_native_readiness.py' -v
-      - name: Verify full integrated First Wake source suite including restore and water telemetry
+      - name: First Wake imported-asset review scene contracts (source only)
+        run: |
+          python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_asset_scene.py' -v
+          python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_asset_stage_runner.py' -v
+          python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_asset_native_readback.py' -v
+          python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_asset_review_launcher.py' -v
+      - name: Parse guarded First Wake asset review launch script (source only)
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            'unreal/Tools/Start-FirstWakeAssetReview.ps1', [ref]$tokens, [ref]$errors
+          ) | Out-Null
+          if ($errors.Count -gt 0) { throw "Asset review launcher PowerShell parse failed: $($errors -join '; ')" }
+      - name: Verify complete source regression suite for F6 save and F7 Continue (no Unreal)
         run: python3 -m unittest discover -s unreal/Tools -p 'test_*.py'

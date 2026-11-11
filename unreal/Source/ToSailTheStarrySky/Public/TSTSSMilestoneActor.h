@@ -12,6 +12,11 @@ public:
     ATSTSSMilestoneActor();
     UFUNCTION(BlueprintCallable, Category="TSTSS|First Wake")
     bool TryActivate(UTSTSSFirstWakeState* State);
+#if WITH_EDITOR
+    // Synchronize review-only marker rays/physical blocking after a successful
+    // SaveGame restore. Never modifies story, non-PIE or production actors.
+    void ReconcileReviewCollisionAfterRestore(const UTSTSSFirstWakeState* State);
+#endif
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="TSTSS|First Wake")
     ETSTSSFirstWakeBeat Milestone = ETSTSSFirstWakeBeat::FlyerDiscovered;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="TSTSS|First Wake")

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Compile and execute the *actual* First Wake F5/F9 handler bodies with API doubles.
 
-Portable behavioral smoke for the existing PIE isolation patch. Does not
+Portable behavioral smoke for the existing PIE isolation patch. The source handler is shared by the F6 PIE action and the F5 normal-game action; this harness tests method behavior, not keyboard binding. Does not
 compile Unreal, run PIE, touch disk saves or verify actual engine semantics.
 Fail closed if the source method boundaries drift or C++17 is unavailable.
 """
@@ -204,7 +204,7 @@ int main() {
                   UGameplayStatics::Slots[playerSlot] == 1,
               "Failed normal save overwrote or claimed success");
         std::cout << "PASS: " << cases
-                  << " actual-handler portable C++ F5/F9 cases; no real disk save\n";
+                  << " actual-handler portable C++ PIE F6 / Game F5 / F9 cases; no real disk save\n";
         return 0;
     } catch (const std::exception& e) {
         std::cerr << "HANDLER_BEHAVIOR_FAILURE: " << e.what() << "\n";
