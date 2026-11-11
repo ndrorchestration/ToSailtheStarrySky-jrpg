@@ -1,0 +1,374 @@
+{
+  "asset_authority": "CUSTOM_PROCEDURAL_REVIEW_ONLY_NOT_APPROVED",
+  "contains_licensed_assets": false,
+  "normal_authority": "SOURCE_TANGENT_PROXY_NOT_VERIFIED_NATIVE_TANGENT_SPACE",
+  "resolution": [
+    512,
+    512
+  ],
+  "roles": 10,
+  "status": "SOURCE_TEXTURES_NOT_NATIVE_RENDERED",
+  "textures": [
+    {
+      "bytes": 98539,
+      "channel": "BaseColor",
+      "dimensions": [
+        512,
+        512
+      ],
+      "material": "blue_green_glass",
+      "name": "TX_FWV3_blue_green_glass_BaseColor.png",
+      "sha256": "3f6185540e8ec63583e6119cfc02730502eae68944cf471a58dae953932a17f7",
+      "status": "SOURCE_ONLY_PBR_TEXTURE_NOT_NATIVE_IMPORTED"
+    },
+    {
+      "bytes": 133676,
+      "channel": "Normal",
+      "dimensions": [
+        512,
+        512
+      ],
+      "material": "blue_green_glass",
+      "name": "TX_FWV3_blue_green_glass_Normal.png",
+      "sha256": "3933272089d38bdc2078313faec5528648c45f302606298ae5d56327abd9881f",
+      "status": "SOURCE_ONLY_PBR_TEXTURE_NOT_NATIVE_IMPORTED"
+    },
+    {
+      "bytes": 79058,
+      "channel": "Roughness",
+      "dimensions": [
+        512,
+        512
+      ],
+      "material": "blue_green_glass",
+      "name": "TX_FWV3_blue_green_glass_Roughness.png",
+      "sha256": "5a05d6394bef917f3e0bc3ac48597b096a87f54d2ae6ae4824d4540cf537bbea",
+      "status": "SOURCE_ONLY_PBR_TEXTURE_NOT_NATIVE_IMPORTED"
+    },
+    {
+      "bytes": 100750,
+      "channel": "BaseColor",
+      "dimensions": [
+        512,
+        512
+      ],
+      "material": "dark_copper",
+      "name": "TX_FWV3_dark_copper_BaseColor.png",
+      "sha256": "671face847a7ae6ed9cf1c13ca14bf5446d15297cacf77fb73ecc1dbe7e5429a",
+      "status": "SOURCE_ONLY_PBR_TEXTURE_NOT_NATIVE_IMPORTED"
+    },
+    {
+      "bytes": 160546,
+      "channel": "Normal",
+      "dimensions": [
+        512,
+        512
+      ],
+      "material": "dark_copper",
+      "name": "TX_FWV3_dark_copper_Normal.png",
+      "sha256": "30154deb9a4c05f1058ea150772590ec6f5a929c783f692d17e53fae0fe5bb0a",
+      "status": "SOURCE_ONLY_PBR_TEXTURE_NOT_NATIVE_IMPORTED"
+    },
+    {
+      "bytes": 90510,
+      "channel": "Roughness",
+      "dimensions": [
+        512,
+        512
+      ],
+      "material": "dark_copper",
+      "name": "TX_FWV3_dark_copper_Roughness.png",
+      "sha256": "ebbdeea3017129f0e1cc6b570809aadad993577ed550027ec4f0b83b3d482bee",
+      "status": "SOURCE_ONLY_PBR_TEXTURE_NOT_NATIVE_IMPORTED"
+    },
+    {
+      "bytes": 122410,
+      "channel": "BaseColor",
+      "dimensions": [
+        512,
+        512
+      ],
+      "material": "dock_timber",
+      "name": "TX_FWV3_dock_timber_BaseColor.png",
+      "sha256": "b94ac0db165366e7a61d48f01f26b078f30578dbfdaf5dd50dced4ca80142165",
+      "status": "SOURCE_ONLY_PBR_TEXTURE_NOT_NATIVE_IMPORTED"
+    },
+    {
+      "bytes": 199453,
+      "channel": "Normal",
+      "dimensions": [
+        512,
+        512
+      ],
+      "material": "dock_timber",
+      "name": "TX_FWV3_dock_timber_Normal.png",
+      "sha256": "95cc92c9ed968938eed3f51236e118252fd58b535aebac61d7318a0e8e194330",
+      "status": "SOURCE_ONLY_PBR_TEXTURE_NOT_NATIVE_IMPORTED"
+    },
+    {
+      "bytes": 102140,
+      "channel": "Roughness",
+      "dimensions": [
+        512,
+        512
+      ],
+      "material": "dock_timber",
+      "name": "TX_FWV3_dock_timber_Roughness.png",
+      "sha256": "de7fe15471115e04bd4992ff7435c515252589829130e257d2e41fa0f1581667",
+      "status": "SOURCE_ONLY_PBR_TEXTURE_NOT_NATIVE_IMPORTED"
+    },
+    {
+      "bytes": 127561,
+      "channel": "BaseColor",
+      "dimensions": [
+        512,
+        512
+      ],
+      "material": "harbor_plaster",
+      "name": "TX_FWV3_harbor_plaster_BaseColor.png",
+      "sha256": "b7bddc234ee4ee6c0f54755b2e92df9e02bb0df6ffbcbb4762e3863b7efa83c9",
+      "status": "SOURCE_ONLY_PBR_TEXTURE_NOT_NATIVE_IMPORTED"
+    },
+    {
+      "bytes": 138785,
+      "channel": "Normal",
+      "dimensions": [
+        512,
+        512
+      ],
+      "material": "harbor_plaster",
+      "name": "TX_FWV3_harbor_plaster_Normal.png",
+      "sha256": "a6ca5ffca4ba82b4ffd2616aaed28d1c9b17f7625fbc29a4b9953aee9211709e",
+      "status": "SOURCE_ONLY_PBR_TEXTURE_NOT_NATIVE_IMPORTED"
+    },
+    {
+      "bytes": 69914,
+      "channel": "Roughness",
+      "dimensions": [
+        512,
+        512
+      ],
+      "material": "harbor_plaster",
+      "name": "TX_FWV3_harbor_plaster_Roughness.png",
+      "sha256": "dec0c27828c2661a5019bb1750a384d3b401429ed1f65c96a264e5faa04f6596",
+      "status": "SOURCE_ONLY_PBR_TEXTURE_NOT_NATIVE_IMPORTED"
+    },
+    {
+      "bytes": 128478,
+      "channel": "BaseColor",
+      "dimensions": [
+        512,
+        512
+      ],
+      "material": "ochre_canvas",
+      "name": "TX_FWV3_ochre_canvas_BaseColor.png",
+      "sha256": "cadc1f9fd5e9e7b6e13381b7d0967d3fa627744c49a675b73a29a95022799308",
+      "status": "SOURCE_ONLY_PBR_TEXTURE_NOT_NATIVE_IMPORTED"
+    },
+    {
+      "bytes": 171957,
+      "channel": "Normal",
+      "dimensions": [
+        512,
+        512
+      ],
+      "material": "ochre_canvas",
+      "name": "TX_FWV3_ochre_canvas_Normal.png",
+      "sha256": "60919a71639c02b0714b1ec51fb78bcba62c8e091d958794ee698d8c3b1ffa89",
+      "status": "SOURCE_ONLY_PBR_TEXTURE_NOT_NATIVE_IMPORTED"
+    },
+    {
+      "bytes": 91848,
+      "channel": "Roughness",
+      "dimensions": [
+        512,
+        512
+      ],
+      "material": "ochre_canvas",
+      "name": "TX_FWV3_ochre_canvas_Roughness.png",
+      "sha256": "efa04a0a0341ee0d1e4f3f50719bd32d50c9f2bc9a46c2509aaa4cc0f2752781",
+      "status": "SOURCE_ONLY_PBR_TEXTURE_NOT_NATIVE_IMPORTED"
+    },
+    {
+      "bytes": 111398,
+      "channel": "BaseColor",
+      "dimensions": [
+        512,
+        512
+      ],
+      "material": "patina_metal",
+      "name": "TX_FWV3_patina_metal_BaseColor.png",
+      "sha256": "e578604a15bfe4d5323259c8f911637ace056e1e35a1deedeb7c747e9a7fb787",
+      "status": "SOURCE_ONLY_PBR_TEXTURE_NOT_NATIVE_IMPORTED"
+    },
+    {
+      "bytes": 160267,
+      "channel": "Normal",
+      "dimensions": [
+        512,
+        512
+      ],
+      "material": "patina_metal",
+      "name": "TX_FWV3_patina_metal_Normal.png",
+      "sha256": "71b6cb6da01a8e087054fe4cb2915728b20c87ffb4c4d270138039bd0b4c3e15",
+      "status": "SOURCE_ONLY_PBR_TEXTURE_NOT_NATIVE_IMPORTED"
+    },
+    {
+      "bytes": 89866,
+      "channel": "Roughness",
+      "dimensions": [
+        512,
+        512
+      ],
+      "material": "patina_metal",
+      "name": "TX_FWV3_patina_metal_Roughness.png",
+      "sha256": "fd340a82ca1eef45f2ab49c0d3299796aca1f8c84644f8eb5696ba229374147f",
+      "status": "SOURCE_ONLY_PBR_TEXTURE_NOT_NATIVE_IMPORTED"
+    },
+    {
+      "bytes": 102010,
+      "channel": "BaseColor",
+      "dimensions": [
+        512,
+        512
+      ],
+      "material": "quay_stone",
+      "name": "TX_FWV3_quay_stone_BaseColor.png",
+      "sha256": "6c7f79c09f34190cf450c659cb6302a37fe4858362a86dd897de7e6a6a945295",
+      "status": "SOURCE_ONLY_PBR_TEXTURE_NOT_NATIVE_IMPORTED"
+    },
+    {
+      "bytes": 155333,
+      "channel": "Normal",
+      "dimensions": [
+        512,
+        512
+      ],
+      "material": "quay_stone",
+      "name": "TX_FWV3_quay_stone_Normal.png",
+      "sha256": "04f00b784ba873b61d9b3dcfbcc6f878b3007589d2345ca9e62eb6c7b38e8810",
+      "status": "SOURCE_ONLY_PBR_TEXTURE_NOT_NATIVE_IMPORTED"
+    },
+    {
+      "bytes": 82871,
+      "channel": "Roughness",
+      "dimensions": [
+        512,
+        512
+      ],
+      "material": "quay_stone",
+      "name": "TX_FWV3_quay_stone_Roughness.png",
+      "sha256": "4e21c211eaf8f0914b96874867fde21d81b9dc679c8c0b8593e2df33bcbb839d",
+      "status": "SOURCE_ONLY_PBR_TEXTURE_NOT_NATIVE_IMPORTED"
+    },
+    {
+      "bytes": 145810,
+      "channel": "BaseColor",
+      "dimensions": [
+        512,
+        512
+      ],
+      "material": "sea_foam",
+      "name": "TX_FWV3_sea_foam_BaseColor.png",
+      "sha256": "efb8189dd13417a968d5a705f46c2dfb62aa5f7705ab5abe05916aadef65e178",
+      "status": "SOURCE_ONLY_PBR_TEXTURE_NOT_NATIVE_IMPORTED"
+    },
+    {
+      "bytes": 155332,
+      "channel": "Normal",
+      "dimensions": [
+        512,
+        512
+      ],
+      "material": "sea_foam",
+      "name": "TX_FWV3_sea_foam_Normal.png",
+      "sha256": "1d0028708cd85b587e0d6488e4723e52d25255960dfec7604ee6d9e4d2bb6842",
+      "status": "SOURCE_ONLY_PBR_TEXTURE_NOT_NATIVE_IMPORTED"
+    },
+    {
+      "bytes": 89296,
+      "channel": "Roughness",
+      "dimensions": [
+        512,
+        512
+      ],
+      "material": "sea_foam",
+      "name": "TX_FWV3_sea_foam_Roughness.png",
+      "sha256": "6028014700952b455fb045e62eb0e034c543b97319c6885d8617b7f7caadae97",
+      "status": "SOURCE_ONLY_PBR_TEXTURE_NOT_NATIVE_IMPORTED"
+    },
+    {
+      "bytes": 111700,
+      "channel": "BaseColor",
+      "dimensions": [
+        512,
+        512
+      ],
+      "material": "warm_roof",
+      "name": "TX_FWV3_warm_roof_BaseColor.png",
+      "sha256": "09e0b4849db0114a62681d66a5ea710e2ed4dc902f6f23f95259801d01596244",
+      "status": "SOURCE_ONLY_PBR_TEXTURE_NOT_NATIVE_IMPORTED"
+    },
+    {
+      "bytes": 171116,
+      "channel": "Normal",
+      "dimensions": [
+        512,
+        512
+      ],
+      "material": "warm_roof",
+      "name": "TX_FWV3_warm_roof_Normal.png",
+      "sha256": "44661d1dcf4d46aa86af2e71b4c80214f7736ce41d62f7b9ff31f4bb2ce13d75",
+      "status": "SOURCE_ONLY_PBR_TEXTURE_NOT_NATIVE_IMPORTED"
+    },
+    {
+      "bytes": 84246,
+      "channel": "Roughness",
+      "dimensions": [
+        512,
+        512
+      ],
+      "material": "warm_roof",
+      "name": "TX_FWV3_warm_roof_Roughness.png",
+      "sha256": "314574436c4a446bbab5c8a7b76ad3dc52900274206dd3713979920b939773f7",
+      "status": "SOURCE_ONLY_PBR_TEXTURE_NOT_NATIVE_IMPORTED"
+    },
+    {
+      "bytes": 122292,
+      "channel": "BaseColor",
+      "dimensions": [
+        512,
+        512
+      ],
+      "material": "warm_stone_trim",
+      "name": "TX_FWV3_warm_stone_trim_BaseColor.png",
+      "sha256": "3dabf2e758ccb2aa0dc345084946feaec700ed7ae34db9bd389609266cabf4d9",
+      "status": "SOURCE_ONLY_PBR_TEXTURE_NOT_NATIVE_IMPORTED"
+    },
+    {
+      "bytes": 150368,
+      "channel": "Normal",
+      "dimensions": [
+        512,
+        512
+      ],
+      "material": "warm_stone_trim",
+      "name": "TX_FWV3_warm_stone_trim_Normal.png",
+      "sha256": "73f7fbae49aa57cd8782e8eda10eae262978a5bafac0574f814f626fa42c1b58",
+      "status": "SOURCE_ONLY_PBR_TEXTURE_NOT_NATIVE_IMPORTED"
+    },
+    {
+      "bytes": 79038,
+      "channel": "Roughness",
+      "dimensions": [
+        512,
+        512
+      ],
+      "material": "warm_stone_trim",
+      "name": "TX_FWV3_warm_stone_trim_Roughness.png",
+      "sha256": "bc24877664787429525fc3a9bb1bbca235c68f799a3d52f0483492654e8c6fff",
+      "status": "SOURCE_ONLY_PBR_TEXTURE_NOT_NATIVE_IMPORTED"
+    }
+  ],
+  "version": 3
+}
