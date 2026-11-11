@@ -1,0 +1,194 @@
+{
+  "PIE_verified": false,
+  "atmosphere": "single_native_director_on_duplicate_only",
+  "authority": "REVIEW_ONLY_NOT_CANON_ART_OR_NATIVE_VISUAL_APPROVAL",
+  "physical_workflow": "albedo_srgb_normal_linear_ORM_linear",
+  "production_maps_changed": false,
+  "review_maps": [
+    "/Game/TSTSS/Review/SurfacePassV1/VS01_DenithHarbor_SurfaceReview",
+    "/Game/TSTSS/Review/SurfacePassV1/VS02_AureateInteriors_SurfaceReview",
+    "/Game/TSTSS/Review/SurfacePassV1/VS03_FirstWakeSky_SurfaceReview",
+    "/Game/TSTSS/Review/SurfacePassV1/VS04_SplashdownSea_SurfaceReview",
+    "/Game/TSTSS/Review/SurfacePassV1/VS05_DenithFuelShanty_SurfaceReview",
+    "/Game/TSTSS/Review/SurfacePassV1/VS06_SplashdownShore_SurfaceReview"
+  ],
+  "scene_looks": {
+    "VS01_DenithHarbor": {
+      "clock_hours": 16.8,
+      "lighting_reference": "harbor_dusk",
+      "motivated_practicals": 2,
+      "weather": "CoastalMist",
+      "weather_and_time_are_noncanonical_lookdev": true
+    },
+    "VS02_AureateInteriors": {
+      "clock_hours": 17.1,
+      "lighting_reference": "engineering",
+      "motivated_practicals": 2,
+      "weather": "Clear",
+      "weather_and_time_are_noncanonical_lookdev": true
+    },
+    "VS03_FirstWakeSky": {
+      "clock_hours": 17.5,
+      "lighting_reference": "ascent",
+      "motivated_practicals": 0,
+      "weather": "Clear",
+      "weather_and_time_are_noncanonical_lookdev": true
+    },
+    "VS04_SplashdownSea": {
+      "clock_hours": 18.0,
+      "lighting_reference": "storm_descent",
+      "motivated_practicals": 0,
+      "weather": "Storm",
+      "weather_and_time_are_noncanonical_lookdev": true
+    },
+    "VS05_DenithFuelShanty": {
+      "clock_hours": 18.6,
+      "lighting_reference": "shore_aftermath",
+      "motivated_practicals": 1,
+      "weather": "Rain",
+      "weather_and_time_are_noncanonical_lookdev": true
+    },
+    "VS06_SplashdownShore": {
+      "clock_hours": 19.1,
+      "lighting_reference": "shore_aftermath",
+      "motivated_practicals": 1,
+      "weather": "CoastalMist",
+      "weather_and_time_are_noncanonical_lookdev": true
+    }
+  },
+  "schema": "tstss.firstwake.surfacepass.v1",
+  "sha256": {
+    "T_FW_aether_BaseColor.png": "76985bf5a6dd3f0e2034f572c36c220bae8fc2fcd12dc7b268cc08855ae86bb0",
+    "T_FW_aether_Normal.png": "e46e9a68c2be2101903db3693c9cd7782880de89368e1d99e8cffcdb7756223e",
+    "T_FW_aether_ORM.png": "41153adffa82c16a4eb39b1d773af268c229614858295a1e82bf8b7861e7cb1e",
+    "T_FW_brass_BaseColor.png": "dd123e2380f7251af3e44ba2fa2077615eea64d8ffbe4ecc44d9b57e1543e33f",
+    "T_FW_brass_Normal.png": "5a3fe0540e40f822d29fbfc21a30a817a7a121bd4704a9afb610427e6c5ca00a",
+    "T_FW_brass_ORM.png": "f8050369c6196ae2534a1a975bb9285fa78eb7a13de91ec927c65ac6005dbd6b",
+    "T_FW_cloud_BaseColor.png": "03b5ca4483b9b8469330194d81025309eb48fcb2db5bb95c819004f95b476f61",
+    "T_FW_cloud_Normal.png": "ff3677b09ba537a0cf32e360728e55691d98c27a8af72da7b38599a31ba74f21",
+    "T_FW_cloud_ORM.png": "68c3621c68f0a5d7c14cc0fe554dc8d4ff16ea851ae1bf0d2dab4813098260df",
+    "T_FW_dark_stone_BaseColor.png": "7b63dc6ed4f432037ad54d83e6bd49814c268afcbda87cfbf705616158b8bc7d",
+    "T_FW_dark_stone_Normal.png": "c848800bb40a6f9e05dee8e65f73a49d1565af17c1187891fec724f1179b79e7",
+    "T_FW_dark_stone_ORM.png": "ee6f695f9a793d1044782a22345218ec19a0d3ad473c65502a94b409c0a64b68",
+    "T_FW_green_BaseColor.png": "614ef5a6d7e6d9f9904d5fe2a1202bcb7c0ed335a7b40d711f133b01639bfebb",
+    "T_FW_green_Normal.png": "f5ae841c7736ba218afa521a26dd0818b318c2cde62f3962cbcc45c05dc6ecab",
+    "T_FW_green_ORM.png": "c4098372732750b7c28c182b46e83359dc127ac38ccf52fc9106411ce8e69b4a",
+    "T_FW_ocean_BaseColor.png": "810d038e55ccfd1c3f406dd80f7f5cac107ae8735a9c2a4794b6949169345547",
+    "T_FW_ocean_Normal.png": "509721122102324e857d2b6524e409044c3d91b1d749325d728029cd232c5071",
+    "T_FW_ocean_ORM.png": "0b90961ff804295a033bffbb807ab62f389249f8e008de9b1cfa5c478abec883",
+    "T_FW_sand_BaseColor.png": "a9234d5c796c09278f0071a815eeba8e7f9c0fe6b38eec21af119acfe8cf8e4f",
+    "T_FW_sand_Normal.png": "982ab3db1b89d2504562c3028f3765a46f4e91a85324326d6658c69a12e31628",
+    "T_FW_sand_ORM.png": "93a8626b7049c2deaf77a824ef4e7e40c7684327af6de310a56768e460fdcfa5",
+    "T_FW_stone_BaseColor.png": "30f5f2b935c4380db689e60cc55321a02625916075eb0a21d44bc357ead940e9",
+    "T_FW_stone_Normal.png": "eed2e9c78fb9d034376df07cc18efe6c1456347518916d6f9e90a927d874032f",
+    "T_FW_stone_ORM.png": "910baa2b347c14b15361057007a498041e3436c0e866c6b9a547e1a894130596",
+    "T_FW_timber_BaseColor.png": "91e8bba0cc55c4dd567c9092f63f6b6550dce0e6f5277635d96165048eeaea61",
+    "T_FW_timber_Normal.png": "00b34394bf0e3a306ab6cff36472474adfb567c6774e9e9483b189a46b041aad",
+    "T_FW_timber_ORM.png": "e7cf9a0b54f7002c2b3fe59778cbe6d1bbc2154081579a42f2f7b8e62e6dabf2",
+    "T_FW_warm_BaseColor.png": "c5534ba76cf43a243143b36869801585528f80ad692e4fb7bd87c4999bf7d48c",
+    "T_FW_warm_Normal.png": "40ae67d41005af5562698625f83b9f665c65440c1e9a35d3bf13256d648a05ab",
+    "T_FW_warm_ORM.png": "ae16e408d58790acf24796eac2eee97c780c01e201e62e03314ceca5f1a05aae"
+  },
+  "source_maps": [
+    "/Game/TSTSS/Review/VerticalSlice/VS01_DenithHarbor",
+    "/Game/TSTSS/Review/VerticalSlice/VS02_AureateInteriors",
+    "/Game/TSTSS/Review/VerticalSlice/VS03_FirstWakeSky",
+    "/Game/TSTSS/Review/VerticalSlice/VS04_SplashdownSea",
+    "/Game/TSTSS/Review/VerticalSlice/VS05_DenithFuelShanty",
+    "/Game/TSTSS/Review/VerticalSlice/VS06_SplashdownShore"
+  ],
+  "textures": {
+    "aether": {
+      "channels": [
+        "BaseColor",
+        "Normal",
+        "ORM"
+      ],
+      "size": 512,
+      "uv_tiling": 3.0
+    },
+    "brass": {
+      "channels": [
+        "BaseColor",
+        "Normal",
+        "ORM"
+      ],
+      "size": 512,
+      "uv_tiling": 2.0
+    },
+    "cloud": {
+      "channels": [
+        "BaseColor",
+        "Normal",
+        "ORM"
+      ],
+      "size": 512,
+      "uv_tiling": 1.5
+    },
+    "dark_stone": {
+      "channels": [
+        "BaseColor",
+        "Normal",
+        "ORM"
+      ],
+      "size": 512,
+      "uv_tiling": 3.5
+    },
+    "green": {
+      "channels": [
+        "BaseColor",
+        "Normal",
+        "ORM"
+      ],
+      "size": 512,
+      "uv_tiling": 5.0
+    },
+    "ocean": {
+      "channels": [
+        "BaseColor",
+        "Normal",
+        "ORM"
+      ],
+      "size": 512,
+      "uv_tiling": 1.4
+    },
+    "sand": {
+      "channels": [
+        "BaseColor",
+        "Normal",
+        "ORM"
+      ],
+      "size": 512,
+      "uv_tiling": 5.0
+    },
+    "stone": {
+      "channels": [
+        "BaseColor",
+        "Normal",
+        "ORM"
+      ],
+      "size": 512,
+      "uv_tiling": 3.0
+    },
+    "timber": {
+      "channels": [
+        "BaseColor",
+        "Normal",
+        "ORM"
+      ],
+      "size": 512,
+      "uv_tiling": 4.0
+    },
+    "warm": {
+      "channels": [
+        "BaseColor",
+        "Normal",
+        "ORM"
+      ],
+      "size": 512,
+      "uv_tiling": 2.0
+    }
+  },
+  "visual_approval": false,
+  "weather_assurance": "native_stage_and_gpu_not_yet_verified"
+}
