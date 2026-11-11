@@ -115,6 +115,20 @@ class CrossPathReviewContract(unittest.TestCase):
     def test_all_nine_lanes_and_native_registry(self):
         self.assertEqual([], validate(self.data))
 
+    def test_native_compile_regression_restore_and_f7_confirmation(self):
+        # Exact errors witnessed by UE 5.8.4 UBT at bb6855e (not merely
+        # theoretical lint rules). Keep the restored public declaration unique.
+        milestone = (UNREAL / "Source/ToSailTheStarrySky/Public/TSTSSMilestoneActor.h").read_text(encoding="utf-8")
+        explorer_h = (UNREAL / "Source/ToSailTheStarrySky/Public/TSTSSExplorerCharacter.h").read_text(encoding="utf-8")
+        explorer_cpp = (UNREAL / "Source/ToSailTheStarrySky/Private/TSTSSExplorerCharacter.cpp").read_text(encoding="utf-8")
+        self.assertEqual(1, milestone.count(
+            "void ReconcileReviewCollisionAfterRestore(const UTSTSSFirstWakeState* State);"))
+        self.assertEqual(1, explorer_h.count(
+            "ETSTSSFirstWakeBeat PendingReviewContinueBeat ="))
+        self.assertRegex(explorer_cpp, r"GetCurrentBeat\(\)\s*==\s*PendingReviewContinueBeat\s*&&")
+        self.assertRegex(explorer_cpp, r"PendingReviewContinueBeat\s*=\s*FirstWakeState->GetCurrentBeat\(\);")
+        self.assertNotIn("bPendingReviewContinueBeat", explorer_cpp)
+
     def test_cannot_claim_approval_or_native_success(self):
         for field in ("pie_verified", "gpu_approved", "creator_approved",
                       "merged_to_main", "release_authorized"):

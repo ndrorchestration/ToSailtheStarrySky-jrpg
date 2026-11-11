@@ -65,3 +65,15 @@ It duplicates VS06 instead of changing it, creates an isolated folder per GLB im
 **Partial-failure semantics:** A failed native import may leave new unapproved assets inside its unique review namespace. The workflow intentionally refuses a second overwrite attempt; inspect the failed run and use a fresh disposable namespace/worktree for remediation rather than silently deleting evidence or assets.
 
 **Source-only QA:** `python -m unittest discover -s unreal/Tools -p "test_first_wake_multipath_shore.py"` checks the map/GLB/gear hashes, no automatic grants, exact native receipt binding, stale/forged receipt denial, no implicit Unreal launch, conflict-free map destination, unique actor counts, and fail-closed process/resource boundaries.
+
+## 2026-11-10 native UBT compile trial: failed at `bb6855e27475`
+
+The first exact-head UE 5.8.4 native Win64 Editor build was attempted on an idle workstation. The build report is retained under `unreal/Saved/MigrationEvidence/bb6855e27475-20261111T042648861Z-212b5bbf/build.log`. **Result: FAILED**, before any Editor automation tests.
+
+Three compiler diagnostics reduced to two source defects:
+- `TSTSSMilestoneActor.h` duplicated the declaration `ReconcileReviewCollisionAfterRestore` within the same class (C2535).
+- `TSTSSExplorerCharacter.cpp` compared the First Wake beat to nonexistent `bPendingReviewContinueBeat` rather than its actual `PendingReviewContinueBeat` member (C2065, cascading C2737).
+
+Smallest reversible source repairs have been applied ONLY on this integration branch, with one new test `test_native_compile_regression_restore_and_f7_confirmation` in `test_first_wake_multipath_review.py`. Source-only regression: **438/438 PASS**. These repairs do not prove that the next native build passes. The failed exact-head evidence stays in place and must not be promoted as native acceptance.
+
+Disk reserve after initial UBT compile: 14.1 GiB. Existing `unreal/Intermediate` (~2.48 GiB) is preserved for the incremental retry; no shared build/cache or other agent session was deleted or terminated.

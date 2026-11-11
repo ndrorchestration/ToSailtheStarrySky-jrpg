@@ -25,11 +25,6 @@ public:
     ETSTSSInspectionStation InspectionStation = ETSTSSInspectionStation::Lift;
     UFUNCTION(BlueprintImplementableEvent, Category="TSTSS|First Wake")
     void OnMilestoneActivated();
-#if WITH_EDITOR
-    // Synchronize review-only marker rays/physical blocking after a successful
-    // SaveGame restore. Never modifies story, non-PIE or production actors.
-    void ReconcileReviewCollisionAfterRestore(const UTSTSSFirstWakeState* State);
-#endif
 
 protected:
     virtual void BeginPlay() override;
