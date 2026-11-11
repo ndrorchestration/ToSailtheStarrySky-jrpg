@@ -1,0 +1,116 @@
+{
+  "authority": "DRAFT_3D_ENVIRONMENTS_NOT_PLAYABLE_OR_CANON_APPROVED",
+  "target": "/Game/TSTSS/Review/VerticalSlice",
+  "levels": [
+    {
+      "name": "VS01_DenithHarbor",
+      "package": "/Game/TSTSS/Review/VerticalSlice/VS01_DenithHarbor",
+      "description": "Prelaunch quay, flyer, Ionia and boarding",
+      "gate": "prelaunch"
+    },
+    {
+      "name": "VS02_AureateInteriors",
+      "package": "/Game/TSTSS/Review/VerticalSlice/VS02_AureateInteriors",
+      "description": "Front deck, bridge and harmonic-engine inspection",
+      "gate": "prelaunch"
+    },
+    {
+      "name": "VS03_FirstWakeSky",
+      "package": "/Game/TSTSS/Review/VerticalSlice/VS03_FirstWakeSky",
+      "description": "Controlled launch, high atmosphere and drift",
+      "gate": "launch"
+    },
+    {
+      "name": "VS04_SplashdownSea",
+      "package": "/Game/TSTSS/Review/VerticalSlice/VS04_SplashdownSea",
+      "description": "Ocean and isolated native contact-adapter lab",
+      "gate": "sea"
+    },
+    {
+      "name": "VS05_DenithFuelShanty",
+      "package": "/Game/TSTSS/Review/VerticalSlice/VS05_DenithFuelShanty",
+      "description": "Post-contact fuel stop and tide-worn settlement",
+      "gate": "post_contact"
+    },
+    {
+      "name": "VS06_SplashdownShore",
+      "package": "/Game/TSTSS/Review/VerticalSlice/VS06_SplashdownShore",
+      "description": "Shore exploration and later Lyra introduction staging",
+      "gate": "post_contact"
+    }
+  ],
+  "links": [
+    {
+      "from": "VS01_DenithHarbor",
+      "to": "VS02_AureateInteriors",
+      "requirement": "Board ship after Ionia",
+      "runtime_transition_implemented": false
+    },
+    {
+      "from": "VS02_AureateInteriors",
+      "to": "VS03_FirstWakeSky",
+      "requirement": "Three checks then launch",
+      "runtime_transition_implemented": false
+    },
+    {
+      "from": "VS03_FirstWakeSky",
+      "to": "VS04_SplashdownSea",
+      "requirement": "Physical sea contact",
+      "runtime_transition_implemented": false
+    },
+    {
+      "from": "VS04_SplashdownSea",
+      "to": "VS05_DenithFuelShanty",
+      "requirement": "Only after flotation",
+      "runtime_transition_implemented": false
+    },
+    {
+      "from": "VS05_DenithFuelShanty",
+      "to": "VS06_SplashdownShore",
+      "requirement": "Post-contact exploration",
+      "runtime_transition_implemented": false
+    }
+  ],
+  "preserve_first_wake_v2": true,
+  "native_water_adaptor_isolated": true,
+  "world_globe_not_implemented": true,
+  "no_automatic_lyra_recruitment": true,
+  "starbourne_locked": true,
+  "visual_approval": false,
+  "PIE_verified": false,
+  "source_head": "bcbc4e77d89ab643aab656822cc996e86adaf525",
+  "parent_sha256_unchanged": "4c96f1fb28fe4af91b879977e473c20de32bd933f741a5384bb8403a00254b80",
+  "native_map_staging": {
+    "VS01_DenithHarbor": {
+      "sha256": "961fc03e3d931de67c70e0c89b7ee6f850f764f65a88149c4adafae2ff7fff04",
+      "bytes": 152198,
+      "new_actors": 47
+    },
+    "VS02_AureateInteriors": {
+      "sha256": "a97fbb057cb87c0e35fe95195ca06c30de1a5cc60158bf31a657f738b22a9d69",
+      "bytes": 64661,
+      "new_actors": 28
+    },
+    "VS03_FirstWakeSky": {
+      "sha256": "1e19e2734709d7bbf3a0ee72b25616c8f538c0126afc031c4b33df272249ddfa",
+      "bytes": 45445,
+      "new_actors": 18
+    },
+    "VS04_SplashdownSea": {
+      "sha256": "45df54576d6c6d20c48b7148c62f10b33b842fefaedd03bf17f4e9b8d3188843",
+      "bytes": 36460,
+      "new_actors": 13
+    },
+    "VS05_DenithFuelShanty": {
+      "sha256": "5c83e7125eb97aa42d951e89ff1b530600bcc1738287b441f681d44bfaf963bd",
+      "bytes": 49464,
+      "new_actors": 20
+    },
+    "VS06_SplashdownShore": {
+      "sha256": "316299925275785494d1ec7b082f20007fa0f889f50ce59ea1c7e977ef942726",
+      "bytes": 51980,
+      "new_actors": 21
+    }
+  },
+  "status": "MAP_FILES_SAVED_NO_PIE_ACCEPTANCE"
+}
