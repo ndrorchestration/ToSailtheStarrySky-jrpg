@@ -189,3 +189,9 @@ jobs:
         run: |
           python3 unreal/Tools/tstss_jrpg_hybrid_review_map.py --validate
           python3 -m unittest discover -s unreal/Tools -p 'test_tstss_jrpg_hybrid_review_map.py' -v
+      - name: Validate original review SFX recipes and fail-closed SoundWave import plan (NOT audio playback)
+        run: |
+          python3 unreal/Tools/build_tstss_jrpg_review_audio.py --validate
+          python3 -m unittest discover -s unreal/Tools -p 'test_tstss_jrpg_review_audio.py' -v
+          python3 unreal/Tools/import_tstss_jrpg_review_sfx.py --validate
+          python3 -m unittest discover -s unreal/Tools -p 'test_import_tstss_jrpg_review_sfx.py' -v
