@@ -33,3 +33,21 @@ separate evidence ledger with verified hashes; never invent results.
 
 Master acceptance: [First Wake v0.2](https://app.notion.com/p/3ecf5bad238b8103b313f79ea816a9b5).
 Engineering owner: [TSTSS issue #754](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/issues/754).
+
+## Story-to-shot source handoffs
+
+`FirstWakeRuntimeShotHandoffs.review.json` maps the ten proposed cinematic
+shots onto the actual `ETSTSSFirstWakeBeat` enum, engineering inspection
+mask and `UTSTSSWaterLandingGate::Observe` contract. The mapping carries
+conservative earliest/latest *review* states and does **not** let a cinematic
+advance gameplay, recruit later party members or synthesize water evidence.
+The actual source validator also refuses removal of the stable two-second
+pre-transition witness and replay-generation boundaries.
+
+Run `py -3 unreal/Tools/verify_first_wake_shot_handoffs.py` and
+`py -3 -m unittest discover -s unreal/Tools -p 'test_first_wake_shot_handoffs.py'`.
+The combined source suite and GitHub source preflight also include these checks.
+
+The handoff is **design/source metadata, not** a LevelSequence, an Unreal
+runtime cue dispatcher, a playable route, a native render, or evidence of
+human approval. Those are separate gates of the master VS matrix.
