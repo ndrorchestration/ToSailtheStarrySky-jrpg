@@ -169,7 +169,7 @@ def stage():
     # This avoids saving a map referencing still-unsaved SoundWaves.
     for filename in sorted(CUES):
         path = DESTINATION + "/QA_" + Path(filename).stem
-        if not assets.save_asset(path):
+        if not assets.save_asset(path, False):
             raise RuntimeError("QA-only SoundWave save failed: " + filename)
     if not level.save_current_level():
         raise RuntimeError("QA map save failed; no native playable claim")
