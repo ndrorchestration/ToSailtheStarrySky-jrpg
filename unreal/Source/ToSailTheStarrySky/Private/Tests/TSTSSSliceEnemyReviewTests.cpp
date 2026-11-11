@@ -13,7 +13,19 @@ bool FTSTSSSliceEnemyReviewCatalogTest::RunTest(const FString& Parameters)
     const ETSTSSSliceEnemyKind AllKinds[] = {
         ETSTSSSliceEnemyKind::HarmonicShear,
         ETSTSSSliceEnemyKind::AetherLeakWisp,
-        ETSTSSSliceEnemyKind::DockSkitter
+        ETSTSSSliceEnemyKind::DockSkitter,
+        ETSTSSSliceEnemyKind::BanditCutpurse,
+        ETSTSSSliceEnemyKind::BanditSlinger,
+        ETSTSSSliceEnemyKind::BanditCaptain,
+        ETSTSSSliceEnemyKind::Thornvine,
+        ETSTSSSliceEnemyKind::Sporecap,
+        ETSTSSSliceEnemyKind::RootSentinel,
+        ETSTSSSliceEnemyKind::ReefEel,
+        ETSTSSSliceEnemyKind::TidefinRaptor,
+        ETSTSSSliceEnemyKind::ShellbackCrab,
+        ETSTSSSliceEnemyKind::CliffLynx,
+        ETSTSSSliceEnemyKind::Bristleboar,
+        ETSTSSSliceEnemyKind::NightGlider
     };
     TSet<FName> Archetypes;
     TSet<FName> Skills;
@@ -22,8 +34,20 @@ bool FTSTSSSliceEnemyReviewCatalogTest::RunTest(const FString& Parameters)
         FTSTSSSliceEnemyDescriptor Definition;
         if (!TestTrue(TEXT("registered kind resolves"),
             FTSTSSSliceEnemyCatalog::TryDescribe(Kind, Definition))) return false;
+
         TestFalse(TEXT("story placement is never automatically approved"),
                   Definition.bStoryPlacementApproved);
+        TestFalse(TEXT("every creature has a habitat"), Definition.HabitatTag.IsNone());
+        if (Kind == ETSTSSSliceEnemyKind::BanditCaptain)
+        {
+            TestTrue(TEXT("captain alone is marked leader"), Definition.bLeader);
+            TestTrue(TEXT("captain classified as bandit"),
+                     Definition.Family == ETSTSSSliceEnemyFamily::Bandit);
+        }
+        else
+        {
+            TestFalse(TEXT("non-captains not promoted to leaders"), Definition.bLeader);
+        }
         TestTrue(TEXT("valid HP/resource/balance ranges"),
             Definition.MaxHP > 0 && Definition.MaxHP <= 100 &&
             Definition.MaxResource >= 0 && Definition.MaxResource <= 20 &&
@@ -33,6 +57,9 @@ bool FTSTSSSliceEnemyReviewCatalogTest::RunTest(const FString& Parameters)
         TestFalse(TEXT("unique archetype identity"),
                   Archetypes.Contains(Definition.ArchetypeId));
         Archetypes.Add(Definition.ArchetypeId);
+        TestTrue(TEXT("strictly populated ability IDs"),
+                 !Definition.AbilityIds[0].IsNone() &&
+                 !Definition.AbilityIds[1].IsNone());
         TestEqual(TEXT("two defined actions per creature"),
                   Definition.AbilityIds.Num(), 2);
         for (const FName Skill : Definition.AbilityIds)
@@ -82,8 +109,8 @@ bool FTSTSSSliceEnemyReviewCatalogTest::RunTest(const FString& Parameters)
     UDataTable* DesignOnly = FTSTSSSliceEnemyCatalog::MakeReviewSkillTable(
         GetTransientPackage());
     if (!TestNotNull(TEXT("review DataTable exists"), DesignOnly)) return false;
-    TestEqual(TEXT("all six enemy-only rows authored"),
-              DesignOnly->GetRowMap().Num(), 6);
+    TestEqual(TEXT("all thirty enemy-only rows authored"),
+              DesignOnly->GetRowMap().Num(), 30);
     for (const FName Skill : Skills)
     {
         const FTSTSSBattleSkillRow* Row =

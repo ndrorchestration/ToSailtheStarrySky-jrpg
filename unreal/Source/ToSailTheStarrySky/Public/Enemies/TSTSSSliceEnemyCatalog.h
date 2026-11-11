@@ -5,14 +5,36 @@
 #include "Engine/DataTable.h"
 #include "TSTSSSliceEnemyCatalog.generated.h"
 
-// Three explicitly provisional native UE creature silhouettes for isolated slice review.
+// Provisional native UE enemy review catalog. No story placement or canonical species approval.
 // These archetypes do not authorize a story encounter or a player skill.
 UENUM(BlueprintType)
 enum class ETSTSSSliceEnemyKind : uint8
 {
     HarmonicShear,
     AetherLeakWisp,
-    DockSkitter
+    DockSkitter,
+    BanditCutpurse,
+    BanditSlinger,
+    BanditCaptain,
+    Thornvine,
+    Sporecap,
+    RootSentinel,
+    ReefEel,
+    TidefinRaptor,
+    ShellbackCrab,
+    CliffLynx,
+    Bristleboar,
+    NightGlider
+};
+
+UENUM(BlueprintType)
+enum class ETSTSSSliceEnemyFamily : uint8
+{
+    Anomaly,
+    Bandit,
+    Flora,
+    Aquatic,
+    Fauna
 };
 
 USTRUCT(BlueprintType)
@@ -25,6 +47,15 @@ struct TOSAILTHESTARRYSKY_API FTSTSSSliceEnemyDescriptor
 
     UPROPERTY(BlueprintReadOnly, Category="Slice Review")
     FString DisplayName;
+
+    UPROPERTY(BlueprintReadOnly, Category="Slice Review")
+    ETSTSSSliceEnemyFamily Family = ETSTSSSliceEnemyFamily::Anomaly;
+
+    UPROPERTY(BlueprintReadOnly, Category="Slice Review")
+    FName HabitatTag = NAME_None;
+
+    UPROPERTY(BlueprintReadOnly, Category="Slice Review")
+    bool bLeader = false;
 
     UPROPERTY(BlueprintReadOnly, Category="Slice Review")
     int32 MaxHP = 0;
