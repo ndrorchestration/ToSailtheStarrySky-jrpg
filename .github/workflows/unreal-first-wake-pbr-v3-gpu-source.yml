@@ -1,0 +1,38 @@
+name: First Wake PBR V3 GPU capture safety — source only
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/unreal-first-wake-pbr-v3-gpu-source.yml"
+      - "unreal/Content/Python/test_first_wake_slice_object_gpu_review.py"
+      - "unreal/Content/Python/test_first_wake_pbr_gpu_v3.py"
+      - "unreal/Tools/intake_first_wake_pbr_gpu_v3.py"
+      - "unreal/Tools/capture_first_wake_pbr_gpu_v3.py"
+      - "unreal/Tools/run_first_wake_pbr_gpu_v3.py"
+      - "unreal/Tools/test_first_wake_pbr_gpu_v3.py"
+      - "unreal/Docs/FIRST_WAKE_PBR_V3_NATIVE_GPU_2026_11_11.md"
+  workflow_dispatch:
+jobs:
+  real-native-gpu-contract-source-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Python compile and adversarial native GPU receipt source tests
+        run: |
+          python3 -m py_compile \
+            unreal/Tools/intake_first_wake_pbr_gpu_v3.py \
+            unreal/Tools/capture_first_wake_pbr_gpu_v3.py \
+            unreal/Tools/run_first_wake_pbr_gpu_v3.py \
+            unreal/Tools/test_first_wake_pbr_gpu_v3.py \
+            unreal/Content/Python/test_first_wake_pbr_gpu_v3.py \
+            unreal/Content/Python/test_first_wake_slice_object_gpu_review.py
+          python3 -m unittest discover -s unreal/Tools -p "test_first_wake_pbr_gpu_v3.py" -v
+      - name: Enforce no false native GPU/render/PIE source claim
+        run: |
+          echo "SOURCE_ONLY_GPU_REVIEW_CONTRACT_NOT_NATIVE_RENDERED"
+          test ! -e unreal/Saved/FirstWakeMaterialLookdevV3/D3D11_PBR_V3_20261111/native_gpu_capture_receipt.json
+          test ! -e unreal/Saved/FirstWakeMaterialLookdevV3/PBR_V3_GPU_UE584_D3D11_HostReceipt_20261111.json
+          test ! -e unreal/Content/TSTSS/Review/Scenes/FirstWake_MaterialLookdev_20261111_REVIEW_V3.umap
