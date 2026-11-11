@@ -114,7 +114,9 @@ void ATSTSSJRPGEncounterFieldReview::BeginPlay()
     }
     Biome=InitialBiome;
     SafeZoneOrigin=GetActorLocation();
+
     bReviewReady=true;
+    BattleConsole->SetReviewHostedByEncounterDirector(true);
     LastEncounterMessage=TEXT("REVIEW ACTIVE / WALK OUT OF CAMP TO FIND FOES");
     if (APlayerController* PC=UGameplayStatics::GetPlayerController(this,0))
     {
@@ -147,8 +149,15 @@ void ATSTSSJRPGEncounterFieldReview::BeginPlay()
             &ATSTSSJRPGEncounterFieldReview::CycleBiome);
         InputComponent->BindKey(EKeys::F2,IE_Pressed,this,
             &ATSTSSJRPGEncounterFieldReview::TriggerScripted);
+
         InputComponent->BindKey(EKeys::Enter,IE_Pressed,this,
             &ATSTSSJRPGEncounterFieldReview::ReturnAfterBattle);
+        InputComponent->BindKey(EKeys::J,IE_Pressed,this,
+            &ATSTSSJRPGEncounterFieldReview::StrikePreviewEnemyOne);
+        InputComponent->BindKey(EKeys::K,IE_Pressed,this,
+            &ATSTSSJRPGEncounterFieldReview::StrikePreviewEnemyTwo);
+        InputComponent->BindKey(EKeys::Escape,IE_Pressed,this,
+            &ATSTSSJRPGEncounterFieldReview::FleeReviewBattle);
     }
     RefreshFieldMarker();
 #endif
@@ -259,7 +268,9 @@ bool ATSTSSJRPGEncounterFieldReview::TryHandoffToBattle(
     SetActorHiddenInGame(true);
     if (APlayerController* PC=UGameplayStatics::GetPlayerController(this,0))
     {
-        BattleConsole->EnableInput(PC);
+        // This walking adapter owns J/K and Escape. The older V1 console's
+        // independent R reset would strand a live director ticket in V2.
+        BattleConsole->DisableInput(PC);
         BattleConsole->SetReviewHUDVisible(true);
         PC->SetViewTargetWithBlend(BattleConsole.Get(),.65f);
     }
@@ -279,6 +290,31 @@ bool ATSTSSJRPGEncounterFieldReview::TryRequestExplicitScriptedWave()
     if (!Director->TryRequestScripted(
         ScriptedPreviewPreset(Biome),Context,Ticket)) return false;
     return TryHandoffToBattle(Ticket);
+#endif
+}
+
+bool ATSTSSJRPGEncounterFieldReview::TryRetreatReviewBattle()
+{
+#if UE_BUILD_SHIPPING
+    return false;
+#else
+    if (!bReviewReady || !bInBattle || bOutcomeReady ||
+        ActiveTicketSerial<=0 || !IsValid(BattleConsole.Get()) ||
+        !IsValid(Director.Get()) ||
+        BattleConsole->GetReviewBattlePhase()!=ETSS_CombatPhase::TurnSelection)
+        return false;
+    // Explicit review flee is an abort, never a victory or a reward grant.
+    // The same one-use ticket must be consumed before returning to the field.
+    if (!Director->TryCompleteBattle(ActiveTicketSerial)) return false;
+    ActiveTicketSerial=0;
+    bInBattle=false;
+    bOutcomeReady=false;
+    BattleConsole->ResetReviewArena();
+    SetActorHiddenInGame(false);
+    LastEncounterMessage=TEXT("FLED / NO REWARD / RETURNED TO SAME WALKING LOCATION");
+    EnterReviewCamera();
+    RefreshFieldMarker();
+    return true;
 #endif
 }
 
@@ -384,7 +420,7 @@ void ATSTSSJRPGEncounterFieldReview::RefreshFieldMarker()
     const FString Title=FString::Printf(
         TEXT("HYBRID JRPG ENCOUNTERS / REVIEW ONLY\n"
              "WASD WALK  1/2/3 PARTY STAGE  V BIOME  P ENCOUNTER RATE\n"
-             "F2 SCRIPTED REVIEW CHALLENGE  ENTER RETURN FROM BATTLE\n"
+             "F2 SCRIPTED REVIEW CHALLENGE  ESC FLEE / ENTER RETURN\n"
              "BIOME: %s   STAGE: %s   RATE: %d   %s\n"
              "DISTANCE: %.0f cm   %s"),
         *BiomeTitle(Biome),*Stage,static_cast<int32>(EncounterRate),
@@ -436,4 +472,18 @@ void ATSTSSJRPGEncounterFieldReview::TriggerScripted()
 void ATSTSSJRPGEncounterFieldReview::ReturnAfterBattle()
 {
     TryReturnToExploration();
+}
+void ATSTSSJRPGEncounterFieldReview::StrikePreviewEnemyOne()
+{
+    if (bInBattle && IsValid(BattleConsole.Get()))
+        BattleConsole->TryStrikePreview(0);
+}
+void ATSTSSJRPGEncounterFieldReview::StrikePreviewEnemyTwo()
+{
+    if (bInBattle && IsValid(BattleConsole.Get()))
+        BattleConsole->TryStrikePreview(1);
+}
+void ATSTSSJRPGEncounterFieldReview::FleeReviewBattle()
+{
+    TryRetreatReviewBattle();
 }

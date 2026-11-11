@@ -47,6 +47,10 @@ public:
     UFUNCTION(BlueprintCallable, Category="TSTSS|Encounters|Review")
     bool TryReturnToExploration();
 
+    // Explicit preview flee, never a production reward/quest outcome.
+    UFUNCTION(BlueprintCallable, Category="TSTSS|Encounters|Review")
+    bool TryRetreatReviewBattle();
+
     UFUNCTION(BlueprintPure, Category="TSTSS|Encounters|Review")
     bool IsReviewBattleActive() const { return bInBattle; }
 
@@ -105,5 +109,9 @@ private:
     void ChooseEnder(); void ChooseIonia(); void ChooseLyra();
     void CycleRate(); void CycleBiome();
     void TriggerScripted();
+
     void ReturnAfterBattle();
+    void StrikePreviewEnemyOne();
+    void StrikePreviewEnemyTwo();
+    void FleeReviewBattle();
 };

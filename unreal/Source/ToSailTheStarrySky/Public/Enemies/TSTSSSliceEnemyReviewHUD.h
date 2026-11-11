@@ -18,7 +18,8 @@ public:
     void UpdateReviewHUD(const FString& WaveName, const FString& BattleState,
                          const FString& LastAction,
                          const TArray<FTSTSSCombatant>& Snapshot,
-                         const TArray<FName>& EnemyIds);
+                         const TArray<FName>& EnemyIds,
+                         bool bHybridReviewInput = false);
 
 protected:
     virtual void NativeConstruct() override;

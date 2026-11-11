@@ -94,17 +94,20 @@ void UTSTSSSliceEnemyReviewHUD::NativeConstruct()
 void UTSTSSSliceEnemyReviewHUD::UpdateReviewHUD(
     const FString& WaveName, const FString& BattleState,
     const FString& LastAction, const TArray<FTSTSSCombatant>& Snapshot,
-    const TArray<FName>& EnemyIds)
+    const TArray<FName>& EnemyIds, bool bHybridReviewInput)
 {
 #if !UE_BUILD_SHIPPING
     if (!IsValid(Title.Get()) || !IsValid(Status.Get())) return;
     Title->SetText(FText::FromString(
         TEXT("TO SAIL THE STARRY SKY  /  ENEMY REVIEW\n") + WaveName));
     Status->SetText(FText::FromString(BattleState));
-    Instruction->SetText(FText::FromString(
-        TEXT("F7 Ender  F8 +Ionia  F9 +Lyra (post-splashdown)\n"
-             "Q/E change wave (before battle)  R reset\n"
-             "J/K attack foe 1/2  |  REVIEW ONLY")));
+    Instruction->SetText(FText::FromString(bHybridReviewInput
+        ? TEXT("WALKING ENCOUNTER /  J/K TARGET 1/2\n"
+               "ESC FLEE (DURING TURN) / ENTER RETURN AFTER BATTLE\n"
+               "NO REWARDS OR STORY PROGRESSION")
+        : TEXT("F7 Ender  F8 +Ionia  F9 +Lyra (post-splashdown)\n"
+               "Q/E change wave (before battle)  R reset\n"
+               "J/K attack foe 1/2  |  REVIEW ONLY")));
     ActionText->SetText(FText::FromString(LastAction));
 
     const UTextBlock* Names[]={EnemyOne.Get(),EnemyTwo.Get()};

@@ -231,6 +231,15 @@ ETSS_CombatPhase ATSTSSSliceEnemyReviewBattleConsole::GetReviewBattlePhase() con
 #endif
 }
 
+void ATSTSSSliceEnemyReviewBattleConsole::SetReviewHostedByEncounterDirector(
+    bool bHosted)
+{
+#if !UE_BUILD_SHIPPING
+    bHostedByEncounterDirector=bHosted;
+    RefreshStatus();
+#endif
+}
+
 void ATSTSSSliceEnemyReviewBattleConsole::SetReviewHUDVisible(bool bVisible)
 {
 #if !UE_BUILD_SHIPPING
@@ -383,7 +392,8 @@ void ATSTSSSliceEnemyReviewBattleConsole::RefreshStatus()
     if (IsValid(ReviewHUD.Get()))
     {
         ReviewHUD->UpdateReviewHUD(DisplayWave(ReviewWavePreset), Phase,
-                                   LastActionText,Snapshot,Enemies);
+                                   LastActionText,Snapshot,Enemies,
+                                   bHostedByEncounterDirector);
     }
     else if (GEngine && GetWorld() && GetWorld()->IsGameWorld())
     {

@@ -48,6 +48,10 @@ public:
     UFUNCTION(BlueprintCallable, Category="TSTSS|Enemy Review")
     void SetReviewHUDVisible(bool bVisible);
 
+    // V2 walking director owns all input while its battle ticket is active;
+    // the V1 console remains standalone when this flag is not set.
+    void SetReviewHostedByEncounterDirector(bool bHosted);
+
     UFUNCTION(BlueprintCallable, Category="TSTSS|Enemy Review")
     void ResetReviewArena();
 
@@ -85,7 +89,9 @@ private:
 
     TArray<FTransform> SavedGalleryTransforms;
     TArray<TWeakObjectPtr<ATSTSSSliceEnemyActor>> ActiveEnemyActors;
+
     FString LastActionText;
+    bool bHostedByEncounterDirector = false;
 
     void StartEnderOnly();
     void StartIoniaRecruited();

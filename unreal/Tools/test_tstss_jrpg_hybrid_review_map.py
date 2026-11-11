@@ -109,6 +109,13 @@ class HybridReviewPlanTests(TestCase):
             self.assertIn(token,field)
         self.assertIn("TSTSSReviewOnly",field)
         self.assertIn("#if UE_BUILD_SHIPPING",field)
+        self.assertIn("TryRetreatReviewBattle",field)
+        self.assertIn("TryCompleteBattle(ActiveTicketSerial)",field)
+        self.assertIn("EKeys::Escape",field)
+        self.assertIn("EKeys::J",field)
+        self.assertIn("EKeys::K",field)
+        self.assertIn("BattleConsole->DisableInput(PC)",field)
+        self.assertNotIn("BattleConsole->EnableInput(PC)",field)
 
 
 if __name__=="__main__":
