@@ -3,6 +3,7 @@
 #include "TSTSSAudioSubsystem.h"
 
 #include "CollisionQueryParams.h"
+#include "Components/SceneComponent.h"
 #include "Engine/World.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -13,6 +14,8 @@
 ATSTSSFootstepAudioDirector::ATSTSSFootstepAudioDirector()
 {
     PrimaryActorTick.bCanEverTick = true;
+    USceneComponent* Anchor = CreateDefaultSubobject<USceneComponent>(TEXT("FootstepAudioAnchor"));
+    RootComponent = Anchor;
     SetActorEnableCollision(false);
 }
 
