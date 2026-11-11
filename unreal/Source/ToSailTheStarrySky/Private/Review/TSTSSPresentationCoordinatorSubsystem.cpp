@@ -240,8 +240,23 @@ bool UTSTSSPresentationCoordinatorSubsystem::MatchesStorySnapshot(
         && State->GetInspectionMask() == ObservedInspectionMask;
 }
 
+void UTSTSSPresentationCoordinatorSubsystem::HandleAcceptedStoryChange()
+{
+    // Invoked ONLY after a valid story transition, inspection, physics gate
+    // or restore/reset. Invalidate the old camera/look cue immediately.
+    PublishNeutral(TEXT("CLEARED_AFTER_ACCEPTED_FIRST_WAKE_CHANGE"));
+}
+
 void UTSTSSPresentationCoordinatorSubsystem::ClearObservedSource()
 {
+    if (StoryChangedHandle.IsValid())
+    {
+        if (UTSTSSFirstWakeState* Bound = ObservedStory.Get())
+        {
+            Bound->OnAcceptedChange().Remove(StoryChangedHandle);
+        }
+        StoryChangedHandle.Reset();
+    }
     ObservedStory.Reset();
     ObservedAtmosphere.Reset();
     ObservedRestoreGeneration = 0;
@@ -332,7 +347,7 @@ FTSTSSPresentationIntent UTSTSSPresentationCoordinatorSubsystem::TryPublishMomen
     // apparently valid milestone. This is presentation gating, not security.
     const ATSTSSExplorerCharacter* Player =
         Cast<ATSTSSExplorerCharacter>(UGameplayStatics::GetPlayerPawn(World, 0));
-    const UTSTSSFirstWakeState* ActualStory = IsValid(Player)
+    UTSTSSFirstWakeState* ActualStory = IsValid(Player)
         ? Player->GetFirstWakeState() : nullptr;
     if (!IsValid(ActualStory) || ActualStory != StoryState)
     {
@@ -357,8 +372,11 @@ FTSTSSPresentationIntent UTSTSSPresentationCoordinatorSubsystem::TryPublishMomen
         return CurrentIntent;
     }
 
+    ClearObservedSource();
     CurrentIntent = Result; // Read-only; no renderer, weather, or audio writes.
     ObservedStory = ActualStory;
+    StoryChangedHandle = ActualStory->OnAcceptedChange().AddUObject(
+        this, &UTSTSSPresentationCoordinatorSubsystem::HandleAcceptedStoryChange);
     ObservedAtmosphere = Atmosphere;
     ObservedRestoreGeneration = ActualStory->GetRestoreGeneration();
     bObservedStarted = ActualStory->HasStarted();
