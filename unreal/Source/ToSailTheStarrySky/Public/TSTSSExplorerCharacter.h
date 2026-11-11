@@ -33,7 +33,7 @@ protected:
     TObjectPtr<UTSTSSFirstWakeState> FirstWakeState;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Interaction")
     float InteractionDistance = 300.f;
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
     // PIE-only, explicitly assigned candidate. Blank by default; does not grant gameplay authority.
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
     TSoftObjectPtr<USkeletalMesh> EnderSliceReviewBody;
@@ -59,6 +59,8 @@ private:
 #if WITH_EDITOR
     // Changes only the spawned PIE pawn; never saves/overwrites the SkeletalMesh asset or level.
     void ApplyEnderSliceReviewAppearance();
+#endif
+#if WITH_EDITORONLY_DATA
     UPROPERTY(VisibleAnywhere, Category="TSTSS|Ender|SliceReview")
     TObjectPtr<UStaticMeshComponent> EnderReviewGogglesComponent;
     UPROPERTY(VisibleAnywhere, Category="TSTSS|Ender|SliceReview")
