@@ -19,7 +19,7 @@ import stage_first_wake_pbr_native_v3 as stage
 
 SRC=prior.SOURCE
 DEST=Path(__file__).resolve().parents[2]
-BRANCH="review/ue58-vslice-lookdev-20261111"
+BRANCH="review/ue58-vslice-lookdev-native-r1-20261111"
 INPUT_HEAD="f47656774d5bb0f163cef550eba09577e2ab8aef"
 RECEIPT=Path("unreal/Saved/FirstWakeMaterialLookdevV3/private_native_intake_receipt.json")
 EXPECTED_COUNT=321
