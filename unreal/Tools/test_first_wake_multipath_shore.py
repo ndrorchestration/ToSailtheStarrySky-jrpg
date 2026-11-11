@@ -60,6 +60,42 @@ class FirstWakeMultiPathShoreSourceTests(unittest.TestCase):
                     HARMONIC_SHEAR="shear", AETHER_LEAK_WISP="wisp",
                     DOCK_SKITTER="shear")))
 
+    def test_native_review_boolean_setter_is_explicit_and_fail_closed(self):
+        class FakeActor:
+            def __init__(self, supported):
+                self.supported = supported
+                self.data = {name: False for name in supported}
+            def get_editor_property(self, name):
+                if name not in self.data:
+                    raise AttributeError(name)
+                return self.data[name]
+            def set_editor_property(self, name, value):
+                if name not in self.data:
+                    raise AttributeError(name)
+                self.data[name] = value
+        actor = FakeActor({"b_loop_review"})
+        self.assertEqual("b_loop_review",
+                         stage.set_required_review_bool(actor, "loop_review", True))
+        self.assertTrue(actor.data["b_loop_review"])
+        actor = FakeActor({"reduced_motion"})
+        self.assertEqual("reduced_motion",
+                         stage.set_required_review_bool(actor, "reduced_motion", True))
+        with self.assertRaisesRegex(RuntimeError, "boolean missing"):
+            stage.set_required_review_bool(FakeActor(set()), "loop_review", True)
+        class BrokenActor(FakeActor):
+            def set_editor_property(self, name, value):
+                pass
+        with self.assertRaisesRegex(RuntimeError, "did not stick"):
+            stage.set_required_review_bool(BrokenActor({"b_loop_review"}), "loop_review", True)
+
+    def test_source_locked_material_helper_requires_absolute_file(self):
+        source = Path(stage.__file__).read_text(encoding="utf-8")
+        self.assertIn('spec_from_file_location("tstss_review_material_source", helper)', source)
+        self.assertIn('module.make_material()', source)
+        self.assertIn('spec.loader.exec_module(module)', source)
+        self.assertNotIn('from build_ender_resonator_preview import make_material', source)
+        self.assertTrue((stage.PROJECT / "Tools/build_ender_resonator_preview.py").is_file())
+
     def test_all_three_visual_groups_and_26_new_actors(self):
         self.assertEqual((22, 8), (self.plan["original_object_imports"],
                                    self.plan["showcase_object_actors"]))

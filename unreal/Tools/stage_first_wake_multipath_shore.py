@@ -179,6 +179,25 @@ def resolve_native_enemy_kinds(unreal_module) -> dict:
         raise RuntimeError("HOLD: enemy Python enum values duplicated or incomplete")
     return values
 
+def set_required_review_bool(actor, name: str, enabled: bool) -> str:
+    """Set a C++ review bool across UE Python's b-prefix spelling variants.
+
+    UE-generated property names are not guaranteed to preserve the leading b.
+    Every necessary review setting must be confirmed after writing; never
+    silently skip reduced-motion / non-autoplay safeguards.
+    """
+    for prop in (name, "b_" + name):
+        try:
+            actor.get_editor_property(prop)
+        except Exception:
+            continue
+        actor.set_editor_property(prop, enabled)
+        if actor.get_editor_property(prop) is not enabled:
+            raise RuntimeError("HOLD: review actor boolean did not stick: " + prop)
+        return prop
+    raise RuntimeError("HOLD: native review actor boolean missing: " + name)
+
+
 def build_native_shore() -> dict:
     plan = check_native_custody()
     import unreal as u
@@ -218,9 +237,17 @@ def build_native_shore() -> dict:
     config_hashes = {name: digest(PROJECT / "Config" / name) for name in config_names}
     source_sha = digest(MAP_FILE)
     if cue_material_missing:
-        # Uses the already reviewed, isolated Ender-material generator from #797.
-        from build_ender_resonator_preview import make_material
-        created = make_material()
+        # UE's -ExecutePythonScript does not guarantee its Tools directory is
+        # importable. Load this specific source-locked helper by absolute path,
+        # without adding an uncontrolled global sys.path or running its __main__.
+        import importlib.util
+        helper = PROJECT / "Tools/build_ender_resonator_preview.py"
+        spec = importlib.util.spec_from_file_location("tstss_review_material_source", helper)
+        if spec is None or spec.loader is None:
+            raise RuntimeError("HOLD: material helper source not loadable")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        created = module.make_material()
         if created is None or not u.EditorAssetLibrary.does_asset_exist(MATERIAL_CUE):
             raise RuntimeError("HOLD: emissive material creation failed")
     if not isinstance(u.load_asset(MATERIAL_CUE), u.MaterialInterface):
@@ -280,8 +307,8 @@ def build_native_shore() -> dict:
     atmosphere = spawn(actor_classes["TSTSSAtmosphereDirector"], "CoastalAtmosphere", (0, 0, 0))
     atmosphere.set_editor_property("volumetric_cloud_material", cloud)
     atmosphere.set_editor_property("initial_clock_hours", 17.0)
-    atmosphere.set_editor_property("autoplay_review_cycle", False)
-    atmosphere.set_editor_property("reduced_motion", True)
+    set_required_review_bool(atmosphere, "autoplay_review_cycle", False)
+    set_required_review_bool(atmosphere, "reduced_motion", True)
     for i, name in enumerate(REVIEW_OBJECTS):
         mesh = imports[name]
         obj = spawn(u.StaticMeshActor, "OriginalProp_" + name,
@@ -300,7 +327,7 @@ def build_native_shore() -> dict:
                       (-3500 + i * 1150, -1350 - i * 350, 150))
         actor.set_editor_property("kind", enum_kinds[kind])
         actor.set_editor_property("instance_id", "MP_ReviewEnemy_%02d" % (i + 1))
-        actor.set_editor_property("reduced_motion", True)
+        set_required_review_bool(actor, "reduced_motion", True)
         actor.set_actor_enable_collision(False)
     for i, row in enumerate(json.loads(MAGIC.read_text(encoding="utf-8"))):
         actor = spawn(actor_classes["TSTSSResonatorVfxActor"],
@@ -308,7 +335,7 @@ def build_native_shore() -> dict:
                       (1000 + (i % 3) * 1200, -650 - (i // 3) * 950, 160))
         actor.set_editor_property("preview_cue_id", row["VfxCueId"])
         actor.set_editor_property("preview_target_offset", u.Vector(300, 0, 80))
-        actor.set_editor_property("loop_review", True)
+        set_required_review_bool(actor, "loop_review", True)
         actor.set_actor_enable_collision(False)
     camera = spawn(u.CameraActor, "Overview_NotGameplayCamera", (-5300, -6200, 2850))
     camera.set_actor_rotation(u.Rotator(-18, 45, 0), False)
