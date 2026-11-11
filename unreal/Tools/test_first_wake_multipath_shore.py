@@ -37,6 +37,29 @@ class FirstWakeMultiPathShoreSourceTests(unittest.TestCase):
              "native_staged")))
         self.assertTrue(p["review_only"])
 
+    def test_ue_python_enemy_enum_drops_cpp_e_prefix(self):
+        from types import SimpleNamespace
+        choices = SimpleNamespace(HARMONIC_SHEAR="shear", AETHER_LEAK_WISP="wisp",
+                                  DOCK_SKITTER="skitter")
+        ue = SimpleNamespace(TSTSSSliceEnemyKind=choices)
+        values = stage.resolve_native_enemy_kinds(ue)
+        self.assertEqual({"HarmonicShear":"shear", "AetherLeakWisp":"wisp",
+                          "DockSkitter":"skitter"}, values)
+        # The earlier real UE 5.8.4 stage failed here because it requested
+        # the C++ E-prefixed name, which is not the Python export.
+        with self.assertRaisesRegex(RuntimeError, "not exposed to Python"):
+            stage.resolve_native_enemy_kinds(SimpleNamespace(
+                ETSTSSSliceEnemyKind=choices))
+        with self.assertRaisesRegex(RuntimeError, "missing DOCK_SKITTER"):
+            stage.resolve_native_enemy_kinds(SimpleNamespace(
+                TSTSSSliceEnemyKind=SimpleNamespace(
+                    HARMONIC_SHEAR="shear", AETHER_LEAK_WISP="wisp")))
+        with self.assertRaisesRegex(RuntimeError, "duplicated"):
+            stage.resolve_native_enemy_kinds(SimpleNamespace(
+                TSTSSSliceEnemyKind=SimpleNamespace(
+                    HARMONIC_SHEAR="shear", AETHER_LEAK_WISP="wisp",
+                    DOCK_SKITTER="shear")))
+
     def test_all_three_visual_groups_and_26_new_actors(self):
         self.assertEqual((22, 8), (self.plan["original_object_imports"],
                                    self.plan["showcase_object_actors"]))

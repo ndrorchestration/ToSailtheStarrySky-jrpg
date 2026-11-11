@@ -159,6 +159,26 @@ def gear_package(entry: dict) -> str:
     return ("/Game/TSTSS/Review/PartyEquipment/" + entry["owner"] + "/"
             + filename + "/StaticMeshes/" + filename)
 
+def resolve_native_enemy_kinds(unreal_module) -> dict:
+    """Resolve the Blueprint-reflected UENUM using UE Python's E-prefix removal.
+
+    C++ ETSTSSSliceEnemyKind becomes unreal.TSTSSSliceEnemyKind. Never fall
+    back to a different enum or an integer cast: missing values are a HOLD.
+    """
+    enum_type = getattr(unreal_module, "TSTSSSliceEnemyKind", None)
+    if enum_type is None:
+        raise RuntimeError("HOLD: native TSTSSSliceEnemyKind not exposed to Python")
+    values = {}
+    for kind in ENEMY_KINDS:
+        member = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", kind).upper()
+        value = getattr(enum_type, member, None)
+        if value is None:
+            raise RuntimeError("HOLD: native enemy enum missing " + member)
+        values[kind] = value
+    if len(values) != 3 or len(set(map(str, values.values()))) != 3:
+        raise RuntimeError("HOLD: enemy Python enum values duplicated or incomplete")
+    return values
+
 def build_native_shore() -> dict:
     plan = check_native_custody()
     import unreal as u
@@ -182,16 +202,7 @@ def build_native_shore() -> dict:
     }
     if any(cls is None for cls in actor_classes.values()):
         raise RuntimeError("HOLD: one or more integrated C++ review actors lack a verified native build")
-    import unreal as ue
-    if not hasattr(ue, "ETSTSSSliceEnemyKind"):
-        raise RuntimeError("HOLD: C++ native enemy enum is not reflected")
-    enum_kinds = {}
-    for kind in ENEMY_KINDS:
-        label = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", kind).upper()
-        value = getattr(ue.ETSTSSSliceEnemyKind, label, None)
-        if value is None:
-            raise RuntimeError("HOLD: native enemy enum missing: " + label)
-        enum_kinds[kind] = value
+    enum_kinds = resolve_native_enemy_kinds(u)
     gear = json.loads((EQUIPMENT / "party_equipment_manifest.review.json").read_text(encoding="utf-8"))
     showcased = {item["id"]: item for item in gear["entries"] if item["id"] in GEAR_SHOWCASE}
     imported_gear = {}
