@@ -6,6 +6,7 @@ on:
   pull_request:
     paths:
       - 'unreal/Source/**'
+      - 'unreal/ArtSource/PartyEquipment/**'
       - 'unreal/Config/**'
       - 'unreal/Tools/**'
       - 'unreal/Docs/**'
@@ -42,6 +43,8 @@ jobs:
         run: python3 unreal/Tools/test_automation_registry.py
       - name: Compare expected and registered Unreal tests
         run: python3 unreal/Tools/check_automation_registry.py
+      - name: Verify three-character party equipment GLBs and plot-stage gates (source only)
+        run: python3 unreal/ArtSource/PartyEquipment/test_party_equipment_source.py -v
       - name: Assert prior UE 5.8 native compatibility corrections (source-only)
         run: python3 -m unittest discover -s unreal/Tools -p 'test_ue58_composed_compatibility.py' -v
       - name: Validate seven-stop First Wake Prelude review authoring plan (source only)
