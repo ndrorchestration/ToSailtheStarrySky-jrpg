@@ -1,7 +1,7 @@
 """Fail-closed no-Editor source guards for #769 native admission tooling.
 
-Checks that only approved disposable worktrees are allowed, 31 native names
-are required (including both Resonator and atmosphere native tests),
+Checks that only approved disposable worktrees are allowed, 32 native names
+are required (including Resonator, atmosphere, and party-equipment tests),
 correct map/source/save guards remain, and the GUI RAM
 threshold matches the documented 6.5 GiB requirement. Never runs Unreal.
 """

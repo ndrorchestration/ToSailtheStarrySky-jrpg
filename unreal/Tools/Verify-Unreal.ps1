@@ -131,6 +131,7 @@ $RequiredTests = @(
     'TSTSS.FirstWake.InteractionCameraBoomReach',
     'TSTSS.FirstWake.ReviewObjectivesAreReadOnly',
     'TSTSS.CombatIntegration.EnderGearSpellBattleReview',
+    'TSTSS.Equipment.PartySliceStageGate',
     'TSTSS.Combat.EncounterCompletion',
     'TSTSS.FirstWake.RequiresOrderedMilestones',
     'TSTSS.FirstWake.InteractionToSplashdown',
