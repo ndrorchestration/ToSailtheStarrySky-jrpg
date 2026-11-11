@@ -30,20 +30,22 @@ bool FTSTSSPartySliceReviewEquipment::IsMemberAvailable(
     ETSTSSPartySliceReviewStage Stage, FName CharacterId)
 {
     if (Stage != ETSTSSPartySliceReviewStage::FirstWake &&
-        Stage != ETSTSSPartySliceReviewStage::AfterSplashdown)
+        Stage != ETSTSSPartySliceReviewStage::AfterSplashdown &&
+        Stage != ETSTSSPartySliceReviewStage::LyraRecruited)
     {
         return false;
     }
     return CharacterId == TEXT("Ender") || CharacterId == TEXT("Ionia") ||
         (CharacterId == TEXT("Lyra") &&
-         Stage == ETSTSSPartySliceReviewStage::AfterSplashdown);
+         Stage == ETSTSSPartySliceReviewStage::LyraRecruited);
 }
 
 bool FTSTSSPartySliceReviewEquipment::TryBuildEquippedReviewFixture(
     ETSTSSPartySliceReviewStage Stage, FTSTSSReviewGearState& OutState)
 {
     if (Stage != ETSTSSPartySliceReviewStage::FirstWake &&
-        Stage != ETSTSSPartySliceReviewStage::AfterSplashdown) return false;
+        Stage != ETSTSSPartySliceReviewStage::AfterSplashdown &&
+        Stage != ETSTSSPartySliceReviewStage::LyraRecruited) return false;
 
     FTSTSSReviewGearState Candidate;
     const auto Weapon = ETSTSSReviewGearSlot::Weapon;
@@ -66,7 +68,7 @@ bool FTSTSSPartySliceReviewEquipment::TryBuildEquippedReviewFixture(
         return false;
     }
 
-    if (Stage == ETSTSSPartySliceReviewStage::AfterSplashdown &&
+    if (Stage == ETSTSSPartySliceReviewStage::LyraRecruited &&
         (!AddAndEquip(Candidate, TEXT("Lyra"), TEXT("Lyra.WaterFocus"),
              Weapon, TEXT("Focus"), 1, 0) ||
          !AddAndEquip(Candidate, TEXT("Lyra"), TEXT("Lyra.TravelCoat"),
