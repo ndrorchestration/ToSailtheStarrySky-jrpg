@@ -10,6 +10,8 @@ on:
       - "unreal/Tools/test_first_wake_slice_objects.py"
       - "unreal/Tools/transfer_first_wake_harbor_review.py"
       - "unreal/Tools/test_first_wake_harbor_intake.py"
+      - "unreal/Tools/prepare_first_wake_editor_module.py"
+      - "unreal/Tools/test_first_wake_editor_module_custody.py"
       - "unreal/ArtSource/VerticalSliceObjectsV1/**"
       - ".github/workflows/unreal-first-wake-slice-objects.yml"
   workflow_dispatch:
@@ -28,6 +30,7 @@ jobs:
           python3 unreal/Tools/stage_first_wake_slice_objects.py --validate
           python3 -m unittest discover -s unreal/Tools -p "test_first_wake_slice_objects.py" -v
           python3 -m unittest discover -s unreal/Tools -p "test_first_wake_harbor_intake.py" -v
+          python3 -m unittest discover -s unreal/Tools -p "test_first_wake_editor_module_custody.py" -v
       - name: Confirm no generated source/art drift
         run: |
           python3 unreal/Tools/generate_first_wake_slice_objects.py --build

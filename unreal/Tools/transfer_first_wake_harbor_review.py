@@ -17,7 +17,7 @@ import subprocess
 SOURCE_ROOT = Path("C:/TSTSS_EnvironmentHarborRecovery_20261105")
 DEST_ROOT = Path(__file__).resolve().parents[2]
 SOURCE_HEAD = "7c3293babc8d4b39c4d99696ff302211f27028c5"
-DEST_BRANCH = "review/ue58-vslice-objects-20261110"
+DEST_BRANCH = "review/ue58-vslice-objects-native-v2-20261110"
 HARBOR_SHA = "073edd19e7ebdcee48b65fb3428fb19d8c8b8c6ca1b95cc4c6f04ed6ea4dd621"
 ASSET_WORLD_SHA = "54b4e266683347fc950a56c8ac8691d99aaddb41d61e304ddf0f5b4d0730e2b5"
 MANIFEST = Path("unreal/Saved/FirstWakeSliceObjectsV1/harbor_private_intake_manifest.json")
@@ -120,7 +120,7 @@ def receipt_check(source=SOURCE_ROOT):
             "pie_verified":False}
 
 def preflight(source=SOURCE_ROOT,dest=DEST_ROOT):
-    if source.name!="TSTSS_EnvironmentHarborRecovery_20261105" or dest.name!="TSTSS_VSliceObjects_20261110":
+    if source.name!="TSTSS_EnvironmentHarborRecovery_20261105" or dest.name!="TSTSS_VSliceObjectsNativeV2_20261110":
         raise RuntimeError("HOLD: wrong named source/target worktree")
     if source.resolve()==dest.resolve():
         raise RuntimeError("HOLD: source and target same")
