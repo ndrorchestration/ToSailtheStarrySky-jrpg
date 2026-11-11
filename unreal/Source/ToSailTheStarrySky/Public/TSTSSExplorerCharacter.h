@@ -4,6 +4,10 @@
 #include "TSTSSFirstWakeState.h"
 #include "TSTSSExplorerCharacter.generated.h"
 
+class USkeletalMesh;
+class UStaticMesh;
+class UStaticMeshComponent;
+
 UCLASS()
 class TOSAILTHESTARRYSKY_API ATSTSSExplorerCharacter : public ACharacter
 {
@@ -29,7 +33,37 @@ protected:
     TObjectPtr<UTSTSSFirstWakeState> FirstWakeState;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Interaction")
     float InteractionDistance = 300.f;
+#if WITH_EDITOR
+    // PIE-only, explicitly assigned candidate. Blank by default; does not grant gameplay authority.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    TSoftObjectPtr<USkeletalMesh> EnderSliceReviewBody;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    TSoftObjectPtr<UStaticMesh> EnderSliceReviewGoggles;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    TSoftObjectPtr<UStaticMesh> EnderSliceReviewStaff;
+    // Disabled until the character's head clearance and staff grip are reviewed.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    bool bShowEnderReviewGoggles = false;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    bool bShowEnderReviewStaff = false;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    FName EnderReviewHeadBone = TEXT("head");
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    FName EnderReviewGripBone = TEXT("l_hand");
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    FTransform EnderReviewGogglesLocalOffset = FTransform::Identity;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    FTransform EnderReviewStaffLocalOffset = FTransform::Identity;
+#endif
 private:
+#if WITH_EDITOR
+    // Changes only the spawned PIE pawn; never saves/overwrites the SkeletalMesh asset or level.
+    void ApplyEnderSliceReviewAppearance();
+    UPROPERTY(VisibleAnywhere, Category="TSTSS|Ender|SliceReview")
+    TObjectPtr<UStaticMeshComponent> EnderReviewGogglesComponent;
+    UPROPERTY(VisibleAnywhere, Category="TSTSS|Ender|SliceReview")
+    TObjectPtr<UStaticMeshComponent> EnderReviewStaffComponent;
+#endif
     void MoveForward(float Value);
     void MoveRight(float Value);
     void Turn(float Value);
