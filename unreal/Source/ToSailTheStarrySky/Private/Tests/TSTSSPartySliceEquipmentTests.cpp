@@ -170,6 +170,17 @@ bool FTSTSSPartySliceEquipmentStageGateTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("recruited Lyra's weapon then cleared"),
         UIInvalid.EquippedByCharacter.FindChecked(Lyra).WeaponInstance.IsNone());
 
+    // The ship console is intentionally non-authoritative. No selection
+    // can grant or simulate a vessel transformation by using menu controls.
+    for (FName ModeId : {FName(TEXT("Skyborne")), FName(TEXT("Seaborne")),
+        FName(TEXT("Submersible")), FName(TEXT("Starbourne")),
+        FName(TEXT("UnknownShipMode"))})
+    {
+        TestFalse(TEXT("ship menu may not execute an unauthorised mode change"),
+            UTSTSSPartyGearMenuReviewWidget::IsShipConfigurationSelectableForReview(
+                ModeId));
+    }
+
     // Native package loading: these are real staged UE assets, not just GLBs.
     const TPair<FName,FString> ReviewedMeshes[] = {
         {Ender, TEXT("ResonanceStaff")},

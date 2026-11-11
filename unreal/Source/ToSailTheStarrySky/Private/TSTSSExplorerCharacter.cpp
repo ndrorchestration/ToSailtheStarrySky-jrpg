@@ -143,12 +143,16 @@ void ATSTSSExplorerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
         PlayerInputComponent->BindAction(
             TEXT("ReviewEquipment"), IE_Pressed, this,
             &ATSTSSExplorerCharacter::ToggleEquipmentReview);
+        PlayerInputComponent->BindAction(
+            TEXT("ReviewRPGMenu"), IE_Pressed, this,
+            &ATSTSSExplorerCharacter::TogglePartyMenuReview);
     }
 #endif
 }
 
 void ATSTSSExplorerCharacter::MoveForward(float Value)
 {
+    if (EquipmentReviewMenu && EquipmentReviewMenu->IsInViewport()) return;
     if (Controller && !FMath::IsNearlyZero(Value))
     {
         const FRotator Yaw(0.f, Controller->GetControlRotation().Yaw, 0.f);
@@ -157,17 +161,27 @@ void ATSTSSExplorerCharacter::MoveForward(float Value)
 }
 void ATSTSSExplorerCharacter::MoveRight(float Value)
 {
+    if (EquipmentReviewMenu && EquipmentReviewMenu->IsInViewport()) return;
     if (Controller && !FMath::IsNearlyZero(Value))
     {
         const FRotator Yaw(0.f, Controller->GetControlRotation().Yaw, 0.f);
         AddMovementInput(FRotationMatrix(Yaw).GetUnitAxis(EAxis::Y), Value);
     }
 }
-void ATSTSSExplorerCharacter::Turn(float Value) { AddControllerYawInput(Value); }
-void ATSTSSExplorerCharacter::LookUp(float Value) { AddControllerPitchInput(Value); }
+void ATSTSSExplorerCharacter::Turn(float Value)
+{
+    if (!EquipmentReviewMenu || !EquipmentReviewMenu->IsInViewport())
+        AddControllerYawInput(Value);
+}
+void ATSTSSExplorerCharacter::LookUp(float Value)
+{
+    if (!EquipmentReviewMenu || !EquipmentReviewMenu->IsInViewport())
+        AddControllerPitchInput(Value);
+}
 
 void ATSTSSExplorerCharacter::Interact()
 {
+    if (EquipmentReviewMenu && EquipmentReviewMenu->IsInViewport()) return;
     if (!FirstWakeState || !FollowCamera || !GetWorld()) return;
     const FVector Start = FollowCamera->GetComponentLocation();
     const FVector PawnLocation = GetActorLocation();
@@ -276,6 +290,7 @@ void ATSTSSExplorerCharacter::ShowObjectiveReview()
 
 void ATSTSSExplorerCharacter::QuickSave()
 {
+    if (EquipmentReviewMenu && EquipmentReviewMenu->IsInViewport()) return;
     // UE's Shift+F5 is Stop Play-In-Editor. The F5 action may also be
     // dispatched to this pawn before PIE shuts down; that must never
     // create a new review SaveGame as a side effect of stopping play.
@@ -310,6 +325,7 @@ void ATSTSSExplorerCharacter::QuickSave()
 
 void ATSTSSExplorerCharacter::QuickLoad()
 {
+    if (EquipmentReviewMenu && EquipmentReviewMenu->IsInViewport()) return;
     const UWorld* World = GetWorld();
     const bool bPIE = World && World->WorldType == EWorldType::PIE;
     const FString Slot = bPIE ? TEXT("tstss_prelude_pie_quick") : TEXT("first_wake_quick");
@@ -426,7 +442,9 @@ void ATSTSSExplorerCharacter::ToggleEquipmentReview()
         const auto Stage = FirstWakeState->IsChapterOneActOne()
             ? ETSTSSPartySliceReviewStage::AfterSplashdown
             : ETSTSSPartySliceReviewStage::FirstWake;
-        if (!Candidate->TryBeginEquipmentReview(Stage)) return;
+        if (!Candidate->TryBeginEquipmentReview(Stage) ||
+            !Candidate->TryBindFirstWakeStoryForReview(FirstWakeState))
+            return;
         EquipmentReviewMenu = Candidate;
     }
 
@@ -442,5 +460,19 @@ void ATSTSSExplorerCharacter::ToggleEquipmentReview()
     Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
     Mode.SetHideCursorDuringCapture(false);
     PC->SetInputMode(Mode);
+#endif
+}
+
+void ATSTSSExplorerCharacter::TogglePartyMenuReview()
+{
+#if !UE_BUILD_SHIPPING
+    if (EquipmentReviewMenu && EquipmentReviewMenu->IsInViewport())
+    {
+        EquipmentReviewMenu->CloseReview();
+        return;
+    }
+    ToggleEquipmentReview();
+    if (EquipmentReviewMenu && EquipmentReviewMenu->IsInViewport())
+        EquipmentReviewMenu->OpenPageForReview(ETSTSSReviewMenuPage::Status);
 #endif
 }

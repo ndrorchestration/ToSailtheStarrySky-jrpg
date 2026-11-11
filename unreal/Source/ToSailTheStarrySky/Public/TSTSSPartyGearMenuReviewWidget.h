@@ -7,6 +7,19 @@
 
 class UButton;
 class UTextBlock;
+class UVerticalBox;
+class UTSTSSFirstWakeState;
+
+enum class ETSTSSReviewMenuPage : uint8
+{
+    Status, Inventory, Equipment, Magic, Skills, Jobs,
+    Formation, Journal, Ship, System
+};
+
+enum class ETSTSSShipReviewPage : uint8
+{
+    Overview, Engineering, Configurations, Crew, Navigation, Upgrades, Cargo
+};
 
 // Opt-in, transient review UI. Not an authoritative inventory or item-grant.
 // The game pawn supplies only the verified opening/sea stage; the widget does
@@ -31,9 +44,18 @@ public:
         bool bEquip,
         FTSTSSReviewGearState& OutState);
 
-    // Non-granting refresh for opening -> splashdown only. Existing review
-    // equipment choices survive; does not create Lyra's owned items.
+    // Non-granting refresh between First Wake and splashdown (including
+    // quickload rewinds). Existing review choices survive, no Lyra grant.
     bool TryRefreshStoryStageReview(ETSTSSPartySliceReviewStage RequestedStage);
+
+    // Read-only story source, never authorizes recruitment or ship transitions.
+    bool TryBindFirstWakeStoryForReview(UTSTSSFirstWakeState* State);
+
+    // Navigable character/system/ship menu. Equipment is the G shortcut.
+    void OpenPageForReview(ETSTSSReviewMenuPage Page);
+
+    // The review menu has no executable ship transformation authority.
+    static bool IsShipConfigurationSelectableForReview(FName ConfigurationId);
 
     UFUNCTION(BlueprintCallable, Category="TSTSS|Equipment|Review")
     void CloseReview();
@@ -60,6 +82,41 @@ private:
 
     UPROPERTY(Transient)
     TArray<TObjectPtr<UButton>> SlotButtons;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UVerticalBox> ContentColumn;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UTSTSSFirstWakeState> StoryReviewState;
+
+    ETSTSSReviewMenuPage ActivePage = ETSTSSReviewMenuPage::Equipment;
+    ETSTSSShipReviewPage ActiveShipPage = ETSTSSShipReviewPage::Overview;
+
+    void RenderReviewPage();
+    void RenderEquipmentPage();
+    void RenderShipPage();
+    void ChangeShipPage(ETSTSSShipReviewPage NewPage);
+    void AddPageLine(const FString& Value, int32 Size = 16,
+        FLinearColor Color = FLinearColor(0.80f, 0.86f, 0.88f, 1.f),
+        float Gap = 9.f);
+    void AddPageHeading(const FString& Value);
+    UFUNCTION() void OpenStatusTab();
+    UFUNCTION() void OpenInventoryTab();
+    UFUNCTION() void OpenEquipmentTab();
+    UFUNCTION() void OpenMagicTab();
+    UFUNCTION() void OpenSkillsTab();
+    UFUNCTION() void OpenJobsTab();
+    UFUNCTION() void OpenFormationTab();
+    UFUNCTION() void OpenJournalTab();
+    UFUNCTION() void OpenShipTab();
+    UFUNCTION() void OpenSystemTab();
+    UFUNCTION() void OpenShipOverview();
+    UFUNCTION() void OpenShipEngineering();
+    UFUNCTION() void OpenShipConfigurations();
+    UFUNCTION() void OpenShipCrew();
+    UFUNCTION() void OpenShipNavigation();
+    UFUNCTION() void OpenShipUpgrades();
+    UFUNCTION() void OpenShipCargo();
 
     void RefreshReviewLabels();
     bool TryToggleSlot(int32 Index);

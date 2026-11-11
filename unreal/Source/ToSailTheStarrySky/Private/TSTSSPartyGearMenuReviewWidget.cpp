@@ -7,6 +7,11 @@
 #include "Components/CanvasPanelSlot.h"
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
+#include "Components/ScrollBox.h"
+#include "Components/SizeBox.h"
+#include "TSTSSCombatData.h"
+#include "TSTSSJobClassSystem.h"
+#include "TSTSSFirstWakeState.h"
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
@@ -127,7 +132,8 @@ bool UTSTSSPartyGearMenuReviewWidget::TryBeginEquipmentReview(
     ReviewState = MoveTemp(Candidate);
     ActiveStage = Stage;
     bInitialized = true;
-    RefreshReviewLabels();
+    ActivePage = ETSTSSReviewMenuPage::Equipment;
+    RenderReviewPage();
     return true;
 }
 
@@ -136,14 +142,55 @@ bool UTSTSSPartyGearMenuReviewWidget::TryRefreshStoryStageReview(
 {
     if (!bInitialized) return false;
     if (ActiveStage == RequestedStage) return true;
-    // Only the real First Wake story transition is accepted from gameplay.
-    // This API cannot synthesize the separate Lyra recruitment event.
-    if (ActiveStage != ETSTSSPartySliceReviewStage::FirstWake ||
-        RequestedStage != ETSTSSPartySliceReviewStage::AfterSplashdown)
-        return false;
+    // The real saved First Wake story may advance OR rewind on quickload.
+    // Neither transition is the separate Lyra recruitment event. Never
+    // admit LyraRecruited from this display-only projection.
+    const bool bWasPreviewStage =
+        ActiveStage == ETSTSSPartySliceReviewStage::FirstWake ||
+        ActiveStage == ETSTSSPartySliceReviewStage::AfterSplashdown;
+    const bool bIsPreviewStage =
+        RequestedStage == ETSTSSPartySliceReviewStage::FirstWake ||
+        RequestedStage == ETSTSSPartySliceReviewStage::AfterSplashdown;
+    if (!bWasPreviewStage || !bIsPreviewStage) return false;
     ActiveStage = RequestedStage;
-    RefreshReviewLabels();
+    RenderReviewPage();
     return true;
+}
+
+
+bool UTSTSSPartyGearMenuReviewWidget::TryBindFirstWakeStoryForReview(
+    UTSTSSFirstWakeState* State)
+{
+    if (!bInitialized || !IsValid(State)) return false;
+    StoryReviewState = State;
+    RenderReviewPage();
+    return true;
+}
+
+bool UTSTSSPartyGearMenuReviewWidget::IsShipConfigurationSelectableForReview(
+    FName ConfigurationId)
+{
+    // Story milestone != permission to drive a future ship configuration.
+    // No ship config is presently connected to an authenticated gameplay gate.
+    (void)ConfigurationId;
+    return false;
+}
+
+void UTSTSSPartyGearMenuReviewWidget::OpenPageForReview(
+    ETSTSSReviewMenuPage Page)
+{
+    if (!bInitialized || Page > ETSTSSReviewMenuPage::System) return;
+    ActivePage = Page;
+    RenderReviewPage();
+}
+
+void UTSTSSPartyGearMenuReviewWidget::ChangeShipPage(
+    ETSTSSShipReviewPage Page)
+{
+    if (!bInitialized || Page > ETSTSSShipReviewPage::Cargo) return;
+    ActiveShipPage = Page;
+    ActivePage = ETSTSSReviewMenuPage::Ship;
+    RenderReviewPage();
 }
 
 void UTSTSSPartyGearMenuReviewWidget::NativeOnInitialized()
@@ -153,56 +200,259 @@ void UTSTSSPartyGearMenuReviewWidget::NativeOnInitialized()
 
     UCanvasPanel* Canvas = WidgetTree->ConstructWidget<UCanvasPanel>();
     UBorder* Panel = WidgetTree->ConstructWidget<UBorder>();
-    UVerticalBox* Column = WidgetTree->ConstructWidget<UVerticalBox>();
-    if (!Canvas || !Panel || !Column) return;
+    UHorizontalBox* Layout = WidgetTree->ConstructWidget<UHorizontalBox>();
+    UVerticalBox* NavigationColumn = WidgetTree->ConstructWidget<UVerticalBox>();
+    UScrollBox* Scroll = WidgetTree->ConstructWidget<UScrollBox>();
+    ContentColumn = WidgetTree->ConstructWidget<UVerticalBox>();
+    if (!Canvas || !Panel || !Layout || !NavigationColumn || !Scroll || !ContentColumn)
+        return;
     WidgetTree->RootWidget = Canvas;
-
-    Panel->SetBrushColor(FLinearColor(0.014f, 0.026f, 0.044f, 0.96f));
-    Panel->SetPadding(FMargin(22.f));
-    Panel->AddChild(Column);
+    Panel->SetBrushColor(FLinearColor(0.008f, 0.020f, 0.035f, 0.96f));
+    Panel->SetPadding(FMargin(20.f));
+    Panel->AddChild(Layout);
     UCanvasPanelSlot* PanelSlot = Canvas->AddChildToCanvas(Panel);
-    PanelSlot->SetAnchors(FAnchors(0.53f, 0.09f, 0.96f, 0.91f));
+    PanelSlot->SetAnchors(FAnchors(0.035f, 0.045f, 0.965f, 0.955f));
     PanelSlot->SetOffsets(FMargin(0.f));
 
-    AddReviewText(WidgetTree, Column,
-        TEXT("FIELD EQUIPMENT"), 27,
-        FLinearColor(0.90f, 0.83f, 0.60f, 1.f), 8.f);
-    AddReviewText(WidgetTree, Column,
-        TEXT("PRELUDE LOADOUT / INTERACTIVE REVIEW"), 14,
-        FLinearColor(0.46f, 0.78f, 0.82f, 1.f), 14.f);
-    StageLabel = AddReviewText(WidgetTree, Column,
-        TEXT("WAITING FOR AUTHORIZED REVIEW STAGE"), 15,
-        FLinearColor::White, 12.f);
-    AddReviewText(WidgetTree, Column,
-        TEXT("Equipment here is a transient test fixture, not saved inventory."),
-        13, FLinearColor(0.75f, 0.80f, 0.81f, 1.f), 14.f);
+    USizeBox* NavigationWidth = WidgetTree->ConstructWidget<USizeBox>();
+    if (!NavigationWidth) return;
+    NavigationWidth->SetWidthOverride(208.f);
+    NavigationWidth->AddChild(NavigationColumn);
+    Layout->AddChildToHorizontalBox(NavigationWidth)->
+        SetPadding(FMargin(0.f, 0.f, 18.f, 0.f));
+    Layout->AddChildToHorizontalBox(Scroll)->
+        SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    Scroll->AddChild(ContentColumn);
 
-    SlotButtons.Reset();
-    SlotLabels.Reset();
-    for (int32 OwnerIndex = 0; OwnerIndex < 3; ++OwnerIndex)
+    AddReviewText(WidgetTree, NavigationColumn,
+        TEXT("TO SAIL THE\nSTARRY SKY"), 22,
+        FLinearColor(0.96f, 0.88f, 0.66f, 1.f), 11.f);
+    AddReviewText(WidgetTree, NavigationColumn,
+        TEXT("VOYAGE / REVIEW"), 12,
+        FLinearColor(0.43f, 0.76f, 0.82f, 1.f), 13.f);
+    StageLabel = AddReviewText(WidgetTree, NavigationColumn,
+        TEXT("FIRST WAKE"), 12,
+        FLinearColor::White, 15.f);
+
+    const TCHAR* Titles[] = {
+        TEXT("PARTY / STATUS"), TEXT("ITEMS"),
+        TEXT("EQUIPMENT"), TEXT("MAGIC / SPELLS"),
+        TEXT("SKILLS / ARTS"), TEXT("JOBS / GROWTH"),
+        TEXT("FORMATION"), TEXT("JOURNAL"),
+        TEXT("AUREATE WAKE"), TEXT("SYSTEM")
+    };
+    for (int32 I=0; I<10; ++I)
     {
-        AddReviewText(WidgetTree, Column,
-            ReviewOwner(OwnerIndex).ToString().ToUpper(), 20,
-            FLinearColor(0.90f, 0.90f, 0.83f, 1.f), 5.f);
+        UButton* NavButton = WidgetTree->ConstructWidget<UButton>();
+        UTextBlock* NavText = WidgetTree->ConstructWidget<UTextBlock>();
+        if (!NavButton || !NavText) return;
+        NavText->SetText(FText::FromString(Titles[I]));
+        FSlateFontInfo Font = NavText->GetFont();
+        Font.Size = 14;
+        NavText->SetFont(Font);
+        NavButton->SetContent(NavText);
+        NavigationColumn->AddChildToVerticalBox(NavButton)->
+            SetPadding(FMargin(0.f, 0.f, 0.f, 4.f));
+        switch (I)
+        {
+        case 0: NavButton->OnClicked.AddDynamic(this, &UTSTSSPartyGearMenuReviewWidget::OpenStatusTab); break;
+        case 1: NavButton->OnClicked.AddDynamic(this, &UTSTSSPartyGearMenuReviewWidget::OpenInventoryTab); break;
+        case 2: NavButton->OnClicked.AddDynamic(this, &UTSTSSPartyGearMenuReviewWidget::OpenEquipmentTab); break;
+        case 3: NavButton->OnClicked.AddDynamic(this, &UTSTSSPartyGearMenuReviewWidget::OpenMagicTab); break;
+        case 4: NavButton->OnClicked.AddDynamic(this, &UTSTSSPartyGearMenuReviewWidget::OpenSkillsTab); break;
+        case 5: NavButton->OnClicked.AddDynamic(this, &UTSTSSPartyGearMenuReviewWidget::OpenJobsTab); break;
+        case 6: NavButton->OnClicked.AddDynamic(this, &UTSTSSPartyGearMenuReviewWidget::OpenFormationTab); break;
+        case 7: NavButton->OnClicked.AddDynamic(this, &UTSTSSPartyGearMenuReviewWidget::OpenJournalTab); break;
+        case 8: NavButton->OnClicked.AddDynamic(this, &UTSTSSPartyGearMenuReviewWidget::OpenShipTab); break;
+        case 9: NavButton->OnClicked.AddDynamic(this, &UTSTSSPartyGearMenuReviewWidget::OpenSystemTab); break;
+        }
+    }
+    StatusLabel = AddReviewText(WidgetTree, NavigationColumn,
+        TEXT("REVIEW ONLY - NO STORY OR ITEM GRANT"), 12,
+        FLinearColor(0.62f, 0.86f, 0.80f, 1.f), 12.f);
+    UButton* CloseButton = WidgetTree->ConstructWidget<UButton>();
+    UTextBlock* CloseText = WidgetTree->ConstructWidget<UTextBlock>();
+    if (!CloseButton || !CloseText) return;
+    CloseText->SetText(FText::FromString(TEXT("RETURN TO VOYAGE")));
+    CloseButton->SetContent(CloseText);
+    CloseButton->OnClicked.AddDynamic(
+        this, &UTSTSSPartyGearMenuReviewWidget::OnCloseClicked);
+    NavigationColumn->AddChildToVerticalBox(CloseButton);
+    RenderReviewPage();
+}
+
+void UTSTSSPartyGearMenuReviewWidget::AddPageLine(
+    const FString& Value, int32 Size, FLinearColor Color, float Gap)
+{
+    if (ContentColumn && WidgetTree)
+        AddReviewText(WidgetTree, ContentColumn, Value, Size, Color, Gap);
+}
+
+void UTSTSSPartyGearMenuReviewWidget::AddPageHeading(const FString& Value)
+{
+    AddPageLine(Value, 20, FLinearColor(0.94f, 0.84f, 0.59f, 1.f), 13.f);
+}
+
+void UTSTSSPartyGearMenuReviewWidget::RenderReviewPage()
+{
+    if (!WidgetTree || !ContentColumn) return;
+    ContentColumn->ClearChildren();
+    SlotLabels.Reset();
+    SlotButtons.Reset();
+    if (StageLabel)
+    {
+        StageLabel->SetText(FText::FromString(
+            ActiveStage == ETSTSSPartySliceReviewStage::AfterSplashdown
+                ? TEXT("AFTER SPLASHDOWN") : TEXT("FIRST WAKE")));
+    }
+    switch (ActivePage)
+    {
+    case ETSTSSReviewMenuPage::Status:
+    {
+        AddPageHeading(TEXT("CHARACTERS / STATUS"));
+        AddPageLine(TEXT("Active voyage crew; unapproved stat numbers are never invented."));
+        const FName Members[] = {
+            TEXT("Ender"), TEXT("Ionia"), TEXT("Lyra"),
+            TEXT("Reson"), TEXT("Aepex")
+        };
+        for (FName Member : Members)
+        {
+            const bool bAvailable =
+                FTSTSSPartySliceReviewEquipment::IsMemberAvailable(
+                    ActiveStage, Member);
+            const ETSTSSLight Affinity = FTSTSSCombatData::ApprovedAffinity(Member);
+            const TCHAR* AffinityName =
+                Affinity == ETSTSSLight::Spirit ? TEXT("Spirit") :
+                Affinity == ETSTSSLight::Earth ? TEXT("Earth") :
+                Affinity == ETSTSSLight::Water ? TEXT("Water") :
+                Affinity == ETSTSSLight::Fire ? TEXT("Fire") :
+                Affinity == ETSTSSLight::Air ? TEXT("Air") : TEXT("Not established");
+            AddPageLine(FString::Printf(TEXT("%s  |  %s  |  Affinity: %s"),
+                *Member.ToString(), bAvailable ? TEXT("AVAILABLE") : TEXT("LOCKED"),
+                AffinityName), 17);
+        }
+        AddPageLine(TEXT("HP / MP / Level / XP / combat attributes: awaiting authoritative live character state."));
+        AddPageLine(TEXT("Equipment bonuses are provisional and shown under Equipment / Items."));
+        break;
+    }
+    case ETSTSSReviewMenuPage::Inventory:
+    {
+        AddPageHeading(TEXT("ITEMS / OWNED REVIEW EQUIPMENT"));
+        AddPageLine(TEXT("Transient test gear only. No production consumables, quantities, crafting or selling."));
+        TArray<FName> Names;
+        ReviewState.OwnedInstances.GetKeys(Names);
+        Names.Sort([](const FName& A, const FName& B)
+        {
+            return A.ToString() < B.ToString();
+        });
+        for (FName ItemId : Names)
+        {
+            const FTSTSSReviewGearInstance& Item =
+                ReviewState.OwnedInstances.FindChecked(ItemId);
+            AddPageLine(FString::Printf(
+                TEXT("%s | Owner %s | Attack +%d | Defense +%d"),
+                *ItemId.ToString(), *Item.OwnerId.ToString(),
+                Item.AttackBonus, Item.DefenseBonus));
+        }
+        AddPageLine(TEXT("Restorative Vial / Resonance Capacitor: scene props only; NOT owned items."));
+        break;
+    }
+    case ETSTSSReviewMenuPage::Equipment:
+        RenderEquipmentPage();
+        break;
+    case ETSTSSReviewMenuPage::Magic:
+        AddPageHeading(TEXT("MAGIC / SPELLS"));
+        AddPageLine(TEXT("Five Lights are affinities, not automatic spell permissions."));
+        AddPageLine(TEXT("Ender: Spirit | Ionia: Earth | Lyra: Water (locked until recruitment)."));
+        AddPageLine(TEXT("Reson: Fire | Aepex: Air (not in this playable party)."));
+        AddPageLine(TEXT("Learned spell catalog, MP costs, targeting, mastery and spell loadouts: no live authoritative data attached."));
+        AddPageLine(TEXT("Casting and assigning spells from this menu are disabled; no unearned unlocks."));
+        break;
+    case ETSTSSReviewMenuPage::Skills:
+        AddPageHeading(TEXT("SKILLS / TECHNIQUES / JOB ARTS"));
+        AddPageLine(TEXT("Spell, weapon-technique and job-art data contracts exist."));
+        AddPageLine(TEXT("Actual learned skills, weapon mastery, rank prerequisites and equipped abilities require the gameplay progression ledger."));
+        AddPageLine(TEXT("Skill assignment and execution are currently unavailable in this review menu."));
+        break;
+    case ETSTSSReviewMenuPage::Jobs:
+        AddPageHeading(TEXT("JOBS / CHARACTER GROWTH"));
+        AddPageLine(TEXT("Primary and secondary job selection requires explicit unlocked definitions."));
+        AddPageLine(TEXT("Level, proficiency, mastery, jobs and skill transfer remain independent progression axes."));
+        AddPageLine(TEXT("The live job catalog has not been admitted to this screen. No job changing or XP granting."));
+        break;
+    case ETSTSSReviewMenuPage::Formation:
+        AddPageHeading(TEXT("PARTY / FORMATION"));
+        AddPageLine(TEXT("Opening voyage party: Ender + Captain Ionia."));
+        AddPageLine(TEXT("Lyra joins AFTER a distinct post-splashdown recruitment scene, not splashdown alone."));
+        AddPageLine(TEXT("Three active combat slots are planned; no bench/party reassignment before legal recruitment."));
+        AddPageLine(TEXT("Reson and Aepex remain unavailable during this vertical slice."));
+        AddPageLine(TEXT("Formation editing: LOCKED pending authoritative battle-party ownership."));
+        break;
+    case ETSTSSReviewMenuPage::Journal:
+        AddPageHeading(TEXT("VOYAGE / JOURNAL"));
+        if (IsValid(StoryReviewState))
+        {
+            AddPageLine(FString::Printf(TEXT("Current objective: %s"),
+                *StoryReviewState->GetReviewObjectiveText()), 18);
+            const UEnum* BeatEnum = StaticEnum<ETSTSSFirstWakeBeat>();
+            AddPageLine(FString::Printf(TEXT("Story beat: %s"),
+                BeatEnum ? *BeatEnum->GetNameStringByValue(
+                    static_cast<int64>(StoryReviewState->GetCurrentBeat()))
+                    : TEXT("Unknown")));
+        }
+        else
+        {
+            AddPageLine(TEXT("First Wake story state unavailable in this review context."));
+        }
+        AddPageLine(TEXT("Quest archive, bestiary, lore codex and map journal: awaiting verified records."));
+        break;
+    case ETSTSSReviewMenuPage::Ship:
+        RenderShipPage();
+        break;
+    case ETSTSSReviewMenuPage::System:
+        AddPageHeading(TEXT("SYSTEM / OPTIONS"));
+        AddPageLine(TEXT("Preliminary controls: WASD move, E interact, J objective, G equipment, M main menu."));
+        AddPageLine(TEXT("Normal Game: F5 quicksave / F9 quickload. PIE: F6 review-only save / F9 guarded review load."));
+        AddPageLine(TEXT("Audio, graphics, input remapping, accessibility and localization preferences: not yet connected."));
+        AddPageLine(TEXT("No menu operation may overwrite an existing player save or bypass save-version validation."));
+        break;
+    default:
+        AddPageHeading(TEXT("UNAVAILABLE MENU PAGE"));
+        break;
+    }
+}
+
+void UTSTSSPartyGearMenuReviewWidget::RenderEquipmentPage()
+{
+    AddPageHeading(TEXT("EQUIPMENT / FIELD LOADOUT"));
+    AddPageLine(TEXT("Transient review ledger. Select equipment slots to equip/unequip owned test gear."));
+    for (int32 OwnerIndex=0; OwnerIndex<3; ++OwnerIndex)
+    {
+        const FName Owner = ReviewOwner(OwnerIndex);
+        const bool bAvailable =
+            FTSTSSPartySliceReviewEquipment::IsMemberAvailable(ActiveStage, Owner);
+        AddPageLine(FString::Printf(TEXT("%s  |  %s"),
+            *Owner.ToString().ToUpper(),
+            bAvailable ? TEXT("AVAILABLE") : TEXT("RECRUITMENT LOCKED")), 19,
+            FLinearColor(0.89f, 0.90f, 0.83f, 1.f));
         UHorizontalBox* Buttons = WidgetTree->ConstructWidget<UHorizontalBox>();
         if (!Buttons) return;
-        Column->AddChildToVerticalBox(Buttons)->SetPadding(FMargin(0.f, 0.f, 0.f, 15.f));
-        for (int32 SlotIndex = 0; SlotIndex < 3; ++SlotIndex)
+        ContentColumn->AddChildToVerticalBox(Buttons)->
+            SetPadding(FMargin(0.f, 0.f, 0.f, 20.f));
+        for (int32 SlotIndex=0; SlotIndex<3; ++SlotIndex)
         {
             UButton* Button = WidgetTree->ConstructWidget<UButton>();
-            UTextBlock* Text = WidgetTree->ConstructWidget<UTextBlock>();
-            if (!Button || !Text) return;
-            FSlateFontInfo Font = Text->GetFont();
+            UTextBlock* Label = WidgetTree->ConstructWidget<UTextBlock>();
+            if (!Button || !Label) return;
+            FSlateFontInfo Font = Label->GetFont();
             Font.Size = 13;
-            Text->SetFont(Font);
-            Text->SetColorAndOpacity(FSlateColor(FLinearColor(0.94f, 0.94f, 0.86f, 1.f)));
-            Text->SetText(FText::FromString(SlotName(ReviewSlot(SlotIndex))));
-            Button->SetContent(Text);
+            Label->SetFont(Font);
+            Label->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+            Button->SetContent(Label);
             Buttons->AddChildToHorizontalBox(Button)->SetPadding(FMargin(0.f, 0.f, 8.f, 0.f));
             SlotButtons.Add(Button);
-            SlotLabels.Add(Text);
-
-            const int32 I = OwnerIndex * 3 + SlotIndex;
+            SlotLabels.Add(Label);
+            const int32 I = OwnerIndex*3 + SlotIndex;
             switch (I)
             {
             case 0: Button->OnClicked.AddDynamic(this, &UTSTSSPartyGearMenuReviewWidget::ToggleEnderWeapon); break;
@@ -214,37 +464,133 @@ void UTSTSSPartyGearMenuReviewWidget::NativeOnInitialized()
             case 6: Button->OnClicked.AddDynamic(this, &UTSTSSPartyGearMenuReviewWidget::ToggleLyraWeapon); break;
             case 7: Button->OnClicked.AddDynamic(this, &UTSTSSPartyGearMenuReviewWidget::ToggleLyraArmor); break;
             case 8: Button->OnClicked.AddDynamic(this, &UTSTSSPartyGearMenuReviewWidget::ToggleLyraAccessory); break;
-            default: break;
             }
         }
     }
-
-    StatusLabel = AddReviewText(WidgetTree, Column,
-        TEXT("REVIEW ONLY - NO CHARACTER GRANT"), 15,
-        FLinearColor(0.47f, 0.84f, 0.83f, 1.f), 15.f);
-    UButton* Close = WidgetTree->ConstructWidget<UButton>();
-    UTextBlock* CloseText = WidgetTree->ConstructWidget<UTextBlock>();
-    if (!Close || !CloseText) return;
-    CloseText->SetText(FText::FromString(TEXT("  RETURN TO VOYAGE  ")));
-    Close->SetContent(CloseText);
-    Close->OnClicked.AddDynamic(this, &UTSTSSPartyGearMenuReviewWidget::OnCloseClicked);
-    Column->AddChildToVerticalBox(Close);
+    AddPageLine(TEXT("These actions change only the review ledger; 3D mount, inventory save and combat linkage still require integration."));
     RefreshReviewLabels();
 }
 
+void UTSTSSPartyGearMenuReviewWidget::RenderShipPage()
+{
+    AddPageHeading(TEXT("THE AUREATE WAKE / SHIP CONSOLE"));
+    AddPageLine(TEXT("Read-only engineering, navigation, crew and configuration review."));
+    UHorizontalBox* Tabs = WidgetTree->ConstructWidget<UHorizontalBox>();
+    if (!Tabs) return;
+    ContentColumn->AddChildToVerticalBox(Tabs)->SetPadding(FMargin(0.f,0.f,0.f,17.f));
+    const TCHAR* Names[] = {
+        TEXT("STATUS"), TEXT("ENGINE"), TEXT("MODES"), TEXT("CREW"),
+        TEXT("ROUTE"), TEXT("UPGRADES"), TEXT("CARGO")
+    };
+    for (int32 I=0; I<7; ++I)
+    {
+        UButton* Button = WidgetTree->ConstructWidget<UButton>();
+        UTextBlock* Text = WidgetTree->ConstructWidget<UTextBlock>();
+        if (!Button || !Text) return;
+        Text->SetText(FText::FromString(Names[I]));
+        FSlateFontInfo Font = Text->GetFont();
+        Font.Size = 12;
+        Text->SetFont(Font);
+        Button->SetContent(Text);
+        Tabs->AddChildToHorizontalBox(Button)->SetPadding(FMargin(0.f,0.f,5.f,0.f));
+        switch (I)
+        {
+        case 0: Button->OnClicked.AddDynamic(this, &UTSTSSPartyGearMenuReviewWidget::OpenShipOverview); break;
+        case 1: Button->OnClicked.AddDynamic(this, &UTSTSSPartyGearMenuReviewWidget::OpenShipEngineering); break;
+        case 2: Button->OnClicked.AddDynamic(this, &UTSTSSPartyGearMenuReviewWidget::OpenShipConfigurations); break;
+        case 3: Button->OnClicked.AddDynamic(this, &UTSTSSPartyGearMenuReviewWidget::OpenShipCrew); break;
+        case 4: Button->OnClicked.AddDynamic(this, &UTSTSSPartyGearMenuReviewWidget::OpenShipNavigation); break;
+        case 5: Button->OnClicked.AddDynamic(this, &UTSTSSPartyGearMenuReviewWidget::OpenShipUpgrades); break;
+        case 6: Button->OnClicked.AddDynamic(this, &UTSTSSPartyGearMenuReviewWidget::OpenShipCargo); break;
+        }
+    }
+    switch (ActiveShipPage)
+    {
+    case ETSTSSShipReviewPage::Overview:
+        AddPageHeading(TEXT("VESSEL / STATUS"));
+        AddPageLine(TEXT("Aureate Wake: harmonic levitation vessel / evolving design."));
+        AddPageLine(TEXT("Hull integrity, power load, fuel, altitude, velocity and stored resources: NO VERIFIED LIVE TELEMETRY."));
+        AddPageLine(TEXT("Ship operational and configuration controls are not admitted by this menu."));
+        if (IsValid(StoryReviewState))
+            AddPageLine(FString::Printf(TEXT("First Wake objective: %s"),
+                *StoryReviewState->GetReviewObjectiveText()));
+        break;
+    case ETSTSSShipReviewPage::Engineering:
+    {
+        AddPageHeading(TEXT("HARMONIC ENGINEERING / FIRST WAKE"));
+        AddPageLine(TEXT("Actual inspection milestone flags, not fabricated engine measurements."));
+        const uint8 Mask = IsValid(StoryReviewState)
+            ? StoryReviewState->GetInspectionMask() : 0;
+        const TCHAR* Labels[] = {TEXT("LIFT"), TEXT("PRESSURE"), TEXT("RESERVE")};
+        for (int32 I=0; I<3; ++I)
+            AddPageLine(FString::Printf(TEXT("%s INSPECTION: %s"),
+                Labels[I], !IsValid(StoryReviewState) ? TEXT("UNAVAILABLE")
+                : (Mask & (1u << I)) ? TEXT("COMPLETE")
+                : TEXT("NOT YET INSPECTED")));
+        AddPageLine(TEXT("True harmonic tuning, repairs, damage, efficiency and reserve telemetry require verified ship-system state."));
+        break;
+    }
+    case ETSTSSShipReviewPage::Configurations:
+        AddPageHeading(TEXT("VESSEL CONFIGURATIONS"));
+        AddPageLine(TEXT("SKYBORNE    /  Winged flight | Review only, no menu-based transformation."));
+        AddPageLine(TEXT("SEABORNE    /  Hydrofoil travel | Review only, no menu-based transformation."));
+        AddPageLine(TEXT("SUBMERSIBLE /  Wings tucked | No executable transformation authorized."));
+        AddPageLine(TEXT("STARBOURNE  /  Four radial sails | STORY AND ALL-FIVE CREW PLUS SHIP RESONANCE LOCKED."));
+        AddPageLine(TEXT("None of these controls is selectable until real mode authority, collision and animation are verified."));
+        break;
+    case ETSTSSShipReviewPage::Crew:
+        AddPageHeading(TEXT("CREW / STATIONS"));
+        AddPageLine(TEXT("Captain Ionia: Earth affinity; command essential."));
+        AddPageLine(TEXT("Ender: Spirit affinity; harmonic levitation engineering."));
+        AddPageLine(TEXT("Lyra: Water affinity; joins only after separate recruitment."));
+        AddPageLine(TEXT("Reson: Fire; Aepex: Air ? future crew progression, not in current slice."));
+        AddPageLine(TEXT("Crew reassignment is locked. Five Lights full-crew feats require EACH member and the ship."));
+        break;
+    case ETSTSSShipReviewPage::Navigation:
+        AddPageHeading(TEXT("COURSE / NAVIGATION"));
+        AddPageLine(TEXT("Route charts, biome visibility and Auroral Ladder navigation require authored world-map state."));
+        AddPageLine(TEXT("Hidden Moon Bridge and Starbourne route remain gated by narrative and celestial requirements."));
+        AddPageLine(TEXT("No fast travel, waypoint teleportation or ship steering is granted by this console."));
+        break;
+    case ETSTSSShipReviewPage::Upgrades:
+        AddPageHeading(TEXT("SHIP / REPAIR AND UPGRADES"));
+        AddPageLine(TEXT("Harmonic calibration, hull reinforcements, wings, hydrofoils and subsystem tuning."));
+        AddPageLine(TEXT("Upgrade tiers, crafting cost, inventory requirements, repair damage and availability are not established."));
+        AddPageLine(TEXT("No purchase/repair/upgrade operation authorized in this review console."));
+        break;
+    case ETSTSSShipReviewPage::Cargo:
+        AddPageHeading(TEXT("HOLD / CARGO / SUPPLIES"));
+        AddPageLine(TEXT("Provisions, expedition supplies, tools, quest cargo and ship inventory."));
+        AddPageLine(TEXT("No authoritative cargo counts, weight allowance, storage or supply consumption integrated."));
+        AddPageLine(TEXT("No transfers, item spawns or resource changes permitted here."));
+        break;
+    default:
+        AddPageHeading(TEXT("INVALID SHIP SUBPAGE"));
+        break;
+    }
+}
+
+void UTSTSSPartyGearMenuReviewWidget::OpenStatusTab() { OpenPageForReview(ETSTSSReviewMenuPage::Status); }
+void UTSTSSPartyGearMenuReviewWidget::OpenInventoryTab() { OpenPageForReview(ETSTSSReviewMenuPage::Inventory); }
+void UTSTSSPartyGearMenuReviewWidget::OpenEquipmentTab() { OpenPageForReview(ETSTSSReviewMenuPage::Equipment); }
+void UTSTSSPartyGearMenuReviewWidget::OpenMagicTab() { OpenPageForReview(ETSTSSReviewMenuPage::Magic); }
+void UTSTSSPartyGearMenuReviewWidget::OpenSkillsTab() { OpenPageForReview(ETSTSSReviewMenuPage::Skills); }
+void UTSTSSPartyGearMenuReviewWidget::OpenJobsTab() { OpenPageForReview(ETSTSSReviewMenuPage::Jobs); }
+void UTSTSSPartyGearMenuReviewWidget::OpenFormationTab() { OpenPageForReview(ETSTSSReviewMenuPage::Formation); }
+void UTSTSSPartyGearMenuReviewWidget::OpenJournalTab() { OpenPageForReview(ETSTSSReviewMenuPage::Journal); }
+void UTSTSSPartyGearMenuReviewWidget::OpenShipTab() { OpenPageForReview(ETSTSSReviewMenuPage::Ship); }
+void UTSTSSPartyGearMenuReviewWidget::OpenSystemTab() { OpenPageForReview(ETSTSSReviewMenuPage::System); }
+void UTSTSSPartyGearMenuReviewWidget::OpenShipOverview() { ChangeShipPage(ETSTSSShipReviewPage::Overview); }
+void UTSTSSPartyGearMenuReviewWidget::OpenShipEngineering() { ChangeShipPage(ETSTSSShipReviewPage::Engineering); }
+void UTSTSSPartyGearMenuReviewWidget::OpenShipConfigurations() { ChangeShipPage(ETSTSSShipReviewPage::Configurations); }
+void UTSTSSPartyGearMenuReviewWidget::OpenShipCrew() { ChangeShipPage(ETSTSSShipReviewPage::Crew); }
+void UTSTSSPartyGearMenuReviewWidget::OpenShipNavigation() { ChangeShipPage(ETSTSSShipReviewPage::Navigation); }
+void UTSTSSPartyGearMenuReviewWidget::OpenShipUpgrades() { ChangeShipPage(ETSTSSShipReviewPage::Upgrades); }
+void UTSTSSPartyGearMenuReviewWidget::OpenShipCargo() { ChangeShipPage(ETSTSSShipReviewPage::Cargo); }
+
 void UTSTSSPartyGearMenuReviewWidget::RefreshReviewLabels()
 {
-    if (StageLabel)
-    {
-        StageLabel->SetText(FText::FromString(
-            ActiveStage == ETSTSSPartySliceReviewStage::FirstWake
-                ? TEXT("FIRST WAKE | ENDER + IONIA")
-                : ActiveStage == ETSTSSPartySliceReviewStage::AfterSplashdown
-                ? TEXT("SPLASHDOWN | LYRA NOT YET RECRUITED")
-                : ActiveStage == ETSTSSPartySliceReviewStage::LyraRecruited
-                ? TEXT("EXPLICIT LYRA RECRUITMENT REVIEW")
-                : TEXT("INVALID REVIEW STAGE")));
-    }
+    if (ActivePage != ETSTSSReviewMenuPage::Equipment) return;
     for (int32 I=0; I<9 && I<SlotLabels.Num() && I<SlotButtons.Num(); ++I)
     {
         const FName Owner = ReviewOwner(I/3);
@@ -252,19 +598,20 @@ void UTSTSSPartyGearMenuReviewWidget::RefreshReviewLabels()
         const bool bAllowed = bInitialized &&
             FTSTSSPartySliceReviewEquipment::IsMemberAvailable(ActiveStage, Owner);
         SlotButtons[I]->SetIsEnabled(bAllowed);
-        const FTSTSSReviewGearSlots* Slots = ReviewState.EquippedByCharacter.Find(Owner);
+        const FTSTSSReviewGearSlots* Slots =
+            ReviewState.EquippedByCharacter.Find(Owner);
         const bool bEquipped = Slots && !SlotValue(*Slots, GearSlot).IsNone();
-        const FString Copy = FString::Printf(TEXT("%s: %s"),
-            SlotName(GearSlot),
-            !bAllowed ? TEXT("LOCKED")
-                : bEquipped ? TEXT("EQUIPPED") : TEXT("UNEQUIPPED"));
-        SlotLabels[I]->SetText(FText::FromString(Copy));
+        SlotLabels[I]->SetText(FText::FromString(FString::Printf(
+            TEXT("%s: %s"), SlotName(GearSlot),
+            !bAllowed ? TEXT("LOCKED") :
+            bEquipped ? TEXT("EQUIPPED") : TEXT("UNEQUIPPED"))));
     }
 }
 
 bool UTSTSSPartyGearMenuReviewWidget::TryToggleSlot(int32 Index)
 {
-    if (!bInitialized || Index < 0 || Index >= 9) return false;
+    if (!bInitialized || ActivePage != ETSTSSReviewMenuPage::Equipment ||
+        Index < 0 || Index >= 9) return false;
     const FName Owner = ReviewOwner(Index/3);
     const auto GearSlot = ReviewSlot(Index%3);
     if (!FTSTSSPartySliceReviewEquipment::IsMemberAvailable(ActiveStage, Owner))

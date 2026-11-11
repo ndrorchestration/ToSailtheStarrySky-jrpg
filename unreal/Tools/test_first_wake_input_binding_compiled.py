@@ -17,6 +17,7 @@ class FirstWakeInputBindingProbeContracts(unittest.TestCase):
         self.assertIn('BindAction(TEXT("PIEReviewQuickSave"), IE_Pressed', src)
         self.assertIn('BindAction(TEXT("QuickSave"), IE_Pressed', src)
         self.assertIn('TEXT("ReviewEquipment"), IE_Pressed', src)
+        self.assertIn('TEXT("ReviewRPGMenu"), IE_Pressed', src)
         self.assertIn("InputWorld->WorldType == EWorldType::PIE ||", src)
         self.assertIsNone(config_guard(self.config))
 
@@ -31,6 +32,12 @@ class FirstWakeInputBindingProbeContracts(unittest.TestCase):
             config_guard(self.config.replace(
                 'ActionName="PIEReviewQuickSave",Key=F6',
                 'ActionName="PIEReviewQuickSave",Key=F5', 1))
+
+    def test_removed_m_main_menu_mapping_rejected(self):
+        with self.assertRaises(ValueError):
+            config_guard(self.config.replace(
+                'ActionName="ReviewRPGMenu",Key=M',
+                'ActionName="ReviewRPGMenu",Key=N', 1))
 
     def test_removed_g_equipment_mapping_rejected(self):
         with self.assertRaises(ValueError):

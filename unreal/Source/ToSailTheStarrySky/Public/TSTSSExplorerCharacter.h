@@ -41,6 +41,7 @@ private:
     void ShowObjectiveReview();
     // Opt-in nonshipping UMG preview; never touches actual saved inventory.
     void ToggleEquipmentReview();
+    void TogglePartyMenuReview();
     UPROPERTY(Transient)
     TObjectPtr<UTSTSSPartyGearMenuReviewWidget> EquipmentReviewMenu;
     // PIE reviews never inherit another session's quicksave ownership.

@@ -127,7 +127,10 @@ class TestPartyEquipmentSource(unittest.TestCase):
   self.assertIn("TryBeginEquipmentReview",impl)
   self.assertIn("TryRefreshStoryStageReview",impl)
   self.assertIn("TryRefreshStoryStageReview(CurrentStage)",pawn)
-  self.assertIn("LyraRecruited",impl)
+  self.assertIn("const bool bWasPreviewStage",impl)
+  self.assertIn("const bool bIsPreviewStage",impl)
+  self.assertIn("RequestedStage == ETSTSSPartySliceReviewStage::FirstWake",impl)
+  self.assertIn("RequestedStage == ETSTSSPartySliceReviewStage::AfterSplashdown",impl)
   self.assertIn("Stage",h)
   self.assertIn("FirstWakeState->IsChapterOneActOne()",pawn)
   self.assertIn("ETSTSSPartySliceReviewStage::AfterSplashdown",pawn)
@@ -137,5 +140,30 @@ class TestPartyEquipmentSource(unittest.TestCase):
   self.assertIn("PC->SetInputMode(Mode)",pawn)
   self.assertIn("CloseReview",impl)
   self.assertNotIn("SaveGame",impl)
+
+ def test_unified_rpg_and_ship_console_contract(self):
+  unreal=HERE.parents[1]
+  cpp=(unreal/"Source"/"ToSailTheStarrySky"/"Private"/"TSTSSPartyGearMenuReviewWidget.cpp").read_text(encoding="utf-8")
+  head=(unreal/"Source"/"ToSailTheStarrySky"/"Public"/"TSTSSPartyGearMenuReviewWidget.h").read_text(encoding="utf-8")
+  pawn=(unreal/"Source"/"ToSailTheStarrySky"/"Private"/"TSTSSExplorerCharacter.cpp").read_text(encoding="utf-8")
+  test=(unreal/"Source"/"ToSailTheStarrySky"/"Private"/"Tests"/"TSTSSPartySliceEquipmentTests.cpp").read_text(encoding="utf-8")
+  config=(unreal/"Config"/"DefaultInput.ini").read_text(encoding="utf-8")
+  self.assertIn('+ActionMappings=(ActionName="ReviewRPGMenu",Key=M)',config)
+  for page in ("Status","Inventory","Equipment","Magic","Skills","Jobs","Formation","Journal","Ship","System"):
+   self.assertIn(page,head)
+  for page in ("Overview","Engineering","Configurations","Crew","Navigation","Upgrades","Cargo"):
+   self.assertIn(page,head)
+  self.assertIn("IsShipConfigurationSelectableForReview",cpp)
+  self.assertIn("ship menu may not execute an unauthorised mode change",test)
+  self.assertIn("StoryReviewState->GetInspectionMask()",cpp)
+  self.assertIn("StoryReviewState->GetReviewObjectiveText()",cpp)
+  self.assertIn("ReviewState.OwnedInstances.GetKeys(Names)",cpp)
+  self.assertIn("FTSTSSCombatData::ApprovedAffinity",cpp)
+  self.assertIn("FTSTSSPartySliceReviewEquipment::IsMemberAvailable",cpp)
+  self.assertIn("TogglePartyMenuReview",pawn)
+  self.assertIn("TryBindFirstWakeStoryForReview",pawn)
+  self.assertNotIn("ETSTSSPartySliceReviewStage::LyraRecruited",pawn)
+  self.assertNotIn("AdvanceTo(",cpp)
+  self.assertNotIn("SaveProgress(",cpp)
 
 if __name__=="__main__":unittest.main()
