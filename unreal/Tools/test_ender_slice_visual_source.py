@@ -28,6 +28,27 @@ class EnderSliceVisualSourceTests(unittest.TestCase):
         gate.validate_contract(self.manifest)
         gate.validate_cpp_guards(self.header, self.source)
 
+    def test_rejects_old_buzz_cut_reintroduction(self):
+        with self.assertRaises(gate.ContractError):
+            gate.validate_contract(self.altered(
+                "authority", "hair", "Very short auburn buzz cut, old approved look"))
+
+    def test_rejects_incorrect_enders_portrait_panel(self):
+        with self.assertRaises(gate.ContractError):
+            gate.validate_contract(self.altered(
+                "appearance_reference", "source",
+                "First panel from left, Ionia"))
+
+    def test_rejects_conflated_image_and_mesh_approval(self):
+        with self.assertRaises(gate.ContractError):
+            gate.validate_contract(self.altered(
+                "appearance_reference", "avatar_model_approved", True))
+
+    def test_rejects_gameplay_canon_overwritten_by_visual_image(self):
+        with self.assertRaises(gate.ContractError):
+            gate.validate_contract(self.altered(
+                "appearance_reference", "game_stats_and_job_redefined", True))
+
     def test_rejects_unapproved_default_mesh(self):
         with self.assertRaises(gate.ContractError):
             gate.validate_contract(self.altered("visual_binding", "default_candidate_mesh",
