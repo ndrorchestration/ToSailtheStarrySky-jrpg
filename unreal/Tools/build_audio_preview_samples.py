@@ -21,6 +21,10 @@ DURATIONS = {
     "mystery_echo.wav": 3.10,
     "weather_gust.wav": 2.20,
     "splashdown_review.wav": 1.80,
+    "footstep_wood.wav": 0.35,
+    "footstep_sand.wav": 0.38,
+    "footstep_stone.wav": 0.32,
+    "footstep_metal.wav": 0.44,
 }
 
 def envelope(t, duration, attack=0.025, release=0.14):
@@ -62,6 +66,19 @@ def make_pcm(name, duration):
         elif name == "weather_gust.wav":
             modulation = 0.5 + 0.4*math.sin(2*math.pi*0.36*t)
             x = (3.0*lowpass + 0.10*noise)*env*modulation
+        elif name == "footstep_wood.wav":
+            x = (0.75*math.sin(2*math.pi*85*t)*math.exp(-24*t)
+                 +0.23*noise*math.exp(-35*t))*env
+        elif name == "footstep_sand.wav":
+            x = (0.58*noise*math.exp(-16*t)
+                 +2.0*lowpass*math.exp(-12*t))*env
+        elif name == "footstep_stone.wav":
+            x = (0.49*noise*math.exp(-41*t)
+                 +0.76*math.sin(2*math.pi*180*t)*math.exp(-25*t))*env
+        elif name == "footstep_metal.wav":
+            x = (0.64*math.sin(2*math.pi*412*t)*math.exp(-17*t)
+                 +0.34*math.sin(2*math.pi*679*t)*math.exp(-23*t)
+                 +0.14*noise*math.exp(-38*t))*env
         else:
             x = (0.7*noise*math.exp(-9*t) + 2.3*lowpass*math.exp(-1.5*t))*env
         samples.append(x)
