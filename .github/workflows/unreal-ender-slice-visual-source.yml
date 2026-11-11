@@ -1,0 +1,39 @@
+name: Ender vertical-slice source gates
+
+on:
+  push:
+    paths:
+      - "unreal/DataSource/Characters/EnderFirstWakeVisualBridge.review.json"
+      - "unreal/Tools/validate_ender_slice_visual.py"
+      - "unreal/Tools/test_ender_slice_visual_source.py"
+      - "unreal/Source/ToSailTheStarrySky/Public/TSTSSExplorerCharacter.h"
+      - "unreal/Source/ToSailTheStarrySky/Private/TSTSSExplorerCharacter.cpp"
+      - ".github/workflows/unreal-ender-slice-visual-source.yml"
+  pull_request:
+    paths:
+      - "unreal/DataSource/Characters/EnderFirstWakeVisualBridge.review.json"
+      - "unreal/Tools/validate_ender_slice_visual.py"
+      - "unreal/Tools/test_ender_slice_visual_source.py"
+      - "unreal/Source/ToSailTheStarrySky/Public/TSTSSExplorerCharacter.h"
+      - "unreal/Source/ToSailTheStarrySky/Private/TSTSSExplorerCharacter.cpp"
+      - ".github/workflows/unreal-ender-slice-visual-source.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  ender-pie-source:
+    name: Ender source contract (not Unreal native)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Contract and C++ guard preflight
+        run: python unreal/Tools/validate_ender_slice_visual.py
+      - name: Negative mutations and source gates
+        run: python -m unittest discover -s unreal/Tools -p "test_ender_slice_visual_source.py" -v
+      - name: Compile Python scripts
+        run: python -m py_compile unreal/Tools/validate_ender_slice_visual.py unreal/Tools/test_ender_slice_visual_source.py
