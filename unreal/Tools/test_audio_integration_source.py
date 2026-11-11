@@ -99,6 +99,26 @@ class AudioReviewIntegrationSourceTests(unittest.TestCase):
         for forbidden in ("AdvanceTo(", "InspectStation(", "ConfirmWaterContact("):
             self.assertNotIn(forbidden, zone)
 
+    def test_grounded_surface_footstep_source_boundaries(self):
+        cpp = (SOURCES / "Private" / "TSTSSFootstepAudioDirector.cpp").read_text(encoding="utf-8")
+        header = (SOURCES / "Public" / "TSTSSFootstepAudioDirector.h").read_text(encoding="utf-8")
+        self.assertIn("ATSTSSFootstepAudioDirector", cpp)
+        self.assertIn("UGameplayStatics::GetPlayerPawn(World, 0)", cpp)
+        self.assertIn("Movement->IsMovingOnGround()", cpp)
+        self.assertIn("Velocity.Size2D() < MinimumGroundSpeedCmPerSec", cpp)
+        self.assertIn("TravelCm > MaximumContinuityDeltaCm", cpp)
+        self.assertIn("DistanceAccumulatorCm", cpp)
+        self.assertIn("Params.bReturnPhysicalMaterial = true", cpp)
+        self.assertIn("UPhysicalMaterial::DetermineSurfaceType", cpp)
+        self.assertIn("World->LineTraceSingleByChannel", cpp)
+        for suffix in ("wood", "sand", "stone", "metal"):
+            self.assertIn("foley.footstep." + suffix, cpp)
+        self.assertIn("return NAME_None", cpp)
+        self.assertIn("ResetFootstepTracking()", cpp)
+        self.assertIn("TEnumAsByte<EPhysicalSurface>", header)
+        for forbidden in ("AddMovementInput(", "AdvanceTo(", "SaveGameToSlot(", "SetActorLocation("):
+            self.assertNotIn(forbidden, cpp)
+
     def test_authoritative_gameplay_still_precedes_audio(self):
         milestone = (SOURCES / "Private" / "TSTSSMilestoneActor.cpp").read_text()
         atmosphere = (SOURCES / "Private" / "TSTSSAtmosphereDirector.cpp").read_text()
