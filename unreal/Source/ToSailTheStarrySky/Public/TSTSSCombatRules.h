@@ -29,6 +29,12 @@ struct FTSTSSCombatAction
     UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 ResourceCost = 0;
     UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 Power = 0;
     UPROPERTY(EditAnywhere, BlueprintReadWrite) bool bHealing = false;
+    // Support actions consume an authenticated turn/MP without fabricating
+    // damage to the caster. Physical mitigation is computed by the skill
+    // authority, never by a UI or a particle renderer.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) bool bSupportOnly = false;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) bool bPhysicalDamage = false;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 PhysicalDefenseBonus = 0;
 };
 
 UCLASS()
