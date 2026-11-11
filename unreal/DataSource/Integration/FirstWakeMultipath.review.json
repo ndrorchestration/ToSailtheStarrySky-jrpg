@@ -1,0 +1,99 @@
+{
+  "schema": "tstss.firstwake.multipath.v1",
+  "engine": "UE 5.8.4",
+  "integration_scope": "REVIEW_ONLY",
+  "native_at_integrated_head": "NOT_TESTED",
+  "pie_verified": false,
+  "gpu_approved": false,
+  "creator_approved": false,
+  "merged_to_main": false,
+  "release_authorized": false,
+  "required_native_names": 35,
+  "pre_splashdown_party": [
+    "Ender",
+    "Ionia"
+  ],
+  "post_splashdown_first_recruit": "Lyra",
+  "disallowed_slice_party": [
+    "Reson",
+    "Aepex"
+  ],
+  "restricted_ship_form": "Starbourne",
+  "min_pretransition_observed_flotation_seconds": 2,
+  "keys": {
+    "pie_save": "F6",
+    "pie_load": "F9",
+    "prelaunch_continue": "F7",
+    "standalone_save": "F5"
+  },
+  "resources": {
+    "native_free_ram_gib": 5,
+    "graphics_free_ram_gib": 6.5,
+    "min_free_disk_gib": 14,
+    "forbid_parallel_unreal_editor_or_live_coding": true
+  },
+  "source_tracks": [
+    {
+      "id": "gameplay",
+      "pr": 792,
+      "source_sha": "e797b9373337df1bb71d3618100d69abe66471bf",
+      "key_file": "unreal/Source/ToSailTheStarrySky/Private/TSTSSExplorerCharacter.cpp"
+    },
+    {
+      "id": "cinematics",
+      "pr": 790,
+      "source_sha": "a91068891e5792ea584301c2b65975b22e954e94",
+      "key_file": "unreal/DataSource/Cinematics/FirstWakeShotPlan.review.json"
+    },
+    {
+      "id": "lighting",
+      "pr": 796,
+      "source_sha": "b77268695a156a7a6684c081abfd1993fb29619c",
+      "key_file": "unreal/Tools/tstss_lighting_review.py"
+    },
+    {
+      "id": "maps",
+      "pr": 794,
+      "source_sha": "65e7a01f3ab1ad211a01d773e36cd4b1669e28b2",
+      "key_file": "unreal/Content/TSTSS/Review/VerticalSlice/VS01_DenithHarbor.umap"
+    },
+    {
+      "id": "objects",
+      "pr": 795,
+      "source_sha": "3a83d06e350111159ad3931f22da6ae9eaed57ea",
+      "key_file": "unreal/ArtSource/VerticalSliceObjectsV1/manifest.json"
+    },
+    {
+      "id": "equipment",
+      "pr": 793,
+      "source_sha": "e78c7a8bf36f23c4c9fd2fb1be8a6ce12685b3a6",
+      "key_file": "unreal/ArtSource/PartyEquipment/party_equipment_manifest.review.json"
+    },
+    {
+      "id": "magic",
+      "pr": 797,
+      "source_sha": "1f7f40d3d0049cfdb6442c2985c0ca937dfb61c4",
+      "key_file": "unreal/DataSource/Magic/EnderResonator.vertical_slice.review.json"
+    },
+    {
+      "id": "atmosphere",
+      "pr": 798,
+      "source_sha": "fbe149d2612bd21fd52679f02988d7382fa5b715",
+      "key_file": "unreal/Source/ToSailTheStarrySky/Private/TSTSSAtmosphereDirector.cpp"
+    },
+    {
+      "id": "enemies",
+      "pr": 791,
+      "source_sha": "b4aca282034c9ce2a55cdf11d757678058a76444",
+      "key_file": "unreal/Source/ToSailTheStarrySky/Private/Enemies/TSTSSSliceEnemyCatalog.cpp"
+    }
+  ],
+  "validation_path": [
+    "35 exact native UE automation names",
+    "full source and PowerShell negative fixture suite",
+    "native UHT and Win64 compile when safe",
+    "independent asset/map readback",
+    "player-controlled Prelude to sea landing with save/continue checks",
+    "paired Lit GPU screenshots and creator acceptance"
+  ]
+}

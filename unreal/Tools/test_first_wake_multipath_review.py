@@ -1,0 +1,128 @@
+"""Fail-closed source-only reconciliation of independent First Wake review lanes.
+
+This does NOT perform an Unreal build, execute PIE, or approve cinematics.
+"""
+import copy
+import json
+import re
+import unittest
+from pathlib import Path
+
+UNREAL = Path(__file__).resolve().parents[1]
+MANIFEST = UNREAL / "DataSource/Integration/FirstWakeMultipath.review.json"
+EXPECTED_TRACKS = {
+    "gameplay", "cinematics", "lighting", "maps", "objects", "equipment",
+    "magic", "atmosphere", "enemies",
+}
+ENEMY_NAMES = {
+    "TSTSS.Slice.Enemies.RegistryAndAdmission",
+    "TSTSS.Slice.Enemies.RealTurnManagerBoundary",
+    "TSTSS.Slice.Enemies.AuthorizedAIAndFallback",
+}
+
+def validate(data):
+    errors = []
+    auth = (
+        "pie_verified", "gpu_approved", "creator_approved", "merged_to_main",
+        "release_authorized",
+    )
+    if data.get("schema") != "tstss.firstwake.multipath.v1":
+        errors.append("schema")
+    if data.get("engine") != "UE 5.8.4" or data.get("integration_scope") != "REVIEW_ONLY":
+        errors.append("engine-or-scope")
+    if data.get("native_at_integrated_head") != "NOT_TESTED":
+        errors.append("native-overclaim")
+    if any(data.get(k) is not False for k in auth):
+        errors.append("authority-overclaim")
+    if data.get("pre_splashdown_party") != ["Ender", "Ionia"]:
+        errors.append("pre-splashdown-chronology")
+    if data.get("post_splashdown_first_recruit") != "Lyra":
+        errors.append("lyra-chronology")
+    if data.get("disallowed_slice_party") != ["Reson", "Aepex"]:
+        errors.append("future-cast-boundary")
+    if data.get("restricted_ship_form") != "Starbourne":
+        errors.append("starbourne-boundary")
+    if data.get("min_pretransition_observed_flotation_seconds", 0) < 2.0:
+        errors.append("observed-water-gate")
+    keys = data.get("keys") or {}
+    if keys != {
+        "pie_save": "F6", "pie_load": "F9",
+        "prelaunch_continue": "F7", "standalone_save": "F5",
+    } or len(set(keys.values())) != 4:
+        errors.append("input-ownership")
+    resources = data.get("resources") or {}
+    if resources.get("native_free_ram_gib", 0) < 5 or resources.get("graphics_free_ram_gib", 0) < 6.5:
+        errors.append("physical-ram-gate")
+    if resources.get("min_free_disk_gib", 0) < 14 or resources.get("forbid_parallel_unreal_editor_or_live_coding") is not True:
+        errors.append("native-process-disk-gate")
+    tracks = data.get("source_tracks") or []
+    if len(tracks) != len(EXPECTED_TRACKS) or {x.get("id") for x in tracks} != EXPECTED_TRACKS:
+        errors.append("track-coverage")
+    if len({x.get("pr") for x in tracks}) != len(tracks):
+        errors.append("duplicate-pr")
+    for track in tracks:
+        if not re.fullmatch("[0-9a-f]{40}", str(track.get("source_sha", ""))):
+            errors.append("invalid-source-sha")
+        rel = str(track.get("key_file", ""))
+        if not rel.startswith("unreal/") or ".." in Path(rel).parts:
+            errors.append("unsafe-source-path")
+        elif not (UNREAL.parent / rel).is_file():
+            errors.append("missing-source-file")
+    registry = (UNREAL / "Tools/Verify-Unreal.ps1").read_text(encoding="utf-8")
+    names = re.findall(r"^\s*'(TSTSS\.[^']+)'", registry, re.M)
+    if data.get("required_native_names") != 35 or len(names) != 35 or len(set(names)) != 35:
+        errors.append("native-registration-count")
+    if not ENEMY_NAMES.issubset(set(names)):
+        errors.append("enemy-native-registration")
+    if len(list((UNREAL / "ArtSource/VerticalSliceObjectsV1").glob("*.glb"))) != 22:
+        errors.append("object-source-count")
+    if len(list((UNREAL / "ArtSource/PartyEquipment/Generated").glob("*.glb"))) != 14:
+        errors.append("equipment-source-count")
+    if len(list((UNREAL / "Content/TSTSS/Review/VerticalSlice").glob("VS*.umap"))) != 6:
+        errors.append("map-count")
+    return errors
+
+
+class CrossPathReviewContract(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.data = json.loads(MANIFEST.read_text(encoding="utf-8"))
+
+    def test_all_nine_lanes_and_native_registry(self):
+        self.assertEqual([], validate(self.data))
+
+    def test_cannot_claim_approval_or_native_success(self):
+        for field in ("pie_verified", "gpu_approved", "creator_approved",
+                      "merged_to_main", "release_authorized"):
+            changed = copy.deepcopy(self.data)
+            changed[field] = True
+            self.assertIn("authority-overclaim", validate(changed))
+        changed = copy.deepcopy(self.data)
+        changed["native_at_integrated_head"] = "PASS"
+        self.assertIn("native-overclaim", validate(changed))
+
+    def test_deny_unearned_progression_and_input_collision(self):
+        changed = copy.deepcopy(self.data)
+        changed["pre_splashdown_party"].append("Lyra")
+        self.assertIn("pre-splashdown-chronology", validate(changed))
+        changed = copy.deepcopy(self.data)
+        changed["keys"]["prelaunch_continue"] = "F6"
+        self.assertIn("input-ownership", validate(changed))
+        changed = copy.deepcopy(self.data)
+        changed["min_pretransition_observed_flotation_seconds"] = 1.9
+        self.assertIn("observed-water-gate", validate(changed))
+
+    def test_fail_closed_when_lane_missing_or_resource_gate_weakens(self):
+        changed = copy.deepcopy(self.data)
+        changed["source_tracks"].pop()
+        self.assertIn("track-coverage", validate(changed))
+        changed = copy.deepcopy(self.data)
+        changed["resources"]["native_free_ram_gib"] = 4.0
+        self.assertIn("physical-ram-gate", validate(changed))
+        changed = copy.deepcopy(self.data)
+        changed["resources"]["forbid_parallel_unreal_editor_or_live_coding"] = False
+        self.assertIn("native-process-disk-gate", validate(changed))
+
+
+if __name__ == "__main__":
+    unittest.main()

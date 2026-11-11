@@ -1,6 +1,6 @@
 """Fail-closed no-Editor source guards for #769 native admission tooling.
 
-Checks that only approved disposable worktrees are allowed, 32 native names
+Checks that only approved disposable worktrees are allowed, 35 native names
 are required (including Resonator, atmosphere, and party-equipment tests),
 correct map/source/save guards remain, and the GUI RAM
 threshold matches the documented 6.5 GiB requirement. Never runs Unreal.
@@ -55,8 +55,8 @@ def verify(review: str, map_launcher: str, builder: str) -> list[str]:
             map_launcher.index("New-Item -Path $LauncherRoot")):
         errors.append("Map preflight creates receipts before checking the hold")
     names = re.findall(r"^\s*'(TSTSS\.[^']+)'", builder, re.M)
-    if len(names) != 30 or len(set(names)) != 30:
-        errors.append("Exact combined-head native registry not 30 unique named tests")
+    if len(names) != 35 or len(set(names)) != 35:
+        errors.append("Exact combined-head native registry not 35 unique named tests")
     if "Source HEAD differs from the explicitly requested review commit" not in builder:
         errors.append("Native build lacks commit-custody check")
     for label, source, before in (
@@ -111,7 +111,7 @@ class CombinedNativeAdmissionContracts(unittest.TestCase):
         self.assertTrue(self.check(review=self.review.replace(
             "if (-not $NativeAccepted)", "if ($false)", 1)))
 
-    def test_wrong_30_name_requirement_rejected(self):
+    def test_wrong_35_name_requirement_rejected(self):
         self.assertTrue(self.check(builder=self.builder.replace(
             "'TSTSS.FirstWake.InteractionToSplashdown',",
             "", 1)))
