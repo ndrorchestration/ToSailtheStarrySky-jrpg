@@ -40,7 +40,7 @@ def digest(p):
 
 def git(root,*args):
     return subprocess.run(["git","-C",str(root),*args],check=True,capture_output=True,
-                          text=True,timeout=30).stdout.strip()
+                          text=True,timeout=30).stdout.rstrip("\r\n")
 
 def safe(relative):
     rel=Path(str(relative).replace("\\","/"))

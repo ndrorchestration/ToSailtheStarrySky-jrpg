@@ -117,6 +117,12 @@ class GPUReviewSafetyTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError,"beyond"):
                     intake.plugin_only_review_change()
 
+    def test_git_porcelain_preserves_leading_status_column(self):
+        with mock.patch.object(intake.subprocess,"run") as run:
+            run.return_value.stdout=" M unreal/ToSailTheStarrySky.uproject\r\n"
+            self.assertEqual(" M unreal/ToSailTheStarrySky.uproject",
+                             intake.git(Path("C:/review"),"status","--porcelain"))
+
     def test_preflight_never_runs_gpu_on_nonwindows(self):
         with mock.patch.object(host.sys,"platform","linux"):
             with self.assertRaisesRegex(RuntimeError,"wrong GPU host"):
