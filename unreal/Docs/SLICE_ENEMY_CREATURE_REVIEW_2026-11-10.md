@@ -1,6 +1,7 @@
 # TSTSS Unreal 3D enemy roster — 15 review archetypes
 
-**Current status:** 15 ARCHETYPES SOURCE-IMPLEMENTED / 30 DAMAGE-ONLY REVIEW ACTIONS / NATIVE UBT-UHT NOT VERIFIED (DISK BELOW GATE) / NO GALLERY MAP / VISUAL QA NOT TESTED / CANON PLACEMENT NOT APPROVED / DRAFT NO MERGE. Earlier native attempt was blocked by Live Coding; see historical receipt below.
+**Current scope:** 15 provisional enemy archetypes, 30 catalog enemy-only damage abilities, 8 neutral review waves, a native-verified V0 Unreal gallery map, and a **new C++ keyboard battle review bench** awaiting its own exact-head native build and PIE validation. No story placement, rendered visual acceptance, production combat certification or merge.
+**Native evidence split:** Gallery source commit `dc79a9dd6164f2ae631c1bd6ee051ea7a6f5c0c7` passed UE 5.8.4 C++ build, **32/32 registered native automations**, and V0 map reload of 15 creatures/120 mesh components. This success **does not transfer** to the new C++ battle bench at the current review branch HEAD. The V1 combat map has not been created or played.
 **Engine:** Unreal Engine 5.8 project (UE 5.8.4 Windows validation required).
 **Source of truth for current proposed review numbers:** `Public/Enemies/TSTSSSliceEnemyCatalog.h` and `Private/Enemies/TSTSSSliceEnemyCatalog.cpp`.
 **Baseline:** main `f4e44544c3c7d7803a964cd1c9435dab8a8aff16`.
@@ -46,7 +47,7 @@ The bandits use different silhouettes for light melee, slinger, and high-health 
 - Shipping builds deny review participant construction and review-table creation, and hide any accidentally placed review actor.
 - Three Editor automation tests cover registry uniqueness, exact HP/ability projection, invalid/impersonated IDs, design-only refusal through the actual manager, and one explicitly opted-in accepted enemy turn. They have **not run** at this new head.
 
-## Native authoring / inspection path
+## Historical original-gallery authoring / inspection path (V0 successfully completed)
 1. In a **disposable** Unreal 5.8.4 review map, stage fifteen distinct `TSTSSSliceEnemyActor` C++ actors in the isolated gallery; each requires a unique `Kind` and `InstanceId`. The source gallery generator defines the five-by-three layout. These are constructed from built-in static meshes when an actor is placed. An earlier connection failure is historical; the current workstation is online, but the generated `.umap` remains absent because native verification is blocked by disk availability.
 2. For mechanical isolated tests only, construct an explicit player roster and selected party members, call `TryMakeReviewParticipant` for enemies, set the manager's `SkillTable` to a table with explicitly reviewed admission, then call `InitializeEncounter`. Merely placing actors **does not start a fight**. For any true player battle, use the project's battle UI and existing skill/party authorization rather than coupling visuals to button presses.
 3. Use the project's unchanged `Tools/Verify-Unreal.ps1` on a clean exact-head isolated checkout with available UE Editor toolchain. Inspect C++/UHT build, the three named enemy-native tests, all other registered tests and tracked-file cleanliness. Do not edit tracked Engine/Input INIs to satisfy the run.
@@ -122,7 +123,7 @@ Each archetype has HP, resource, attack, defense, agility, family, proposed habi
 
 `tstss_slice_enemy_gallery.py` now authors five gallery aisles, three enemies in each, with per-family review cameras, floor stages, labels, and low-resource point/directional lighting. It remains opt-in and still refuses dirty or foreign workspaces, overwrites, missing native build evidence, or an active editor session.
 
-**Native build hold:** On Neontic the free disk measurement was roughly **9.09 GiB**, below the existing **14 GiB** gate, so no native build/gallery authoring will be attempted until resources recover; do not weaken the gate or delete another worker's files.
+**Historical resource hold:** During initial authoring, disk briefly fell to 9.09 GiB, below the 14 GiB native threshold. That earlier hold was later cleared and the V0 gallery was built, saved, reloaded and tested; subsequent V1 combat-bench verification has an independent resource/editor-availability gate.
 
 ## Neutral encounter recipe bank (C++ source only)
 
