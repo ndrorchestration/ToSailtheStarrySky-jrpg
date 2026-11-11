@@ -1,6 +1,8 @@
 #include "Review/TSTSSPresentationCoordinatorSubsystem.h"
 
 #include "Engine/World.h"
+#include "TSTSSExplorerCharacter.h"
+#include "Kismet/GameplayStatics.h"
 
 /**
  * This implementation is deliberately only a decision-and-notification path.
@@ -165,15 +167,30 @@ FTSTSSPresentationIntent UTSTSSPresentationCoordinatorSubsystem::ResolveForRevie
     {
         return Intent;
     }
-    // World.GetMapName in PIE is prefixed UEDPIE_<index>_; use exact
-    // documented map suffix, not caller-supplied creative label.
-    const bool bMapMatches = MapName.EndsWith(Authored.SourceMap,
+    // Accept ONLY the exact supported native map name. PIE adds the
+    // "UEDPIE_<index>_" prefix. EndsWith alone would admit a spoofed map
+    // such as FakeVS02_AureateInteriors, so strip that precise prefix first.
+    FString NativeMapName = MapName;
+    if (NativeMapName.StartsWith(TEXT("UEDPIE_"), ESearchCase::CaseSensitive))
+    {
+        FString PIEIndex;
+        FString Unprefixed;
+        const FString Remainder = NativeMapName.RightChop(7);
+        if (!Remainder.Split(TEXT("_"), &PIEIndex, &Unprefixed)
+            || PIEIndex.IsEmpty() || !PIEIndex.IsNumeric())
+        {
+            Intent.Reason = TEXT("DENIED_INVALID_PIE_MAP_PREFIX");
+            return Intent;
+        }
+        NativeMapName = Unprefixed;
+    }
+    const bool bMapMatches = NativeMapName.Equals(Authored.SourceMap,
         ESearchCase::CaseSensitive);
     const bool bHarborReviewCopy =
         (Moment == ETSTSSPresentationMoment::DockEstablish
             || Moment == ETSTSSPresentationMoment::IoniaConversation)
-        && MapName.EndsWith(TEXT("M_DenithHarborBokehStudy"),
-                            ESearchCase::CaseSensitive);
+        && NativeMapName.Equals(TEXT("M_DenithHarborBokehStudy"),
+                                ESearchCase::CaseSensitive);
     if (!bMapMatches && !bHarborReviewCopy)
     {
         Intent.Reason = TEXT("DENIED_WRONG_NATIVE_MAP");
@@ -209,13 +226,87 @@ FTSTSSPresentationIntent UTSTSSPresentationCoordinatorSubsystem::ResolveForRevie
     return Intent;
 }
 
+bool UTSTSSPresentationCoordinatorSubsystem::MatchesStorySnapshot(
+    const UTSTSSFirstWakeState* State,
+    uint64 ObservedGeneration,
+    bool bObservedStarted,
+    ETSTSSFirstWakeBeat ObservedBeat,
+    uint8 ObservedInspectionMask)
+{
+    return IsValid(State)
+        && State->GetRestoreGeneration() == ObservedGeneration
+        && State->HasStarted() == bObservedStarted
+        && State->GetCurrentBeat() == ObservedBeat
+        && State->GetInspectionMask() == ObservedInspectionMask;
+}
+
+void UTSTSSPresentationCoordinatorSubsystem::ClearObservedSource()
+{
+    ObservedStory.Reset();
+    ObservedAtmosphere.Reset();
+    ObservedRestoreGeneration = 0;
+    ObservedBeat = ETSTSSFirstWakeBeat::FlyerDiscovered;
+    ObservedInspectionMask = 0;
+    bObservedStarted = false;
+    ObservedWeather = ETSTSSWeather::Clear;
+    ObservedClockHours = 0.0f;
+}
+
+void UTSTSSPresentationCoordinatorSubsystem::PublishNeutral(const FString& Reason)
+{
+    ClearObservedSource();
+    CurrentIntent = FTSTSSPresentationIntent();
+    CurrentIntent.Reason = Reason;
+    OnReviewIntentChanged.Broadcast(CurrentIntent);
+}
+
+FTSTSSPresentationIntent UTSTSSPresentationCoordinatorSubsystem::GetCurrentIntent() const
+{
+    if (!CurrentIntent.bEligible)
+    {
+        return CurrentIntent;
+    }
+
+    const UWorld* World = GetWorld();
+    const ATSTSSExplorerCharacter* Player = World
+        ? Cast<ATSTSSExplorerCharacter>(UGameplayStatics::GetPlayerPawn(World, 0))
+        : nullptr;
+    const UTSTSSFirstWakeState* State = IsValid(Player)
+        ? Player->GetFirstWakeState() : nullptr;
+    const ATSTSSAtmosphereDirector* Atmosphere = ObservedAtmosphere.Get();
+    if (!bReviewEnabled || !World || World->WorldType != EWorldType::PIE
+        || !IsValid(Player)
+        || !IsValid(State)
+        || State != ObservedStory.Get()
+        || !MatchesStorySnapshot(State, ObservedRestoreGeneration,
+                                  bObservedStarted, ObservedBeat,
+                                  ObservedInspectionMask)
+        || !IsValid(Atmosphere)
+        || Atmosphere->GetWorld() != World
+        || Atmosphere->GetTargetWeather() != ObservedWeather
+        || !FMath::IsNearlyEqual(
+            Atmosphere->GetAtmosphereProfile().ClockHours,
+            ObservedClockHours, 0.1f))
+    {
+        // Const getter intentionally does not broadcast: callers must treat
+        // stale or missing source snapshots as neutral until republished.
+        FTSTSSPresentationIntent Expired;
+        Expired.Reason = TEXT("EXPIRED_STORY_OR_WORLD_SNAPSHOT");
+        return Expired;
+    }
+    return CurrentIntent;
+}
+
 void UTSTSSPresentationCoordinatorSubsystem::SetReviewEnabled(bool bEnabled)
 {
 #if WITH_EDITOR
     const UWorld* World = GetWorld();
     if (!World || World->WorldType != EWorldType::PIE) return;
     bReviewEnabled = bEnabled;
-    if (!bReviewEnabled) ResetReviewIntent();
+    if (!bReviewEnabled)
+    {
+        ResetReviewIntent();
+    }
 #else
     (void)bEnabled;
 #endif
@@ -236,26 +327,58 @@ FTSTSSPresentationIntent UTSTSSPresentationCoordinatorSubsystem::TryPublishMomen
         return Denied;
     }
 
-    const ETSTSSWeather Weather = IsValid(Atmosphere)
-        ? Atmosphere->GetTargetWeather() : ETSTSSWeather::Clear;
+    // The caller does not define truth. Bind to the ACTUAL player-owned state
+    // to prevent a transient or caller-created UObject from manufacturing an
+    // apparently valid milestone. This is presentation gating, not security.
+    const ATSTSSExplorerCharacter* Player =
+        Cast<ATSTSSExplorerCharacter>(UGameplayStatics::GetPlayerPawn(World, 0));
+    const UTSTSSFirstWakeState* ActualStory = IsValid(Player)
+        ? Player->GetFirstWakeState() : nullptr;
+    if (!IsValid(ActualStory) || ActualStory != StoryState)
+    {
+        PublishNeutral(TEXT("DENIED_UNBOUND_PLAYER_STORY_STATE"));
+        return CurrentIntent;
+    }
+    // No inferred "clear weather" when the world owner is absent or from
+    // another level. An unmerged atmosphere draft is an explicit blocker.
+    if (!IsValid(Atmosphere) || Atmosphere->GetWorld() != World)
+    {
+        PublishNeutral(TEXT("DENIED_MISSING_WORLD_ATMOSPHERE"));
+        return CurrentIntent;
+    }
+
+    const ETSTSSWeather Weather = Atmosphere->GetTargetWeather();
     const FTSTSSPresentationIntent Result = ResolveForReview(
-        StoryState, Moment, World->GetMapName(), Weather,
+        ActualStory, Moment, World->GetMapName(), Weather,
         bReducedMotion, bGameplayClarityOverride);
-    CurrentIntent = Result; // Non-authoritative, transient presentation receipt.
+    if (!Result.bEligible)
+    {
+        PublishNeutral(Result.Reason);
+        return CurrentIntent;
+    }
+
+    CurrentIntent = Result; // Read-only; no renderer, weather, or audio writes.
+    ObservedStory = ActualStory;
+    ObservedAtmosphere = Atmosphere;
+    ObservedRestoreGeneration = ActualStory->GetRestoreGeneration();
+    bObservedStarted = ActualStory->HasStarted();
+    ObservedBeat = ActualStory->GetCurrentBeat();
+    ObservedInspectionMask = ActualStory->GetInspectionMask();
+    ObservedWeather = Weather;
+    ObservedClockHours = Atmosphere->GetAtmosphereProfile().ClockHours;
     OnReviewIntentChanged.Broadcast(CurrentIntent);
-    return Result;
+    return CurrentIntent;
 }
 
 void UTSTSSPresentationCoordinatorSubsystem::ResetReviewIntent()
 {
-    CurrentIntent = FTSTSSPresentationIntent();
-    CurrentIntent.Reason = TEXT("CLEARED_ON_STORY_RESET_OR_SCENE_EXIT");
-    OnReviewIntentChanged.Broadcast(CurrentIntent);
+    PublishNeutral(TEXT("CLEARED_ON_STORY_RESET_OR_SCENE_EXIT"));
 }
 
 void UTSTSSPresentationCoordinatorSubsystem::Deinitialize()
 {
     bReviewEnabled = false;
+    ClearObservedSource();
     CurrentIntent = FTSTSSPresentationIntent();
     Super::Deinitialize();
 }
