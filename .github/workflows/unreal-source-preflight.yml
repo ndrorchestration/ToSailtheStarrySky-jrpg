@@ -181,3 +181,7 @@ jobs:
         run: |
           python3 unreal/Tools/tstss_slice_enemy_gallery.py --validate
           python3 -m unittest discover -s unreal/Tools -p 'test_tstss_slice_enemy_gallery.py' -v
+      - name: Validate optional enemy combat sandbox source plan and fail-closed gates (NOT PIE)
+        run: |
+          python3 unreal/Tools/tstss_slice_enemy_combat_sandbox.py --validate
+          python3 -m unittest discover -s unreal/Tools -p 'test_tstss_slice_enemy_combat_sandbox.py' -v

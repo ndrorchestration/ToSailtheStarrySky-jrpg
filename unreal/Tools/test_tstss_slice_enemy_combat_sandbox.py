@@ -87,5 +87,25 @@ class ReviewCombatSandboxTests(TestCase):
                             sandbox.checked_project(folder)
             self.assertEqual(dest.read_bytes(),marker)
 
+    def test_cpp_combat_bench_preserves_protagonist_recruitment(self):
+        root=Path(sandbox.__file__).resolve().parents[1]
+        base=root/"Source/ToSailTheStarrySky"
+        header=(base/"Public/Enemies/TSTSSSliceEnemyReviewSession.h").read_text(encoding="utf-8")
+        impl=(base/"Private/Enemies/TSTSSSliceEnemyReviewSession.cpp").read_text(encoding="utf-8")
+        actor=(base/"Private/Enemies/TSTSSSliceEnemyReviewBattleConsole.cpp").read_text(encoding="utf-8")
+        for token in ("EnderOnly","IoniaRecruited","AfterSplashdown"):
+            self.assertIn(token,header)
+        self.assertIn('Member.LearnedSkills.Add(ReviewStrikeId)',impl)
+        self.assertIn('FTSTSSSliceEnemyCatalog::TryMakeReviewWave',impl)
+        self.assertIn('UTSTSSSliceEnemyReviewAI::TryActReviewEnemy',impl)
+        self.assertIn('Next->InitializeEncounter(Crew, CandidatePartyIds, Wave)',impl)
+        self.assertIn('EKeys::F7',actor)
+        self.assertIn('EKeys::F8',actor)
+        self.assertIn('EKeys::F9',actor)
+        self.assertIn('EKeys::J',actor)
+        self.assertIn('EKeys::K',actor)
+        self.assertIn("#if UE_BUILD_SHIPPING",impl)
+        self.assertIn("#if UE_BUILD_SHIPPING",actor)
+
 if __name__=="__main__":
     main()
