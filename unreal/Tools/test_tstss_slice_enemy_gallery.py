@@ -21,7 +21,7 @@ class SourceOnlyGalleryTests(TestCase):
         self.assertEqual(len(set(x[0] for x in gallery.ENEMIES)),15)
         self.assertEqual(len(set(x[1] for x in gallery.ENEMIES)),15)
         self.assertEqual([x[0] for x in gallery.GALLERY_FAMILIES],
-                         ["Anomaly","Bandit","Flora","Aquatic","Fauna"])
+                         ["Baseline","Bandit","Flora","Aquatic","Fauna"])
         self.assertEqual(gallery.ENEMIES[5][1],"BanditCaptain")
 
     def test_reject_mutated_overlap(self):
@@ -118,7 +118,7 @@ class SourceOnlyGalleryTests(TestCase):
             self.assertIn("    "+kind,header)
             self.assertIn("case ETSTSSSliceEnemyKind::"+kind+":",cpp)
             self.assertIn("case ETSTSSSliceEnemyKind::"+kind+":",actor)
-        self.assertEqual(len(re.findall(r'AddRow\\(Table, TEXT\\("SliceReview_',cpp)),30)
+        self.assertEqual(cpp.count('AddRow(Table, TEXT("SliceReview_'),30)
 
 
 if __name__ == "__main__":
