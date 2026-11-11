@@ -76,7 +76,11 @@ class FirstWakeMultiPathShoreSourceTests(unittest.TestCase):
                 stage.evidence_plan()
 
     def test_missing_exact_head_fails_before_editor_import(self):
-        with mock.patch.dict(os.environ, {"TSTSS_MP_EXPECTED_HEAD": "invalid",
+        # Simulate the target Windows worktree on Linux CI without weakening
+        # any gate in the actual staging implementation.
+        with mock.patch.object(stage, "ROOT", Path("C:/" + stage.WORKTREE)), \
+             mock.patch.object(stage.sys, "platform", "win32"), \
+             mock.patch.dict(os.environ, {"TSTSS_MP_EXPECTED_HEAD": "invalid",
                                            "TSTSS_MP_STAGE_EXPLICIT": "1"}):
             with self.assertRaisesRegex(RuntimeError, "exact-head"):
                 stage.check_native_custody()
@@ -89,9 +93,9 @@ class FirstWakeMultiPathShoreSourceTests(unittest.TestCase):
                     ("rev-parse", "HEAD"): sha,
                     ("status", "--porcelain"): ""}[arguments]
 
-        with mock.patch.object(stage.sys, "platform", "win32"), mock.patch.object(
-            stage, "git", side_effect=clean_git
-        ):
+        with mock.patch.object(stage, "ROOT", Path("C:/" + stage.WORKTREE)), \
+             mock.patch.object(stage.sys, "platform", "win32"), \
+             mock.patch.object(stage, "git", side_effect=clean_git):
             with mock.patch.dict(os.environ, {"TSTSS_MP_EXPECTED_HEAD": sha,
                                                "TSTSS_MP_STAGE_EXPLICIT": ""}):
                 with self.assertRaisesRegex(RuntimeError, "explicit host permission"):
@@ -110,7 +114,8 @@ class FirstWakeMultiPathShoreSourceTests(unittest.TestCase):
                     stage.check_native_custody()
 
     def test_host_rejects_unsafe_sha_and_does_not_start_ue(self):
-        with mock.patch.object(host.subprocess, "Popen") as popen:
+        with mock.patch.object(host.sys, "platform", "win32"), \
+             mock.patch.object(host.subprocess, "Popen") as popen:
             with self.assertRaisesRegex(RuntimeError, "exact 40-hex"):
                 host.prerequisites("bad-sha")
             popen.assert_not_called()
