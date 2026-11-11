@@ -80,6 +80,18 @@ class AudioReviewIntegrationSourceTests(unittest.TestCase):
         for forbidden in ("AdvanceTo(", "ConfirmWaterContact(", "SaveGameToSlot(", "UnlockStarbourne("):
             self.assertNotIn(forbidden, impl)
 
+    def test_harbor_zone_is_local_player_sound_only(self):
+        zone = (SOURCES / "Private" / "TSTSSHarborAudioZone.cpp").read_text(encoding="utf-8")
+        head = (SOURCES / "Public" / "TSTSSHarborAudioZone.h").read_text(encoding="utf-8")
+        self.assertIn("SetCollisionEnabled(ECollisionEnabled::QueryOnly)", zone)
+        self.assertIn("SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap)", zone)
+        self.assertIn("Player->GetPawn() == OtherActor", zone)
+        self.assertIn("SetHarborZoneAudible(true)", zone)
+        self.assertIn("SetHarborZoneAudible(false)", zone)
+        self.assertIn("TObjectPtr<ATSTSSAudioEnvironmentDirector>", head)
+        for forbidden in ("AdvanceTo(", "InspectStation(", "ConfirmWaterContact("):
+            self.assertNotIn(forbidden, zone)
+
     def test_authoritative_gameplay_still_precedes_audio(self):
         milestone = (SOURCES / "Private" / "TSTSSMilestoneActor.cpp").read_text()
         atmosphere = (SOURCES / "Private" / "TSTSSAtmosphereDirector.cpp").read_text()
