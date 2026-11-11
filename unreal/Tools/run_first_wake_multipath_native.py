@@ -27,6 +27,8 @@ EDITOR = Path("C:/Program Files/Epic Games/UE_5.8/Engine/Binaries/Win64/UnrealEd
 LOG_DIR = PROJECT / "Saved/MultipathV1"
 LOG = LOG_DIR / "shore_unreal.log"
 STDOUT = LOG_DIR / "shore_stdout.log"
+PREPARE_LOG = LOG_DIR / "shore_prepare_unreal.log"
+PREPARE_STDOUT = LOG_DIR / "shore_prepare_stdout.log"
 HOST_RECEIPT = LOG_DIR / "shore_host_receipt.json"
 MIN_FREE_RAM_GIB = 6.5
 MIN_FREE_DISK_GIB = 14.0
@@ -155,7 +157,8 @@ def prerequisites(expected_head: str) -> dict:
     required_engine_version()
     if not (PROJECT / "ToSailTheStarrySky.uproject").is_file():
         raise RuntimeError("HOLD: UE project file missing")
-    for file in (stage.SAVED_RECEIPT, HOST_RECEIPT, LOG, STDOUT,
+    for file in (stage.SAVED_RECEIPT, stage.PREPARE_RECEIPT, HOST_RECEIPT,
+                 PREPARE_LOG, PREPARE_STDOUT, LOG, STDOUT,
                  PROJECT / "Content/TSTSS/Review/MultipathV1"):
         if file.exists():
             raise RuntimeError("HOLD: previously created output must not be overwritten: " + file.name)
@@ -184,65 +187,101 @@ def checksum(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 def stage_native(expected_head: str) -> dict:
+    """Two separate UE child processes: prepare the map, THEN compose actors.
+
+    UE 5.8.4 can fatally leak a newly duplicated standalone UWorld when
+    duplicate_asset and load_map run in the same Python/Editor process.
+    Each phase must have a separate child process and independent log sentinel.
+    """
     report = prerequisites(expected_head)
     config_paths = [PROJECT / "Config/DefaultEngine.ini", PROJECT / "Config/DefaultInput.ini"]
     config_hashes = {p.name: checksum(p) for p in config_paths}
-    child = None
-    stop_reason = None
+    config_modes = {p.name: p.stat().st_mode for p in config_paths}
     LOG_DIR.mkdir(parents=True, exist_ok=True)
     try:
         for p in config_paths:
             os.chmod(p, stat.S_IREAD)
-        env = os.environ.copy()
-        env["TSTSS_MP_EXPECTED_HEAD"] = expected_head.lower()
-        env["TSTSS_MP_STAGE_EXPLICIT"] = "1"
-        command = [
-            str(EDITOR), str(PROJECT / "ToSailTheStarrySky.uproject"),
-            "-ExecutePythonScript=" + str(Path(stage.__file__).resolve()),
-            "-NullRHI", "-unattended", "-nop4", "-NoSplash", "-NoSound",
-            "-stdout", "-FullStdOutLogOutput", "-abslog=" + str(LOG),
-        ]
-        with STDOUT.open("x", encoding="utf-8") as stream:
-            child = subprocess.Popen(command, cwd=str(ROOT), env=env,
-                                     stdin=subprocess.DEVNULL, stdout=stream,
-                                     stderr=subprocess.STDOUT,
-                                     creationflags=subprocess.BELOW_NORMAL_PRIORITY_CLASS)
-            report["child_pid"] = child.pid
-            started = time.monotonic()
-            while child.poll() is None:
-                if time.monotonic() - started > MAX_BUILD_SECONDS:
-                    stop_reason = "Own Unreal process exceeded time cap"
-                    break
-                if free_ram_gib() < 0.85:
-                    stop_reason = "Own Unreal process exceeded free-RAM safety floor"
-                    break
-                time.sleep(2)
-            if stop_reason:
-                child.terminate()
-            try:
-                child.wait(timeout=15)
-            except subprocess.TimeoutExpired:
-                child.kill()
-                child.wait(timeout=10)
-        report["native_exit_code"] = child.returncode
-        if stop_reason or child.returncode != 0:
-            raise RuntimeError(stop_reason or "Native Unreal process returned failure")
+        for phase in ("prepare", "compose"):
+            if phase == "compose":
+                # Phase one must have exited cleanly and fully materialized a
+                # unique map package. No previous UWorld reference survives.
+                if not stage.PREPARE_RECEIPT.is_file():
+                    raise RuntimeError("HOLD: no native first-process preparation receipt")
+                if not (PROJECT / "Content/TSTSS/Review/MultipathV1/L_VS06_ShoreMagicEnemyGear_Review.umap").is_file():
+                    raise RuntimeError("HOLD: no saved review map from preparation")
+                if current_editor_processes() or current_ubt_build_running():
+                    raise RuntimeError("HOLD: other Unreal process appeared before composition")
+                ram = free_ram_gib()
+                disk = shutil.disk_usage(ROOT).free / (1024 ** 3)
+                if ram < MIN_FREE_RAM_GIB or disk < MIN_FREE_DISK_GIB:
+                    raise RuntimeError("HOLD: insufficient post-preparation RAM/disk %.2f / %.2f GiB" % (ram, disk))
+                if stage.git("rev-parse", "HEAD").lower() != expected_head.lower():
+                    raise RuntimeError("HOLD: source HEAD moved before composition")
+                prepared = json.loads(stage.PREPARE_RECEIPT.read_text(encoding="utf-8"))
+                map_file = PROJECT / "Content/TSTSS/Review/MultipathV1/L_VS06_ShoreMagicEnemyGear_Review.umap"
+                if (prepared.get("status") != "REVIEW_ASSETS_AND_BASE_MAP_PREPARED_NOT_PIE"
+                        or prepared.get("source_head") != expected_head.lower()
+                        or prepared.get("base_map_sha256") != checksum(map_file)
+                        or prepared.get("prepared_object_meshes") != 22
+                        or prepared.get("PIE_verified") is not False):
+                    raise RuntimeError("HOLD: first-process receipt does not authorize composition")
+            env = os.environ.copy()
+            env["TSTSS_MP_EXPECTED_HEAD"] = expected_head.lower()
+            env["TSTSS_MP_STAGE_EXPLICIT"] = "1"
+            env["TSTSS_MP_PHASE"] = phase
+            current_log = PREPARE_LOG if phase == "prepare" else LOG
+            current_stdout = PREPARE_STDOUT if phase == "prepare" else STDOUT
+            command = [
+                str(EDITOR), str(PROJECT / "ToSailTheStarrySky.uproject"),
+                "-ExecutePythonScript=" + str(Path(stage.__file__).resolve()),
+                "-NullRHI", "-unattended", "-nop4", "-NoSplash", "-NoSound",
+                "-stdout", "-FullStdOutLogOutput", "-abslog=" + str(current_log),
+            ]
+            with current_stdout.open("x", encoding="utf-8") as stream:
+                child = subprocess.Popen(command, cwd=str(ROOT), env=env,
+                                         stdin=subprocess.DEVNULL, stdout=stream,
+                                         stderr=subprocess.STDOUT,
+                                         creationflags=subprocess.BELOW_NORMAL_PRIORITY_CLASS)
+                report[phase + "_child_pid"] = child.pid
+                stop_reason = None
+                started = time.monotonic()
+                while child.poll() is None:
+                    if time.monotonic() - started > MAX_BUILD_SECONDS:
+                        stop_reason = "Own Unreal " + phase + " process exceeded time cap"
+                        break
+                    if free_ram_gib() < 0.85:
+                        stop_reason = "Own Unreal " + phase + " process exceeded free-RAM floor"
+                        break
+                    time.sleep(2)
+                if stop_reason:
+                    child.terminate()
+                try:
+                    child.wait(timeout=15)
+                except subprocess.TimeoutExpired:
+                    child.kill()
+                    child.wait(timeout=10)
+            report[phase + "_native_exit_code"] = child.returncode
+            if stop_reason or child.returncode != 0:
+                raise RuntimeError(stop_reason or "Native Unreal " + phase + " process returned failure")
+            sentinel = ("TSTSS_MULTIPATH_SHORE_PREPARED_NOT_PIE"
+                        if phase == "prepare" else "TSTSS_MULTIPATH_SHORE_NATIVE_SAVED_NOT_PIE")
+            if (not current_log.is_file() or
+                    sentinel not in current_log.read_text(encoding="utf-8", errors="replace")):
+                raise RuntimeError("HOLD: " + phase + " native sentinel missing")
         if not stage.SAVED_RECEIPT.is_file():
-            raise RuntimeError("HOLD: native child produced no stage receipt")
+            raise RuntimeError("HOLD: separate composition process produced no native stage receipt")
         receipt = json.loads(stage.SAVED_RECEIPT.read_text(encoding="utf-8"))
         if (receipt.get("status") != "NATIVE_REVIEW_MAP_SAVED_NOT_PIE_OR_VISUAL_APPROVED"
                 or receipt.get("source_head") != expected_head.lower()
                 or receipt.get("native_staged") is not True
                 or receipt.get("PIE_verified") is not False
                 or receipt.get("visual_approved") is not False):
-            raise RuntimeError("HOLD: native receipt has unsafe status")
+            raise RuntimeError("HOLD: native final receipt has unsafe status")
         file = PROJECT / "Content/TSTSS/Review/MultipathV1/L_VS06_ShoreMagicEnemyGear_Review.umap"
         if not file.is_file() or checksum(file) != receipt.get("new_map_sha256"):
             raise RuntimeError("HOLD: independently readable map/hash missing")
         if checksum(stage.MAP_FILE) != report["source_sha256"]:
             raise RuntimeError("HOLD: original source map changed")
-        if not LOG.is_file() or "TSTSS_MULTIPATH_SHORE_NATIVE_SAVED_NOT_PIE" not in LOG.read_text(encoding="utf-8", errors="replace"):
-            raise RuntimeError("HOLD: exact native stage sentinel missing")
         report["status"] = "NATIVE_SAVED_PENDING_INDEPENDENT_EDITOR_AND_PIE_READBACK"
         report["new_map_sha256"] = checksum(file)
     except Exception as exc:
@@ -250,11 +289,13 @@ def stage_native(expected_head: str) -> dict:
         report["error"] = str(exc)
     finally:
         for p in config_paths:
-            os.chmod(p, stat.S_IREAD | stat.S_IWRITE)
+            os.chmod(p, config_modes[p.name])
         report["configs_unchanged"] = all(checksum(p) == config_hashes[p.name] for p in config_paths)
         report["source_head_unchanged"] = stage.git("rev-parse", "HEAD").lower() == expected_head.lower()
         report["original_shore_map_unchanged"] = checksum(stage.MAP_FILE) == report["source_sha256"]
-        HOST_RECEIPT.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+        with HOST_RECEIPT.open("x", encoding="utf-8") as stream:
+            json.dump(report, stream, indent=2)
+            stream.write("\n")
     return report
 
 def main() -> int:

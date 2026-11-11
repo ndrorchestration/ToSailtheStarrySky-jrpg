@@ -97,8 +97,9 @@ def native_readback() -> dict:
         raise RuntimeError("HOLD: independent review must be explicitly invoked")
     if stage.ROOT.name != stage.WORKTREE or stage.git("rev-parse", "HEAD") != head:
         raise RuntimeError("HOLD: wrong source worktree or head")
-    if stage.git("status", "--porcelain"):
-        raise RuntimeError("HOLD: independent review requires clean source")
+    # Native review assets are necessarily untracked until separately accepted.
+    # Source/config edits and arbitrary untracked files are still fail-closed.
+    stage.assert_source_custody_for_phase("compose")
     if not ue.SystemLibrary.get_engine_version().startswith("5.8.4"):
         raise RuntimeError("HOLD: exact native UE version mismatch")
     receipt = validate_native_receipt(head)

@@ -96,6 +96,29 @@ class FirstWakeMultiPathShoreSourceTests(unittest.TestCase):
         self.assertNotIn('from build_ender_resonator_preview import make_material', source)
         self.assertTrue((stage.PROJECT / "Tools/build_ender_resonator_preview.py").is_file())
 
+    def test_two_process_map_duplication_avoids_ue_world_leak(self):
+        source = Path(stage.__file__).read_text(encoding="utf-8")
+        runner = Path(host.__file__).read_text(encoding="utf-8")
+        self.assertIn('def build_native_shore(phase: str)', source)
+        self.assertIn('if phase == "prepare":', source)
+        self.assertIn('if not u.EditorLoadingAndSavingUtils.save_map(source_world, DEST_MAP):', source)
+        self.assertIn('source_world = u.EditorLoadingAndSavingUtils.load_map(SOURCE_PACKAGE)', source)
+        self.assertNotIn('u.EditorAssetLibrary.duplicate_asset(SOURCE_PACKAGE, DEST_MAP)', source)
+        self.assertIn('PREPARE_RECEIPT.open("x"', source)
+        self.assertIn("REVIEW_ASSETS_AND_BASE_MAP_PREPARED_NOT_PIE", source)
+        self.assertIn('if phase == "compose" and (not PREPARE_RECEIPT.is_file()', source)
+        self.assertIn('if phase == "compose" and not u.EditorAssetLibrary.does_directory_exist', source)
+        self.assertLess(source.index("return receipt\n    # Phase two"),
+                        source.index("world = u.EditorLoadingAndSavingUtils.load_map(DEST_MAP)"))
+        self.assertIn('for phase in ("prepare", "compose"):', runner)
+        self.assertIn('env["TSTSS_MP_PHASE"] = phase', runner)
+        self.assertIn("PREPARE_LOG", runner)
+        self.assertIn("PREPARE_STDOUT", runner)
+        self.assertIn('if not stage.PREPARE_RECEIPT.is_file():', runner)
+        self.assertIn("if current_editor_processes() or current_ubt_build_running():", runner)
+        self.assertIn("separate composition process produced no native stage receipt", runner)
+        self.assertIn("with HOST_RECEIPT.open(\"x\"", runner)
+
     def test_all_three_visual_groups_and_26_new_actors(self):
         self.assertEqual((22, 8), (self.plan["original_object_imports"],
                                    self.plan["showcase_object_actors"]))
@@ -150,7 +173,7 @@ class FirstWakeMultiPathShoreSourceTests(unittest.TestCase):
         def clean_git(*arguments):
             return {("branch", "--show-current"): stage.BRANCH,
                     ("rev-parse", "HEAD"): sha,
-                    ("status", "--porcelain"): ""}[arguments]
+                    ("status", "--porcelain", "-uall"): ""}[arguments]
 
         with mock.patch.object(stage, "ROOT", Path("C:/" + stage.WORKTREE)), \
              mock.patch.object(stage.sys, "platform", "win32"), \
@@ -161,7 +184,7 @@ class FirstWakeMultiPathShoreSourceTests(unittest.TestCase):
                     stage.check_native_custody()
 
             def dirty_git(*arguments):
-                if arguments == ("status", "--porcelain"):
+                if arguments == ("status", "--porcelain", "-uall"):
                     return " M unreal/Config/DefaultInput.ini"
                 return clean_git(*arguments)
 
@@ -169,8 +192,27 @@ class FirstWakeMultiPathShoreSourceTests(unittest.TestCase):
                 os.environ, {"TSTSS_MP_EXPECTED_HEAD": sha,
                              "TSTSS_MP_STAGE_EXPLICIT": "1"}
             ):
-                with self.assertRaisesRegex(RuntimeError, "dirty or changed"):
+                with self.assertRaisesRegex(RuntimeError, "entirely clean source"):
                     stage.check_native_custody()
+
+    def test_native_compose_allows_only_generated_review_artifacts(self):
+        allowed = (
+            "?? unreal/Content/TSTSS/Magic/M_ResonatorGlow.uasset\n"
+            "?? unreal/Content/TSTSS/Review/MultipathV1/ObjectImports/Prop/Prop.uasset\n"
+            "?? unreal/Content/TSTSS/Review/MultipathV1/L_VS06_ShoreMagicEnemyGear_Review.umap"
+        )
+        with mock.patch.object(stage, "git", return_value=allowed):
+            stage.assert_source_custody_for_phase("compose")
+            with self.assertRaisesRegex(RuntimeError, "entirely clean source"):
+                stage.assert_source_custody_for_phase("prepare")
+        for drift in (
+            allowed + "\n M unreal/Config/DefaultInput.ini",
+            allowed + "\n?? unreal/Content/TSTSS/Review/VerticalSlice/Another.umap",
+            "?? unreal/Content/TSTSS/Magic/OtherMaterial.uasset",
+        ):
+            with mock.patch.object(stage, "git", return_value=drift):
+                with self.assertRaisesRegex(RuntimeError, "unexpected tracked/untracked"):
+                    stage.assert_source_custody_for_phase("compose")
 
     def test_host_rejects_unsafe_sha_and_does_not_start_ue(self):
         with mock.patch.object(host.sys, "platform", "win32"), \
@@ -321,7 +363,7 @@ class FirstWakeMultiPathShoreSourceTests(unittest.TestCase):
         source = Path(stage.__file__).read_text(encoding="utf-8")
         runner = Path(host.__file__).read_text(encoding="utf-8")
         for term in ("get_dirty_map_packages", "get_dirty_content_packages",
-                     "does_directory_exist(DEST_ROOT)", "duplicate_asset(SOURCE_PACKAGE, DEST_MAP)",
+                     "does_directory_exist(DEST_ROOT)", "save_map(source_world, DEST_MAP)",
                      "get_all_level_actors", "save_map(world, DEST_MAP)",
                      "get_editor_property", "set_actor_enable_collision(False)",
                      "configs_unchanged"):
