@@ -202,6 +202,46 @@ bool ATSTSSSliceEnemyReviewBattleConsole::TryStrikePreview(int32 EnemySlot)
 #endif
 }
 
+bool ATSTSSSliceEnemyReviewBattleConsole::TryStartWavePreview(
+    FName WavePreset, ETSTSSSliceReviewPartyStage Stage)
+{
+#if UE_BUILD_SHIPPING
+    return false;
+#else
+    if (IsValid(Session.Get()) || WavePreset.IsNone()) return false;
+    const FName Before=ReviewWavePreset;
+    ReviewWavePreset=WavePreset;
+    if (!TryStartPreview(Stage))
+    {
+        ReviewWavePreset=Before;
+        return false;
+    }
+    return true;
+#endif
+}
+
+ETSS_CombatPhase ATSTSSSliceEnemyReviewBattleConsole::GetReviewBattlePhase() const
+{
+#if UE_BUILD_SHIPPING
+    return ETSS_CombatPhase::NotStarted;
+#else
+    return (IsValid(Session.Get()) && IsValid(Session->GetReviewManager()))
+        ? Session->GetReviewManager()->GetCurrentPhase()
+        : ETSS_CombatPhase::NotStarted;
+#endif
+}
+
+void ATSTSSSliceEnemyReviewBattleConsole::SetReviewHUDVisible(bool bVisible)
+{
+#if !UE_BUILD_SHIPPING
+    if (IsValid(ReviewHUD.Get()))
+    {
+        ReviewHUD->SetVisibility(bVisible
+            ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+    }
+#endif
+}
+
 bool ATSTSSSliceEnemyReviewBattleConsole::TryChangeReviewWave(int32 Delta)
 {
 #if UE_BUILD_SHIPPING

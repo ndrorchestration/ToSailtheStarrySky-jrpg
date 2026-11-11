@@ -168,6 +168,22 @@ bool UTSTSSJRPGEncounterDirector::TryRequestScripted(
 #endif
 }
 
+bool UTSTSSJRPGEncounterDirector::TryCancelPending(int32 TicketSerial)
+{
+#if UE_BUILD_SHIPPING
+    return false;
+#else
+    if (!bPending || bBattleStarted || TicketSerial<=0 ||
+        PendingTicket.Serial!=TicketSerial) return false;
+    bPending=false;
+    bBattleStarted=false;
+    PendingTicket=FTSTSSJRPGEncounterTicket();
+    DistanceCm=0.f;
+    StepRemainderCm=0.f;
+    return true;
+#endif
+}
+
 bool UTSTSSJRPGEncounterDirector::TryAcknowledgeBattleStart(int32 TicketSerial)
 {
 #if UE_BUILD_SHIPPING

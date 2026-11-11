@@ -103,6 +103,10 @@ public:
                             const FTSTSSJRPGEncounterContext& Context,
                             FTSTSSJRPGEncounterTicket& OutTicket);
 
+    // If world-to-battle handoff fails, release only an unstarted ticket.
+    UFUNCTION(BlueprintCallable, Category="TSTSS|Encounters")
+    bool TryCancelPending(int32 TicketSerial);
+
     UFUNCTION(BlueprintCallable, Category="TSTSS|Encounters")
     bool TryAcknowledgeBattleStart(int32 TicketSerial);
 

@@ -265,6 +265,8 @@ bool FTSTSSSliceEnemyReviewAIProbe::RunTest(const FString& Parameters)
                 Director->TryAcknowledgeBattleStart(FirstTicket.Serial+1));
             TestFalse(TEXT("unstarted ticket cannot complete"),
                 Director->TryCompleteBattle(FirstTicket.Serial));
+            TestFalse(TEXT("wrong ticket cannot be canceled"),
+                Director->TryCancelPending(FirstTicket.Serial+1));
             TestTrue(TEXT("ticket acknowledged once for real battle"),
                 Director->TryAcknowledgeBattleStart(FirstTicket.Serial));
             TestFalse(TEXT("ticket replay blocked"),
@@ -294,8 +296,18 @@ bool FTSTSSSliceEnemyReviewAIProbe::RunTest(const FString& Parameters)
     TestTrue(TEXT("scripted ticket provenance recorded"),BossTicket.bScripted);
     TestTrue(TEXT("scripted ticket consumed exactly once"),
         Director->TryAcknowledgeBattleStart(BossTicket.Serial));
+    TestFalse(TEXT("started battle cannot be canceled"),
+        Director->TryCancelPending(BossTicket.Serial));
     TestTrue(TEXT("scripted ticket completed"),
         Director->TryCompleteBattle(BossTicket.Serial));
+    FTSTSSJRPGEncounterTicket AbortedTicket;
+    TestTrue(TEXT("explicit second scripted review issued"),
+        Director->TryRequestScripted(TEXT("Review_HarborBanditCaptain"),
+                                      Region,AbortedTicket));
+    TestTrue(TEXT("unstarted failed scene handoff can be canceled"),
+        Director->TryCancelPending(AbortedTicket.Serial));
+    TestFalse(TEXT("canceled ticket cannot be acknowledged"),
+        Director->TryAcknowledgeBattleStart(AbortedTicket.Serial));
 
     Region.bSafeZone=true;
     TestFalse(TEXT("safe zone never selects encounter"),

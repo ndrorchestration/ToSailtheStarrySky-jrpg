@@ -34,7 +34,19 @@ public:
 
     // Change among eight existing review-only encounter presets before battle.
     UFUNCTION(BlueprintCallable, Category="TSTSS|Enemy Review")
+
     bool TryChangeReviewWave(int32 Delta);
+
+    // Explicit handoff for walking encounters; the returned result is
+    // authoritative and contains no story or SaveGame mutation.
+    UFUNCTION(BlueprintCallable, Category="TSTSS|Enemy Review")
+    bool TryStartWavePreview(FName WavePreset, ETSTSSSliceReviewPartyStage Stage);
+
+    UFUNCTION(BlueprintPure, Category="TSTSS|Enemy Review")
+    ETSS_CombatPhase GetReviewBattlePhase() const;
+
+    UFUNCTION(BlueprintCallable, Category="TSTSS|Enemy Review")
+    void SetReviewHUDVisible(bool bVisible);
 
     UFUNCTION(BlueprintCallable, Category="TSTSS|Enemy Review")
     void ResetReviewArena();
