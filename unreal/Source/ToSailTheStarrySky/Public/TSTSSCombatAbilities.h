@@ -11,6 +11,9 @@ struct FTSTSSAbilitySpec
     int32 Power = 0;
     int32 Cost = 0;
     bool bHealing = false;
+    bool bSupportOnly = false;
+    bool bPhysicalDamage = false;
+    int32 PhysicalDefenseBonus = 0;
     enum class ETarget : uint8 { Self, Ally, Enemy } Target = ETarget::Enemy;
 };
 

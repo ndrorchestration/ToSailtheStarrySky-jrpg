@@ -17,7 +17,8 @@ bool FTSTSSCombatAbilities::TryUse(
     if (!Ability || Ability->AbilityId != AbilityId || !Known ||
         !Known->Contains(AbilityId) || !ActorFaction || !TargetFaction ||
         ActorFaction->IsNone() || TargetFaction->IsNone() ||
-        Ability->Power < 0 || Ability->Cost < 0) return false;
+        Ability->Power < 0 || Ability->Cost < 0 ||
+        Ability->PhysicalDefenseBonus < 0) return false;
     const bool bAllies = *ActorFaction == *TargetFaction;
     switch (Ability->Target)
     {
@@ -39,6 +40,9 @@ bool FTSTSSCombatAbilities::TryUse(
     Action.ResourceCost = Ability->Cost;
     Action.Power = Ability->Power;
     Action.bHealing = Ability->bHealing;
+    Action.bSupportOnly = Ability->bSupportOnly;
+    Action.bPhysicalDamage = Ability->bPhysicalDamage;
+    Action.PhysicalDefenseBonus = Ability->PhysicalDefenseBonus;
     return FTSTSSEncounterGate::TryAction(State, Factions, PartyFaction,
                                         OpponentFaction, Action, OutState);
 }
