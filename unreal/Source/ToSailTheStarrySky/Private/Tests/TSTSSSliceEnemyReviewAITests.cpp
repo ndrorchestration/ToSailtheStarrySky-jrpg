@@ -3,6 +3,7 @@
 #include "Combat/TSS_CombatTurnManager.h"
 #include "Enemies/TSTSSSliceEnemyReviewSession.h"
 #include "Enemies/TSTSSSliceEnemyReviewBattleConsole.h"
+#include "Encounter/TSTSSJRPGEncounterDirector.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTSTSSSliceEnemyReviewAIProbe,
@@ -186,6 +187,130 @@ bool FTSTSSSliceEnemyReviewAIProbe::RunTest(const FString& Parameters)
 
     TestNotNull(TEXT("review battle console C++ actor registered"),
         ATSTSSSliceEnemyReviewBattleConsole::StaticClass());
+
+    // Hybrid FF-style walking encounter selector. It never initializes combat,
+    // and must be explicitly authorized by traversal, party and area scope.
+    UTSTSSJRPGEncounterDirector* Director =
+        NewObject<UTSTSSJRPGEncounterDirector>(GetTransientPackage());
+    FTSTSSJRPGEncounterTicket DeniedTicket;
+    DeniedTicket.Serial=771;
+    FTSTSSJRPGEncounterContext Region;
+    TestFalse(TEXT("unconfigured region refuses walking encounter"),
+        Director->TryRecordWalking(300.f,Region,DeniedTicket));
+    TestEqual(TEXT("denied request preserves output"),DeniedTicket.Serial,771);
+    TestFalse(TEXT("unknown biome enum refused"),
+        Director->TryConfigureReviewBiome(
+            static_cast<ETSTSSJRPGEncounterBiome>(255),17));
+    TestTrue(TEXT("explicit harbor review profile configured"),
+        Director->TryConfigureReviewBiome(
+            ETSTSSJRPGEncounterBiome::HarborOutskirts,17));
+    for (int32 I=0;I<25;++I)
+    {
+        TestFalse(TEXT("unauthorized profile never rolls"),
+            Director->TryRecordWalking(300.f,Region,DeniedTicket));
+    }
+    TestEqual(TEXT("denied traversal cannot bank ambush progress"),
+        Director->GetWalkingDistanceSinceBattleCm(),0.f);
+    Region.bTraversalActive=true;
+    Region.bAreaAuthorized=true;
+    Region.bPartyAuthorized=true;
+    Region.bSafeZone=false;
+    FTSTSSJRPGEncounterTicket Selected;
+    TestFalse(TEXT("teleport jump rejected"),
+        Director->TryRecordWalking(99999.f,Region,Selected));
+    TestFalse(TEXT("negative distance rejected"),
+        Director->TryRecordWalking(-1.f,Region,Selected));
+    TestFalse(TEXT("nonfinite distance rejected"),
+        Director->TryRecordWalking(TNumericLimits<float>::QuietNaN(),Region,Selected));
+    TestFalse(TEXT("scripted event denied without separate authority"),
+        Director->TryRequestScripted(TEXT("Review_HarborBanditCaptain"),
+                                      Region,Selected));
+    TestFalse(TEXT("unrelated biome script refused"),
+        Director->TryRequestScripted(TEXT("Review_CoastalHunters"),
+                                      Region,Selected));
+
+    UTSTSSJRPGEncounterDirector* Mirror =
+        NewObject<UTSTSSJRPGEncounterDirector>(GetTransientPackage());
+    TestTrue(TEXT("reproducible exact-seed director initialized"),
+        Mirror->TryConfigureReviewBiome(
+            ETSTSSJRPGEncounterBiome::HarborOutskirts,17));
+    bool bEncounter=false;
+    for(int32 Step=0;Step<45;++Step)
+    {
+        FTSTSSJRPGEncounterTicket FirstTicket;
+        FTSTSSJRPGEncounterTicket SecondTicket;
+        const bool A=Director->TryRecordWalking(300.f,Region,FirstTicket);
+        const bool B=Mirror->TryRecordWalking(300.f,Region,SecondTicket);
+        if (!TestEqual(TEXT("seeded encounter parity"),A,B))return false;
+        if (A)
+        {
+            TestEqual(TEXT("seeded preset parity"),
+                FirstTicket.ReviewWavePreset,SecondTicket.ReviewWavePreset);
+            TestEqual(TEXT("rare/common selection remains a legal harbor wave"),
+                FirstTicket.Biome,ETSTSSJRPGEncounterBiome::HarborOutskirts);
+            TestFalse(TEXT("random encounter is not scripted"),
+                FirstTicket.bScripted);
+            TestTrue(TEXT("random output is noncanonical review"),
+                FirstTicket.bReviewOnly);
+            TestTrue(TEXT("minimum walk prevents instant interruptions"),
+                Director->GetWalkingDistanceSinceBattleCm()>=1800.f);
+            TestTrue(TEXT("pity counter guarantees within cap"),
+                Director->GetWalkingDistanceSinceBattleCm()<=5700.f);
+            TestFalse(TEXT("duplicate pending encounter refused"),
+                Director->TryRecordWalking(300.f,Region,DeniedTicket));
+            TestFalse(TEXT("pending ticket cannot be overwritten by new biome"),
+                Director->TryConfigureReviewBiome(
+                    ETSTSSJRPGEncounterBiome::Woodland,13));
+            TestFalse(TEXT("incorrect ticket cannot start battle"),
+                Director->TryAcknowledgeBattleStart(FirstTicket.Serial+1));
+            TestFalse(TEXT("unstarted ticket cannot complete"),
+                Director->TryCompleteBattle(FirstTicket.Serial));
+            TestTrue(TEXT("ticket acknowledged once for real battle"),
+                Director->TryAcknowledgeBattleStart(FirstTicket.Serial));
+            TestFalse(TEXT("ticket replay blocked"),
+                Director->TryAcknowledgeBattleStart(FirstTicket.Serial));
+            TestFalse(TEXT("wrong ticket completion refused"),
+                Director->TryCompleteBattle(FirstTicket.Serial+1));
+            TestTrue(TEXT("correct ticket completion returns to traversal"),
+                Director->TryCompleteBattle(FirstTicket.Serial));
+            TestFalse(TEXT("battle ticket not sticky after return"),
+                Director->HasOutstandingTicket());
+            bEncounter=true;
+            break;
+        }
+    }
+    TestTrue(TEXT("fixed-distance random selection eventually occurs"),bEncounter);
+
+    // Explicitly scripted captain encounter remains a separate authority,
+    // never a random boss story claim or an implicit quest progression.
+    Region.bScriptedEncounterApproved=true;
+    FTSTSSJRPGEncounterTicket BossTicket;
+    TestFalse(TEXT("scripted cross-biome spoof refused"),
+        Director->TryRequestScripted(TEXT("Review_WoodlandSentinel"),
+                                      Region,BossTicket));
+    TestTrue(TEXT("explicit same-biome scripted encounter admitted"),
+        Director->TryRequestScripted(TEXT("Review_HarborBanditCaptain"),
+                                      Region,BossTicket));
+    TestTrue(TEXT("scripted ticket provenance recorded"),BossTicket.bScripted);
+    TestTrue(TEXT("scripted ticket consumed exactly once"),
+        Director->TryAcknowledgeBattleStart(BossTicket.Serial));
+    TestTrue(TEXT("scripted ticket completed"),
+        Director->TryCompleteBattle(BossTicket.Serial));
+
+    Region.bSafeZone=true;
+    TestFalse(TEXT("safe zone never selects encounter"),
+        Director->TryRecordWalking(300.f,Region,Selected));
+    TestEqual(TEXT("safe zone resets danger meter"),
+        Director->GetWalkingDistanceSinceBattleCm(),0.f);
+    Region.bSafeZone=false;
+    Region.bShipTravel=true;
+    TestFalse(TEXT("ship travel cannot select walking encounters"),
+        Director->TryRecordWalking(300.f,Region,Selected));
+    Region.bShipTravel=false;
+    Region.Rate=ETSTSSJRPGEncounterRate::Off;
+    TestFalse(TEXT("accessibility off disables encounters"),
+        Director->TryRecordWalking(300.f,Region,Selected));
+
     return true;
 }
 #endif
