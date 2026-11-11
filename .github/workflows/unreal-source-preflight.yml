@@ -6,7 +6,9 @@ on:
   pull_request:
     paths:
       - 'unreal/Source/**'
-      - 'unreal/DataSource/Magic/**'
+      - 'unreal/DataSource/**'
+      - 'unreal/Content/TSTSS/Review/VerticalSlice/**'
+      - 'unreal/ArtSource/VerticalSliceObjectsV1/**'
       - 'unreal/ArtSource/PartyEquipment/**'
       - 'unreal/Content/TSTSS/Review/PartyEquipment/**'
       - 'unreal/Config/**'

@@ -32,6 +32,12 @@
     "min_free_disk_gib": 14,
     "forbid_parallel_unreal_editor_or_live_coding": true
   },
+  "convergence_handoff_update": {
+    "pr": 792,
+    "head_sha": "ab69db6abd06fab35a0ab105f8c3b3539699c9cb",
+    "source_review_only": true,
+    "key_file": "unreal/DataSource/Cinematics/FirstWakeRuntimeShotHandoffs.review.json"
+  },
   "source_tracks": [
     {
       "id": "gameplay",

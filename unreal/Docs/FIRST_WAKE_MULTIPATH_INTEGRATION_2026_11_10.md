@@ -4,7 +4,7 @@
 
 ## What has been integrated in the isolated review worktree
 
-- #792 — water contact, pretransition flotation, E interactions, F6 save/F9 load, F7 preview/confirm prelaunch Continue.
+- #792 — water contact, pretransition flotation, E interactions, F6 save/F9 load, F7 preview/confirm prelaunch Continue. **New live #792 head `ab69db6abd06fab35a0ab105f8c3b3539699c9cb`** was separately merged after the initial integration candidate: it adds a source-validated 10-shot runtime beat/engineering/water handoff contract, not a runtime LevelSequence or actual gameplay integration.
 - #790 — 10-shot cinematic requirements and story chronology.
 - #796 — 11 independently authorable lighting looks and source tests.
 - #794 — six UE 5.8.4 review maps and ten native material assets with prior map-readback evidence.

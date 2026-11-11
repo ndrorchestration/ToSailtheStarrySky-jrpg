@@ -55,6 +55,13 @@ def validate(data):
         errors.append("physical-ram-gate")
     if resources.get("min_free_disk_gib", 0) < 14 or resources.get("forbid_parallel_unreal_editor_or_live_coding") is not True:
         errors.append("native-process-disk-gate")
+    handoff = data.get("convergence_handoff_update") or {}
+    if (handoff.get("pr") != 792 or
+        handoff.get("head_sha") != "ab69db6abd06fab35a0ab105f8c3b3539699c9cb" or
+        handoff.get("source_review_only") is not True or
+        handoff.get("key_file") != "unreal/DataSource/Cinematics/FirstWakeRuntimeShotHandoffs.review.json" or
+        not (UNREAL.parent / str(handoff.get("key_file", ""))).is_file()):
+        errors.append("convergence-handoff-binding")
     tracks = data.get("source_tracks") or []
     if len(tracks) != len(EXPECTED_TRACKS) or {x.get("id") for x in tracks} != EXPECTED_TRACKS:
         errors.append("track-coverage")
@@ -68,6 +75,15 @@ def validate(data):
             errors.append("unsafe-source-path")
         elif not (UNREAL.parent / rel).is_file():
             errors.append("missing-source-file")
+    preflight = (UNREAL.parent / ".github/workflows/unreal-source-preflight.yml").read_text(encoding="utf-8")
+    for glob in (
+        "unreal/DataSource/**", "unreal/Content/TSTSS/Review/VerticalSlice/**",
+        "unreal/ArtSource/VerticalSliceObjectsV1/**",
+        "unreal/ArtSource/PartyEquipment/**",
+        "unreal/Content/TSTSS/Review/PartyEquipment/**",
+    ):
+        if ("'" + glob + "'") not in preflight:
+            errors.append("source-preflight-trigger-coverage")
     registry = (UNREAL / "Tools/Verify-Unreal.ps1").read_text(encoding="utf-8")
     names = re.findall(r"^\s*'(TSTSS\.[^']+)'", registry, re.M)
     if data.get("required_native_names") != 35 or len(names) != 35 or len(set(names)) != 35:
@@ -113,6 +129,9 @@ class CrossPathReviewContract(unittest.TestCase):
         self.assertIn("observed-water-gate", validate(changed))
 
     def test_fail_closed_when_lane_missing_or_resource_gate_weakens(self):
+        changed = copy.deepcopy(self.data)
+        changed["convergence_handoff_update"]["source_review_only"] = False
+        self.assertIn("convergence-handoff-binding", validate(changed))
         changed = copy.deepcopy(self.data)
         changed["source_tracks"].pop()
         self.assertIn("track-coverage", validate(changed))
