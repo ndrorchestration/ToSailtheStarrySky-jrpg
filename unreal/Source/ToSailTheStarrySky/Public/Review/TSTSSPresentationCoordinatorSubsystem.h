@@ -105,7 +105,7 @@ public:
         bool bGameplayClarityOverride);
 
     UFUNCTION(BlueprintPure, Category="TSTSS|Cinematics|Review")
-    FTSTSSPresentationIntent GetCurrentIntent() const { return CurrentIntent; }
+    FTSTSSPresentationIntent GetCurrentIntent() const;
 
     UFUNCTION(BlueprintCallable, Category="TSTSS|Cinematics|Review")
     void ResetReviewIntent();
@@ -119,6 +119,17 @@ public:
         bool bReducedMotion,
         bool bGameplayClarityOverride);
 
+    /**
+     * Native testable story revision guard, independent of world simulation.
+     * Any restore, reset, later milestone, or inspection invalidates a cue.
+     */
+    static bool MatchesStorySnapshot(
+        const UTSTSSFirstWakeState* State,
+        uint64 ObservedGeneration,
+        bool bObservedStarted,
+        ETSTSSFirstWakeBeat ObservedBeat,
+        uint8 ObservedInspectionMask);
+
     virtual void Deinitialize() override;
 
 protected:
@@ -130,4 +141,17 @@ private:
 
     UPROPERTY(Transient)
     FTSTSSPresentationIntent CurrentIntent;
+
+    // Weak references: never prolong gameplay objects just for a camera look.
+    TWeakObjectPtr<const UTSTSSFirstWakeState> ObservedStory;
+    TWeakObjectPtr<const ATSTSSAtmosphereDirector> ObservedAtmosphere;
+    uint64 ObservedRestoreGeneration = 0;
+    ETSTSSFirstWakeBeat ObservedBeat = ETSTSSFirstWakeBeat::FlyerDiscovered;
+    uint8 ObservedInspectionMask = 0;
+    bool bObservedStarted = false;
+    ETSTSSWeather ObservedWeather = ETSTSSWeather::Clear;
+    float ObservedClockHours = 0.0f;
+
+    void PublishNeutral(const FString& Reason);
+    void ClearObservedSource();
 };
