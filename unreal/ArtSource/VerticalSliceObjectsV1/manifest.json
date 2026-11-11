@@ -24,7 +24,7 @@
         "dark_iron"
       ],
       "name": "MooringBollard",
-      "sha256": "d2c4a4f4909ea705e42858c286c4298cc9af13843fa8e84dd692a7a5b42679ee",
+      "sha256": "4ea8063deb01da153bf4f77c222a7063b18d3a23ede8dd55b42b614221a85d57",
       "triangles": 704
     },
     {
@@ -48,7 +48,7 @@
         "dark_iron"
       ],
       "name": "MooringCleat",
-      "sha256": "007b7e10217163b5bd13ea06893e577e23be3e917bc15142cdfe2e91f86df8f0",
+      "sha256": "8e75177e92f1be063d59194ea8a1132a7d30af74765cb5420afcb75b8c1d0f30",
       "triangles": 264
     },
     {
@@ -66,7 +66,7 @@
           0.3
         ]
       ],
-      "bytes": 58748,
+      "bytes": 58728,
       "materials_used": [
         "brass",
         "dark_iron",
@@ -74,7 +74,7 @@
         "amber_glass"
       ],
       "name": "HarborLantern",
-      "sha256": "be25950f717dc4d9bbc3f3277eae71123b55dc44f858adb1042de5140b3ca967",
+      "sha256": "28fbaeff8fb78c88c7e51474efa803c7db1b9a51714961be3e7bb3a879d1090f",
       "triangles": 504
     },
     {
@@ -99,7 +99,7 @@
         "wood"
       ],
       "name": "CargoCrate",
-      "sha256": "9a13a47f074b0178ca56ad82ecad59847102a453f237d79af6399983e13822a2",
+      "sha256": "b2146ab755e8adc5529292a85fde8ec24530a96970c390dafcab0ce8b667f720",
       "triangles": 244
     },
     {
@@ -117,12 +117,12 @@
           0.43
         ]
       ],
-      "bytes": 283152,
+      "bytes": 283132,
       "materials_used": [
         "canvas"
       ],
       "name": "RopeCoil",
-      "sha256": "f014d1a98b83a2a00495d7cdee8ce4ba0d1651943229142577ab4877e606d7f6",
+      "sha256": "cdbbf7efc82ca498e524bb7a6e618a9b7637bcb62b41f70d509d84dafec69ce0",
       "triangles": 2600
     },
     {
@@ -148,7 +148,7 @@
         "amber_glass"
       ],
       "name": "FlyerPodium",
-      "sha256": "f5dc289caf8441713c4a03f80be23f2689005cd6491c754a649669174e016b81",
+      "sha256": "c56cd2f870d78c146a9a5b11d946ac5696b566100d1bb0c30eeaf43835cd49b4",
       "triangles": 772
     },
     {
@@ -166,7 +166,7 @@
           0.455
         ]
       ],
-      "bytes": 26332,
+      "bytes": 26324,
       "materials_used": [
         "brass",
         "dark_iron",
@@ -174,7 +174,7 @@
         "canvas"
       ],
       "name": "CaptainDesk",
-      "sha256": "4d7548ae305cfe0d9785051129d1ac0f41525d260ac8cf6d785bf19f0614f434",
+      "sha256": "694fe0ace37098814176c34fb5cdcd3dd6f11737750dafa6600090b60e70bc44",
       "triangles": 204
     },
     {
@@ -199,7 +199,7 @@
         "patina"
       ],
       "name": "GangwayAnchor",
-      "sha256": "62f365ac213673fccadedf23b8effd773b7f9919ad6770ca1281002134fbda4f",
+      "sha256": "445ee1c647b0e99c9e67a4eb653a89a73558d379ff53171fda3a2ee51208d09e",
       "triangles": 924
     },
     {
@@ -217,7 +217,7 @@
           0.45
         ]
       ],
-      "bytes": 26360,
+      "bytes": 26340,
       "materials_used": [
         "brass",
         "dark_iron",
@@ -225,7 +225,7 @@
         "wood"
       ],
       "name": "EngineeringWorkbench",
-      "sha256": "eaf45e41b5dab1da3cff1f41c131fa5054bd09e78e9e8b8970c233b7676a5bea",
+      "sha256": "5dbc1dcf4924a5e51c765637e705ffb1a869c6a84c10ea042cea3aec62df881c",
       "triangles": 204
     },
     {
@@ -243,7 +243,7 @@
           0.67
         ]
       ],
-      "bytes": 238304,
+      "bytes": 238280,
       "materials_used": [
         "brass",
         "dark_iron",
@@ -252,7 +252,7 @@
         "teal_glass"
       ],
       "name": "LiftResonator",
-      "sha256": "3596b33bde8bedbed0de13f0914e28e86011c29c60fc011eeab3e78f5217e7ed",
+      "sha256": "447386aeb1e78fbfed5035d6938064dc6c597a016b853f6246f34ff0959986e0",
       "triangles": 2160
     },
     {
@@ -270,7 +270,7 @@
           0.6198
         ]
       ],
-      "bytes": 164440,
+      "bytes": 164420,
       "materials_used": [
         "brass",
         "dark_iron",
@@ -279,7 +279,7 @@
         "ruby"
       ],
       "name": "PressureRegulator",
-      "sha256": "e864b4c9fc98e8c0191f184c9094a67e8432f7f4de0bae6709090210e59ad1c2",
+      "sha256": "7edbb90a17e785eacc45710a7f86df4e0960021a7cb88f17e64c97a6a121876d",
       "triangles": 1476
     },
     {
@@ -297,7 +297,7 @@
           0.63
         ]
       ],
-      "bytes": 167428,
+      "bytes": 167420,
       "materials_used": [
         "brass",
         "dark_iron",
@@ -306,7 +306,7 @@
         "teal_glass"
       ],
       "name": "ReserveTank",
-      "sha256": "e76962a08a1ff89888564ebf80007d3ef42d8588f6437ee58b18c29e76fc718a",
+      "sha256": "aaf097d0baf7edb0bc8d8e850c8405c2218e14000d8d2e7facf7f96ec4806a2b",
       "triangles": 1504
     },
     {
@@ -333,7 +333,7 @@
         "ruby"
       ],
       "name": "SignoffPlinth",
-      "sha256": "b3df0d7932965ac4c0adbe4447f10efa6e0519509985916c3d8c9304c3f1add8",
+      "sha256": "71a495f39469da00ebaf0f495c6d8fbb31a5939bde72ffd150d9a61eba40947d",
       "triangles": 492
     },
     {
@@ -351,7 +351,7 @@
           0.86
         ]
       ],
-      "bytes": 270476,
+      "bytes": 270456,
       "materials_used": [
         "brass",
         "dark_iron",
@@ -359,7 +359,7 @@
         "teal_glass"
       ],
       "name": "HarmonicEngineCore",
-      "sha256": "f8c4929f2d7493a298dcb1c79b2c7e0115ed1ddb7bd6af3f1534d39aa4494be8",
+      "sha256": "adcb4a64b24a89a0081ae8bdc68890d6c04508f145777647794139c488b2c9a7",
       "triangles": 2464
     },
     {
@@ -377,14 +377,14 @@
           0.32
         ]
       ],
-      "bytes": 60672,
+      "bytes": 60652,
       "materials_used": [
         "brass",
         "dark_iron",
         "wood"
       ],
       "name": "ToolRack",
-      "sha256": "8900e277bbfd60b2f6adc1b23c08d3512ef5d8be51bb230742790b03324a2622",
+      "sha256": "5b219482ba53e2a347e6d7f8fbfb0ec64f2cb95339db937567cec8cf0dd20511",
       "triangles": 528
     },
     {
@@ -409,7 +409,7 @@
         "patina"
       ],
       "name": "BridgeHelm",
-      "sha256": "162ff3d63555c2e2e4d08ab48ef7d15171fb4a5cca2037537d987d79e00813d7",
+      "sha256": "d72370cc523397e505198871d9ca63ec804cc351f04551fee2d684ae39473e74",
       "triangles": 1136
     },
     {
@@ -427,7 +427,7 @@
           0.59
         ]
       ],
-      "bytes": 250612,
+      "bytes": 250576,
       "materials_used": [
         "brass",
         "dark_iron",
@@ -435,7 +435,7 @@
         "teal_glass"
       ],
       "name": "BridgeOrrery",
-      "sha256": "91dd84b6f8f644250c6af644de7ba94f623f151a95fe32285dec8f533d95a84c",
+      "sha256": "add1e2fbb4afbcdd88677af641e4a054b04fb2de9f3b01d57be4133d8cd90133",
       "triangles": 2280
     },
     {
@@ -460,7 +460,7 @@
         "patina"
       ],
       "name": "DeckRailModule",
-      "sha256": "0aafd2ac569f3c7f8ea6db7d657c9b4b0543448c3ae9433352b7f93fc56b2d1f",
+      "sha256": "e03486733b7934e4bfb744eef81068d6b2c995c5cd0f807a7a0d95b5fa70768d",
       "triangles": 664
     },
     {
@@ -478,14 +478,14 @@
           0.7162
         ]
       ],
-      "bytes": 203340,
+      "bytes": 203268,
       "materials_used": [
         "brass",
         "dark_iron",
         "patina"
       ],
       "name": "GeodesicJunction",
-      "sha256": "eb3c15dcbac9cb3401413b2acd7e607ee1b07e77759663271f8899af5fd137b3",
+      "sha256": "ed89b88685cc1f16de47d41d3dc6efdc7959468e89e84b094f9b34ddc90ac3f4",
       "triangles": 1848
     },
     {
@@ -510,7 +510,7 @@
         "patina"
       ],
       "name": "WingHinge",
-      "sha256": "4038cacc57f99914cbf3e6485167843902fd5a8d3dc2079e55d3c9dedb073e46",
+      "sha256": "33acae27fa895b5e11fa7089ad72a5efa76a11d1063d75feccd471c390c4d073",
       "triangles": 624
     },
     {
@@ -536,7 +536,7 @@
         "amber_glass"
       ],
       "name": "EmergencyBeacon",
-      "sha256": "ba0b5a1999b14e3e043b4411361b79ee1e9d700ca75e44daa1f6ddf3821fc0c9",
+      "sha256": "73da52d351e052137d69b85efd15c881c4d6ad7df2396398ef96f4485326fb04",
       "triangles": 480
     },
     {
@@ -554,14 +554,14 @@
           0.6
         ]
       ],
-      "bytes": 221472,
+      "bytes": 221412,
       "materials_used": [
         "dark_iron",
         "canvas",
         "amber_glass"
       ],
       "name": "FlotationBuoy",
-      "sha256": "f04263aa9f4c7e8b6c298d655c382adba4dad59d7b0c9552f841509bb151615a",
+      "sha256": "9d51a4ffb7717f4a6fa263bca1e102de50727f541cf370168f8f65382b814d3c",
       "triangles": 2016
     }
   ],

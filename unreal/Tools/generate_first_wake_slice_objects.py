@@ -29,8 +29,13 @@ MATERIALS = {
     "ruby": ([0.66, 0.08, 0.095, 1], 0.12, 0.18),
 }
 # Transform from authoring cm (UE Z-up) to glTF meters (+Y-up).
+def quant(v):
+    # Normalize libm/CPython platform-level trig and signed-zero differences.
+    q=round(float(v),6)
+    return 0.0 if abs(q)<0.0000005 else q
+
 def gltf(p):
-    return (p[0] / 100.0, p[2] / 100.0, -p[1] / 100.0)
+    return tuple(quant(v) for v in (p[0]/100.0,p[2]/100.0,-p[1]/100.0))
 
 def vec_add(a,b): return tuple(x+y for x,y in zip(a,b))
 def vec_sub(a,b): return tuple(x-y for x,y in zip(a,b))
@@ -48,7 +53,7 @@ class Mesh:
         q = [gltf(v) for v in (a,b,c)]
         normal = cross(vec_sub(q[1],q[0]), vec_sub(q[2],q[0]))
         if sum(x*x for x in normal) < 1e-14: raise ValueError("Degenerate triangle")
-        self.triangles[mat].append((q,unit(normal)))
+        self.triangles[mat].append((q,tuple(quant(x) for x in unit(normal))))
     def quad(self, mat, a,b,c,d):
         self.tri(mat,a,b,c); self.tri(mat,a,c,d)
     def box(self, mat, x,y,z, w,d,h):
