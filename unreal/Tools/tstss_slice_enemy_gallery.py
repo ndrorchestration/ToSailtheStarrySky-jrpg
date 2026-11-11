@@ -212,7 +212,7 @@ def build_in_unreal() -> dict:
         raise RuntimeError("HOLD: fill light missing")
     fill_comp.set_editor_property("intensity", 2200.0)
     fill_comp.set_editor_property("attenuation_radius", 1350.0)
-    fill_comp.set_editor_property("light_color", unreal.LinearColor(.17,.58,1.0,1.0))
+    fill_comp.set_editor_property("light_color", unreal.Color(44, 148, 255, 255))
     # Five per-family camera presets. Gallery is staged, never entered as a
     # narrative encounter; camera placement does not select playable party.
     for family, y in GALLERY_FAMILIES:
