@@ -33,14 +33,13 @@ def suppress_transient_only(actor_list,unreal):
         if not isinstance(signs[name],unreal.TextRenderActor):
             raise RuntimeError("HOLD: developer sign is not a native TextRenderActor")
     # Never hide/destroy seven gameplay marker actors or change any collision.
-    if any(a.get_actor_label().startswith(MILESTONE_PREFIX) and
-           a.get_actor_label() not in signs and
-           a.get_actor_label() in {MILESTONE_PREFIX+s for s in MILESTONES} and
-           a.is_hidden() for a in actor_list):
+    milestones={MILESTONE_PREFIX+s for s in MILESTONES}
+    if any(bool(a.get_editor_property("hidden")) for a in actor_list
+           if a.get_actor_label() in milestones):
         raise RuntimeError("HOLD: interaction marker already hidden")
     for name in expected:
         signs[name].set_actor_hidden_in_game(True)
-    if any(not signs[name].is_hidden() for name in expected):
+    if any(not bool(signs[name].get_editor_property("hidden")) for name in expected):
         raise RuntimeError("HOLD: native sign visibility toggle unverified")
     return {"status":"ONLY_SEVEN_DEV_SIGNS_HIDDEN_TRANSIENT_FOR_CAPTURE",
             "sign_labels":list(expected),"interaction_actors_hidden":0,
