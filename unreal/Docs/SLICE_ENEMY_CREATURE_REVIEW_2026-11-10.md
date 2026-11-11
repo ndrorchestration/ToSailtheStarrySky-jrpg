@@ -83,3 +83,20 @@ map, active Unreal Editor, insufficient RAM/disk, wrong UE patch, or missing
 native build receipt before starting. It makes both tracked default INIs
 temporarily read-only, restores attributes, and validates the new map SHA receipt.
 Do not perform this launch in any other worktree.
+
+## Provisional expanded wildlife and hostile humans — November 10, 2026
+
+The original three remain preserved. Twelve *additional* archetypes are implemented as native C++ descriptor entries, each with two `SliceReview_` actions and eight procedural Unreal Engine primitive parts. The review roster now totals **15** and the strict enemy-only DataTable has **30** rows. No new persistent game assets were imported or canonized.
+
+| Enemy family | Review members | Gameplay distinction |
+|---|---|---|
+| Bandits | Quayside Cutpurse, Quayside Slinger, Bandit Captain | agile melee, ranged-style attack, durable leader |
+| Flora | Thornvine Creeper, Sporecap Stalker, Root Sentinel | constricting-looking plant, mobile mushroom, high-defense rooted guard |
+| Aquatic | Reef Eel, Tidefin Hunter, Shellback Crab | high initiative swimmer, fast predator, heavy shell defense |
+| Fauna | Cliff Lynx, Bristleboar, Night Glider | quick mammal, charging heavy mammal, evasive glider |
+
+Each archetype has HP, resource, attack, defense, agility, family, proposed habitat and exactly two ability definitions. `BanditCaptain` is the only `bLeader=true` entry. The habitats are **ideas**, not Chapter I placements. Names and models are editable proxies pending worldbuilding approval. The existing mechanic currently processes all 30 actions as damage-style `JobArt` skills; *poison, spores, roots, currents, intimidation, ranged projectiles, team buffs, area damage, summoning, knockback and status effects are not implemented*. Actions do not confer a class/spell on party members.
+
+`tstss_slice_enemy_gallery.py` now authors five gallery aisles, three enemies in each, with per-family review cameras, floor stages, labels, and low-resource point/directional lighting. It remains opt-in and still refuses dirty or foreign workspaces, overwrites, missing native build evidence, or an active editor session.
+
+**Native build hold:** On Neontic the free disk measurement was roughly **9.09 GiB**, below the existing **14 GiB** gate, so no native build/gallery authoring will be attempted until resources recover; do not weaken the gate or delete another worker's files.

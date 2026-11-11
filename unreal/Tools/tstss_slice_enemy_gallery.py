@@ -22,23 +22,55 @@ NATIVE_CLASS = "/Script/ToSailTheStarrySky.TSTSSSliceEnemyActor"
 ENV_SHA = "TSTSS_ENEMY_GALLERY_EXPECTED_HEAD"
 # All coordinates are centimeters, 1m = 100 Unreal units.
 # Kind strings map to the actual C++ enum, not speculative numeric values.
+# 15 independent actor identities. Five category aisles, three plinths each.
+# Each y-coordinate is a separate gallery bay; x is the camera-facing spread.
+GALLERY_FAMILIES = (
+    ("Anomaly", 0.0),
+    ("Bandit", 850.0),
+    ("Flora", 1700.0),
+    ("Aquatic", 2550.0),
+    ("Fauna", 3400.0),
+)
 ENEMIES = (
-    ("Shear_01", "HarmonicShear", -460.0, "HARMONIC SHEAR  |  WIND"),
-    ("Wisp_01", "AetherLeakWisp", 0.0, "AETHER LEAK  |  WISP"),
-    ("Skitter_01", "DockSkitter", 460.0, "DOCK SKITTER  |  ARMOR"),
+    ("Shear_01", "HarmonicShear", -480.0, 0.0, "HARMONIC SHEAR"),
+    ("Wisp_01", "AetherLeakWisp", 0.0, 0.0, "AETHER WISP"),
+    ("Skitter_01", "DockSkitter", 480.0, 0.0, "DOCK SKITTER"),
+    ("Cutpurse_01", "BanditCutpurse", -480.0, 850.0, "QUAYSIDE CUTPURSE"),
+    ("Slinger_01", "BanditSlinger", 0.0, 850.0, "QUAYSIDE SLINGER"),
+    ("Captain_01", "BanditCaptain", 480.0, 850.0, "BANDIT CAPTAIN / LEADER"),
+    ("Thornvine_01", "Thornvine", -480.0, 1700.0, "THORNVINE CREEPER"),
+    ("Sporecap_01", "Sporecap", 0.0, 1700.0, "SPORECAP STALKER"),
+    ("Sentinel_01", "RootSentinel", 480.0, 1700.0, "ROOT SENTINEL"),
+    ("Eel_01", "ReefEel", -480.0, 2550.0, "REEF EEL"),
+    ("Tidefin_01", "TidefinRaptor", 0.0, 2550.0, "TIDEFIN HUNTER"),
+    ("Shellback_01", "ShellbackCrab", 480.0, 2550.0, "SHELLBACK CRAB"),
+    ("Lynx_01", "CliffLynx", -480.0, 3400.0, "CLIFF LYNX"),
+    ("Boar_01", "Bristleboar", 0.0, 3400.0, "BRISTLEBOAR"),
+    ("Glider_01", "NightGlider", 480.0, 3400.0, "NIGHT GLIDER"),
 )
 ACTOR_PREFIX = "REVIEW_ONLY_ENEMY_"
 PREVIEW_STATUS = "SOURCE_PLAN_ONLY_NOT_NATIVE_RENDERED"
 
 
 def validate_plan() -> dict:
-    ids = [x[0] for x in ENEMIES]
-    kinds = [x[1] for x in ENEMIES]
-    lanes = [x[2] for x in ENEMIES]
-    if len(ids) != 3 or len(set(ids)) != 3 or len(set(kinds)) != 3:
-        raise RuntimeError("HOLD: gallery must contain exactly three distinct enemy kinds")
-    if sorted(lanes) != lanes or min(b-a for a,b in zip(lanes,lanes[1:])) < 400:
-        raise RuntimeError("HOLD: gallery labels/silhouettes would overlap")
+    ids = [entry[0] for entry in ENEMIES]
+    kinds = [entry[1] for entry in ENEMIES]
+    positions = [(entry[2], entry[3]) for entry in ENEMIES]
+    if len(ENEMIES) != 15 or len(set(ids)) != 15 or len(set(kinds)) != 15:
+        raise RuntimeError("HOLD: gallery must contain 15 unique enemy identities")
+    expected_aisles = [0.0, 850.0, 1700.0, 2550.0, 3400.0]
+    if [y for _,y in GALLERY_FAMILIES] != expected_aisles:
+        raise RuntimeError("HOLD: category aisle locations drifted")
+    if len(set(positions)) != 15:
+        raise RuntimeError("HOLD: duplicate gallery placement")
+    for i, (name, kind, x, y, caption) in enumerate(ENEMIES):
+        if not name or not kind or not caption:
+            raise RuntimeError("HOLD: incomplete gallery slot")
+        if y != expected_aisles[i // 3] or x != (-480.0,0.0,480.0)[i % 3]:
+            raise RuntimeError("HOLD: gallery category layout or overlap drifted")
+        if any((x-x2)**2+(y-y2)**2 < 400.0**2
+               for x2,y2 in positions[:i]):
+            raise RuntimeError("HOLD: gallery silhouettes overlap")
     if MAP_FILE.startswith("/") or ".." in Path(MAP_FILE).parts:
         raise RuntimeError("HOLD: unsafe destination")
     return {
@@ -46,6 +78,8 @@ def validate_plan() -> dict:
         "new_review_map": MAP,
         "native_actor_class": NATIVE_CLASS,
         "staged_enemy_ids": ids,
+        "families": [name for name,_ in GALLERY_FAMILIES],
+        "gallery_slots": len(ids),
         "species_or_revised_encounter_placement_approved": False,
         "combat_player_actions_granted": False,
         "saves_or_protected_maps_modified": False,
@@ -146,10 +180,10 @@ def build_in_unreal() -> dict:
     # Stage + individual plinths; source C++ enemy geometry remains the only
     # source for silhouettes. Level has no player input, monster spawning, or
     # automatic encounter initiation.
-    cube_actor("NEUTRAL_STAGE", (0,0,-80), (17.0,16.0,0.6))
-    for name, kind, lane, caption in ENEMIES:
-        cube_actor("PLINTH_"+name, (0,lane,-24), (3.3,3.2,.32))
-        creature = spawn(enemy_class, name, (0,lane,0))
+    cube_actor("NEUTRAL_STAGE", (0,1700,-80), (22.0,46.0,0.6))
+    for name, kind, x, y, caption in ENEMIES:
+        cube_actor("PLINTH_"+name, (x,y,-24), (3.3,3.2,.32))
+        creature = spawn(enemy_class, name, (x,y,0))
         creature.set_editor_property("kind", enum_member(enum_type, kind))
         creature.set_editor_property("instance_id", unreal.Name(name))
         creature.set_editor_property("reduced_motion", True)
@@ -157,8 +191,8 @@ def build_in_unreal() -> dict:
         creature.set_editor_property("tags",
                                      [unreal.Name("TSTSSReviewOnly"),
                                       unreal.Name("StoryPlacementNotApproved")])
-        sign = spawn(unreal.TextRenderActor, "CAPTION_"+name, (0,lane,315),
-                     unreal.Rotator(pitch=0, yaw=180, roll=0))
+        sign = spawn(unreal.TextRenderActor, "CAPTION_"+name, (x,y,315),
+                     unreal.Rotator(pitch=0, yaw=-90, roll=0))
         text = sign.get_component_by_class(unreal.TextRenderComponent)
         if text is None:
             raise RuntimeError("HOLD: source gallery text component unavailable")
@@ -179,18 +213,36 @@ def build_in_unreal() -> dict:
     fill_comp.set_editor_property("intensity", 2200.0)
     fill_comp.set_editor_property("attenuation_radius", 1350.0)
     fill_comp.set_editor_property("light_color", unreal.LinearColor(.17,.58,1.0,1.0))
-    camera = spawn(unreal.CameraActor, "GALLERY_REVIEW_CAMERA", (1350,0,430),
-                   unreal.Rotator(pitch=-13, yaw=180, roll=0))
-    camera_comp = camera.get_component_by_class(unreal.CameraComponent)
-    if camera_comp is None:
-        raise RuntimeError("HOLD: stage camera component unavailable")
-    camera_comp.set_editor_property("field_of_view", 58.0)
+    # Five per-family camera presets. Gallery is staged, never entered as a
+    # narrative encounter; camera placement does not select playable party.
+    for family, y in GALLERY_FAMILIES:
+        category = spawn(unreal.TextRenderActor,
+                         "FAMILY_"+family, (-770,y,360),
+                         unreal.Rotator(pitch=0,yaw=-90,roll=0))
+        label = category.get_component_by_class(unreal.TextRenderComponent)
+        if label is None:
+            raise RuntimeError("HOLD: gallery family label unavailable")
+        label.set_text(family.upper() + " / PROVISIONAL REVIEW")
+        label.set_editor_property("world_size", 32.0)
+        view = spawn(unreal.CameraActor, "CAMERA_"+family,
+                     (0,y-1450,480),
+                     unreal.Rotator(pitch=-12,yaw=90,roll=0))
+        lens = view.get_component_by_class(unreal.CameraComponent)
+        if lens is None:
+            raise RuntimeError("HOLD: gallery family camera unavailable")
+        lens.set_editor_property("field_of_view", 58.0)
+        side = spawn(unreal.PointLight,"FILL_"+family,(0,y-220,380))
+        light = side.get_component_by_class(unreal.PointLightComponent)
+        if light is None:
+            raise RuntimeError("HOLD: gallery lighting component unavailable")
+        light.set_editor_property("intensity",1600.0)
+        light.set_editor_property("attenuation_radius",950.0)
 
     enemy_actors = [a for a in editor.get_all_level_actors()
                     if str(a.get_actor_label()).startswith(ACTOR_PREFIX)
                     and a.get_class() == enemy_class]
-    if len(enemy_actors) != 3:
-        raise RuntimeError("HOLD: gallery does not contain exactly three native enemy actors")
+    if len(enemy_actors) != 15:
+        raise RuntimeError("HOLD: gallery does not contain all fifteen native enemy actors")
     if not unreal.EditorLoadingAndSavingUtils.save_map(world, MAP):
         raise RuntimeError("HOLD: native gallery failed to save")
     output = project / MAP_FILE
