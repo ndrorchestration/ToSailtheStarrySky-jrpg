@@ -24,10 +24,15 @@ class FocusV2Tests(TestCase):
             with self.assertRaisesRegex(RuntimeError,"dedicated review worktree"):
                 stage.preflight(Path(temp)/"unreal")
     def test_no_native_authoring_without_commit_and_opt_in(self):
-        with mock.patch.dict(os.environ,{},clear=True):
-            with self.assertRaisesRegex(RuntimeError,"exact expected"):
-                stage.preflight()
-        with mock.patch.dict(os.environ,{stage.EXPECTED_ENV:"a"*40},clear=True):
-            with self.assertRaisesRegex(RuntimeError,"explicitly authorized"):
-                stage.preflight()
+        # Prove the authorization failures in a disposable path whose name
+        # satisfies the dedicated-worktree gate. Never create a native map.
+        with TemporaryDirectory() as tmp:
+            review=Path(tmp)/"TSTSS_CenteringPulse_20261111"/"unreal"
+            review.mkdir(parents=True)
+            with mock.patch.dict(os.environ,{},clear=True):
+                with self.assertRaisesRegex(RuntimeError,"exact expected"):
+                    stage.preflight(project=review)
+            with mock.patch.dict(os.environ,{stage.EXPECTED_ENV:"a"*40},clear=True):
+                with self.assertRaisesRegex(RuntimeError,"explicitly authorized"):
+                    stage.preflight(project=review)
 if __name__=="__main__":main()

@@ -35,8 +35,10 @@ def verify_sources(project=PROJECT, manifest=MANIFEST, require_exact_head=False)
     review works on a fresh clone without relying on local author state.
     """
     project=Path(project).resolve()
-    if project.name!="unreal" or project.parent.name!="TSTSS_CenteringPulse_20261111":
-        raise RuntimeError("HOLD: wrong isolated review worktree")
+    # Portable source-only verification may run in any actual Git worktree.
+    # Native readback retains the dedicated-worktree and exact-head lock below.
+    if project.name!="unreal" or not (project.parent/".git").exists():
+        raise RuntimeError("HOLD: source check requires isolated review worktree")
     data=json.loads(Path(manifest).read_text(encoding="utf8"))
     if (data.get("schema")!="tstss.resonator-focus-native-review.v1" or
         data.get("unreal_version")!="5.8.4" or
@@ -69,6 +71,8 @@ def verify_sources(project=PROJECT, manifest=MANIFEST, require_exact_head=False)
         current=git("rev-parse","HEAD")
         if not exact_sha(expected) or expected!=current:
             raise RuntimeError("HOLD: native readback needs unchanged explicit HEAD")
+        if project.parent.name!="TSTSS_CenteringPulse_20261111":
+            raise RuntimeError("HOLD: wrong isolated review worktree for native readback")
         if git("status","--porcelain","-uall"):
             raise RuntimeError("HOLD: changed project source during native readback")
         subprocess.run(["git","-C",str(ROOT),"merge-base","--is-ancestor",

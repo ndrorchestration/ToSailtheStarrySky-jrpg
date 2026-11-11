@@ -41,6 +41,12 @@ class FocusReadbackTests(TestCase):
             with self.assertRaisesRegex(RuntimeError,"unchanged explicit HEAD"):
                 native.verify_sources(require_exact_head=True)
 
+    def test_portable_source_probe_does_not_remove_native_path_guard(self):
+        source=Path(native.__file__).read_text(encoding="utf8")
+        self.assertIn('if require_exact_head:',source)
+        self.assertIn('project.parent.name!="TSTSS_CenteringPulse_20261111"',source)
+        self.assertIn('wrong isolated review worktree for native readback',source)
+
     def test_exact_sha_validation(self):
         self.assertTrue(native.exact_sha("a"*40))
         self.assertFalse(native.exact_sha("x"*40))
