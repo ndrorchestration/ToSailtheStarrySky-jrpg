@@ -17,7 +17,7 @@ def good_inputs() -> dict:
         "git_head": SHA, "git_clean": True,
         "map_sha": EXPECTED_MAP_SHA, "engine_version": [5, 8, 4],
         "engine_exes": True,
-        "native_names": [f"TSTSS.TestCase{i:02d}" for i in range(29)],
+        "native_names": [f"TSTSS.TestCase{i:02d}" for i in range(32)],
         "save_files": [], "native_receipts": ["synthetic-candidate"],
         "map_receipts": ["synthetic-candidate"],
         "active": [], "free_ram_gib": 7.1, "free_disk_gib": 16.0,
