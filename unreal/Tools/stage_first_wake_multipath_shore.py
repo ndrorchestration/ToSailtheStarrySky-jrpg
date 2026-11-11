@@ -415,7 +415,13 @@ def build_native_shore(phase: str) -> dict:
         set_required_review_bool(actor, "loop_review", True)
         actor.set_actor_enable_collision(False)
     camera = spawn(u.CameraActor, "Overview_NotGameplayCamera", (-5300, -6200, 2850))
-    camera.set_actor_rotation(u.Rotator(-18, 45, 0), False)
+    # Python Rotator is (roll, pitch, yaw), unlike the C++ (pitch, yaw, roll)
+    # constructor. Named fields prevent a +45-degree upward camera bug.
+    camera.set_actor_rotation(u.Rotator(roll=0.0, pitch=-18.0, yaw=45.0), False)
+    actual = camera.get_actor_rotation()
+    if (abs(actual.pitch + 18.0) > 0.01 or abs(actual.yaw - 45.0) > 0.01
+            or abs(actual.roll) > 0.01):
+        raise RuntimeError("HOLD: staged camera native pitch/yaw/roll mismatch")
     caption = spawn(u.TextRenderActor, "UnapprovedVisualsNotice", (-3550, 2850, 500))
     text_component = caption.get_component_by_class(u.TextRenderComponent)
     if text_component is None:
