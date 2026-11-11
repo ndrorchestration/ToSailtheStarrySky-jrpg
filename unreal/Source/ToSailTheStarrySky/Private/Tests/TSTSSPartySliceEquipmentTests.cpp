@@ -2,6 +2,7 @@
 #include "TSTSSPartySliceReviewEquipment.h"
 #include "TSTSSPartyGearReviewMountComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/Engine.h"
 #include "Engine/World.h"
@@ -207,6 +208,24 @@ bool FTSTSSPartySliceEquipmentStageGateTest::RunTest(const FString& Parameters)
             Mount->TryInitializeReviewDisplay(
                 TEXT("Aepex"), Recruited, WeaponView, ArmorView, AccessoryView));
     }
+    // A static character study is not an animated/skeletal fit candidate.
+    // No rig, fake socket, or visual asset can authorize a socket attachment.
+    USkeletalMeshComponent* Unrigged = NewObject<USkeletalMeshComponent>(Stand);
+    Stand->AddInstanceComponent(Unrigged);
+    Unrigged->RegisterComponent();
+    TestFalse(TEXT("missing skeletal mesh denies three socket mounts"),
+        Mount->TryAttachToSkeletalSocketsReview(
+            Unrigged, TEXT("hand_r"), TEXT("spine"), TEXT("head")));
+    TestFalse(TEXT("null skeleton denies attachment"),
+        Mount->TryAttachToSkeletalSocketsReview(
+            nullptr, TEXT("hand_r"), TEXT("spine"), TEXT("head")));
+    TestFalse(TEXT("duplicate socket identifiers deny attachment"),
+        Mount->TryAttachToSkeletalSocketsReview(
+            Unrigged, TEXT("hand_r"), TEXT("hand_r"), TEXT("head")));
+    TestFalse(TEXT("no visual rig attachment can unlock Aepex"),
+        FTSTSSPartySliceReviewEquipment::IsMemberAvailable(
+            Recruited, TEXT("Aepex")));
+
     Stand->Destroy();
     return true;
 }

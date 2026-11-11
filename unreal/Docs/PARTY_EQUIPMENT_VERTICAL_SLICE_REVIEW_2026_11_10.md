@@ -69,3 +69,11 @@ No skeletal rig or socket names are presumed: exact weapon grips, cloth and gogg
 The existing mandatory TSTSS.Equipment.PartySliceStageGate Editor automation has been extended to cover splashdown versus recruitment, native loading of the nine wearable mesh packages and a disposable actor-based mount / equip / unequip / denied-access test. These new assertions must be executed under UE 5.8.4 and reported SUCCESS before dynamic behavior is called verified. Seven engine-free checks independently cover geometry, source provenance, stage gating, asset allowlists and Unreal import path consistency.
 
 Remaining: exact-head native test report; owner and story-state wiring to a player UI; actual skeleton/socket fit and cinematics; D3D12 screenshots; animation; combat; explicit creator art approval. This review-only component is not a shipping gameplay feature.
+
+## Socket-ready integration checkpoint (2026-11-11 UTC)
+
+A second review-only entry point now accepts an explicit real SkeletalMeshComponent and three existing distinct sockets (weapon, armor, accessory). It checks actual skeletal mesh presence, same-actor ownership, registered views, socket existence and available character stage before parenting; it refuses static-only character candidates. Actor attachment state is captured for rollback if a native attach fails. The mandatory UE equipment automation has three new negative cases denying absent rigs and duplicate socket names. A UE 5.8.4 Win64 Editor build **succeeded** for these source changes; exact-head test execution is still a separate receipt.
+
+Source audit of available prior Ender/Ionia/Lyra cast candidate GLBs found 0 skins and 0 animations for all three. Consequently this adapter cannot yet be claimed as final character fitting, nor as playable equipment. Detailed status: PARTY_EQUIPMENT_RIG_READINESS_2026_11_10.md.
+
+An earlier clean-head strict native verification attempt executed 30/30 named tests successfully but did not satisfy its source-custody invariant because UE auto-wrote tracked config. The config changes were restored; a rerun then failed the mandatory free-disk preflight. The native test report is preserved as a diagnostic, not an accepted strict gate: PartyEquipment_ThirtyNativeTests_Diagnostic_2026_11_10.report.json.

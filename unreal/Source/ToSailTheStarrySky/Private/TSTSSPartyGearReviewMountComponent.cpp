@@ -1,6 +1,7 @@
 #include "TSTSSPartyGearReviewMountComponent.h"
 
 #include "Components/StaticMeshComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "GameFramework/Actor.h"
 #include "UObject/UObjectGlobals.h"
@@ -197,5 +198,76 @@ bool UTSTSSPartyGearReviewMountComponent::TrySetReviewSlotEquipped(
     if (!View->SetStaticMesh(NextMesh)) return false;
 
     ReviewState = MoveTemp(Candidate);
+    return true;
+}
+
+bool UTSTSSPartyGearReviewMountComponent::TryAttachToSkeletalSocketsReview(
+    USkeletalMeshComponent* Rig,
+    FName WeaponSocket, FName ArmorSocket, FName AccessorySocket)
+{
+    UStaticMeshComponent* Views[3] = {
+        WeaponView.Get(), ArmorView.Get(), AccessoryView.Get()
+    };
+    const FName Sockets[3] = {
+        WeaponSocket, ArmorSocket, AccessorySocket
+    };
+    if (!bReviewInitialized || !IsValid(Rig) ||
+        Rig->GetOwner() != GetOwner() || !Rig->IsRegistered() ||
+        !IsValid(Rig->GetSkeletalMeshAsset()) ||
+        !FTSTSSPartySliceReviewEquipment::IsMemberAvailable(
+            ActiveStage, ActiveCharacterId) ||
+        Sockets[0].IsNone() || Sockets[1].IsNone() || Sockets[2].IsNone() ||
+        Sockets[0] == Sockets[1] || Sockets[0] == Sockets[2] ||
+        Sockets[1] == Sockets[2])
+    {
+        return false;
+    }
+
+    for (int32 Index=0; Index<3; ++Index)
+    {
+        if (!IsOwnedMount(GetOwner(), Views[Index]) ||
+            !Views[Index]->IsRegistered() ||
+            !Rig->DoesSocketExist(Sockets[Index]))
+        {
+            return false;
+        }
+    }
+    // Validate all three sockets and owners before attempting a scene mutation.
+    // Preserve parents and local transforms in case a component rejects attach.
+    USceneComponent* PreviousParents[3];
+    FName PreviousSockets[3];
+    FTransform PreviousTransforms[3];
+    for (int32 Index=0; Index<3; ++Index)
+    {
+        PreviousParents[Index] = Views[Index]->GetAttachParent();
+        PreviousSockets[Index] = Views[Index]->GetAttachSocketName();
+        PreviousTransforms[Index] = Views[Index]->GetRelativeTransform();
+    }
+
+    for (int32 Index=0; Index<3; ++Index)
+    {
+        if (!Views[Index]->AttachToComponent(
+            Rig, FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+            Sockets[Index]))
+        {
+            for (int32 Rollback=0; Rollback<=Index; ++Rollback)
+            {
+                if (PreviousParents[Rollback])
+                {
+                    Views[Rollback]->AttachToComponent(
+                        PreviousParents[Rollback],
+                        FAttachmentTransformRules::KeepRelativeTransform,
+                        PreviousSockets[Rollback]);
+                }
+                else
+                {
+                    Views[Rollback]->DetachFromComponent(
+                        FDetachmentTransformRules::KeepRelativeTransform);
+                }
+                Views[Rollback]->SetRelativeTransform(PreviousTransforms[Rollback]);
+            }
+            return false;
+        }
+    }
     return true;
 }

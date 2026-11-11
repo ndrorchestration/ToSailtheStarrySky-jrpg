@@ -6,6 +6,7 @@
 #include "TSTSSPartyGearReviewMountComponent.generated.h"
 
 class UStaticMeshComponent;
+class USkeletalMeshComponent;
 
 UENUM(BlueprintType)
 enum class ETSTSSPartyGearPreviewSlot : uint8
@@ -41,6 +42,16 @@ public:
     // No asset grants, consumables, skills, class unlocks or persistent changes.
     UFUNCTION(BlueprintCallable, Category="TSTSS|Party Equipment|Review")
     bool TrySetReviewSlotEquipped(ETSTSSPartyGearPreviewSlot Slot, bool bEquip);
+
+    // Optional native rig attachment. Requires a real skeletal asset and three
+    // distinct existing socket names; rejects the static cast mannequins.
+    // This does not claim anatomical fit, material approval or combat animation.
+    UFUNCTION(BlueprintCallable, Category="TSTSS|Party Equipment|Review")
+    bool TryAttachToSkeletalSocketsReview(
+        USkeletalMeshComponent* Rig,
+        FName WeaponSocket,
+        FName ArmorSocket,
+        FName AccessorySocket);
 
     UFUNCTION(BlueprintPure, Category="TSTSS|Party Equipment|Review")
     FName GetReviewCharacterId() const { return ActiveCharacterId; }
