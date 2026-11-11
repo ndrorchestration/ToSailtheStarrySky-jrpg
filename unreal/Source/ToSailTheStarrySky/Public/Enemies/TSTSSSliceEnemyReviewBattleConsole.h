@@ -46,6 +46,12 @@ public:
     UFUNCTION(BlueprintPure, Category="TSTSS|Enemy Review")
     ETSS_CombatPhase GetReviewBattlePhase() const;
 
+    // Ground reward distribution in exactly the party active in the review
+    // turn manager; no assumed canonical unlocks.
+    UFUNCTION(BlueprintPure, Category="TSTSS|Enemy Review")
+    TArray<FName> GetReviewActivePartyIds() const;
+
+
     UFUNCTION(BlueprintCallable, Category="TSTSS|Enemy Review")
     void SetReviewHUDVisible(bool bVisible);
 

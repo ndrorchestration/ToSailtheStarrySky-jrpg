@@ -269,6 +269,16 @@ bool ATSTSSSliceEnemyReviewBattleConsole::TryStartWavePreview(
 #endif
 }
 
+TArray<FName> ATSTSSSliceEnemyReviewBattleConsole::GetReviewActivePartyIds() const
+{
+#if UE_BUILD_SHIPPING
+    return {};
+#else
+    return IsValid(Session.Get()) ? Session->GetReviewActivePartyIds()
+                                  : TArray<FName>();
+#endif
+}
+
 ETSS_CombatPhase ATSTSSSliceEnemyReviewBattleConsole::GetReviewBattlePhase() const
 {
 #if UE_BUILD_SHIPPING
