@@ -1,0 +1,49 @@
+name: First Wake PBR Lookdev V3 — deterministic source and fail-closed native contract
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/unreal-first-wake-pbr-lookdev-v3.yml"
+      - "unreal/Tools/generate_first_wake_pbr_textures_v3.py"
+      - "unreal/Tools/plan_first_wake_material_lookdev_v3.py"
+      - "unreal/Tools/stage_first_wake_pbr_native_v3.py"
+      - "unreal/Tools/intake_first_wake_pbr_native_v3.py"
+      - "unreal/Tools/first_wake_cinematic_sign_policy_v3.py"
+      - "unreal/Tools/run_first_wake_pbr_v3_native.py"
+      - "unreal/Tools/verify_first_wake_pbr_v3_native.py"
+      - "unreal/Tools/run_first_wake_pbr_v3_readback.py"
+      - "unreal/Tools/test_first_wake_pbr_v3.py"
+      - "unreal/Docs/FIRST_WAKE_PBR_V3_IMPLEMENTATION_2026_11_11.md"
+      - "unreal/ArtSource/FirstWakeMaterialsV3/**"
+  workflow_dispatch:
+jobs:
+  pure-source-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Python structure and source-bound deterministic PNGs
+        run: |
+          python3 -m py_compile \
+            unreal/Tools/generate_first_wake_pbr_textures_v3.py \
+            unreal/Tools/plan_first_wake_material_lookdev_v3.py \
+            unreal/Tools/stage_first_wake_pbr_native_v3.py \
+            unreal/Tools/intake_first_wake_pbr_native_v3.py \
+            unreal/Tools/first_wake_cinematic_sign_policy_v3.py \
+            unreal/Tools/run_first_wake_pbr_v3_native.py \
+            unreal/Tools/verify_first_wake_pbr_v3_native.py \
+            unreal/Tools/run_first_wake_pbr_v3_readback.py \
+            unreal/Tools/test_first_wake_pbr_v3.py
+          python3 unreal/Tools/generate_first_wake_pbr_textures_v3.py --verify
+      - name: Validate isolated derived World plan, adversarial receipts and preserved story markers
+        run: |
+          python3 -m unittest discover -s unreal/Tools -p "test_first_wake_pbr_v3.py" -v
+          python3 unreal/Tools/stage_first_wake_pbr_native_v3.py --validate
+      - name: Distinguish source generation from native Unreal and GPU results
+        run: |
+          echo "SOURCE_PBR_V3_PLAN_ONLY_NO_NATIVE_UE_IMPORT_OR_VISUAL_APPROVAL"
+          test ! -e unreal/Saved/FirstWakeMaterialLookdevV3/native_stage.json
+          test ! -e unreal/Saved/FirstWakeMaterialLookdevV3/native_independent_readback.json
+          test ! -e unreal/Content/TSTSS/Review/Scenes/FirstWake_MaterialLookdev_20261111_REVIEW_V3.umap
