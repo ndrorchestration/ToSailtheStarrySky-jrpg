@@ -1,0 +1,250 @@
+{
+  "schema": "tstss.firstwake.cinematic-shots.v0.1",
+  "review_status": "SOURCE_CANDIDATE",
+  "approval_status": "CREATOR_PENDING",
+  "engine": "Unreal Engine 5.8.4",
+  "public_safe": true,
+  "evidence_policy": "Native UE player-view and cinematic captures only. Reference atlases, source checks and mockups never constitute visual, playability or creator approval.",
+  "story_policy": "Prelude ends with real sea landing; Splashdown begins Chapter 1 Act 1. Ionia joins before Lyra. Reson and Aepex are later protagonists. Ship Starbourne remains locked.",
+  "proposed_art_direction": true,
+  "capture_requirements": [
+    "exact git revision and asset/map hash",
+    "Unreal engine and RHI",
+    "camera and exposure settings",
+    "native image or clip file hash",
+    "player-observed interaction state",
+    "creator side-by-side review decision"
+  ],
+  "shots": [
+    {
+      "id": "FW-CIN-01",
+      "beat": "harbor_flyer",
+      "location": "harbor",
+      "subjects": [
+        "Ender"
+      ],
+      "playable_subjects": [
+        "Ender"
+      ],
+      "lens_mm": 28,
+      "composition": "Wide coastal harbor reveal. Lead the eye to Ionia's paid engineering flyer.",
+      "movement": "Slow lateral crane; keep a traversable route visible.",
+      "lighting": "Late afternoon golden practicals, restrained teal reflected light.",
+      "vfx": "Salt haze, wind-driven cloth, wet stone, ship silhouette.",
+      "interaction_handoff": "Player regains movement and finds the flyer.",
+      "requires_native_capture": true,
+      "final_art_verified": false,
+      "creator_accepted": false,
+      "evidence": [],
+      "min_continuous_pretransition_world_seconds": 0
+    },
+    {
+      "id": "FW-CIN-02",
+      "beat": "engine_diagnosis",
+      "location": "engine_room",
+      "subjects": [
+        "Ender"
+      ],
+      "playable_subjects": [
+        "Ender"
+      ],
+      "lens_mm": 50,
+      "composition": "Readable hands, dial markings and physical harmonic engine components.",
+      "movement": "Gentle controlled push toward player-operated tuning component.",
+      "lighting": "Warm brass bounce against cool teal resonance pulses.",
+      "vfx": "Low-intensity harmonic rings, instrument needle, visible dust.",
+      "interaction_handoff": "Player manipulates the actual diagnostic apparatus.",
+      "requires_native_capture": true,
+      "final_art_verified": false,
+      "creator_accepted": false,
+      "evidence": [],
+      "min_continuous_pretransition_world_seconds": 0
+    },
+    {
+      "id": "FW-CIN-03",
+      "beat": "ionia_commands",
+      "location": "bridge",
+      "subjects": [
+        "Ender",
+        "Ionia"
+      ],
+      "playable_subjects": [
+        "Ender"
+      ],
+      "lens_mm": 45,
+      "composition": "Show Ionia at helm and Ender at engineering readout, equal narrative agency.",
+      "movement": "Steady shoulder-level two-shot; avoid disorienting cut.",
+      "lighting": "Natural skylight through geodesic glass, gentle amber instrument glow.",
+      "vfx": "Glass curvature, reflections, bounded bridge vibration.",
+      "interaction_handoff": "Ionia explicitly authorizes launch only after checks.",
+      "requires_native_capture": true,
+      "final_art_verified": false,
+      "creator_accepted": false,
+      "evidence": [],
+      "min_continuous_pretransition_world_seconds": 0
+    },
+    {
+      "id": "FW-CIN-04",
+      "beat": "launch",
+      "location": "dock",
+      "subjects": [
+        "Ender",
+        "Ionia"
+      ],
+      "playable_subjects": [
+        "Ender"
+      ],
+      "lens_mm": 35,
+      "composition": "Four dragonfly wing silhouettes and hull scale remain readable.",
+      "movement": "Tracking profile to three-quarter elevation; no impossible teleport.",
+      "lighting": "Golden port light shifts into clear open sky.",
+      "vfx": "Articulating wings, restrained propulsion wake, disturbed dock spray.",
+      "interaction_handoff": "Ship visibly disengages and begins controlled climb.",
+      "requires_native_capture": true,
+      "final_art_verified": false,
+      "creator_accepted": false,
+      "evidence": [],
+      "min_continuous_pretransition_world_seconds": 0
+    },
+    {
+      "id": "FW-CIN-05",
+      "beat": "sky_ascent",
+      "location": "sky",
+      "subjects": [
+        "Ender",
+        "Ionia"
+      ],
+      "playable_subjects": [
+        "Ender"
+      ],
+      "lens_mm": 24,
+      "composition": "Believable planetary horizon curvature with layered cloud depth.",
+      "movement": "Exterior wide gliding tracking shot to cockpit/window view.",
+      "lighting": "High-altitude daylight, thin atmospheric scattering, auroral lane accents.",
+      "vfx": "Volumetric cloud parallax and non-occluding auroral traces.",
+      "interaction_handoff": "Player observes flight; no Starbourne gate or premature crew join.",
+      "requires_native_capture": true,
+      "final_art_verified": false,
+      "creator_accepted": false,
+      "evidence": [],
+      "min_continuous_pretransition_world_seconds": 0
+    },
+    {
+      "id": "FW-CIN-06",
+      "beat": "phase_drift",
+      "location": "engine_room",
+      "subjects": [
+        "Ender",
+        "Ionia"
+      ],
+      "playable_subjects": [
+        "Ender"
+      ],
+      "lens_mm": 65,
+      "composition": "Keep diagnostics and emotional expressions readable under alarm.",
+      "movement": "Tight instrumentation insert then restrained two-character response.",
+      "lighting": "Controlled cool-shift and practical warning lights without exposure clipping.",
+      "vfx": "Desynchronized harmonic pulse, sparking contact, temporal visual shimmer.",
+      "interaction_handoff": "Ender's attempted correction changes visible diagnostics; fuel cause remains unresolved.",
+      "requires_native_capture": true,
+      "final_art_verified": false,
+      "creator_accepted": false,
+      "evidence": [],
+      "min_continuous_pretransition_world_seconds": 0
+    },
+    {
+      "id": "FW-CIN-07",
+      "beat": "emergency_descent",
+      "location": "sky_over_sea",
+      "subjects": [
+        "Ender",
+        "Ionia"
+      ],
+      "playable_subjects": [
+        "Ender"
+      ],
+      "lens_mm": 35,
+      "composition": "Ship descent path, sea surface scale and captain's agency share frame.",
+      "movement": "Following camera with stable world horizon; limit camera shake.",
+      "lighting": "Storm-filtered natural light, retained hull silhouette.",
+      "vfx": "Air shear ribbons, increasing spray and wing articulation.",
+      "interaction_handoff": "Controlled sea-entry is player-visible, never a scene-skip proxy.",
+      "requires_native_capture": true,
+      "final_art_verified": false,
+      "creator_accepted": false,
+      "evidence": [],
+      "min_continuous_pretransition_world_seconds": 0
+    },
+    {
+      "id": "FW-CIN-08",
+      "beat": "sea_contact",
+      "location": "sea",
+      "subjects": [
+        "Ender",
+        "Ionia"
+      ],
+      "playable_subjects": [
+        "Ender"
+      ],
+      "lens_mm": 85,
+      "composition": "Continuous physical hull-to-water contact and meaningful buoyancy cues.",
+      "movement": "Held side-on confirmation shot, no cut before sea-contact evidence.",
+      "lighting": "Soft rim on hull; ocean highlights not clipped.",
+      "vfx": "Displaced water, wake, plausible foam and sinking/rebound response.",
+      "interaction_handoff": "Contact observation comes from native water physics.",
+      "requires_native_capture": true,
+      "final_art_verified": false,
+      "creator_accepted": false,
+      "evidence": [],
+      "min_continuous_pretransition_world_seconds": 0
+    },
+    {
+      "id": "FW-CIN-09",
+      "beat": "stable_flotation",
+      "location": "sea",
+      "subjects": [
+        "Ender",
+        "Ionia"
+      ],
+      "playable_subjects": [
+        "Ender"
+      ],
+      "lens_mm": 50,
+      "composition": "Stable floating hull remains in frame continuously for witnessed duration.",
+      "movement": "Locked uninterrupted shot; no edit or fade across evidence window.",
+      "lighting": "Stable sky and water exposure with clear reference horizon.",
+      "vfx": "Residual waves decay; buoyancy and vertical speed remain observable.",
+      "interaction_handoff": "At least 2.0 seconds independent pre-transition world-time frames.",
+      "requires_native_capture": true,
+      "final_art_verified": false,
+      "creator_accepted": false,
+      "evidence": [],
+      "min_continuous_pretransition_world_seconds": 2
+    },
+    {
+      "id": "FW-CIN-10",
+      "beat": "shoreline_aftermath",
+      "location": "shoreline",
+      "subjects": [
+        "Ender",
+        "Ionia",
+        "Lyra",
+        "Talen"
+      ],
+      "playable_subjects": [
+        "Ender"
+      ],
+      "lens_mm": 50,
+      "composition": "Human-scale aftermath with Lyra and Talen safely grounded; found-family tension.",
+      "movement": "Slow steady walk-up, reserved eyelines and space around Talen.",
+      "lighting": "Gentle coastal aftermath light, warm characters against cool sea.",
+      "vfx": "Subtle shoreline foam, damp fabrics, atmospheric depth.",
+      "interaction_handoff": "Lyra introduced only after real splashdown; Talen never playable.",
+      "requires_native_capture": true,
+      "final_art_verified": false,
+      "creator_accepted": false,
+      "evidence": [],
+      "min_continuous_pretransition_world_seconds": 0
+    }
+  ]
+}
