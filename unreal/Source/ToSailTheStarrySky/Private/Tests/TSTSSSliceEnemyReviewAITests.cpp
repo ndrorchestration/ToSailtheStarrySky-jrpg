@@ -4,6 +4,8 @@
 #include "Enemies/TSTSSSliceEnemyReviewSession.h"
 #include "Enemies/TSTSSSliceEnemyReviewBattleConsole.h"
 #include "Encounter/TSTSSJRPGEncounterDirector.h"
+#include "Encounter/TSTSSJRPGEncounterFieldReview.h"
+#include <limits>
 
 #if WITH_DEV_AUTOMATION_TESTS
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTSTSSSliceEnemyReviewAIProbe,
@@ -188,6 +190,9 @@ bool FTSTSSSliceEnemyReviewAIProbe::RunTest(const FString& Parameters)
     TestNotNull(TEXT("review battle console C++ actor registered"),
         ATSTSSSliceEnemyReviewBattleConsole::StaticClass());
 
+    TestNotNull(TEXT("opt-in review explorer C++ actor registered"),
+        ATSTSSJRPGEncounterFieldReview::StaticClass());
+
     // Hybrid FF-style walking encounter selector. It never initializes combat,
     // and must be explicitly authorized by traversal, party and area scope.
     UTSTSSJRPGEncounterDirector* Director =
@@ -221,7 +226,7 @@ bool FTSTSSSliceEnemyReviewAIProbe::RunTest(const FString& Parameters)
     TestFalse(TEXT("negative distance rejected"),
         Director->TryRecordWalking(-1.f,Region,Selected));
     TestFalse(TEXT("nonfinite distance rejected"),
-        Director->TryRecordWalking(TNumericLimits<float>::QuietNaN(),Region,Selected));
+        Director->TryRecordWalking(std::numeric_limits<float>::quiet_NaN(),Region,Selected));
     TestFalse(TEXT("scripted event denied without separate authority"),
         Director->TryRequestScripted(TEXT("Review_HarborBanditCaptain"),
                                       Region,Selected));
