@@ -1,5 +1,9 @@
 #include "Encounter/TSTSSJRPGEncounterFieldReview.h"
 #include "Enemies/TSTSSSliceEnemyReviewBattleConsole.h"
+#include "Encounter/TSTSSJRPGReviewPresentation.h"
+#include "Encounter/TSTSSJRPGReviewSequenceHUD.h"
+#include "Sound/SoundBase.h"
+#include "Blueprint/UserWidget.h"
 #include "Camera/CameraComponent.h"
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -115,11 +119,32 @@ void ATSTSSJRPGEncounterFieldReview::BeginPlay()
     Biome=InitialBiome;
     SafeZoneOrigin=GetActorLocation();
 
+    Presentation=NewObject<UTSTSSJRPGReviewPresentation>(this);
+    RewardLedger=NewObject<UTSTSSJRPGReviewRewards>(this);
+    if (!IsValid(Presentation.Get()) || !IsValid(RewardLedger.Get()))
+    {
+        SetActorTickEnabled(false);
+        return;
+    }
+    EncounterSting=LoadObject<USoundBase>(nullptr,
+        TEXT("/Game/TSTSS/Review/Audio/SFX_EncounterSting.SFX_EncounterSting"));
+    VictoryFanfare=LoadObject<USoundBase>(nullptr,
+        TEXT("/Game/TSTSS/Review/Audio/SFX_VictoryFanfare.SFX_VictoryFanfare"));
+    RewardReveal=LoadObject<USoundBase>(nullptr,
+        TEXT("/Game/TSTSS/Review/Audio/SFX_RewardReveal.SFX_RewardReveal"));
+    ReturnWhoosh=LoadObject<USoundBase>(nullptr,
+        TEXT("/Game/TSTSS/Review/Audio/SFX_ReturnWhoosh.SFX_ReturnWhoosh"));
     bReviewReady=true;
     BattleConsole->SetReviewHostedByEncounterDirector(true);
     LastEncounterMessage=TEXT("REVIEW ACTIVE / WALK OUT OF CAMP TO FIND FOES");
     if (APlayerController* PC=UGameplayStatics::GetPlayerController(this,0))
     {
+        SequenceHUD=CreateWidget<UTSTSSJRPGReviewSequenceHUD>(
+            PC, UTSTSSJRPGReviewSequenceHUD::StaticClass());
+        if (IsValid(SequenceHUD.Get()))
+        {
+            SequenceHUD->AddToViewport(150);
+        }
         EnableInput(PC);
         InputComponent->BindKey(EKeys::W,IE_Pressed,this,
             &ATSTSSJRPGEncounterFieldReview::PressForward);
@@ -160,6 +185,7 @@ void ATSTSSJRPGEncounterFieldReview::BeginPlay()
             &ATSTSSJRPGEncounterFieldReview::FleeReviewBattle);
     }
     RefreshFieldMarker();
+    RefreshSequenceHUD();
 #endif
 }
 
@@ -244,36 +270,27 @@ bool ATSTSSJRPGEncounterFieldReview::TryHandoffToBattle(
     return false;
 #else
     if (!bReviewReady || bInBattle || !IsValid(BattleConsole.Get()) ||
+        !IsValid(Presentation.Get()) || !IsValid(RewardLedger.Get()) ||
         Ticket.Serial<=0 || !Ticket.bReviewOnly) return false;
-
-    if (!BattleConsole->TryStartWavePreview(Ticket.ReviewWavePreset,PartyStage))
+    if (!Presentation->TryBegin(Ticket.Serial))
     {
-        Director->TryCancelPending(Ticket.Serial);
-        LastEncounterMessage=TEXT("ENCOUNTER HANDOFF DENIED / NO STORY MUTATION");
-        return false;
-    }
-    if (!Director->TryAcknowledgeBattleStart(Ticket.Serial))
-    {
-        BattleConsole->ResetReviewArena();
         Director->TryCancelPending(Ticket.Serial);
         return false;
     }
-
+    // Stage 1: flash and encounter sting while the camera is still in the
+    // world. Battle initialization and camera transfer occur after the fade.
     ActiveTicketSerial=Ticket.Serial;
+    PendingWave=Ticket.ReviewWavePreset;
+    LastReward=FTSTSSJRPGReviewReward();
+    bRewardAwarded=false;
+    bRetreated=false;
     bInBattle=true;
     bOutcomeReady=false;
     LastEncounterMessage=FString::Printf(TEXT("%s  /  %s"),
         Ticket.bScripted ? TEXT("SCRIPTED REVIEW") : TEXT("RANDOM REVIEW"),
         *Ticket.ReviewWavePreset.ToString());
-    SetActorHiddenInGame(true);
-    if (APlayerController* PC=UGameplayStatics::GetPlayerController(this,0))
-    {
-        // This walking adapter owns J/K and Escape. The older V1 console's
-        // independent R reset would strand a live director ticket in V2.
-        BattleConsole->DisableInput(PC);
-        BattleConsole->SetReviewHUDVisible(true);
-        PC->SetViewTargetWithBlend(BattleConsole.Get(),.65f);
-    }
+    PlayReviewSound(EncounterSting.Get());
+    RefreshSequenceHUD();
     return true;
 #endif
 }
@@ -300,20 +317,17 @@ bool ATSTSSJRPGEncounterFieldReview::TryRetreatReviewBattle()
 #else
     if (!bReviewReady || !bInBattle || bOutcomeReady ||
         ActiveTicketSerial<=0 || !IsValid(BattleConsole.Get()) ||
-        !IsValid(Director.Get()) ||
+        !IsValid(Director.Get()) || !IsValid(Presentation.Get()) ||
+        Presentation->GetPhase()!=ETSTSSJRPGReviewSequencePhase::Combat ||
         BattleConsole->GetReviewBattlePhase()!=ETSS_CombatPhase::TurnSelection)
         return false;
-    // Explicit review flee is an abort, never a victory or a reward grant.
-    // The same one-use ticket must be consumed before returning to the field.
-    if (!Director->TryCompleteBattle(ActiveTicketSerial)) return false;
-    ActiveTicketSerial=0;
-    bInBattle=false;
-    bOutcomeReady=false;
-    BattleConsole->ResetReviewArena();
-    SetActorHiddenInGame(false);
-    LastEncounterMessage=TEXT("FLED / NO REWARD / RETURNED TO SAME WALKING LOCATION");
-    EnterReviewCamera();
-    RefreshFieldMarker();
+    if (!Presentation->TryFlee(ActiveTicketSerial)) return false;
+    // No loot, gold or XP. The outstanding ticket completes only after
+    // the return-screen fade, to prevent another encounter mid-transition.
+    bRetreated=true;
+    LastEncounterMessage=TEXT("FLEEING / NO REWARDS");
+    PlayReviewSound(ReturnWhoosh.Get());
+    RefreshSequenceHUD();
     return true;
 #endif
 }
@@ -324,28 +338,68 @@ bool ATSTSSJRPGEncounterFieldReview::TryReturnToExploration()
     return false;
 #else
     if (!bReviewReady || !bInBattle || !bOutcomeReady ||
-        ActiveTicketSerial<=0 || !IsValid(BattleConsole.Get())) return false;
+        ActiveTicketSerial<=0 || !IsValid(BattleConsole.Get()) ||
+        !IsValid(Presentation.Get())) return false;
     const ETSS_CombatPhase Result=BattleConsole->GetReviewBattlePhase();
     if (Result!=ETSS_CombatPhase::Victory &&
         Result!=ETSS_CombatPhase::Defeat &&
         Result!=ETSS_CombatPhase::Draw) return false;
-    if (!Director->TryCompleteBattle(ActiveTicketSerial)) return false;
+    if (!Presentation->TryDismissResult(ActiveTicketSerial)) return false;
+    // Do not complete the encounter ticket until the out-transition finishes.
+    PlayReviewSound(ReturnWhoosh.Get());
+    RefreshSequenceHUD();
+    return true;
+#endif
+}
+
+void ATSTSSJRPGEncounterFieldReview::PlayReviewSound(USoundBase* Sound)
+{
+#if !UE_BUILD_SHIPPING
+    if (IsValid(Sound) && GetWorld() && GetWorld()->IsGameWorld())
+        UGameplayStatics::PlaySound2D(this,Sound);
+#endif
+}
+
+void ATSTSSJRPGEncounterFieldReview::RefreshSequenceHUD()
+{
+#if !UE_BUILD_SHIPPING
+    if (IsValid(SequenceHUD.Get()) && IsValid(Presentation.Get()))
+    {
+        SequenceHUD->UpdatePresentation(Presentation->GetPhase(),
+            Presentation->GetPhaseProgress(),LastReward,bRewardAwarded,
+            IsValid(RewardLedger.Get())?RewardLedger->GetGoldBalance():0);
+    }
+#endif
+}
+
+void ATSTSSJRPGEncounterFieldReview::FinishReturnToField()
+{
+#if !UE_BUILD_SHIPPING
+    if (ActiveTicketSerial<=0 || !IsValid(Presentation.Get()) ||
+        Presentation->GetPhase()!=ETSTSSJRPGReviewSequencePhase::ReturnReady ||
+        !IsValid(Director.Get()) || !IsValid(BattleConsole.Get())) return;
+    const ETSS_CombatPhase Battle=BattleConsole->GetReviewBattlePhase();
+    const bool bVictorious=!bRetreated && Battle==ETSS_CombatPhase::Victory;
+    if (!Director->TryCompleteBattle(ActiveTicketSerial)) return;
+    if (!Presentation->TryFinishReturn(ActiveTicketSerial)) return;
+    BattleConsole->SetVictoryCelebrationActive(false);
+    BattleConsole->ResetReviewArena();
+    if (!bVictorious && !bRetreated)
+        SetActorLocation(SafeZoneOrigin);
+    SetActorHiddenInGame(false);
+    LastEncounterMessage=bRetreated
+        ? TEXT("FLED / NO REWARD / EXPLORATION RESUMED")
+        : bVictorious
+        ? TEXT("VICTORY / GOLD, XP AND ITEMS ADDED TO REVIEW LEDGER")
+        : TEXT("DEFEAT / RETURNED TO SAFE CAMP / NO REWARDS");
     ActiveTicketSerial=0;
+    PendingWave=NAME_None;
     bInBattle=false;
     bOutcomeReady=false;
-    BattleConsole->ResetReviewArena();
-    if (Result!=ETSS_CombatPhase::Victory)
-    {
-        // Sandbox-only retry from safe camp; no SaveGame or progression.
-        SetActorLocation(SafeZoneOrigin);
-    }
-    SetActorHiddenInGame(false);
-    LastEncounterMessage=Result==ETSS_CombatPhase::Victory
-        ? TEXT("VICTORY / RETURNED TO EXACT EXPLORATION POSITION")
-        : TEXT("BATTLE ENDED / RETURNED TO SAFE REVIEW CAMP");
+    bRetreated=false;
     EnterReviewCamera();
+    RefreshSequenceHUD();
     RefreshFieldMarker();
-    return true;
 #endif
 }
 
@@ -358,15 +412,84 @@ void ATSTSSJRPGEncounterFieldReview::Tick(float DeltaSeconds)
 
     if (bInBattle)
     {
-        const ETSS_CombatPhase Phase=BattleConsole->GetReviewBattlePhase();
-        if (Phase==ETSS_CombatPhase::Victory || Phase==ETSS_CombatPhase::Defeat ||
-            Phase==ETSS_CombatPhase::Draw)
+        if (!IsValid(Presentation.Get()) || !IsValid(Director.Get()) ||
+            !IsValid(RewardLedger.Get())) return;
+        const ETSTSSJRPGReviewSequencePhase Before=Presentation->GetPhase();
+        Presentation->Advance(FMath::Clamp(DeltaSeconds,0.f,.2f));
+        ETSTSSJRPGReviewSequencePhase Now=Presentation->GetPhase();
+
+        // Stage 2: show the visual transition BEFORE entering battle.
+        if (Now==ETSTSSJRPGReviewSequencePhase::BattleReveal &&
+            Presentation->IsAwaitingBattleStart())
         {
-            bOutcomeReady=true;
-            LastEncounterMessage=TEXT("BATTLE COMPLETE / PRESS ENTER TO RETURN");
+            if (!BattleConsole->TryStartWavePreview(PendingWave,PartyStage) ||
+                !Director->TryAcknowledgeBattleStart(ActiveTicketSerial))
+            {
+                BattleConsole->ResetReviewArena();
+                Presentation->TryAbortBeforeCombat(ActiveTicketSerial);
+                Director->TryCancelPending(ActiveTicketSerial);
+                ActiveTicketSerial=0;
+                PendingWave=NAME_None;
+                bInBattle=false;
+                LastEncounterMessage=TEXT("ENCOUNTER ADMISSION FAILED / RETURNED TO FIELD");
+                EnterReviewCamera();
+                RefreshSequenceHUD();
+                return;
+            }
+            // The director is the authoritative owner of the encounter ticket.
+            if (!Presentation->TryEnterCombat(ActiveTicketSerial)) return;
+            SetActorHiddenInGame(true);
+            if (APlayerController* PC=UGameplayStatics::GetPlayerController(this,0))
+            {
+                BattleConsole->DisableInput(PC);
+                BattleConsole->SetReviewHUDVisible(true);
+                PC->SetViewTargetWithBlend(BattleConsole.Get(),.42f);
+            }
+            Now=Presentation->GetPhase();
         }
-        MarkerRefreshTimer+=DeltaSeconds;
-        if(MarkerRefreshTimer>=.4f)RefreshFieldMarker();
+
+        // Stage 3: real turn manager resolves combat, not the presentation.
+        if (Now==ETSTSSJRPGReviewSequencePhase::Combat)
+        {
+            const ETSS_CombatPhase Battle=BattleConsole->GetReviewBattlePhase();
+            if (Battle==ETSS_CombatPhase::Victory &&
+                Presentation->TryResolveVictory(ActiveTicketSerial))
+            {
+                bOutcomeReady=true;
+                // Stage 4: once-only, in-memory gold/loot/XP transaction
+                // granted only AFTER the authoritative victory phase.
+                FTSTSSJRPGReviewReward Earned;
+                bRewardAwarded=RewardLedger->TryAwardOnce(
+                    ActiveTicketSerial,PendingWave,
+                    BattleConsole->GetReviewActivePartyIds(),Earned);
+                if (bRewardAwarded) LastReward=Earned;
+                BattleConsole->SetVictoryCelebrationActive(true);
+                PlayReviewSound(VictoryFanfare.Get());
+                LastEncounterMessage=bRewardAwarded
+                    ? TEXT("VICTORY / FANFARE / CELEBRATION / REWARDS")
+                    : TEXT("VICTORY / REVIEW REWARD ADMISSION DENIED");
+            }
+            else if ((Battle==ETSS_CombatPhase::Defeat ||
+                      Battle==ETSS_CombatPhase::Draw) &&
+                     Presentation->TryResolveDefeat(ActiveTicketSerial))
+            {
+                bOutcomeReady=true;
+                LastEncounterMessage=TEXT("DEFEAT / NO REWARDS");
+            }
+        }
+        Now=Presentation->GetPhase();
+        if (Now==ETSTSSJRPGReviewSequencePhase::Rewards &&
+            Before!=ETSTSSJRPGReviewSequencePhase::Rewards)
+        {
+            BattleConsole->SetVictoryCelebrationActive(false);
+            PlayReviewSound(RewardReveal.Get());
+        }
+        if (Now==ETSTSSJRPGReviewSequencePhase::ReturnReady)
+        {
+            FinishReturnToField();
+            return;
+        }
+        RefreshSequenceHUD();
         return;
     }
 
@@ -475,12 +598,16 @@ void ATSTSSJRPGEncounterFieldReview::ReturnAfterBattle()
 }
 void ATSTSSJRPGEncounterFieldReview::StrikePreviewEnemyOne()
 {
-    if (bInBattle && IsValid(BattleConsole.Get()))
+    if (bInBattle && IsValid(BattleConsole.Get()) &&
+        IsValid(Presentation.Get()) &&
+        Presentation->GetPhase()==ETSTSSJRPGReviewSequencePhase::Combat)
         BattleConsole->TryStrikePreview(0);
 }
 void ATSTSSJRPGEncounterFieldReview::StrikePreviewEnemyTwo()
 {
-    if (bInBattle && IsValid(BattleConsole.Get()))
+    if (bInBattle && IsValid(BattleConsole.Get()) &&
+        IsValid(Presentation.Get()) &&
+        Presentation->GetPhase()==ETSTSSJRPGReviewSequencePhase::Combat)
         BattleConsole->TryStrikePreview(1);
 }
 void ATSTSSJRPGEncounterFieldReview::FleeReviewBattle()

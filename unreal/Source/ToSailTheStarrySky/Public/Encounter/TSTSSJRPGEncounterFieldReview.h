@@ -4,6 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "Encounter/TSTSSJRPGEncounterDirector.h"
 #include "Enemies/TSTSSSliceEnemyReviewSession.h"
+#include "Encounter/TSTSSJRPGReviewRewards.h"
 #include "TSTSSJRPGEncounterFieldReview.generated.h"
 
 class UCameraComponent;
@@ -12,6 +13,9 @@ class UTextRenderComponent;
 class UStaticMeshComponent;
 class UTSTSSJRPGEncounterDirector;
 class ATSTSSSliceEnemyReviewBattleConsole;
+class UTSTSSJRPGReviewPresentation;
+class UTSTSSJRPGReviewSequenceHUD;
+class USoundBase;
 
 // Self-contained opt-in 3D walking encounter laboratory. Never placed in any
 // campaign level, serialized SaveGame, or shipping battle. The reusable
@@ -82,6 +86,27 @@ private:
     UPROPERTY(Transient)
     TObjectPtr<ATSTSSSliceEnemyReviewBattleConsole> BattleConsole;
 
+    UPROPERTY(Transient)
+    TObjectPtr<UTSTSSJRPGReviewPresentation> Presentation;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UTSTSSJRPGReviewRewards> RewardLedger;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UTSTSSJRPGReviewSequenceHUD> SequenceHUD;
+
+    // Loaded only in the opt-in review world from original, authored review
+    // SFX assets. Missing assets suppress sound; no unrelated asset fallback.
+    UPROPERTY(Transient) TObjectPtr<USoundBase> EncounterSting;
+    UPROPERTY(Transient) TObjectPtr<USoundBase> VictoryFanfare;
+    UPROPERTY(Transient) TObjectPtr<USoundBase> RewardReveal;
+    UPROPERTY(Transient) TObjectPtr<USoundBase> ReturnWhoosh;
+
+    FTSTSSJRPGReviewReward LastReward;
+    FName PendingWave=NAME_None;
+    bool bRewardAwarded=false;
+    bool bRetreated=false;
+
     bool bReviewReady=false;
     bool bInBattle=false;
     bool bOutcomeReady=false;
@@ -101,6 +126,9 @@ private:
     bool TryHandoffToBattle(const FTSTSSJRPGEncounterTicket& Ticket);
     void RefreshFieldMarker();
     void EnterReviewCamera();
+    void RefreshSequenceHUD();
+    void PlayReviewSound(USoundBase* Sound);
+    void FinishReturnToField();
 
     void PressForward(); void ReleaseForward();
     void PressBack(); void ReleaseBack();
