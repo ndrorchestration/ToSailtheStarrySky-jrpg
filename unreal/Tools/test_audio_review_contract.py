@@ -56,6 +56,21 @@ class TestAudioSourceContract(unittest.TestCase):
                     self.assertTrue(any(x for x in wav.readframes(wav.getnframes())))
                 self.assertFalse(item["production_approved"])
 
+    def test_audio_subsystem_does_not_control_authoritative_state(self):
+        root = Path(__file__).resolve().parents[1] / "Source" / "ToSailTheStarrySky"
+        header = (root / "Public" / "TSTSSAudioSubsystem.h").read_text(encoding="utf-8")
+        impl = (root / "Private" / "TSTSSAudioSubsystem.cpp").read_text(encoding="utf-8")
+        milestone = (root / "Private" / "TSTSSMilestoneActor.cpp").read_text(encoding="utf-8")
+        atmosphere = (root / "Private" / "TSTSSAtmosphereDirector.cpp").read_text(encoding="utf-8")
+        self.assertIn("public UWorldSubsystem", header)
+        self.assertIn("SILENT_UNREGISTERED", impl)
+        self.assertIn("SILENT_MUTED", impl)
+        self.assertIn("bIsInspectionStation", milestone)
+        self.assertLess(milestone.index("if (!bSucceeded) return false;"),
+                        milestone.index("Audio->EmitCue("))
+        self.assertIn("weather.storm.begin", atmosphere)
+        self.assertIn("PreviousWeather != InWeather", atmosphere)
+
     def test_no_raw_audio_in_shipping_tree(self):
         with tempfile.TemporaryDirectory() as temp:
             for forbidden in ("Content", "assets"):
