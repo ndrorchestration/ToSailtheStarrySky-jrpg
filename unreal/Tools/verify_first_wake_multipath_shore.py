@@ -27,7 +27,7 @@ def sha256(file: Path) -> str:
     return hashlib.sha256(file.read_bytes()).hexdigest()
 
 def expected_labels() -> dict[str, str]:
-    spells = json.loads(stage.MAGIC.read_text(encoding="utf-8"))
+    spells = stage.legacy_magic_preview_rows()
     labels = {"CoastalAtmosphere":"TSTSSAtmosphereDirector",
               "Overview_NotGameplayCamera":"CameraActor",
               "UnapprovedVisualsNotice":"TextRenderActor"}
