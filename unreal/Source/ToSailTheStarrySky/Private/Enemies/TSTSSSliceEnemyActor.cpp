@@ -34,15 +34,15 @@ namespace
         }
     }
 
-    UStaticMeshComponent* MakePiece(AActor* Owner, const FName Name,
-                                    USceneComponent* Parent)
-    {
-        UStaticMeshComponent* Piece = Owner->CreateDefaultSubobject<UStaticMeshComponent>(Name);
-        Piece->SetupAttachment(Parent);
-        Piece->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-        Piece->SetGenerateOverlapEvents(false);
-        return Piece;
-    }
+}
+
+UStaticMeshComponent* ATSTSSSliceEnemyActor::MakePiece(const TCHAR* Name)
+{
+    UStaticMeshComponent* Piece = CreateDefaultSubobject<UStaticMeshComponent>(FName(Name));
+    Piece->SetupAttachment(VisualRoot);
+    Piece->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    Piece->SetGenerateOverlapEvents(false);
+    return Piece;
 }
 
 ATSTSSSliceEnemyActor::ATSTSSSliceEnemyActor()
@@ -52,14 +52,14 @@ ATSTSSSliceEnemyActor::ATSTSSSliceEnemyActor()
     SetRootComponent(Root);
     VisualRoot = CreateDefaultSubobject<USceneComponent>(TEXT("VisualRoot"));
     VisualRoot->SetupAttachment(Root);
-    Core = MakePiece(this, TEXT("Core"), VisualRoot);
-    Crown = MakePiece(this, TEXT("Crown"), VisualRoot);
-    LeftFin = MakePiece(this, TEXT("LeftFin"), VisualRoot);
-    RightFin = MakePiece(this, TEXT("RightFin"), VisualRoot);
-    LowerLeft = MakePiece(this, TEXT("LowerLeft"), VisualRoot);
-    LowerRight = MakePiece(this, TEXT("LowerRight"), VisualRoot);
-    EyeLeft = MakePiece(this, TEXT("EyeLeft"), VisualRoot);
-    EyeRight = MakePiece(this, TEXT("EyeRight"), VisualRoot);
+    Core = MakePiece(TEXT("Core"));
+    Crown = MakePiece(TEXT("Crown"));
+    LeftFin = MakePiece(TEXT("LeftFin"));
+    RightFin = MakePiece(TEXT("RightFin"));
+    LowerLeft = MakePiece(TEXT("LowerLeft"));
+    LowerRight = MakePiece(TEXT("LowerRight"));
+    EyeLeft = MakePiece(TEXT("EyeLeft"));
+    EyeRight = MakePiece(TEXT("EyeRight"));
     Glow = CreateDefaultSubobject<UPointLightComponent>(TEXT("AtmosphericGlow"));
     Glow->SetupAttachment(VisualRoot);
     Glow->SetIntensity(1700.f);
