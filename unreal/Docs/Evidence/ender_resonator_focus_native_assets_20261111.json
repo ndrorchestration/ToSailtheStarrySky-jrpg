@@ -1,0 +1,41 @@
+{
+  "schema": "tstss.resonator-focus-native-review.v1",
+  "label": "Ender Centering and Resonant Pulse — review only",
+  "asset_commit": "dceee7deb8f845f8f7813e9ec44d12c5a6fc2064",
+  "original_import_source_commit": "0d790db594bf2f2d016f2e1d8d9e843d9ca107d5",
+  "original_native_tests_source_commit": "5260c721686f865d1b45a92fd63f5156d8f7c904",
+  "unreal_version": "5.8.4",
+  "content_root": "unreal/Content/TSTSS/Review/ResonatorFocus",
+  "map_package": "/Game/TSTSS/Review/ResonatorFocus/L_EnderCenteringPulseReview",
+  "data_table_package": "/Game/TSTSS/Review/ResonatorFocus/DT_EnderResonatorFocusReview",
+  "executable_spells": [
+    "Ender_Centering",
+    "Ender_ResonantPulse"
+  ],
+  "other_magic_status": "DesignOnly / Correspondence ON HOLD",
+  "assets": {
+    "L_EnderCenteringPulseReview.umap": "207cf8cfdf5102b6f69a48510aac38c44a3ade731f84b74ec84d64c637d0ad35",
+    "DT_EnderResonatorFocusReview.uasset": "c43ef3059563645dc7f964f358c58c32249696e2d3c0b3f9a22f167c9ad4dc69",
+    "Audio/SFX_Centering.uasset": "9b8221a3306a61062a3416123e6ca3c9410e8aa9f42b0af8b829da5364da2ec4",
+    "Audio/SFX_ResonantPulse.uasset": "d1c36884514515f734342328577464e29413284f9b0e3fc313251da69bdc419a"
+  },
+  "source_wav": {
+    "AudioSource/SFX_Centering.wav": "ca0c83a4a9445b6c84dbc8dc3f5a477c2371d8d82b119c9d908495007702da6f",
+    "AudioSource/SFX_ResonantPulse.wav": "79ce806490e31fe0fa282b20b64b3bdb7f0d990a02906a345fdc05313d3058f3"
+  },
+  "tests": {
+    "source_tests_at_asset_commit": 465,
+    "registered_native_at_preimport_commit": 35
+  },
+  "statuses": {
+    "assets_imported": true,
+    "native_editor_build": true,
+    "independent_editor_readback": false,
+    "piE_keyboard": false,
+    "audible_sound": false,
+    "gpu_lit_review": false,
+    "creator_visual_approval": false,
+    "campaign_integration": false,
+    "merged_main": false
+  }
+}
