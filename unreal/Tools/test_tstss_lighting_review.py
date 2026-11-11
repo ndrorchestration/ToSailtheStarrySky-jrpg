@@ -71,6 +71,14 @@ class LightingPlanTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             mod.check_disposable_project(r"C:\TSTSS_Lighting_20261110\other")
 
+    def test_unreal_component_methods_are_explicitly_authorable(self):
+        source = Path(mod.__file__).read_text(encoding="utf-8")
+        self.assertIn("sc.set_atmosphere_sun_light(True)", source)
+        self.assertIn("sk.set_real_time_capture(True)", source)
+        self.assertIn('pc.set_editor_property("intensity_units", unreal.LightUnits.LUMENS)', source)
+        self.assertNotIn('sk.set_editor_property("real_time_capture"', source)
+        self.assertNotIn('sc.set_editor_property("atmosphere_sun_light"', source)
+
     class mock_looks:
         def __init__(self,new): self.new=new
         def __enter__(self):

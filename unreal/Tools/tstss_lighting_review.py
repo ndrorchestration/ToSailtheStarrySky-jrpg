@@ -177,12 +177,12 @@ def stage_native(key: str) -> dict:
     sc = movable_component(sun, unreal.DirectionalLightComponent)
     sc.set_editor_property("intensity", look.sun_lux)
     sc.set_light_color(linear(look.sun_rgb), False)
-    sc.set_editor_property("atmosphere_sun_light", True)
+    sc.set_atmosphere_sun_light(True)
 
     sky = spawn(unreal.SkyLight, "DynamicSkyFill", (0., 0., 1400.))
     sk = movable_component(sky, unreal.SkyLightComponent)
     sk.set_editor_property("intensity", look.sky_intensity)
-    sk.set_editor_property("real_time_capture", True)
+    sk.set_real_time_capture(True)
     spawn(unreal.SkyAtmosphere, "AtmosphericScattering", (0., 0., 0.))
 
     fog = spawn(unreal.ExponentialHeightFog, "DistanceDepth", (0., 0., 0.))
@@ -194,12 +194,13 @@ def stage_native(key: str) -> dict:
 
     lamp = spawn(unreal.PointLight, "MotivatedPractical", PRACTICAL_ANCHORS[key])
     pc = movable_component(lamp, unreal.PointLightComponent)
+    pc.set_editor_property("intensity_units", unreal.LightUnits.LUMENS)
     pc.set_editor_property("intensity", look.practical_lumens)
     pc.set_editor_property("attenuation_radius", 1000.)
     pc.set_light_color(linear(look.practical_rgb), False)
     pc.set_editor_property("cast_shadows", True)
 
-    pp = spawn(unreal.PostProcessVolume, "UnboundExposureGuard", (0., 0., 0.))
+    pp = spawn(unreal.PostProcessVolume, "ExposureBiasReview", (0., 0., 0.))
     pp.set_editor_property("unbound", True)
     settings = pp.get_editor_property("settings")
     settings.set_editor_property("override_auto_exposure_bias", True)
