@@ -2,14 +2,17 @@
 
 #include "CoreMinimal.h"
 #include "TSTSSReviewEquipment.h"
+#include "TSTSSPartySliceReviewEquipment.generated.h"
 
-// Only Ender and Ionia before splashdown; Lyra can join AFTER splashdown.
-// This is an opt-in transient review fixture, not a game item-grant service,
-// runtime equipment attachment, authoritative inventory or character unlock.
+// Review-stage authority is NOT proof of actual story recruitment.
+// Splashdown alone does NOT unlock Lyra. A separate verified recruitment
+// event is required before the review fixture may include her.
+UENUM(BlueprintType)
 enum class ETSTSSPartySliceReviewStage : uint8
 {
     FirstWake,
-    AfterSplashdown
+    AfterSplashdown,
+    LyraRecruited
 };
 
 class TOSAILTHESTARRYSKY_API FTSTSSPartySliceReviewEquipment
@@ -18,7 +21,7 @@ public:
     static bool IsMemberAvailable(ETSTSSPartySliceReviewStage Stage, FName CharacterId);
 
     // Pure deterministic fixture builder. Atomic failure preserves caller output.
-    // All items must still pass normal owner/slot validity in TSTSSReviewEquipment.
+    // No persistent inventory, story-state mutation or skill authority.
     static bool TryBuildEquippedReviewFixture(
         ETSTSSPartySliceReviewStage Stage, FTSTSSReviewGearState& OutState);
 };
