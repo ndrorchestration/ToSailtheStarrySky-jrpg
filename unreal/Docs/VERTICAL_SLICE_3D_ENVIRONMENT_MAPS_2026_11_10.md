@@ -55,3 +55,29 @@ The builder refuses prior target packages, dirty source, out-of-sandbox paths, u
 - [ ] Creator aesthetic acceptance and uncoached player acceptance.
 
 No merge, production art promotion, release, globe implementation or Starbourne change is implied.
+
+## Native evidence — 2026-11-10 (independent readback, pre-PR commit)
+
+**Native staging source head:** bcbc4e77d89ab643aab656822cc996e86adaf525.
+**Engine:** Unreal 5.8.4 (5.8.4-58902052); native Python editor commandlet, NullRHI.
+**Bounded constraint:** The native editor loaded an existing compiled, review-only ToSailTheStarrySky Editor DLL from a previous First Wake sandbox (SHA-256 D8676B204139D303696A1D32F0FADAB6FE3C8BC4175C78602E2684E4518BBB7E). This is not evidence of a new exact-head C++ module build or native gameplay-test success.
+
+The authoring commandlet successfully saved 6 genuine .umap levels and 10 new PBR preview .uasset materials. An independent second UE editor commandlet reopened all six files and checked expected actors, materials, specified walkable floor collisions, and the isolated water probe's overlap/authority tag and initially disabled hull physics.
+
+| Package | Serialized bytes | New authored actors | Re-opened total actor instances |
+|---|---:|---:|---:|
+| VS01_DenithHarbor | 152,198 | 47 | 71 (includes inherited Prelude actors) |
+| VS02_AureateInteriors | 64,661 | 28 | 28 |
+| VS03_FirstWakeSky | 45,445 | 18 | 18 |
+| VS04_SplashdownSea | 36,460 | 13 | 13 |
+| VS05_DenithFuelShanty | 49,464 | 20 | 20 |
+| VS06_SplashdownShore | 51,980 | 21 | 21 |
+
+**Cumulative readback actor instances:** 171, across six independently opened scenes.
+**Local full Python source suite:** 333/333 PASS (exit 0).
+**Original Prelude map SHA-256 unchanged:** 4c96f1fb28fe4af91b879977e473c20de32bd933f741a5384bb8403a00254b80.
+**Protected DefaultEngine.ini SHA-256 unchanged:** 21267d83c3544b4860c4182229e7a98aaa9a89028a60f98ce74808254dcf337c.
+
+The first commandlet attempt failed closed when Unreal's AndroidFileServer startup appended a generated setting to DefaultEngine.ini. The strictly isolated worktree's previously clean config was restored to its recorded original hash and made read-only before successful authoring. Neither the generated setting nor the token was committed. The first readback attempts exposed QA-script compatibility faults (Python module search path, StaticMeshComponent property access), which were corrected; the final independent readback completed exit 0.
+
+**Not established:** Real D3D11/D3D12 rendered frames, full quality materials/textures, player possession in new levels, cross-level progression, water contact PIE, physical flotation window, post-contact interactions, 29/29 exact-head native automations, current-head C++ build, creator visual acceptance or release readiness. Do not equate map reopening with playability.

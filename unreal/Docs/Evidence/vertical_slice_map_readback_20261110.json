@@ -1,0 +1,41 @@
+{
+  "map_validation": {
+    "VS01_DenithHarbor": {
+      "source_sha256": "961fc03e3d931de67c70e0c89b7ee6f850f764f65a88149c4adafae2ff7fff04",
+      "actor_count": 71,
+      "required_actor_labels_read": 4,
+      "reopened_native": true
+    },
+    "VS02_AureateInteriors": {
+      "source_sha256": "a97fbb057cb87c0e35fe95195ca06c30de1a5cc60158bf31a657f738b22a9d69",
+      "actor_count": 28,
+      "required_actor_labels_read": 4,
+      "reopened_native": true
+    },
+    "VS03_FirstWakeSky": {
+      "source_sha256": "1e19e2734709d7bbf3a0ee72b25616c8f538c0126afc031c4b33df272249ddfa",
+      "actor_count": 18,
+      "required_actor_labels_read": 3,
+      "reopened_native": true
+    },
+    "VS04_SplashdownSea": {
+      "source_sha256": "45df54576d6c6d20c48b7148c62f10b33b842fefaedd03bf17f4e9b8d3188843",
+      "actor_count": 13,
+      "required_actor_labels_read": 3,
+      "reopened_native": true
+    },
+    "VS05_DenithFuelShanty": {
+      "source_sha256": "5c83e7125eb97aa42d951e89ff1b530600bcc1738287b441f681d44bfaf963bd",
+      "actor_count": 20,
+      "required_actor_labels_read": 3,
+      "reopened_native": true
+    },
+    "VS06_SplashdownShore": {
+      "source_sha256": "316299925275785494d1ec7b082f20007fa0f889f50ce59ea1c7e977ef942726",
+      "actor_count": 21,
+      "required_actor_labels_read": 3,
+      "reopened_native": true
+    }
+  },
+  "status": "SIX_NATIVE_LEVELS_REOPENED_NOT_PIE_OR_RENDER_ACCEPTED"
+}
