@@ -15,7 +15,7 @@ K only works in the named source map with the exact authorized story beat and a 
 
 ## Current evidence and incomplete acceptance
 
-- New C++ automation test: `TSTSS.VerticalSlice.NativeSceneRouteStoryGate` covers the authorized four scene boundaries and denial cases. This source is not marked PASS until compiled and executed natively.
+- Added native C++ route assertions to the existing required `TSTSS.FirstWake.ReviewObjectivesAreReadOnly` test, covering all four scene boundaries and denial cases without changing the 35-test verification inventory. This modified test is not marked PASS until recompiled and executed at the new HEAD.
 - The existing source suite and UE Win64 compiler must be rerun against the final source commit; source-only checks cannot prove the OpenLevel route or native water landing.
 - Remaining interactive gate: New Game -> input -> engineering -> sky -> physics-driven sea landing -> fuel interaction -> composited shore pawn control, with logs and a fresh lit D3D12 screenshot.
 - Automated white captures are inconclusive. No visuals, combat, gear, spell progression, ship flight or Chapter 1 scenes have been approved.
