@@ -139,8 +139,8 @@ def evaluate(found: dict, expected: str, phase: str) -> dict:
     if found.get("engine_version") != [5, 8, 4] or not found.get("engine_exes"):
         reasons.append("Installed Unreal Engine 5.8.4 files are not verified")
     names = found.get("native_names") or []
-    if len(names) != 29 or len(set(names)) != 29:
-        reasons.append("Required native automation inventory must be 29 distinct names")
+    if len(names) != 30 or len(set(names)) != 30:
+        reasons.append("Required native automation inventory must be 30 distinct names")
     if found.get("save_files"):
         reasons.append("Isolated review SaveGame files already exist: never delete/overwrite")
     if found.get("active") is None or found["active"]:
@@ -160,7 +160,7 @@ def evaluate(found: dict, expected: str, phase: str) -> dict:
         "status": "HOLD" if reasons else "READ_ONLY_PREFLIGHT_PASS_NOT_NATIVE_EVIDENCE",
         "phase": phase,
         "source_sha": expected,
-        "required_native_automations": 29,
+        "required_native_automations": 30,
         "active_process_names": found.get("active"),
         "available_ram_gib": found.get("free_ram_gib"),
         "available_disk_gib": found.get("free_disk_gib"),
