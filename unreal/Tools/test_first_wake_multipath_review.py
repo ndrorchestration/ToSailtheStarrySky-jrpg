@@ -131,6 +131,23 @@ class CrossPathReviewContract(unittest.TestCase):
         self.assertIn("7 PowerShell verification scripts parse", workflow)
         self.assertTrue((UNREAL / "Tools/Test-NativeBuildOverlapFixtures.ps1").is_file())
 
+    def test_native_automation_protects_tracked_unreal_configs(self):
+        verifier = (UNREAL / "Tools/Verify-Unreal.ps1").read_text(encoding="utf-8")
+        self.assertIn("Config/DefaultEngine.ini", verifier)
+        self.assertIn("Config/DefaultInput.ini", verifier)
+        self.assertIn("$ConfigGuards = @()", verifier)
+        self.assertIn("OldReadOnly = $File.IsReadOnly", verifier)
+        self.assertIn("BeforeSha256 = (Get-FileHash", verifier)
+        self.assertIn(".IsReadOnly = $true", verifier)
+        self.assertIn(".IsReadOnly = $Guard.OldReadOnly", verifier)
+        self.assertIn("finally {", verifier)
+        self.assertIn("if ($After -ne $Guard.BeforeSha256)", verifier)
+        self.assertIn("Tracked Unreal source config changed", verifier)
+        self.assertLess(verifier.index(".IsReadOnly = $true"),
+                        verifier.index("& $EditorCmd $Project -unattended"))
+        self.assertLess(verifier.index("& $EditorCmd $Project -unattended"),
+                        verifier.index(".IsReadOnly = $Guard.OldReadOnly"))
+
     def test_native_build_rechecks_race_and_disk_before_automation(self):
         # A second Editor/UBT lane started after the initial admission on
         # 2026-11-10; no build-only/source pass may bypass this second gate.

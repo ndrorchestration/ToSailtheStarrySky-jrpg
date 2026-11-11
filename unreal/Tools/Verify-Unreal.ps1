@@ -143,9 +143,46 @@ $ReportDirectory = Join-Path $Evidence 'AutomationReport'
 if (Test-Path $ReportDirectory) { throw 'Review automation evidence collision; refusing overwrite' }
 New-Item -Path $ReportDirectory -ItemType Directory -ErrorAction Stop | Out-Null
 $ExportArgument = '-ReportExportPath=' + $ReportDirectory
-& $EditorCmd $Project -unattended -nop4 -nullrhi '-ExecCmds=Automation RunTests TSTSS; Quit' $ExportArgument -log 2>&1 |
-    Tee-Object (Join-Path $Evidence 'automation.log')
-if ($LASTEXITCODE -ne 0) { throw "Unreal automation command failed ($LASTEXITCODE)" }
+# UE Editor startup may serialize input defaults and persist plugin-generated
+# settings (including transient local values). Never permit the commandlet to
+# rewrite tracked source configs merely to produce an automation report.
+$ProtectedConfigPaths = @(
+    (Join-Path $PSScriptRoot '../Config/DefaultEngine.ini'),
+    (Join-Path $PSScriptRoot '../Config/DefaultInput.ini')
+)
+$ConfigGuards = @()
+foreach ($Path in $ProtectedConfigPaths) {
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { throw "Missing protected Unreal source config: $Path" }
+    $File = Get-Item -LiteralPath $Path -ErrorAction Stop
+    $ConfigGuards += [pscustomobject]@{
+        Path = $Path
+        OldReadOnly = $File.IsReadOnly
+        BeforeSha256 = (Get-FileHash -LiteralPath $Path -Algorithm SHA256 -ErrorAction Stop).Hash
+    }
+}
+$EditorExitCode = $null
+try {
+    foreach ($Guard in $ConfigGuards) {
+        (Get-Item -LiteralPath $Guard.Path -ErrorAction Stop).IsReadOnly = $true
+    }
+    & $EditorCmd $Project -unattended -nop4 -nullrhi '-ExecCmds=Automation RunTests TSTSS; Quit' $ExportArgument -log 2>&1 |
+        Tee-Object (Join-Path $Evidence 'automation.log')
+    $EditorExitCode = $LASTEXITCODE
+} finally {
+    foreach ($Guard in $ConfigGuards) {
+        # Restore original file attributes on every outcome, including failure.
+        (Get-Item -LiteralPath $Guard.Path -ErrorAction Stop).IsReadOnly = $Guard.OldReadOnly
+    }
+}
+if ($null -eq $EditorExitCode -or $EditorExitCode -ne 0) {
+    throw "Unreal automation command failed ($EditorExitCode)"
+}
+foreach ($Guard in $ConfigGuards) {
+    $After = (Get-FileHash -LiteralPath $Guard.Path -Algorithm SHA256 -ErrorAction Stop).Hash
+    if ($After -ne $Guard.BeforeSha256) {
+        throw "Tracked Unreal source config changed during native automation: $($Guard.Path)"
+    }
+}
 $ReportPath = Join-Path $Evidence 'AutomationReport/index.json'
 if (-not (Test-Path $ReportPath)) { throw 'No automation JSON evidence; refusing to mark PASS' }
 # Keep the 35-name registry local; a separate read-only PowerShell function
