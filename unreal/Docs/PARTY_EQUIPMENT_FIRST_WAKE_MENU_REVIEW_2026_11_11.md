@@ -25,3 +25,9 @@ This is a developer-controlled, opt-in **interactive equipment review panel** fo
 - Engine-free source tests verify the G-key mapping, runtime story-stage derivation, source UI gates and denial paths.
 - Native UMG runtime widget visibility, mouse focus, button clicks, cinematic layout and D3D12 screenshots require actual target-project PIE review (compile and source-only checks are not visual evidence).
 - Final three-character rigging, fit and animation, persistent inventory ownership and player combat integration remain separate tasks. No current changes are authorized for merge or art promotion.
+
+## Portable input-handler parity and regression (November 11 follow-up)
+
+The older First Wake source-extracted C++ input harness modeled only movement, interaction, F5/F6/F9 save/load and J objectives. The new G action introduced an actual member-function pointer previously missing in the harness. The harness now declares and links a no-op ToggleEquipmentReview method, checks G exactly once in PIE and Game and never in Editor/null-world contexts, and retains existing F5/F6/F9 safety regressions.
+
+The actual pawn binds G only for PIE and Game worlds; configuration requires a unique ReviewEquipment=G binding. Negative cases reject wrong G key and missing G action without loosening save guards. Local MSVC compiled and executed 25 actual-source action-binding cases plus mutation denials. This is a portable C++ fixture result, not proof of live UMG gameplay or visual styling.

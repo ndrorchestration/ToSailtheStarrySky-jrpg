@@ -136,7 +136,14 @@ void ATSTSSExplorerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
     PlayerInputComponent->BindAction(TEXT("QuickLoad"), IE_Pressed, this, &ATSTSSExplorerCharacter::QuickLoad);
     PlayerInputComponent->BindAction(TEXT("ReviewObjective"), IE_Pressed, this, &ATSTSSExplorerCharacter::ShowObjectiveReview);
 #if !UE_BUILD_SHIPPING
-    PlayerInputComponent->BindAction(TEXT("ReviewEquipment"), IE_Pressed, this, &ATSTSSExplorerCharacter::ToggleEquipmentReview);
+    // No equipment-review action outside an actual PIE/game world.
+    if (InputWorld && (InputWorld->WorldType == EWorldType::PIE ||
+                       InputWorld->WorldType == EWorldType::Game))
+    {
+        PlayerInputComponent->BindAction(
+            TEXT("ReviewEquipment"), IE_Pressed, this,
+            &ATSTSSExplorerCharacter::ToggleEquipmentReview);
+    }
 #endif
 }
 

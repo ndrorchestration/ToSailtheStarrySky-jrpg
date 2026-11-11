@@ -50,7 +50,7 @@ struct ATSTSSExplorerCharacter : TSTSSBaseCharacter {
     void SetupPlayerInputComponent(UInputComponent*);
     void MoveForward(float); void MoveRight(float);
     void Turn(float); void LookUp(float);
-    void Interact(); void QuickSave(); void QuickLoad(); void ShowObjectiveReview();
+    void Interact(); void QuickSave(); void QuickLoad(); void ShowObjectiveReview(); void ToggleEquipmentReview();
 };
 // The binder receives real member-function pointers; provide no-op implementations
 // only so the standalone executable links. None of these methods are executed.
@@ -62,6 +62,7 @@ void ATSTSSExplorerCharacter::Interact() {}
 void ATSTSSExplorerCharacter::QuickSave() {}
 void ATSTSSExplorerCharacter::QuickLoad() {}
 void ATSTSSExplorerCharacter::ShowObjectiveReview() {}
+void ATSTSSExplorerCharacter::ToggleEquipmentReview() {}
 """
 SUFFIX = r"""
 static unsigned cases = 0;
@@ -88,6 +89,9 @@ int main() {
             verify(hasExactly(input.actions, "Interact", 1), "Interaction unavailable");
             verify(hasExactly(input.actions, "QuickLoad", 1), "QuickLoad unavailable");
             verify(hasExactly(input.actions, "ReviewObjective", 1), "Read-only objective unavailable");
+            verify(hasExactly(input.actions, "ReviewEquipment",
+                              type == EWorldType::Editor ? 0 : 1),
+                   "Interactive equipment review must be PIE/Game only");
             if (type == EWorldType::PIE) {
                 verify(hasExactly(input.actions, "PIEReviewQuickSave", 1),
                        "PIE must bind exactly one F6 action");
@@ -104,15 +108,16 @@ int main() {
                 verify(hasExactly(input.actions, "PIEReviewQuickSave", 0),
                        "Editor world must never bind review QuickSave");
             }
-            verify(input.actions.size() == 4 || (type == EWorldType::Editor && input.actions.size() == 3),
+            verify(input.actions.size() == (type == EWorldType::Editor ? 3u : 5u),
                    "Unexpected extra or duplicated action bindings");
         }
         ATSTSSExplorerCharacter missingWorld;
         UInputComponent noWorldInput;
         missingWorld.SetupPlayerInputComponent(&noWorldInput);
         verify(hasExactly(noWorldInput.actions, "QuickSave", 0) &&
-               hasExactly(noWorldInput.actions, "PIEReviewQuickSave", 0),
-               "Null world must fail closed for both save bindings");
+               hasExactly(noWorldInput.actions, "PIEReviewQuickSave", 0) &&
+               hasExactly(noWorldInput.actions, "ReviewEquipment", 0),
+               "Null world must fail closed for save and review equipment bindings");
         std::cout << "PASS: " << cases
                   << " actual-source input binding C++ cases; PIE F6 separated from Game F5\n";
         return 0;
@@ -132,7 +137,8 @@ def method_from(source: str) -> str:
     method = source[beginning:ending]
     for token in ("Super::SetupPlayerInputComponent", "EWorldType::PIE",
                   "EWorldType::Game", 'TEXT("PIEReviewQuickSave")',
-                  'TEXT("QuickSave")', 'TEXT("QuickLoad")'):
+                  'TEXT("QuickSave")', 'TEXT("QuickLoad")',
+                  'TEXT("ReviewEquipment")', 'ToggleEquipmentReview'):
         if token not in method:
             raise ValueError("Source method missing expected selection: " + token)
     return method
@@ -142,7 +148,8 @@ def config_guard(config: str) -> None:
     mappings = re.findall(r'^\+ActionMappings=\(ActionName="([^"]+)",Key=([^)]*)\)',
                           config, re.M)
     required = {("PIEReviewQuickSave", "F6"), ("QuickSave", "F5"),
-                ("QuickLoad", "F9"), ("Interact", "E"), ("ReviewObjective", "J")}
+                ("QuickLoad", "F9"), ("Interact", "E"), ("ReviewObjective", "J"),
+                ("ReviewEquipment", "G")}
     if len(mappings) != len(set(mappings)) or not required.issubset(mappings):
         raise ValueError("DefaultInput.ini lacks unique F6 PIE / F5 Game / F9 load")
     if any(name in ("PIEReviewQuickSave", "QuickSave") and (name, key) not in required
@@ -192,6 +199,7 @@ def main() -> int:
         for name, old, new in (
             ("PIE F5 shortcut collision", 'TEXT("PIEReviewQuickSave")', 'TEXT("QuickSave")'),
             ("Game mistakenly uses F6", 'TEXT("QuickSave")', 'TEXT("PIEReviewQuickSave")'),
+            ("G equipment review binding removed", 'TEXT("ReviewEquipment")', 'TEXT("WrongEquipmentAction")'),
         ):
             if original.count(old) != 1:
                 raise RuntimeError("Mutation anchor missing or ambiguous: " + name)
