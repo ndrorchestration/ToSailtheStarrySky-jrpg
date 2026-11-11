@@ -1,0 +1,17 @@
+{
+  "creator_approval": false,
+  "editor_build": "SUCCESS",
+  "merge_authorized": false,
+  "origin": "Saved/MigrationEvidence/96ecd18cb2e9-20261111T043133192Z-b5c849df/AutomationReport/index.json",
+  "rendering": "NullRHI, no graphical/PIE/rig QA",
+  "safety_afterward": "Both generated config changes restored to git HEAD; verified status clean",
+  "strict_clean_source_gate": "FAILED, engine regenerated DefaultEngine.ini and DefaultInput.ini during verification",
+  "subsequent_retry": "Blocked by at least 14 GiB free disk minimum (not bypassed)",
+  "tested_commit": "96ecd18cb2e969140f0dc948c658ba10d1990bbb",
+  "tests_failed": 0,
+  "tests_not_run": 0,
+  "tests_succeeded": 30,
+  "tests_total": 30,
+  "tests_with_warnings": 0,
+  "type": "FULL_UNREAL_NATIVE_AUTOMATION_DIAGNOSTIC_NOT_STRICT_SOURCE_ACCEPTED"
+}

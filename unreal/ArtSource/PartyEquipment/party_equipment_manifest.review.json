@@ -1,0 +1,497 @@
+{
+  "automatic_item_grants": false,
+  "available_party": [
+    "Ender",
+    "Ionia"
+  ],
+  "creator_approved": false,
+  "entries": [
+    {
+      "bounds_m": [
+        [
+          -0.017899999395012856,
+          0.017899999395012856
+        ],
+        [
+          -0.8610000014305115,
+          0.8610000014305115
+        ],
+        [
+          -0.017899999395012856,
+          0.017899999395012856
+        ]
+      ],
+      "collision_tested": false,
+      "creator_approved": false,
+      "id": "Ender.ResonanceStaff",
+      "is_full_character_outfit": false,
+      "notes": "Use preserved centered-wrap, double-ferrule source",
+      "owner": "Ender",
+      "primitives": 7,
+      "relative_path": "Generated/Ender_ResonanceStaff_REVIEW.glb",
+      "reused_prior_review_staff": true,
+      "review_availability_gate": "FirstWake",
+      "rig_attached": false,
+      "runtime_equippable": false,
+      "sha256": "0ceb1955bcc8053dc306f564bbe3a6647b36a3d9aa09f49fcff5752e7d89e307",
+      "slot": "weapon",
+      "stage": "prelude",
+      "static_import_only": true
+    },
+    {
+      "bounds_m": [
+        [
+          -0.30000001192092896,
+          0.30000001192092896
+        ],
+        [
+          -0.44999998807907104,
+          0.3199999928474426
+        ],
+        [
+          -0.1599999964237213,
+          0.21199999749660492
+        ]
+      ],
+      "bytes": 37164,
+      "collision_tested": false,
+      "creator_approved": false,
+      "id": "Ender.EngineersVest",
+      "is_full_character_outfit": false,
+      "material_slots": 5,
+      "mesh_count": 1,
+      "notes": "Working engineer layered leather/cloth",
+      "owner": "Ender",
+      "primitives": 5,
+      "relative_path": "Generated/Ender_EngineersVest_REVIEW.glb",
+      "review_availability_gate": "FirstWake",
+      "rig_attached": false,
+      "runtime_equippable": false,
+      "sha256": "1d5649f30f95d475c098832dca938ee3e515af8d88093f3dcaae81b7add8f5ed",
+      "slot": "armor",
+      "stage": "prelude",
+      "triangles": 1284
+    },
+    {
+      "bounds_m": [
+        [
+          -0.17031416296958923,
+          0.17031416296958923
+        ],
+        [
+          -0.05000000074505806,
+          0.05000000074505806
+        ],
+        [
+          -0.04600000008940697,
+          0.04600000008940697
+        ]
+      ],
+      "bytes": 72144,
+      "collision_tested": false,
+      "creator_approved": false,
+      "id": "Ender.SealedAviatorGoggles",
+      "is_full_character_outfit": false,
+      "material_slots": 4,
+      "mesh_count": 1,
+      "notes": "Twin sealed protective lenses, character-fit pending",
+      "owner": "Ender",
+      "primitives": 4,
+      "relative_path": "Generated/Ender_SealedAviatorGoggles_REVIEW.glb",
+      "review_availability_gate": "FirstWake",
+      "rig_attached": false,
+      "runtime_equippable": false,
+      "sha256": "7239a3c51d067b68980a1df84360375f5dca28d1639f4293d4cd19555368f026",
+      "slot": "accessory",
+      "stage": "prelude",
+      "triangles": 2744
+    },
+    {
+      "bounds_m": [
+        [
+          -0.14499999582767487,
+          0.14499999582767487
+        ],
+        [
+          -0.09000000357627869,
+          0.17800000309944153
+        ],
+        [
+          -0.07999999821186066,
+          0.09650000184774399
+        ]
+      ],
+      "bytes": 65892,
+      "collision_tested": false,
+      "creator_approved": false,
+      "id": "Ender.HarmonicCalibrationKit",
+      "is_full_character_outfit": false,
+      "material_slots": 4,
+      "mesh_count": 1,
+      "notes": "Portable engine tools, no innate magic grant",
+      "owner": "Ender",
+      "primitives": 4,
+      "relative_path": "Generated/Ender_HarmonicCalibrationKit_REVIEW.glb",
+      "review_availability_gate": "FirstWake",
+      "rig_attached": false,
+      "runtime_equippable": false,
+      "sha256": "3d7d21c8a92b737e093dc01f622d940791c2b0d95045164a521cefd2ca922d7a",
+      "slot": "utility",
+      "stage": "prelude",
+      "triangles": 2436
+    },
+    {
+      "bounds_m": [
+        [
+          -0.10999999940395355,
+          0.10999999940395355
+        ],
+        [
+          -0.3659999966621399,
+          0.7099999785423279
+        ],
+        [
+          -0.027000000700354576,
+          0.027000000700354576
+        ]
+      ],
+      "bytes": 37768,
+      "collision_tested": false,
+      "creator_approved": false,
+      "id": "Ionia.CaptainSaber",
+      "is_full_character_outfit": false,
+      "material_slots": 5,
+      "mesh_count": 1,
+      "notes": "Provisional captain sidearm",
+      "owner": "Ionia",
+      "primitives": 5,
+      "relative_path": "Generated/Ionia_CaptainSaber_REVIEW.glb",
+      "review_availability_gate": "FirstWake",
+      "rig_attached": false,
+      "runtime_equippable": false,
+      "sha256": "a17c84737ef15cda867b583f168091e8f527f7981c76d50d08e655efb5407246",
+      "slot": "weapon",
+      "stage": "prelude",
+      "triangles": 1314
+    },
+    {
+      "bounds_m": [
+        [
+          -0.30000001192092896,
+          0.30000001192092896
+        ],
+        [
+          -0.7149999737739563,
+          0.3500000238418579
+        ],
+        [
+          -0.1599999964237213,
+          0.21199999749660492
+        ]
+      ],
+      "bytes": 39508,
+      "collision_tested": false,
+      "creator_approved": false,
+      "id": "Ionia.CaptainsCoat",
+      "is_full_character_outfit": false,
+      "material_slots": 6,
+      "mesh_count": 1,
+      "notes": "Provisional travel-worn captain outfit",
+      "owner": "Ionia",
+      "primitives": 6,
+      "relative_path": "Generated/Ionia_CaptainsCoat_REVIEW.glb",
+      "review_availability_gate": "FirstWake",
+      "rig_attached": false,
+      "runtime_equippable": false,
+      "sha256": "a668812e94b2b4a37303652e6dca880d84a5dee6c8539e71b8ae06cb9e8d9544",
+      "slot": "armor",
+      "stage": "prelude",
+      "triangles": 1328
+    },
+    {
+      "bounds_m": [
+        [
+          -0.07500000298023224,
+          0.07500000298023224
+        ],
+        [
+          -0.07499999552965164,
+          0.10400000214576721
+        ],
+        [
+          -0.013000000268220901,
+          0.04499826952815056
+        ]
+      ],
+      "bytes": 74448,
+      "collision_tested": false,
+      "creator_approved": false,
+      "id": "Ionia.EarthCompass",
+      "is_full_character_outfit": false,
+      "material_slots": 5,
+      "mesh_count": 1,
+      "notes": "Earth affinity design motif; not an ability",
+      "owner": "Ionia",
+      "primitives": 5,
+      "relative_path": "Generated/Ionia_EarthCompass_REVIEW.glb",
+      "review_availability_gate": "FirstWake",
+      "rig_attached": false,
+      "runtime_equippable": false,
+      "sha256": "7cc3d9770a76afe7cf19ead8068a1fe258b2258b873bfe125b27c2ea654a64f5",
+      "slot": "accessory",
+      "stage": "prelude",
+      "triangles": 2720
+    },
+    {
+      "bounds_m": [
+        [
+          -0.14499999582767487,
+          0.14499999582767487
+        ],
+        [
+          -0.09000000357627869,
+          0.17800000309944153
+        ],
+        [
+          -0.07999999821186066,
+          0.09650000184774399
+        ]
+      ],
+      "bytes": 65864,
+      "collision_tested": false,
+      "creator_approved": false,
+      "id": "Ionia.ChartCase",
+      "is_full_character_outfit": false,
+      "material_slots": 4,
+      "mesh_count": 1,
+      "notes": "Navigation instruments and charts",
+      "owner": "Ionia",
+      "primitives": 4,
+      "relative_path": "Generated/Ionia_ChartCase_REVIEW.glb",
+      "review_availability_gate": "FirstWake",
+      "rig_attached": false,
+      "runtime_equippable": false,
+      "sha256": "fcaee5741924611a9dd1506ef2b9c0268344cdb0b605898b0e20f3f678b8f5ea",
+      "slot": "utility",
+      "stage": "prelude",
+      "triangles": 2436
+    },
+    {
+      "bounds_m": [
+        [
+          -0.07599999755620956,
+          0.07599999755620956
+        ],
+        [
+          -0.5049999952316284,
+          0.42499998211860657
+        ],
+        [
+          -0.04699999839067459,
+          0.04699999839067459
+        ]
+      ],
+      "bytes": 59548,
+      "collision_tested": false,
+      "creator_approved": false,
+      "id": "Lyra.WaterFocus",
+      "is_full_character_outfit": false,
+      "material_slots": 4,
+      "mesh_count": 1,
+      "notes": "Provisional water-channeling implement",
+      "owner": "Lyra",
+      "primitives": 4,
+      "relative_path": "Generated/Lyra_WaterFocus_REVIEW.glb",
+      "review_availability_gate": "LyraRecruited",
+      "rig_attached": false,
+      "runtime_equippable": false,
+      "sha256": "faa0ccce5ec6a58834f38722e0be10a3a36076cebba8fe5f26177fc05ca107bd",
+      "slot": "weapon",
+      "stage": "post_splashdown",
+      "triangles": 2240
+    },
+    {
+      "bounds_m": [
+        [
+          -0.30000001192092896,
+          0.30000001192092896
+        ],
+        [
+          -0.7149999737739563,
+          0.3500000238418579
+        ],
+        [
+          -0.1599999964237213,
+          0.21199999749660492
+        ]
+      ],
+      "bytes": 39508,
+      "collision_tested": false,
+      "creator_approved": false,
+      "id": "Lyra.TravelCoat",
+      "is_full_character_outfit": false,
+      "material_slots": 6,
+      "mesh_count": 1,
+      "notes": "Provisional traveler outfit",
+      "owner": "Lyra",
+      "primitives": 6,
+      "relative_path": "Generated/Lyra_TravelCoat_REVIEW.glb",
+      "review_availability_gate": "LyraRecruited",
+      "rig_attached": false,
+      "runtime_equippable": false,
+      "sha256": "68f9f08bc46b0de2e1a0e136d1edd5092051d96be10366a5a1c738017d8079c2",
+      "slot": "armor",
+      "stage": "post_splashdown",
+      "triangles": 1328
+    },
+    {
+      "bounds_m": [
+        [
+          -0.1615065038204193,
+          0.1615065038204193
+        ],
+        [
+          -0.07499999552965164,
+          0.2019951045513153
+        ],
+        [
+          -0.013000000268220901,
+          0.04499826952815056
+        ]
+      ],
+      "bytes": 77656,
+      "collision_tested": false,
+      "creator_approved": false,
+      "id": "Lyra.WaterPendant",
+      "is_full_character_outfit": false,
+      "material_slots": 6,
+      "mesh_count": 1,
+      "notes": "Water affinity design motif",
+      "owner": "Lyra",
+      "primitives": 6,
+      "relative_path": "Generated/Lyra_WaterPendant_REVIEW.glb",
+      "review_availability_gate": "LyraRecruited",
+      "rig_attached": false,
+      "runtime_equippable": false,
+      "sha256": "3cae876e0fb9b5a870028049fb9d7b8db16cdd924e8a9bb8f8d5b475839e17fc",
+      "slot": "accessory",
+      "stage": "post_splashdown",
+      "triangles": 2784
+    },
+    {
+      "bounds_m": [
+        [
+          -0.14196465909481049,
+          0.14196465909481049
+        ],
+        [
+          -0.13499999046325684,
+          0.35199999809265137
+        ],
+        [
+          -0.08799999952316284,
+          0.08950000256299973
+        ]
+      ],
+      "bytes": 23260,
+      "collision_tested": false,
+      "creator_approved": false,
+      "id": "Lyra.HealersSatchel",
+      "is_full_character_outfit": false,
+      "material_slots": 5,
+      "mesh_count": 1,
+      "notes": "Healing supplies prop; not free spells",
+      "owner": "Lyra",
+      "primitives": 5,
+      "relative_path": "Generated/Lyra_HealersSatchel_REVIEW.glb",
+      "review_availability_gate": "LyraRecruited",
+      "rig_attached": false,
+      "runtime_equippable": false,
+      "sha256": "cf514d17f414d6e5cfa7bc0251d1a020e2dcce54765849206fd1bdea8b798815",
+      "slot": "utility",
+      "stage": "post_splashdown",
+      "triangles": 708
+    },
+    {
+      "bounds_m": [
+        [
+          -0.027000000700354576,
+          0.027000000700354576
+        ],
+        [
+          -0.05999999865889549,
+          0.11400000005960464
+        ],
+        [
+          -0.027000000700354576,
+          0.027000000700354576
+        ]
+      ],
+      "bytes": 26224,
+      "collision_tested": false,
+      "creator_approved": false,
+      "id": "Shared.RestorativeVial",
+      "is_full_character_outfit": false,
+      "material_slots": 4,
+      "mesh_count": 1,
+      "notes": "Scene prop; not an unlocked consumable",
+      "owner": "Shared",
+      "primitives": 4,
+      "relative_path": "Generated/Shared_RestorativeVial_REVIEW.glb",
+      "review_availability_gate": "scene_prop_only",
+      "rig_attached": false,
+      "runtime_equippable": false,
+      "sha256": "b0a5d2048329305a4299c5c43cc13faa81d770fb926eba1064344afb53ee2503",
+      "slot": "prop",
+      "stage": "post_splashdown",
+      "triangles": 928
+    },
+    {
+      "bounds_m": [
+        [
+          -0.05900000035762787,
+          0.05900000035762787
+        ],
+        [
+          -0.15000000596046448,
+          0.18799999356269836
+        ],
+        [
+          -0.05900000035762787,
+          0.05900000035762787
+        ]
+      ],
+      "bytes": 37628,
+      "collision_tested": false,
+      "creator_approved": false,
+      "id": "Shared.ResonanceCapacitor",
+      "is_full_character_outfit": false,
+      "material_slots": 5,
+      "mesh_count": 1,
+      "notes": "Engine repair prop, noncanonical",
+      "owner": "Shared",
+      "primitives": 5,
+      "relative_path": "Generated/Shared_ResonanceCapacitor_REVIEW.glb",
+      "review_availability_gate": "scene_prop_only",
+      "rig_attached": false,
+      "runtime_equippable": false,
+      "sha256": "6cd739b690834ff490d883fee8bb49f77f2e8026b2e7ff8da2d51d947eb95e24",
+      "slot": "prop",
+      "stage": "prelude",
+      "triangles": 1216
+    }
+  ],
+  "excluded_party": [
+    "Reson",
+    "Aepex"
+  ],
+  "generator": "generate_party_equipment.py",
+  "joins_post_splashdown": [
+    "Lyra"
+  ],
+  "lyra_unlock_requires": "LyraRecruited",
+  "review_only": true,
+  "schema_version": 1,
+  "source_convention": "glTF2 Y-up meters; UE imported length in cm",
+  "spells_granted": false
+}

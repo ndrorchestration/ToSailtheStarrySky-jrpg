@@ -1,0 +1,255 @@
+{
+  "approved_canonical_art": false,
+  "automatic_gear_grants": false,
+  "characters": [
+    "Ender",
+    "Ionia",
+    "Lyra"
+  ],
+  "combat_runtime_verified": false,
+  "entries": [
+    {
+      "bounds_xyz_cm": [
+        3.58,
+        3.58,
+        172.2
+      ],
+      "combat_equippable": false,
+      "id": "Ender.ResonanceStaff",
+      "material_slots": 7,
+      "mesh_path": "/Game/TSTSS/Review/PartyEquipment/Ender/Ender_ResonanceStaff_REVIEW/StaticMeshes/Ender_ResonanceStaff_REVIEW.Ender_ResonanceStaff_REVIEW",
+      "native_static_mesh": true,
+      "owner": "Ender",
+      "rigged": false,
+      "source_sha256": "0ceb1955bcc8053dc306f564bbe3a6647b36a3d9aa09f49fcff5752e7d89e307",
+      "stage": "prelude",
+      "worn_by_character": false
+    },
+    {
+      "bounds_xyz_cm": [
+        60.0,
+        37.2,
+        77.0
+      ],
+      "combat_equippable": false,
+      "id": "Ender.EngineersVest",
+      "material_slots": 5,
+      "mesh_path": "/Game/TSTSS/Review/PartyEquipment/Ender/Ender_EngineersVest_REVIEW/StaticMeshes/Ender_EngineersVest_REVIEW.Ender_EngineersVest_REVIEW",
+      "native_static_mesh": true,
+      "owner": "Ender",
+      "rigged": false,
+      "source_sha256": "1d5649f30f95d475c098832dca938ee3e515af8d88093f3dcaae81b7add8f5ed",
+      "stage": "prelude",
+      "worn_by_character": false
+    },
+    {
+      "bounds_xyz_cm": [
+        34.06,
+        9.2,
+        10.0
+      ],
+      "combat_equippable": false,
+      "id": "Ender.SealedAviatorGoggles",
+      "material_slots": 4,
+      "mesh_path": "/Game/TSTSS/Review/PartyEquipment/Ender/Ender_SealedAviatorGoggles_REVIEW/StaticMeshes/Ender_SealedAviatorGoggles_REVIEW.Ender_SealedAviatorGoggles_REVIEW",
+      "native_static_mesh": true,
+      "owner": "Ender",
+      "rigged": false,
+      "source_sha256": "7239a3c51d067b68980a1df84360375f5dca28d1639f4293d4cd19555368f026",
+      "stage": "prelude",
+      "worn_by_character": false
+    },
+    {
+      "bounds_xyz_cm": [
+        29.0,
+        17.65,
+        26.8
+      ],
+      "combat_equippable": false,
+      "id": "Ender.HarmonicCalibrationKit",
+      "material_slots": 4,
+      "mesh_path": "/Game/TSTSS/Review/PartyEquipment/Ender/Ender_HarmonicCalibrationKit_REVIEW/StaticMeshes/Ender_HarmonicCalibrationKit_REVIEW.Ender_HarmonicCalibrationKit_REVIEW",
+      "native_static_mesh": true,
+      "owner": "Ender",
+      "rigged": false,
+      "source_sha256": "3d7d21c8a92b737e093dc01f622d940791c2b0d95045164a521cefd2ca922d7a",
+      "stage": "prelude",
+      "worn_by_character": false
+    },
+    {
+      "bounds_xyz_cm": [
+        22.0,
+        5.4,
+        107.6
+      ],
+      "combat_equippable": false,
+      "id": "Ionia.CaptainSaber",
+      "material_slots": 5,
+      "mesh_path": "/Game/TSTSS/Review/PartyEquipment/Ionia/Ionia_CaptainSaber_REVIEW/StaticMeshes/Ionia_CaptainSaber_REVIEW.Ionia_CaptainSaber_REVIEW",
+      "native_static_mesh": true,
+      "owner": "Ionia",
+      "rigged": false,
+      "source_sha256": "a17c84737ef15cda867b583f168091e8f527f7981c76d50d08e655efb5407246",
+      "stage": "prelude",
+      "worn_by_character": false
+    },
+    {
+      "bounds_xyz_cm": [
+        60.0,
+        37.2,
+        106.5
+      ],
+      "combat_equippable": false,
+      "id": "Ionia.CaptainsCoat",
+      "material_slots": 6,
+      "mesh_path": "/Game/TSTSS/Review/PartyEquipment/Ionia/Ionia_CaptainsCoat_REVIEW/StaticMeshes/Ionia_CaptainsCoat_REVIEW.Ionia_CaptainsCoat_REVIEW",
+      "native_static_mesh": true,
+      "owner": "Ionia",
+      "rigged": false,
+      "source_sha256": "a668812e94b2b4a37303652e6dca880d84a5dee6c8539e71b8ae06cb9e8d9544",
+      "stage": "prelude",
+      "worn_by_character": false
+    },
+    {
+      "bounds_xyz_cm": [
+        15.0,
+        5.8,
+        17.9
+      ],
+      "combat_equippable": false,
+      "id": "Ionia.EarthCompass",
+      "material_slots": 5,
+      "mesh_path": "/Game/TSTSS/Review/PartyEquipment/Ionia/Ionia_EarthCompass_REVIEW/StaticMeshes/Ionia_EarthCompass_REVIEW.Ionia_EarthCompass_REVIEW",
+      "native_static_mesh": true,
+      "owner": "Ionia",
+      "rigged": false,
+      "source_sha256": "7cc3d9770a76afe7cf19ead8068a1fe258b2258b873bfe125b27c2ea654a64f5",
+      "stage": "prelude",
+      "worn_by_character": false
+    },
+    {
+      "bounds_xyz_cm": [
+        29.0,
+        17.65,
+        26.8
+      ],
+      "combat_equippable": false,
+      "id": "Ionia.ChartCase",
+      "material_slots": 4,
+      "mesh_path": "/Game/TSTSS/Review/PartyEquipment/Ionia/Ionia_ChartCase_REVIEW/StaticMeshes/Ionia_ChartCase_REVIEW.Ionia_ChartCase_REVIEW",
+      "native_static_mesh": true,
+      "owner": "Ionia",
+      "rigged": false,
+      "source_sha256": "fcaee5741924611a9dd1506ef2b9c0268344cdb0b605898b0e20f3f678b8f5ea",
+      "stage": "prelude",
+      "worn_by_character": false
+    },
+    {
+      "bounds_xyz_cm": [
+        15.2,
+        9.4,
+        93.0
+      ],
+      "combat_equippable": false,
+      "id": "Lyra.WaterFocus",
+      "material_slots": 4,
+      "mesh_path": "/Game/TSTSS/Review/PartyEquipment/Lyra/Lyra_WaterFocus_REVIEW/StaticMeshes/Lyra_WaterFocus_REVIEW.Lyra_WaterFocus_REVIEW",
+      "native_static_mesh": true,
+      "owner": "Lyra",
+      "rigged": false,
+      "source_sha256": "faa0ccce5ec6a58834f38722e0be10a3a36076cebba8fe5f26177fc05ca107bd",
+      "stage": "post_splashdown",
+      "worn_by_character": false
+    },
+    {
+      "bounds_xyz_cm": [
+        60.0,
+        37.2,
+        106.5
+      ],
+      "combat_equippable": false,
+      "id": "Lyra.TravelCoat",
+      "material_slots": 6,
+      "mesh_path": "/Game/TSTSS/Review/PartyEquipment/Lyra/Lyra_TravelCoat_REVIEW/StaticMeshes/Lyra_TravelCoat_REVIEW.Lyra_TravelCoat_REVIEW",
+      "native_static_mesh": true,
+      "owner": "Lyra",
+      "rigged": false,
+      "source_sha256": "68f9f08bc46b0de2e1a0e136d1edd5092051d96be10366a5a1c738017d8079c2",
+      "stage": "post_splashdown",
+      "worn_by_character": false
+    },
+    {
+      "bounds_xyz_cm": [
+        32.3,
+        5.8,
+        27.7
+      ],
+      "combat_equippable": false,
+      "id": "Lyra.WaterPendant",
+      "material_slots": 6,
+      "mesh_path": "/Game/TSTSS/Review/PartyEquipment/Lyra/Lyra_WaterPendant_REVIEW/StaticMeshes/Lyra_WaterPendant_REVIEW.Lyra_WaterPendant_REVIEW",
+      "native_static_mesh": true,
+      "owner": "Lyra",
+      "rigged": false,
+      "source_sha256": "3cae876e0fb9b5a870028049fb9d7b8db16cdd924e8a9bb8f8d5b475839e17fc",
+      "stage": "post_splashdown",
+      "worn_by_character": false
+    },
+    {
+      "bounds_xyz_cm": [
+        28.39,
+        17.75,
+        48.7
+      ],
+      "combat_equippable": false,
+      "id": "Lyra.HealersSatchel",
+      "material_slots": 5,
+      "mesh_path": "/Game/TSTSS/Review/PartyEquipment/Lyra/Lyra_HealersSatchel_REVIEW/StaticMeshes/Lyra_HealersSatchel_REVIEW.Lyra_HealersSatchel_REVIEW",
+      "native_static_mesh": true,
+      "owner": "Lyra",
+      "rigged": false,
+      "source_sha256": "cf514d17f414d6e5cfa7bc0251d1a020e2dcce54765849206fd1bdea8b798815",
+      "stage": "post_splashdown",
+      "worn_by_character": false
+    },
+    {
+      "bounds_xyz_cm": [
+        5.4,
+        5.4,
+        17.4
+      ],
+      "combat_equippable": false,
+      "id": "Shared.RestorativeVial",
+      "material_slots": 4,
+      "mesh_path": "/Game/TSTSS/Review/PartyEquipment/Shared/Shared_RestorativeVial_REVIEW/StaticMeshes/Shared_RestorativeVial_REVIEW.Shared_RestorativeVial_REVIEW",
+      "native_static_mesh": true,
+      "owner": "Shared",
+      "rigged": false,
+      "source_sha256": "b0a5d2048329305a4299c5c43cc13faa81d770fb926eba1064344afb53ee2503",
+      "stage": "post_splashdown",
+      "worn_by_character": false
+    },
+    {
+      "bounds_xyz_cm": [
+        11.8,
+        11.8,
+        33.8
+      ],
+      "combat_equippable": false,
+      "id": "Shared.ResonanceCapacitor",
+      "material_slots": 5,
+      "mesh_path": "/Game/TSTSS/Review/PartyEquipment/Shared/Shared_ResonanceCapacitor_REVIEW/StaticMeshes/Shared_ResonanceCapacitor_REVIEW.Shared_ResonanceCapacitor_REVIEW",
+      "native_static_mesh": true,
+      "owner": "Shared",
+      "rigged": false,
+      "source_sha256": "6cd739b690834ff490d883fee8bb49f77f2e8026b2e7ff8da2d51d947eb95e24",
+      "stage": "prelude",
+      "worn_by_character": false
+    }
+  ],
+  "gameplay_abilities_granted": false,
+  "native_import": true,
+  "review_only": true,
+  "skeleton_binding": false,
+  "status": "NATIVE_STATIC_MESH_IMPORT_PASS_REVIEW_ONLY"
+}

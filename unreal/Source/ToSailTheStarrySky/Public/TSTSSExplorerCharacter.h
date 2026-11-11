@@ -4,6 +4,9 @@
 #include "TSTSSFirstWakeState.h"
 #include "TSTSSExplorerCharacter.generated.h"
 
+class UTSTSSPartyGearMenuReviewWidget;
+class UTSTSSSaveGame;
+
 UCLASS()
 class TOSAILTHESTARRYSKY_API ATSTSSExplorerCharacter : public ACharacter
 {
@@ -37,6 +40,16 @@ private:
     void QuickSave();
     void QuickLoad();
     void ShowObjectiveReview();
+    // Opt-in nonshipping UMG preview; never touches actual saved inventory.
+    void ToggleEquipmentReview();
+    void TogglePartyMenuReview();
+    UPROPERTY(Transient)
+    TObjectPtr<UTSTSSPartyGearMenuReviewWidget> EquipmentReviewMenu;
+
+    // One validated, explicitly loaded version-2 save only. No save writes
+    // and no authority to recruit characters or modify battle state.
+    UPROPERTY(Transient)
+    TObjectPtr<UTSTSSSaveGame> LastLoadedSaveSnapshotForReview;
     // PIE reviews never inherit another session's quicksave ownership.
     UPROPERTY(Transient)
     bool bPIEReviewQuickSlotOwned = false;

@@ -3,6 +3,9 @@
 #include "TSTSSPersistence.h"
 #include "TSTSSInteractionReach.h"
 #include "TSTSSSaveGame.h"
+#include "TSTSSPartyGearMenuReviewWidget.h"
+#include "Blueprint/UserWidget.h"
+#include "GameFramework/HUD.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -105,6 +108,7 @@ void ATSTSSExplorerCharacter::BeginPlay()
     Super::BeginPlay();
     FirstWakeState = NewObject<UTSTSSFirstWakeState>(this);
     bPIEReviewQuickSlotOwned = false;
+    LastLoadedSaveSnapshotForReview = nullptr;
     ShowFirstWakeReviewObjective(FirstWakeState);
 }
 
@@ -132,10 +136,24 @@ void ATSTSSExplorerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
     }
     PlayerInputComponent->BindAction(TEXT("QuickLoad"), IE_Pressed, this, &ATSTSSExplorerCharacter::QuickLoad);
     PlayerInputComponent->BindAction(TEXT("ReviewObjective"), IE_Pressed, this, &ATSTSSExplorerCharacter::ShowObjectiveReview);
+#if !UE_BUILD_SHIPPING
+    // No equipment-review action outside an actual PIE/game world.
+    if (InputWorld && (InputWorld->WorldType == EWorldType::PIE ||
+                       InputWorld->WorldType == EWorldType::Game))
+    {
+        PlayerInputComponent->BindAction(
+            TEXT("ReviewEquipment"), IE_Pressed, this,
+            &ATSTSSExplorerCharacter::ToggleEquipmentReview);
+        PlayerInputComponent->BindAction(
+            TEXT("ReviewRPGMenu"), IE_Pressed, this,
+            &ATSTSSExplorerCharacter::TogglePartyMenuReview);
+    }
+#endif
 }
 
 void ATSTSSExplorerCharacter::MoveForward(float Value)
 {
+    if (EquipmentReviewMenu && EquipmentReviewMenu->IsInViewport()) return;
     if (Controller && !FMath::IsNearlyZero(Value))
     {
         const FRotator Yaw(0.f, Controller->GetControlRotation().Yaw, 0.f);
@@ -144,17 +162,27 @@ void ATSTSSExplorerCharacter::MoveForward(float Value)
 }
 void ATSTSSExplorerCharacter::MoveRight(float Value)
 {
+    if (EquipmentReviewMenu && EquipmentReviewMenu->IsInViewport()) return;
     if (Controller && !FMath::IsNearlyZero(Value))
     {
         const FRotator Yaw(0.f, Controller->GetControlRotation().Yaw, 0.f);
         AddMovementInput(FRotationMatrix(Yaw).GetUnitAxis(EAxis::Y), Value);
     }
 }
-void ATSTSSExplorerCharacter::Turn(float Value) { AddControllerYawInput(Value); }
-void ATSTSSExplorerCharacter::LookUp(float Value) { AddControllerPitchInput(Value); }
+void ATSTSSExplorerCharacter::Turn(float Value)
+{
+    if (!EquipmentReviewMenu || !EquipmentReviewMenu->IsInViewport())
+        AddControllerYawInput(Value);
+}
+void ATSTSSExplorerCharacter::LookUp(float Value)
+{
+    if (!EquipmentReviewMenu || !EquipmentReviewMenu->IsInViewport())
+        AddControllerPitchInput(Value);
+}
 
 void ATSTSSExplorerCharacter::Interact()
 {
+    if (EquipmentReviewMenu && EquipmentReviewMenu->IsInViewport()) return;
     if (!FirstWakeState || !FollowCamera || !GetWorld()) return;
     const FVector Start = FollowCamera->GetComponentLocation();
     const FVector PawnLocation = GetActorLocation();
@@ -263,6 +291,7 @@ void ATSTSSExplorerCharacter::ShowObjectiveReview()
 
 void ATSTSSExplorerCharacter::QuickSave()
 {
+    if (EquipmentReviewMenu && EquipmentReviewMenu->IsInViewport()) return;
     // UE's Shift+F5 is Stop Play-In-Editor. The F5 action may also be
     // dispatched to this pawn before PIE shuts down; that must never
     // create a new review SaveGame as a side effect of stopping play.
@@ -297,6 +326,7 @@ void ATSTSSExplorerCharacter::QuickSave()
 
 void ATSTSSExplorerCharacter::QuickLoad()
 {
+    if (EquipmentReviewMenu && EquipmentReviewMenu->IsInViewport()) return;
     const UWorld* World = GetWorld();
     const bool bPIE = World && World->WorldType == EWorldType::PIE;
     const FString Slot = bPIE ? TEXT("tstss_prelude_pie_quick") : TEXT("first_wake_quick");
@@ -356,6 +386,12 @@ bool ATSTSSExplorerCharacter::LoadFirstWake(const FString& Slot)
     if (!Save) return false;
     const bool bRestored = FirstWakeState->Restore(
         Save->bFirstWakeStarted, Save->FirstWakeBeat, Save->InspectionMask);
+    if (bRestored)
+    {
+        // Preserve a read-only reference ONLY from a successful validated
+        // load. The equipment panel never reads arbitrary stale save slots.
+        LastLoadedSaveSnapshotForReview = const_cast<UTSTSSSaveGame*>(Save);
+    }
 #if WITH_EDITOR
     // Previously accepted review cubes have been made transparent to rays
     // and pawn movement. Restoring an earlier story beat must reactivate
@@ -382,4 +418,83 @@ bool ATSTSSExplorerCharacter::LoadFirstWake(const FString& Slot)
     }
 #endif
     return bRestored;
+}
+
+void ATSTSSExplorerCharacter::ToggleEquipmentReview()
+{
+#if !UE_BUILD_SHIPPING
+    if (!IsValid(FirstWakeState)) return;
+    APlayerController* PC = Cast<APlayerController>(Controller);
+    if (!IsValid(PC) || !IsLocallyControlled()) return;
+    if (AHUD* CurrentHUD = PC->GetHUD(); CurrentHUD && !CurrentHUD->bShowHUD)
+    {
+        // Never overlap the opening movie/title screen.
+        return;
+    }
+
+    if (EquipmentReviewMenu && EquipmentReviewMenu->IsInViewport())
+    {
+        EquipmentReviewMenu->CloseReview();
+        return;
+    }
+    if (!IsValid(EquipmentReviewMenu))
+    {
+        UTSTSSPartyGearMenuReviewWidget* Candidate =
+            CreateWidget<UTSTSSPartyGearMenuReviewWidget>(
+                PC, UTSTSSPartyGearMenuReviewWidget::StaticClass());
+        if (!IsValid(Candidate)) return;
+
+        // Current First Wake save schema contains no Lyra recruitment receipt.
+        // Even after splashdown, Lyra MUST remain locked in this runtime UI.
+        const auto Stage = FirstWakeState->IsChapterOneActOne()
+            ? ETSTSSPartySliceReviewStage::AfterSplashdown
+            : ETSTSSPartySliceReviewStage::FirstWake;
+        if (!Candidate->TryBeginEquipmentReview(Stage) ||
+            !Candidate->TryBindFirstWakeStoryForReview(FirstWakeState))
+            return;
+        EquipmentReviewMenu = Candidate;
+    }
+
+    const auto CurrentStage = FirstWakeState->IsChapterOneActOne()
+        ? ETSTSSPartySliceReviewStage::AfterSplashdown
+        : ETSTSSPartySliceReviewStage::FirstWake;
+    if (!EquipmentReviewMenu->TryRefreshStoryStageReview(CurrentStage))
+        return;
+    EquipmentReviewMenu->ClearLoadedSaveRosterForReview();
+    if (IsValid(LastLoadedSaveSnapshotForReview))
+    {
+        // This may fail when story has moved on or the save roster includes
+        // unrecruited members. Never widen the party to make it pass.
+        EquipmentReviewMenu->TryBindLoadedSaveRosterForReview(
+            LastLoadedSaveSnapshotForReview);
+    }
+
+    EquipmentReviewMenu->AddToViewport(30);
+    EquipmentReviewMenu->SuspendReviewScreenWarnings();
+    if (AHUD* ReviewHUD = PC->GetHUD();
+        ReviewHUD && ReviewHUD->bShowHUD)
+    {
+        ReviewHUD->bShowHUD = false;
+        EquipmentReviewMenu->MarkWorldHUDHiddenForReview();
+    }
+    PC->bShowMouseCursor = true;
+    FInputModeGameAndUI Mode;
+    Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+    Mode.SetHideCursorDuringCapture(false);
+    PC->SetInputMode(Mode);
+#endif
+}
+
+void ATSTSSExplorerCharacter::TogglePartyMenuReview()
+{
+#if !UE_BUILD_SHIPPING
+    if (EquipmentReviewMenu && EquipmentReviewMenu->IsInViewport())
+    {
+        EquipmentReviewMenu->CloseReview();
+        return;
+    }
+    ToggleEquipmentReview();
+    if (EquipmentReviewMenu && EquipmentReviewMenu->IsInViewport())
+        EquipmentReviewMenu->OpenPageForReview(ETSTSSReviewMenuPage::Status);
+#endif
 }
