@@ -41,6 +41,15 @@ REVIEW_OBJECTS = (
 )
 GEAR_SHOWCASE = ("Ender.ResonanceStaff", "Ionia.CaptainSaber", "Lyra.WaterFocus")
 ENEMY_KINDS = ("HarmonicShear", "AetherLeakWisp", "DockSkitter")
+# Immutable visual scope of the HISTORIC 222-file native shoreline snapshot:
+# nine fixed spell-cue silhouettes, not an ever-growing live spell catalog.
+# Centering belongs only in the new, independent interactive focus review.
+LEGACY_PREVIEW_SKILL_IDS = (
+    "Ender_ResonantPulse", "Ender_TuningLance", "Ender_EchoMend",
+    "Ender_CorrespondenceThread", "Ender_LatticeBreak",
+    "Ender_MindRipple", "Ender_FocusHarmonic",
+    "Ender_ConcordanceBurst", "Ender_ThoughtChord",
+)
 LEGACY_ENV_LABELS = (
     "TSTSS_VS_REVIEW_SunKey", "TSTSS_VS_REVIEW_SkyAmbient",
     "TSTSS_VS_REVIEW_Atmosphere", "TSTSS_VS_REVIEW_AerialFog",
@@ -48,6 +57,48 @@ LEGACY_ENV_LABELS = (
 
 def digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+def legacy_magic_preview_rows() -> list[dict]:
+    """Maintain exact 9 spell actor identities for the original shoreline map.
+
+    The new Centering ability can appear as a tenth catalog row, but may not
+    rewrite this exact-hash historical map, raise its actor count, or promote
+    older DesignOnly abilities. Unknown extra rows fail closed.
+    """
+    spells = json.loads(MAGIC.read_text(encoding="utf-8"))
+    if not isinstance(spells, list):
+        raise RuntimeError("HOLD: invalid magic catalog")
+    ids = [row.get("SkillId") for row in spells if isinstance(row, dict)]
+    cues = [row.get("VfxCueId") for row in spells if isinstance(row, dict)]
+    if (len(ids) != len(spells) or len(set(ids)) != len(spells)
+            or len(set(cues)) != len(spells)
+            or any(not isinstance(s, str) or not s.startswith("Ender_") for s in ids)):
+        raise RuntimeError("HOLD: duplicate or malformed magic catalog")
+    legacy = [r for r in spells if r["SkillId"] in LEGACY_PREVIEW_SKILL_IDS]
+    if len(legacy) != 9 or {r["SkillId"] for r in legacy} != set(LEGACY_PREVIEW_SKILL_IDS):
+        raise RuntimeError("HOLD: legacy shoreline nine-cue roster drift")
+    extras = [r for r in spells if r["SkillId"] not in LEGACY_PREVIEW_SKILL_IDS]
+    if extras:
+        if len(extras) != 1:
+            raise RuntimeError("HOLD: unsupported additional legacy-stage cues")
+        added = extras[0]
+        if (added.get("SkillId") != "Ender_Centering"
+                or added.get("VfxCueId") != "VFX.Ender.Centering"
+                or added.get("Admission") != "ReviewExecutable"
+                or added.get("RequiredSchool") != "ResonanceHarmonic"
+                or added.get("RequiredMasteryRank") != 1
+                or added.get("Target") != "Self"
+                or added.get("ResourceCost") != 5
+                or added.get("Power") != 0
+                or added.get("bPartyPhysicalDefenseBuff") is not True
+                or added.get("PhysicalDefenseBuffPercent") != 15
+                or added.get("BuffDurationRounds") != 3):
+            raise RuntimeError("HOLD: Centering cannot contaminate historical preview")
+        if {r["SkillId"] for r in spells if r.get("Admission")=="ReviewExecutable"} != {
+                "Ender_Centering","Ender_ResonantPulse"}:
+            raise RuntimeError("HOLD: non-focus magic gained review execution")
+    return legacy
+
 
 def evidence_plan() -> dict:
     integration = json.loads(INTEGRATION.read_text(encoding="utf-8"))
@@ -97,10 +148,9 @@ def evidence_plan() -> dict:
             raise RuntimeError("HOLD: equipment visual source accidentally promoted")
     if not set(GEAR_SHOWCASE).issubset(ids):
         raise RuntimeError("HOLD: three showcase equipment assets missing")
-    spells = json.loads(MAGIC.read_text(encoding="utf-8"))
-    if (len(spells) != 9 or len({r["VfxCueId"] for r in spells}) != 9
-            or not all(str(s["SkillId"]).startswith("Ender_") for s in spells)):
-        raise RuntimeError("HOLD: source magic cue list drift")
+    spells = legacy_magic_preview_rows()
+    if len(spells)!=9:
+        raise RuntimeError("HOLD: historic shoreline review has nine cues exactly")
     if len(ENEMY_KINDS) != 3 or len(set(ENEMY_KINDS)) != 3:
         raise RuntimeError("HOLD: enemy review kinds changed")
     return {
@@ -406,7 +456,7 @@ def build_native_shore(phase: str) -> dict:
         actor.set_editor_property("instance_id", "MP_ReviewEnemy_%02d" % (i + 1))
         set_required_review_bool(actor, "reduced_motion", True)
         actor.set_actor_enable_collision(False)
-    for i, row in enumerate(json.loads(MAGIC.read_text(encoding="utf-8"))):
+    for i, row in enumerate(legacy_magic_preview_rows()):
         actor = spawn(actor_classes["TSTSSResonatorVfxActor"],
                       "NoAuthorizedCast_" + row["SkillId"],
                       (1000 + (i % 3) * 1200, -650 - (i // 3) * 950, 160))

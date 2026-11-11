@@ -1,4 +1,4 @@
-"""Unreal Editor Python: author an emissive material and disposable nine-cue preview level.
+"""Unreal Editor Python: author an emissive material and disposable ten-cue preview level.
 
 Run only from the isolated Ender-magic checkout, with the Editor otherwise idle:
 UnrealEditor-Cmd.exe <uproject> -unattended -nop4 -ExecutePythonScript=<this_file>
@@ -12,7 +12,7 @@ HERE = Path(__file__).resolve().parent
 SRC = HERE.parent / "DataSource" / "Magic" / "EnderResonator.vertical_slice.review.json"
 PACKAGE = "/Game/TSTSS/Magic"
 MAT_PATH = PACKAGE + "/M_ResonatorGlow"
-MAP_PATH = PACKAGE + "/L_EnderResonatorCueReview"
+MAP_PATH = PACKAGE + "/L_EnderResonatorFocusReview_V2"
 
 def safe_property(obj, prop, value):
     try:
@@ -91,9 +91,9 @@ def make_level():
         raise RuntimeError("Could not create isolated review level")
     subsystem = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
     for i, row in enumerate(rows):
-        # Separate actors and lines of fire: a 3 x 3 VFX comparison stage.
-        x = float((i % 3) * 880 - 880)
-        y = float((i // 3) * 820 - 820)
+        # Isolated 4 x 3 review cue stage; nonfocus cues remain design-only.
+        x = float((i % 4) * 880 - 1320)
+        y = float((i // 4) * 820 - 820)
         actor = subsystem.spawn_actor_from_class(cls, unreal.Vector(x, y, 15),
                                                 unreal.Rotator(0, 0, 0))
         if not actor:

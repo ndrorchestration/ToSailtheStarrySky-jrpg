@@ -27,6 +27,7 @@ const FCueDesign* FindCue(FName CueId)
 {
     static const FCueDesign Cues[] = {
         {TEXT("Ender_ResonantPulse"), TEXT("VFX.Ender.ResonantPulse"), 0, FLinearColor(0.03f, 0.68f, 1.0f)},
+        {TEXT("Ender_Centering"), TEXT("VFX.Ender.Centering"), 9, FLinearColor(0.35f, 0.94f, 0.73f)},
         {TEXT("Ender_TuningLance"), TEXT("VFX.Ender.TuningLance"), 1, FLinearColor(0.11f, 0.94f, 0.96f)},
         {TEXT("Ender_EchoMend"), TEXT("VFX.Ender.EchoMend"), 2, FLinearColor(0.12f, 1.0f, 0.58f)},
         {TEXT("Ender_CorrespondenceThread"), TEXT("VFX.Ender.CorrespondenceThread"), 3, FLinearColor(0.6f, 0.32f, 1.0f)},
@@ -122,7 +123,8 @@ bool ATSTSSResonatorVfxActor::StartCue(FName CueId, const FVector& RelativeTarge
     Style = Def->Style;
     CueTint = Def->Color;
     Age = 0.f;
-    Duration = (Style == 1 || Style == 7 || Style == 8) ? 2.45f : 2.15f;
+    Duration = Style == 9 ? 2.7f :
+        (Style == 1 || Style == 7 || Style == 8) ? 2.45f : 2.15f;
     TargetOffset = RelativeTarget;
     bReviewInstance = bReview;
     bPlaying = true;
@@ -185,7 +187,7 @@ void ATSTSSResonatorVfxActor::UpdateVisuals(float TimeSeconds)
     if (Right.IsNearlyZero()) Right = FVector::RightVector;
     const FVector Up = FVector::CrossProduct(Right, Direction).GetSafeNormal();
     const bool bAtTarget = (Style == 2 || Style == 4 || Style == 5);
-    const bool bAtOrigin = (Style == 0 || Style == 6);
+    const bool bAtOrigin = (Style == 0 || Style == 6 || Style == 9);
     const float TravelT = FMath::Clamp(T * 1.45f, 0.f, 1.f);
     const FVector Center = bAtOrigin ? FVector::ZeroVector :
         bAtTarget ? TargetOffset : FMath::Lerp(FVector::ZeroVector, TargetOffset, TravelT);
@@ -196,7 +198,9 @@ void ATSTSSResonatorVfxActor::UpdateVisuals(float TimeSeconds)
     {
         const float Delay = static_cast<float>(Ring) * 0.16f;
         const float Phase = FMath::Clamp((T - Delay) / (1.f - Delay), 0.f, 1.f);
-        const float Radius = (Style == 0 || Style == 7 || Style == 8)
+        const float Radius = Style == 9
+            ? 70.f + 440.f * Phase :
+            (Style == 0 || Style == 7 || Style == 8)
             ? 35.f + 240.f * Phase : 40.f + 70.f * Phase;
         const float Tilt = (Style == 3 || Style == 4) ? 0.6f * Ring : 0.0f;
         for (int32 Segment = 0; Segment < 24; ++Segment)
@@ -226,5 +230,6 @@ void ATSTSSResonatorVfxActor::UpdateVisuals(float TimeSeconds)
     CoreMesh->UpdateInstanceTransform(0, FTransform(FRotator::ZeroRotator,
         CenterRaised, FVector(CoreScale)), false, true, true);
     CastLight->SetRelativeLocation(CenterRaised);
-    CastLight->SetIntensity(2200.f * Visibility * (0.6f + 0.4f * Pulse));
+    CastLight->SetIntensity((Style == 9 ? 1050.f : 2200.f) *
+        Visibility * (0.6f + 0.4f * Pulse));
 }
