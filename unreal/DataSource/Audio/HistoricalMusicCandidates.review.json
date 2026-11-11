@@ -1,0 +1,52 @@
+{
+  "schema_version": "0.1",
+  "status": "HISTORICAL_ONLY_RIGHTS_UNVERIFIED",
+  "historical_source": "https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/tree/1b1f51806ea9d013433cb98add260bd9c5be79c0/assets/audio",
+  "tracks": [
+    {
+      "title": "Skyward Arpeggio",
+      "filename": "aetherwake-skyward-arpeggio-main-title.mp3",
+      "sha256": "7ac5fe9c2ee0bc8d0cbfa36441dbb7783dbe2ef0cc5e2ee665086a527a7bc350",
+      "bytes": 4233081,
+      "license": "NOT_VERIFIED",
+      "approved_for_shipping": false,
+      "integrated_in_current_unreal": false
+    },
+    {
+      "title": "Amonigio Umulula",
+      "filename": "amonigio-umulula.mp3",
+      "sha256": "bce86fc575323b99573e420dcb6c0d19bfe1eb8e6ba637edc2b72c1edf20cd98",
+      "bytes": 5364037,
+      "license": "NOT_VERIFIED",
+      "approved_for_shipping": false,
+      "integrated_in_current_unreal": false
+    },
+    {
+      "title": "Nocturnal Resolve",
+      "filename": "nocturnal-resolve.mp3",
+      "sha256": "c8a35d42762705011f8a9eeefebea91736b333677a9b1117087490bbf0dbc65c",
+      "bytes": 6500031,
+      "license": "NOT_VERIFIED",
+      "approved_for_shipping": false,
+      "integrated_in_current_unreal": false
+    },
+    {
+      "title": "Solar Punk Airship",
+      "filename": "solar-punk-airship.mp3",
+      "sha256": "d5d1561c1ef056978342732e363df5411860611739fb485bb707c6e98800335c",
+      "bytes": 4432217,
+      "license": "NOT_VERIFIED",
+      "approved_for_shipping": false,
+      "integrated_in_current_unreal": false
+    },
+    {
+      "title": "Open Sky Signal",
+      "filename": "open-sky-signal.mp3",
+      "sha256": null,
+      "bytes": 4171250,
+      "license": "NOT_VERIFIED",
+      "approved_for_shipping": false,
+      "integrated_in_current_unreal": false
+    }
+  ]
+}
