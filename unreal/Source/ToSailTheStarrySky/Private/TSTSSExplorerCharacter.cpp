@@ -3,6 +3,8 @@
 #include "TSTSSPersistence.h"
 #include "TSTSSInteractionReach.h"
 #include "TSTSSSaveGame.h"
+#include "TSTSSReviewShoreTravelSubsystem.h"
+#include "Engine/GameInstance.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -175,6 +177,24 @@ void ATSTSSExplorerCharacter::BeginPlay()
 {
     Super::BeginPlay();
     FirstWakeState = NewObject<UTSTSSFirstWakeState>(this);
+#if WITH_EDITOR
+    if (UWorld* World = GetWorld())
+    {
+        if (UGameInstance* GameInstance = World->GetGameInstance())
+        {
+            if (UTSTSSReviewShoreTravelSubsystem* Travel =
+                    GameInstance->GetSubsystem<UTSTSSReviewShoreTravelSubsystem>())
+            {
+                if (Travel->ConsumeShoreArrival(World, FirstWakeState))
+                {
+                    UE_LOG(LogTemp, Display,
+                        TEXT("TSTSS_SHORE_REVIEW_ARRIVAL_STORY_RESTORED_NO_RECRUITMENT beat=%d"),
+                        static_cast<int32>(FirstWakeState->GetCurrentBeat()));
+                }
+            }
+        }
+    }
+#endif
     bPIEReviewQuickSlotOwned = false;
 #if WITH_EDITOR
     bPendingReviewContinue = false;
@@ -212,6 +232,14 @@ void ATSTSSExplorerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
     }
 #endif
     PlayerInputComponent->BindAction(TEXT("ReviewObjective"), IE_Pressed, this, &ATSTSSExplorerCharacter::ShowObjectiveReview);
+#if WITH_EDITOR
+    if (InputWorld && (InputWorld->WorldType == EWorldType::PIE ||
+                       InputWorld->WorldType == EWorldType::Game))
+    {
+        PlayerInputComponent->BindAction(TEXT("ReviewShoreTravel"), IE_Pressed,
+            this, &ATSTSSExplorerCharacter::ReviewShoreTravel);
+    }
+#endif
 }
 
 void ATSTSSExplorerCharacter::MoveForward(float Value)
@@ -339,7 +367,39 @@ void ATSTSSExplorerCharacter::ShowObjectiveReview()
 {
     // Read-only recall of the existing short-lived objective cue.
     ShowFirstWakeReviewObjective(FirstWakeState);
+#if WITH_EDITOR
+    UWorld* World = GetWorld();
+    if (World && (World->WorldType == EWorldType::PIE ||
+                  World->WorldType == EWorldType::Game) &&
+        UTSTSSReviewShoreTravelSubsystem::IsEligible(
+            FirstWakeState, UGameplayStatics::GetCurrentLevelName(World, true)) && GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 7.f, FColor::Cyan,
+            TEXT("First Wake (review): K = visit composited shoreline (not encounter/visual approval)"));
+    }
+#endif
 }
+
+#if WITH_EDITOR
+void ATSTSSExplorerCharacter::ReviewShoreTravel()
+{
+    UWorld* World = GetWorld();
+    UGameInstance* GameInstance = World ? World->GetGameInstance() : nullptr;
+    UTSTSSReviewShoreTravelSubsystem* Travel = GameInstance
+        ? GameInstance->GetSubsystem<UTSTSSReviewShoreTravelSubsystem>() : nullptr;
+    if (!Travel || !Travel->QueueShore(World, FirstWakeState))
+    {
+        if (GEngine)
+        {
+            GEngine->AddOnScreenDebugMessage(-1, 6.f, FColor::Yellow,
+                TEXT("First Wake (review): shoreline locked until physical landing and reserve investigation"));
+        }
+        return;
+    }
+    UE_LOG(LogTemp, Display, TEXT("TSTSS_SHORE_REVIEW_TRAVEL_QUEUED_WITHOUT_RECRUITMENT"));
+    UGameplayStatics::OpenLevel(this, FName(UTSTSSReviewShoreTravelSubsystem::ShorePackage()));
+}
+#endif
 
 void ATSTSSExplorerCharacter::QuickSave()
 {
