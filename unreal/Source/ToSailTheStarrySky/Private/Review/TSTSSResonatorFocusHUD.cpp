@@ -20,7 +20,7 @@ UTextBlock* MakeLine(UWidgetTree* Tree,UVerticalBox* Stack,const TCHAR* Name,
     Line->SetAutoWrapText(true);
     Line->SetColorAndOpacity(FSlateColor(Color));
     if(UVerticalBoxSlot* Slot=Stack->AddChildToVerticalBox(Line))
-        Slot->SetPadding(FMargin(15.f,7.f));
+        FocusCanvasSlot->SetPadding(FMargin(15.f,7.f));
     return Line;
 }
 }
@@ -37,10 +37,10 @@ void UTSTSSResonatorFocusHUD::NativeConstruct()
     UBorder* Back=WidgetTree->ConstructWidget<UBorder>(
         UBorder::StaticClass(),TEXT("FocusHudPanel"));
     Back->SetBrushColor(FLinearColor(.016f,.047f,.079f,.94f));
-    UCanvasPanelSlot* Slot=Canvas->AddChildToCanvas(Back);
-    Slot->SetAnchors(FAnchors(0.f,0.f));
-    Slot->SetPosition(FVector2D(18.f,18.f));
-    Slot->SetSize(FVector2D(560.f,415.f));
+    UCanvasPanelSlot* FocusCanvasSlot=Canvas->AddChildToCanvas(Back);
+    FocusCanvasSlot->SetAnchors(FAnchors(0.f,0.f));
+    FocusCanvasSlot->SetPosition(FVector2D(18.f,18.f));
+    FocusCanvasSlot->SetSize(FVector2D(560.f,415.f));
     UVerticalBox* Stack=WidgetTree->ConstructWidget<UVerticalBox>(
         UVerticalBox::StaticClass(),TEXT("FocusLayout"));
     Back->SetContent(Stack);

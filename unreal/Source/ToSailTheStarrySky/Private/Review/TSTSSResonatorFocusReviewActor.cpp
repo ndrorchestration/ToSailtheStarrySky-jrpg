@@ -18,11 +18,11 @@
 
 namespace
 {
-const FName Centering(TEXT("Ender_Centering"));
-const FName Pulse(TEXT("Ender_ResonantPulse"));
+const FName FocusCenteringSkill(TEXT("Ender_Centering"));
+const FName FocusPulseSkill(TEXT("Ender_ResonantPulse"));
 const FName IoniaArt(TEXT("Review_FocusIoniaStrike"));
 const FName FoeArt(TEXT("Review_FocusFoeStrike"));
-const FName FoeId(TEXT("ReviewFocusFoe"));
+const FName FocusOpponentId(TEXT("ReviewFocusFoe"));
 
 FTSS_CombatParticipant Member(FName Id,int32 HP,int32 MP,
                                 int32 Attack,int32 Defense,int32 Initiative,
@@ -60,14 +60,14 @@ bool AcceptedFocusRow(const FTSTSSBattleSkillRow* Row,FName Id)
         Row->RequiredMasteryRank!=1 ||
         !Row->RequiredSecondarySchool.IsNone() ||
         Row->RequiredSecondaryRank!=0) return false;
-    if (Id==Centering)
+    if (Id==FocusCenteringSkill)
         return Row->Target==ETSTSSBattleSkillTarget::Self &&
             Row->bPartyPhysicalDefenseBuff &&
             Row->PhysicalDefenseBuffPercent==15 &&
             Row->BuffDurationRounds==3 &&
             Row->ResourceCost==5 && Row->Power==0 &&
             !Row->bHealing && Row->VfxCueId==TEXT("VFX.Ender.Centering");
-    if (Id==Pulse)
+    if (Id==FocusPulseSkill)
         return Row->Target==ETSTSSBattleSkillTarget::Enemy &&
             !Row->bPartyPhysicalDefenseBuff &&
             Row->PhysicalDefenseBuffPercent==0 &&
@@ -188,10 +188,10 @@ bool ATSTSSResonatorFocusReviewActor::TryInitArena()
     if(!IsValid(Source) || Source->GetRowStruct()!=FTSTSSBattleSkillRow::StaticStruct() ||
        Source->GetRowMap().Num()!=10) return false;
     const FTSTSSBattleSkillRow* C=Source->FindRow<FTSTSSBattleSkillRow>(
-        Centering,TEXT("focus review Centering"),false);
+        FocusCenteringSkill,TEXT("focus review Centering"),false);
     const FTSTSSBattleSkillRow* P=Source->FindRow<FTSTSSBattleSkillRow>(
-        Pulse,TEXT("focus review Pulse"),false);
-    if(!AcceptedFocusRow(C,Centering) || !AcceptedFocusRow(P,Pulse)) return false;
+        FocusPulseSkill,TEXT("focus review Pulse"),false);
+    if(!AcceptedFocusRow(C,FocusCenteringSkill) || !AcceptedFocusRow(P,FocusPulseSkill)) return false;
     // A future contributor cannot enable unapproved Correspondence or other
     // spells merely by adding them to the DataTable.
     for(const auto& Pair:Source->GetRowMap())
@@ -199,24 +199,24 @@ bool ATSTSSResonatorFocusReviewActor::TryInitArena()
         const FName Id=Pair.Key;
         const FTSTSSBattleSkillRow* Row=reinterpret_cast<const FTSTSSBattleSkillRow*>(
             Pair.Value);
-        if(Id!=Centering && Id!=Pulse &&
+        if(Id!=FocusCenteringSkill && Id!=FocusPulseSkill &&
            (!Row || Row->Admission!=ETSTSSBattleSkillAdmission::DesignOnly))
             return false;
     }
     AcceptedReviewTable=NewObject<UDataTable>(this);
     if(!AcceptedReviewTable) return false;
     AcceptedReviewTable->RowStruct=FTSTSSBattleSkillRow::StaticStruct();
-    AcceptedReviewTable->AddRow(Centering,*C);
-    AcceptedReviewTable->AddRow(Pulse,*P);
+    AcceptedReviewTable->AddRow(FocusCenteringSkill,*C);
+    AcceptedReviewTable->AddRow(FocusPulseSkill,*P);
     AcceptedReviewTable->AddRow(IoniaArt,ReviewArt(IoniaArt,3));
     AcceptedReviewTable->AddRow(FoeArt,ReviewArt(FoeArt,6));
 
     FTSS_CombatParticipant E=Member(TEXT("Ender"),60,30,5,3,20,true);
-    E.LearnedSkills={Centering,Pulse}; // Only explicit isolated reviewer loadout.
+    E.LearnedSkills={FocusCenteringSkill,FocusPulseSkill}; // Only explicit isolated reviewer loadout.
     E.MasteryRanks.Add(TEXT("ResonanceHarmonic"),1);
     FTSS_CombatParticipant I=Member(TEXT("Ionia"),70,0,3,6,10,true);
     I.LearnedSkills={IoniaArt};
-    FTSS_CombatParticipant F=Member(FoeId,145,0,3,1,7,false);
+    FTSS_CombatParticipant F=Member(FocusOpponentId,145,0,3,1,7,false);
     F.LearnedSkills={FoeArt};
     TArray<FTSS_CombatParticipant> Crew{E};
     TArray<FName> Active{E.ParticipantId};
@@ -250,9 +250,9 @@ bool ATSTSSResonatorFocusReviewActor::TryCast(FName Skill,FName Target)
 #endif
 }
 bool ATSTSSResonatorFocusReviewActor::TryCastCentering()
-{return TryCast(Centering,TEXT("Ender"));}
+{return TryCast(FocusCenteringSkill,TEXT("Ender"));}
 bool ATSTSSResonatorFocusReviewActor::TryCastResonantPulse()
-{return TryCast(Pulse,FoeId);}
+{return TryCast(FocusPulseSkill,FocusOpponentId);}
 void ATSTSSResonatorFocusReviewActor::CastCenteringKey()
 {
     if(!TryCastCentering())
@@ -282,7 +282,7 @@ void ATSTSSResonatorFocusReviewActor::OnAcceptedSkill(
     LastReviewEvent=FString::Printf(TEXT("%s USED %s"),
         *ActorId.ToString(),*SkillId.ToString());
     if(ActorId!=TEXT("Ender") ||
-       (SkillId!=Centering && SkillId!=Pulse)) return;
+       (SkillId!=FocusCenteringSkill && SkillId!=FocusPulseSkill)) return;
     FTSTSSBattleSkillCue Accepted;
     Accepted.SkillId=SkillId;
     Accepted.ActorId=ActorId;
@@ -290,12 +290,12 @@ void ATSTSSResonatorFocusReviewActor::OnAcceptedSkill(
     Accepted.VfxCueId=VfxCueId;
     Accepted.AnimationCueId=AnimationCueId;
     const FVector Origin=EnderProxy->GetComponentLocation();
-    const FVector Target=SkillId==Centering
+    const FVector Target=SkillId==FocusCenteringSkill
         ? Origin : FoeProxy->GetComponentLocation();
     if(ATSTSSResonatorVfxActor::IsAcceptedEnderCue(Accepted))
         ATSTSSResonatorVfxActor::SpawnFromAcceptedCue(
             GetWorld(),Accepted,Origin,Target);
-    PlaySound(SkillId==Centering?CenteringSfx.Get():PulseSfx.Get());
+    PlaySound(SkillId==FocusCenteringSkill?CenteringSfx.Get():PulseSfx.Get());
     RefreshHUD();
 #endif
 }
@@ -320,9 +320,9 @@ void ATSTSSResonatorFocusReviewActor::Tick(float DeltaSeconds)
                 if(Actor==TEXT("Ionia"))
                 {
                     Command.SkillId=IoniaArt;
-                    Command.TargetParticipantId=FoeId;
+                    Command.TargetParticipantId=FocusOpponentId;
                 }
-                else if(Actor==FoeId)
+                else if(Actor==FocusOpponentId)
                 {
                     Command.SkillId=FoeArt;
                     Command.TargetParticipantId=bIoniaRecruitedForReview
