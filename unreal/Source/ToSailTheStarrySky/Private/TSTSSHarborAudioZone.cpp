@@ -23,6 +23,19 @@ void ATSTSSHarborAudioZone::BeginPlay()
     Super::BeginPlay();
     Trigger->OnComponentBeginOverlap.AddDynamic(this, &ATSTSSHarborAudioZone::OnPlayerEnter);
     Trigger->OnComponentEndOverlap.AddDynamic(this, &ATSTSSHarborAudioZone::OnPlayerLeave);
+    // BeginPlay can occur after overlap state was established by actor placement.
+    APlayerController* Player = UGameplayStatics::GetPlayerController(this, 0);
+    if (IsValid(HarborAudio) && IsValid(Player) && IsValid(Player->GetPawn()) &&
+        Trigger->IsOverlappingActor(Player->GetPawn()))
+    {
+        HarborAudio->SetHarborZoneAudible(true);
+    }
+}
+
+void ATSTSSHarborAudioZone::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    if (IsValid(HarborAudio)) HarborAudio->SetHarborZoneAudible(false);
+    Super::EndPlay(EndPlayReason);
 }
 
 void ATSTSSHarborAudioZone::OnPlayerEnter(
