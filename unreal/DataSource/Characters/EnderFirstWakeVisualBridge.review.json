@@ -24,12 +24,12 @@
       "Aepex"
     ],
     "starbourne": "LOCKED",
-    "identity": "Creator-approved reference is authoritative; generic Genesis 9 test face is NOT accepted Ender.",
-    "face": "Lean youthful 22-year-old with light freckles; must match approved portrait, not generic Genesis 9.",
+    "identity": "Creator-approved November 11 cast-bible illustration: Ender in second panel from left. Earlier very-short/buzz-cut references are historically superseded; generic Genesis 9 face is not approved.",
+    "face": "Match the youthful expressive 22-year-old with defined brow, light facial stubble and confident/curious/upbeat expressions shown in the approved cast-bible Ender panel; preserve bright-green in-game eyes and avoid generic Genesis 9 likeness.",
     "eyes": "Bright green; final eyes require actual textured iris/cornea and native lighting review.",
-    "hair": "Very short dark copper-brown/auburn appearance is the earlier approved lock; procedural longer V9 fringe remains UNAPPROVED until explicit review.",
-    "costume": "Practical field scholar / engineer: olive and green, tan and cream; natural textiles, brass details. Teal generic-shirt study is diagnostic only.",
-    "goggles": "Sealed brass aviator goggles with green lenses, worn on forehead; glasses rejected.",
+    "hair": "CREATOR APPROVED: textured, full-volume, tousled dark brown hair with copper/auburn undertones as depicted on Ender in the November 11 cast bible. Supersedes prior buzz-cut direction. V9 thin hair-card prototype remains unapproved.",
+    "costume": "CREATOR APPROVED SILHOUETTE: rolled-sleeve olive/sage practical mechanic jacket and shirt, dark brown fitted leather chest harness, belts and pouches, aged brass buckles and subtle teal glowing mechanical components; match second-panel reference. The current generic DAZ shirt/shorts are not final.",
+    "goggles": "Brass/bronze sealed aviator goggles worn on head, teal-tinted lenses and proportional fit matched to approved cast-bible Ender panel; no eyeglasses. Native clearance/attachment still pending.",
     "staff": "Full-length centered-wrap wooden resonance staff with twin brass ferrules; anatomically valid hand grip required."
   },
   "source_review": {
@@ -98,5 +98,19 @@
       "Test real player movement, interaction, save/load and First Wake progression without Lyra early",
       "Verify first party and Starbourne gates unchanged; request creator approval only after native evidence"
     ]
+  },
+  "appearance_reference": {
+    "status": "CREATOR_APPROVED_VISUAL_REFERENCE_ONLY",
+    "approved_on": "2026-11-11",
+    "source": "User-uploaded To Sail the Starry Sky — Cast & Gameplay Bible — Main Party (Act 1), SECOND PANEL FROM LEFT (ENDER)",
+    "access": "CONVERSATION_IMAGE; not yet embedded in repository/Notion",
+    "prior_hair_reference": "VERY_SHORT_AUBURN_BUZZ_CUT_SUPERSEDED",
+    "avatar_model_approved": false,
+    "mesh_rig_animation_approved": false,
+    "game_stats_and_job_redefined": false,
+    "accepted_hair": "TOUSLED_DARK_COPPER_BROWN_FULL_VOLUME",
+    "accepted_face": "YOUTHFUL_EXPRESSIVE_WITH_LIGHT_STUBBLE",
+    "accepted_outfit": "OLIVE_SLEEVES_LEATHER_HARNESS_BRASS_TEAL_GADGETS",
+    "accepted_goggles": "BRASS_TEAL_LENSES_ON_HEAD"
   }
 }
