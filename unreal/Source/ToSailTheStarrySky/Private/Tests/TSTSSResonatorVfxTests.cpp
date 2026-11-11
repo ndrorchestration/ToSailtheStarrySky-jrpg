@@ -2,6 +2,9 @@
 #include "TSTSSResonatorVfxActor.h"
 #include "Combat/TSS_CombatTurnManager.h"
 #include "Engine/DataTable.h"
+#include "Review/TSTSSResonatorFocusGameMode.h"
+#include "GameFramework/SpectatorPawn.h"
+#include "GameFramework/HUD.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 
@@ -50,6 +53,17 @@ bool FTSTSSResonatorCueContractTest::RunTest(const FString& Parameters)
     Invalid.ActorId = TEXT("Ender");
     Invalid.TargetId = NAME_None;
     TestFalse(TEXT("missing target denied"), ATSTSSResonatorVfxActor::IsAcceptedEnderCue(Invalid));
+
+    const ATSTSSResonatorFocusGameMode* FocusMode =
+        GetDefault<ATSTSSResonatorFocusGameMode>();
+    if (!TestNotNull(TEXT("isolated Resonator review GameMode available"),FocusMode))
+        return false;
+    TestTrue(TEXT("focus review never spawns First Wake explorer pawn"),
+        FocusMode->DefaultPawnClass==ASpectatorPawn::StaticClass());
+    TestTrue(TEXT("focus review never draws First Wake objective HUD"),
+        FocusMode->HUDClass==AHUD::StaticClass());
+    TestTrue(TEXT("focus starts players as spectators"),
+        FocusMode->bStartPlayersAsSpectators);
 
     // Focused, ACTUAL turn-authority tests for the two playable Resonator
     // review spells. No arbitrary review light/animation grants a skill.
