@@ -80,6 +80,7 @@ def validate_cpp_guards(header: str, source: str) -> None:
     require('SetCollisionEnabled(ECollisionEnabled::NoCollision)' in source,
             "review accessories must not alter physics collision")
     require('SetSkeletalMeshAsset(Candidate)' in source, "no real pawn visual binding")
+    require("!Body->DoesSocketExist(Bone)" in source, "missing valid-bone socket guard")
     require('FAttachmentTransformRules::SnapToTargetNotIncludingScale' in source,
             "uncontrolled attachment semantics")
     # Inspect only the bounded review method: prevent accidental gameplay state edits.
