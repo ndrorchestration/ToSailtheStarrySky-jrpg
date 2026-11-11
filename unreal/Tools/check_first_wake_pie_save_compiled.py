@@ -47,6 +47,10 @@ void ShowFirstWakeReviewSaveLoadStatus(bool isLoad, bool succeeded) {
     lastStatus = (isLoad ? 2 : 0) + (succeeded ? 1 : 0);
 }
 struct UTSTSSFirstWakeState {};
+struct UReviewMenu {
+    bool visible = false;
+    bool IsInViewport() const { return visible; }
+};
 namespace EKeys { static constexpr int LeftShift = 1; static constexpr int RightShift = 2; }
 struct APlayerController {
     bool leftShift = false;
@@ -65,6 +69,7 @@ struct ATSTSSExplorerCharacter {
     bool bHasController = true;
     APlayerController* GetController() { return bHasController ? &controller : nullptr; }
     bool bPIEReviewQuickSlotOwned = false;
+    UReviewMenu* EquipmentReviewMenu = nullptr;
     bool bSaveSuccess = true;
     bool bLoadSuccess = true;
     int saves = 0;
@@ -104,6 +109,19 @@ int main() {
         UWorld game{EWorldType::Game};
         const FString reviewSlot = "tstss_prelude_pie_quick";
         const FString playerSlot = "first_wake_quick";
+
+        // Menus are not quicksave/quickload entrypoints. A visible menu must
+        // prevent both actions without creating any disk-save side effect.
+        UReviewMenu openMenu{true};
+        ATSTSSExplorerCharacter menuOpen;
+        menuOpen.world = &pie;
+        menuOpen.EquipmentReviewMenu = &openMenu;
+        menuOpen.QuickSave();
+        menuOpen.QuickLoad();
+        check(menuOpen.saves == 0 && menuOpen.loads == 0 &&
+                  !UGameplayStatics::DoesSaveGameExist(reviewSlot, 0) &&
+                  !UGameplayStatics::DoesSaveGameExist(playerSlot, 0),
+              "Open RPG menu incorrectly allowed quicksave or quickload");
 
         ATSTSSExplorerCharacter noSave;
         noSave.world = &pie;
@@ -228,7 +246,8 @@ def extract_methods(code: str) -> str:
                   "bPIEReviewQuickSlotOwned", "GetController()",
                   "PC->IsInputKeyDown(EKeys::LeftShift)",
                   "PC->IsInputKeyDown(EKeys::RightShift)",
-                  "UGameplayStatics::DoesSaveGameExist"):
+                  "UGameplayStatics::DoesSaveGameExist",
+                  "EquipmentReviewMenu->IsInViewport()"):
         if token not in method_code:
             raise ValueError("PIE safety logic missing: " + token)
     return method_code
@@ -271,6 +290,14 @@ def main() -> int:
         raise RuntimeError("Actual handler failed: " + actual.stdout + actual.stderr)
     print(actual.stdout.strip())
     if args.self_test:
+        menu_guard = "if (EquipmentReviewMenu && EquipmentReviewMenu->IsInViewport()) return;"
+        if methods.count(menu_guard) != 2:
+            raise RuntimeError("Both save and load must honor exact menu guard")
+        unsafe_menu = methods.replace(menu_guard, "if (false) return;")
+        denied = compiled_run(compiler, unsafe_menu)
+        if denied.returncode == 0 or "HANDLER_BEHAVIOR_FAILURE" not in denied.stderr:
+            raise RuntimeError("Probe failed to reject menu-open save/load bypass")
+        print("PASS: open-menu save/load bypass mutation rejected")
         anchor = "if (bPIE && !bPIEReviewQuickSlotOwned &&"
         if methods.count(anchor) != 1:
             raise RuntimeError("PIE mutation control anchor missing/duplicated")

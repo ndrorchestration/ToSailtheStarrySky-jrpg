@@ -45,3 +45,9 @@ Data absence must remain explicit, never replaced by invented numerical health, 
 - Creator art review for cinematic materials, iconography, HUD typography, sound cues, controller/gamepad focus and accessibility, plus native D3D12 captures.
 
 **Review-only / draft / no merge.**
+
+## Native and portable acceptance updates
+
+At implementation head 40aba94c6ab9db57f9417a4a9110afdd593c1f75, Windows UE 5.8.4 Win64 Editor build and the complete strict source-locked 30/30 native automation suite passed; checkout remained clean and original DefaultEngine.ini / DefaultInput.ini hashes were unchanged. Local retained receipt: unreal/Saved/MigrationEvidence/40aba94c6ab9-20261111T154137603Z-bd0d8071 (not a D3D12 visual/PIE acceptance).
+
+Hosted source preflight discovered a portable test-doubles mismatch: the older F5/F9 handler compilation harness did not model the new EquipmentReviewMenu open-state predicate. The repair adds a menu-visibility double and proves actual QuickSave/QuickLoad C++ method bodies refuse operations while the RPG menu is open, without changing production gameplay guards. Windows MSVC ran 16 successful cases and rejected mutations bypassing the menu guard, the stale PIE save-ownership restriction, and both Shift+F5 protections. These portable results do not claim real disk writes or PIE UX proof. Revalidate full hosted CI and exact-head native status after any repair commit.
