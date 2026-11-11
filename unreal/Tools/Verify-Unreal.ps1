@@ -114,6 +114,7 @@ $RequiredTests = @(
     'TSTSS.Combat.TurnOrderAndAtomicity',
     'TSTSS.Combat.AbilityAuthorization',
     'TSTSS.Combat.MagicAndWeaponTechniques',
+    'TSTSS.Magic.ResonatorCueContract',
     'TSTSS.Combat.InitiativeAndActiveParty',
     'TSTSS.Combat.TurnManagerTerminalOutcomes',
     'TSTSS.CombatData.ProtagonistContracts',
