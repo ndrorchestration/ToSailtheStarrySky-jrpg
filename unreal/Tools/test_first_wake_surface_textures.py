@@ -86,5 +86,77 @@ class SurfacePassQA(unittest.TestCase):
         self.assertNotEqual(p.returncode, 0)
         self.assertIn("explicit opt-in", p.stderr)
 
+    def test_six_bounded_scene_weather_and_light_references(self):
+        self.assertEqual(set(surface.SCENE_LOOKS), set(surface.SCENES))
+        self.assertEqual(set(surface.PRACTICAL_LAMPS), set(surface.SCENES))
+        atmosphere_src = SRC.with_name("build_first_wake_atmosphere_review.py").read_text(encoding="utf-8")
+        lighting_src = SRC.with_name("tstss_lighting_review.py").read_text(encoding="utf-8")
+        for scene, (weather, hour, look) in surface.SCENE_LOOKS.items():
+            self.assertIn('"' + weather + '"', atmosphere_src)
+            self.assertIn('Look("' + look + '"', lighting_src)
+            self.assertTrue(0 <= hour < 24)
+            self.assertTrue(surface.manifest()["scene_looks"][scene]
+                            ["weather_and_time_are_noncanonical_lookdev"])
+        self.assertNotIn("Snow", [entry[0] for entry in surface.SCENE_LOOKS.values()])
+        self.assertNotIn("Blizzard", [entry[0] for entry in surface.SCENE_LOOKS.values()])
+
+    def test_only_known_sky_actors_will_be_replaced(self):
+        self.assertEqual(len(surface.OLD_SKY_LABELS), 4)
+        self.assertEqual(len(surface.HARBOR_INHERITED_LIGHTS), 2)
+        code = SRC.with_name("stage_first_wake_multipath_shore.py").read_text(encoding="utf-8")
+        for name in surface.OLD_SKY_LABELS:
+            self.assertIn(name, code)
+        self.assertEqual(len(set(surface.OLD_SKY_LABELS +
+                                 surface.HARBOR_INHERITED_LIGHTS)), 6)
+
+    def test_weather_enum_resolution_refuses_missing_member(self):
+        from types import SimpleNamespace
+        u = SimpleNamespace(ETSTSSWeather=SimpleNamespace(
+            CLEAR=12, COASTAL_MIST=13, STORM=14, RAIN=15))
+        self.assertEqual(surface.weather_enum_value(u, "CoastalMist"), 13)
+        self.assertEqual(surface.weather_enum_value(u, "Clear"), 12)
+        with self.assertRaisesRegex(RuntimeError, "unsupported native weather"):
+            surface.weather_enum_value(u, "AuroralVeil")
+
+    def test_native_staging_refuses_missing_original_lights_before_writes(self):
+        class FakeWorld:
+            def get_all_level_actors(self): return []
+            def destroy_actor(self, _actor):
+                raise AssertionError("Must not mutate map")
+        with self.assertRaisesRegex(RuntimeError, "inventory drift"):
+            surface.stage_scene_atmosphere(None, FakeWorld(),
+                                            "VS06_SplashdownShore", None, None)
+
+    def test_native_staging_refuses_unowned_extra_sky(self):
+        class FakeClass:
+            def __init__(self, name): self.name = name
+            def get_name(self): return self.name
+        class FakeActor:
+            def __init__(self, label, klass): self.label, self.klass = label, klass
+            def get_actor_label(self): return self.label
+            def get_class(self): return FakeClass(self.klass)
+        actors = [FakeActor(n, "DirectionalLight" if n.endswith("SunKey")
+                            else "SkyLight" if n.endswith("SkyAmbient")
+                            else "ExponentialHeightFog") for n in surface.OLD_SKY_LABELS]
+        actors.append(FakeActor("Unowned_Sun", "DirectionalLight"))
+        class FakeWorld:
+            def get_all_level_actors(self): return actors
+            def destroy_actor(self, _actor):
+                raise AssertionError("Must not mutate map")
+        with self.assertRaisesRegex(RuntimeError, "duplicate illumination"):
+            surface.stage_scene_atmosphere(None, FakeWorld(),
+                                            "VS06_SplashdownShore", None, None)
+
+    def test_guarded_scene_source_map_receipts_are_present(self):
+        proof = surface.PROJECT / "Docs/Evidence/vertical_slice_map_readback_20261110.json"
+        self.assertTrue(proof.is_file())
+        receipt = json.loads(proof.read_text(encoding="utf-8"))
+        self.assertEqual(set(receipt["map_validation"]), set(surface.SCENES))
+        for scene in surface.SCENES:
+            self.assertEqual(
+                hashlib.sha256((surface.PROJECT / "Content/TSTSS/Review/VerticalSlice" /
+                                (scene + ".umap")).read_bytes()).hexdigest(),
+                receipt["map_validation"][scene]["source_sha256"])
+
 if __name__ == "__main__":
     unittest.main()

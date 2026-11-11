@@ -40,3 +40,22 @@ Native checks to perform **before any accepted visual claim**:
 5. Capture player-input PIE and creator side-by-side review. Keep all PRs draft until native proof and art approval.
 
 Status: `SOURCE_TEXTURES_CREATED` after generation; native assets, GPU screenshots, PIE, performance, final look and canonical approval remain **NOT_VERIFIED** until measured on this exact branch.
+
+## V1.1 — Six-map cinematic atmosphere composition (source implementation)
+
+The follow-on pass now binds proposed **scene-specific weather/time/lighting-reference profiles** and practical lamps to all six duplicated review levels. The values are look-development proposals, not canon or game progression:
+
+| Review map | Weather | Clock (lookdev) | Lighting reference | Practical lamps |
+| --- | --- | --- | --- | ---: |
+| VS01 Denith Harbor | Coastal mist | 16:48 | harbor_dusk | 2 |
+| VS02 Aureate Interiors | Clear | 17:06 | engineering | 2 |
+| VS03 First Wake Sky | Clear | 17:30 | ascent | 0 |
+| VS04 Splashdown Sea | Storm | 18:00 | storm_descent | 0 |
+| VS05 Denith Fuel Shanty | Rain | 18:36 | shore_aftermath | 1 |
+| VS06 Splashdown Shore | Coastal mist | 19:06 | shore_aftermath | 1 |
+
+On each newly duplicated map, the opt-in native authoring now **requires exactly four known environment-placeholder sky actors**, plus exactly two inherited Prelude V2 placeholder lights in the harbor map. It removes those actors **only in the duplicate**, then spawns exactly one `ATSTSSAtmosphereDirector`, assigns the existing UE cloud material, uses the source-locked weather/time recipe and adds review-only movable practical PointLights. It refuses unexpected competing sky/sun/fog actors before deleting anything. Six independent map SHA-256 values from the native six-map readback are checked before and after authoring. Art and gameplay grants remain unchanged.
+
+**Mandatory gate:** Native material/atmosphere authoring now refuses absent, stale, incomplete or mismatched same-head `verified-native.json` evidence for a real Unreal 5.8.4 Win64 build and all 35 named automation tests. Synthetic unit fixtures check that gate logic, but cannot substitute for real native evidence. Do not attempt GPU staging without an idle Unreal Editor, >=6.5 GiB RAM, >=14 GiB free disk, creator review pipeline and all exact-head native gates. Review whether the light and atmosphere class names and Python setters work inside UE 5.8.4; those APIs are **source proposals** until verified in Editor.
+
+A sky material/actor pass by itself is not proof of cloud realism, illuminated ocean, physical splashdown, runtime weather transitions, 3D player navigation, or cinematic acceptance. Snow and blizzard remain optional northern/biome lookdev, not forced into the Prelude. No new Starbourne authorization is implied.
