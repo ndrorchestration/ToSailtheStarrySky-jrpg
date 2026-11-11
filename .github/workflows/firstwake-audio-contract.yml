@@ -25,6 +25,8 @@ jobs:
         run: python3 unreal/Tools/test_audio_integration_source.py
       - name: Assert exact six review maps and sound-only staged bindings
         run: python3 unreal/Tools/test_audio_scene_contract.py
+      - name: Deny non-detached or rights-unverified audio map staging
+        run: python3 unreal/Tools/test_audio_stage_source.py
       - name: Generate bounded original review WAV files
         run: python3 unreal/Tools/build_audio_preview_samples.py --output "$RUNNER_TEMP/tstss-firstwake-audio-review"
       - name: Publish temporary original-QA preview files
