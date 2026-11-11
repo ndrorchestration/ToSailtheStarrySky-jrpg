@@ -12,6 +12,7 @@ bool FTSTSSResonatorCueContractTest::RunTest(const FString& Parameters)
     struct FPair { FName Spell; FName Visual; };
     const FPair ApprovedReviewPairs[] = {
         {TEXT("Ender_ResonantPulse"), TEXT("VFX.Ender.ResonantPulse")},
+        {TEXT("Ender_Centering"), TEXT("VFX.Ender.Centering")},
         {TEXT("Ender_TuningLance"), TEXT("VFX.Ender.TuningLance")},
         {TEXT("Ender_EchoMend"), TEXT("VFX.Ender.EchoMend")},
         {TEXT("Ender_CorrespondenceThread"), TEXT("VFX.Ender.CorrespondenceThread")},
