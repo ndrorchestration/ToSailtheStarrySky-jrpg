@@ -12,9 +12,19 @@ This is a **visual bridge**; it does not change movement input, story milestones
 
 **It does NOT yet provide:** a creator-approved face, hair, styled goggles fit, finished outfit, real animated staff grip, valid animation blueprint, cloth deformation proof, native UE5.8.4 compilation, gameplay screenshot, or full vertical-slice visual acceptance.
 
+## Creator approval recorded November 11 — definitive Ender likeness
+
+The creator explicitly approved **the Ender portrait in the SECOND panel from the left** of the uploaded **To Sail the Starry Sky — Cast & Gameplay Bible — Main Party (Act 1)**. This supersedes all older buzz-cut/very-short hair directions. It is an image-based **visual-reference approval**, not an approval of a generated skeletal mesh or any change to the game systems.
+
+**Match this source reference**, not a generic image lookup: youthful expressive face with subtle facial stubble; full, dark-brown hair with tousled copper/auburn texture; brass/bronze head-worn sealed aviator goggles with teal-tinted lenses; rolled olive/sage mechanic sleeves; dark leather chest harness and straps, pouches and brass hardware; restrained turquoise-glowing technical devices. Keep approved in-game bright-green eyes. Preserve his Resonator job, Harmonic Resonance Engineer trade, Spirit affinity, staff design and other canonical RPG systems. Do not copy the illustration's compact infographic text over more recent system documents.
+
+The original source is the **user-uploaded conversation image**; the underlying binary has not been attached to this GitHub branch. Obtain and checksum the original reference file before asset generation that requires image-to-3D input. An unrelated web image is **not** an acceptable substitute.
+
+The approved target **replaces** the old short-hair priority in the steps below, and the professional 3D likeness, hair volume, outfit, goggles and staff still need native Unreal fit/animation and creator model approval.
+
 ## Visual and personality tone to carry into final art
 
-- **Canon look:** youthful lean 22-year-old field scholar/engineer; bright **green** eyes, light freckles, approved dark copper/auburn **very short hair** (later V9 longer fringe is experimental and must not silently supersede earlier creator-approved short hair); practical olive/green + tan/cream clothing; aged brass sealed aviator goggles with green lenses. No ordinary glasses. The full-length staff has a centered wrap and double brass ferrules.
+- **Canon look (superseded hair lock corrected November 11):** youthful expressive 22-year-old engineer with subtle stubble and bright **green** eyes, full **tousled dark copper/brown hair**, brass sealed aviator goggles with teal lenses worn on his head, olive-green rolled sleeves, layered leather harness/straps, aged brass fittings and turquoise-glowing technical devices. Match the **actual second-panel cast-bible image**, not a stock concept or older buzz-cut. Staff remains centered-wrap with twin brass ferrules.
 - **Proposed tone in presentation (not a canon rewrite):** warm, credible, quietly confident expertise in older finicky harmonic-levitation engines; capable of dry humor and humility when the Aureate Wake surprises him. Convey technical competence in animation, expression and line delivery, not generic fantasy-hero posing.
 - **Cinematic requirement:** believable body scale, non-flat skin and real eye shaders, tangible cloth and metal, intentional staging, atmospheric depth, good foreground/background separation, physically plausible hand contact; approved front/side/three-quarter before field promotion.
 - **No generic Genesis placeholder approval:** the DAZ Genesis 9 reference is an intermediate body/rig experiment, not Ender's accepted likeness or final costume.
