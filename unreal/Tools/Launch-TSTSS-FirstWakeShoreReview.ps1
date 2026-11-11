@@ -11,20 +11,28 @@ if ("$($Version.MajorVersion).$($Version.MinorVersion).$($Version.PatchVersion)"
     throw 'Review route requires Unreal 5.8.4'
 }
 $Level = '/Game/TSTSS/Review/FirstWake_PreludeInteraction_V2'
-$Shore = Join-Path (Split-Path $Project) 'Content\TSTSS\Review\MultipathV1\L_VS06_ShoreMagicEnemyGear_Review.umap'
-if (-not (Test-Path $Shore -PathType Leaf)) { throw 'Published shore review map missing' }
+$MapFolder = Join-Path (Split-Path $Project) 'Content\TSTSS\Review'
+foreach ($Map in @(
+    'VerticalSlice\VS03_FirstWakeSky.umap',
+    'VerticalSlice\VS04_SplashdownSea.umap',
+    'VerticalSlice\VS05_DenithFuelShanty.umap',
+    'MultipathV1\L_VS06_ShoreMagicEnemyGear_Review.umap'
+)) {
+    if (-not (Test-Path (Join-Path $MapFolder $Map) -PathType Leaf)) {
+        throw "Required native review map missing: $Map"
+    }
+}
 $LaunchArguments = @(
     ('"{0}"' -f $Project),
     ('"{0}?game=/Script/ToSailTheStarrySky.TSTSSOpeningReviewMode"' -f $Level),
     '-game', '-windowed', '-ResX=1280', '-ResY=720', '-log'
 )
 if ($PrintOnly) {
-    Write-Output 'Review route: title overlay -> First Wake Prelude -> physical sea landing -> reserve investigation -> K shoreline'
-    Write-Output 'Executable: UnrealEditor.exe (UE 5.8.4)'
-    Write-Output 'Project and review map verified. This is not a gameplay or visual QA pass.'
+    Write-Output 'Review route: title -> First Wake engineering -> K sky -> K physical sea -> K fuel shanty -> E reserves -> K shoreline'
+    Write-Output 'Executable: UnrealEditor.exe (UE 5.8.4); four scene maps verified'
+    Write-Output 'Source checks only: no native PIE, gameplay or visual acceptance claimed.'
     exit 0
 }
-# Avoid competing with any other Unreal Editor or live-coding user.
 if (@(Get-Process -Name 'UnrealEditor','UnrealEditor-Cmd','LiveCodingConsole' -ErrorAction SilentlyContinue).Count -gt 0) {
     throw 'Another Unreal editor session is active: no launch'
 }
@@ -33,5 +41,5 @@ $FreeDisk = (Get-PSDrive C).Free
 if ($FreeKiB -lt 6815744 -or $FreeDisk -lt (14 * 1GB)) {
     throw 'Insufficient resources for interactive review: need 6.5 GiB RAM and 14 GiB C: free'
 }
-Write-Output 'Opening review-only First Wake; no art/gameplay acceptance implied.'
+Write-Output 'Opening review-only First Wake; native gameplay and art quality unapproved.'
 Start-Process -FilePath $Editor -ArgumentList $LaunchArguments -WorkingDirectory (Split-Path $Project)
