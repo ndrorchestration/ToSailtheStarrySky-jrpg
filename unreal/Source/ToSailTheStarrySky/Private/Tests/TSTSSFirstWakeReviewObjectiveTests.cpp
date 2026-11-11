@@ -1,5 +1,6 @@
 #include "Misc/AutomationTest.h"
 #include "TSTSSFirstWakeState.h"
+#include "TSTSSReviewShoreTravelSubsystem.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTSTSSFirstWakeReviewObjectiveTest,
@@ -62,6 +63,51 @@ bool FTSTSSFirstWakeReviewObjectiveTest::RunTest(const FString& Parameters)
     State->Reset();
     TestEqual(TEXT("Reset returns objective to flyer"), State->GetReviewObjectiveText(),
         FString(TEXT("Find Ionia's flyer")));
+
+    // Review-only 3D route is subject to the same native First Wake
+    // acceptance inventory. No new unverified test registration, no
+    // shortcut around the physical sea-landing gate.
+    using Route = UTSTSSReviewShoreTravelSubsystem;
+    const FString Prelude(TEXT("FirstWake_PreludeInteraction_V2"));
+    TestFalse(TEXT("Unstarted review cannot travel"),
+        Route::IsEligible(State, Prelude));
+    TestTrue(TEXT("Fixture restores boarded ship"),
+        State->Restore(true, ETSTSSFirstWakeBeat::BoardedAureateWake, 0));
+    TestFalse(TEXT("Pre-inspection launch is refused"),
+        Route::IsEligible(State, Prelude));
+    TestTrue(TEXT("Fixture restores engineering signoff"),
+        State->Restore(true, ETSTSSFirstWakeBeat::EngineeringChecked, 0x07));
+    TestEqual(TEXT("Engineering opens only the sky review"),
+        Route::NextReviewMap(State, Prelude),
+        FString(TEXT("/Game/TSTSS/Review/VerticalSlice/VS03_FirstWakeSky")));
+    TestFalse(TEXT("Cannot start in sea map"),
+        Route::IsEligible(State, TEXT("VS04_SplashdownSea")));
+    TestTrue(TEXT("Fixture restores launch"),
+        State->Restore(true, ETSTSSFirstWakeBeat::Launched, 0x07));
+    TestTrue(TEXT("Launched sky proceeds to native sea scene"),
+        Route::IsEligible(State, TEXT("VS03_FirstWakeSky")));
+    TestFalse(TEXT("Launch itself cannot grant flotation"),
+        Route::IsEligible(State, TEXT("VS04_SplashdownSea")));
+    TestTrue(TEXT("Fixture restores sea contact without flotation"),
+        State->Restore(true, ETSTSSFirstWakeBeat::SeaContact, 0x07));
+    TestFalse(TEXT("Contact alone cannot admit shanty"),
+        Route::IsEligible(State, TEXT("VS04_SplashdownSea")));
+    TestTrue(TEXT("Fixture restores stable flotation"),
+        State->Restore(true, ETSTSSFirstWakeBeat::FlotationConfirmed, 0x07));
+    TestEqual(TEXT("Stable flotation alone opens fuel review"),
+        Route::NextReviewMap(State, TEXT("VS04_SplashdownSea")),
+        FString(TEXT("/Game/TSTSS/Review/VerticalSlice/VS05_DenithFuelShanty")));
+    TestFalse(TEXT("Reserve check required for shore"),
+        Route::IsEligible(State, TEXT("VS05_DenithFuelShanty")));
+    TestTrue(TEXT("Fixture restores inspected reserves"),
+        State->Restore(true, ETSTSSFirstWakeBeat::EmptyReserveInspected, 0x07));
+    TestEqual(TEXT("Only fuel map opens composited shore"),
+        Route::NextReviewMap(State, TEXT("VS05_DenithFuelShanty")),
+        FString(Route::ShorePackage()));
+    TestFalse(TEXT("No direct Prelude shortcut after splashdown"),
+        Route::IsEligible(State, Prelude));
+    TestFalse(TEXT("Shore cannot self-transition"),
+        Route::IsEligible(State, TEXT("L_VS06_ShoreMagicEnemyGear_Review")));
     return true;
 }
 #endif

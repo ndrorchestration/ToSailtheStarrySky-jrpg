@@ -3,6 +3,12 @@
 #include "TSTSSPersistence.h"
 #include "TSTSSInteractionReach.h"
 #include "TSTSSSaveGame.h"
+#include "TSTSSReviewShoreTravelSubsystem.h"
+#include "Engine/GameInstance.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
+#include "Engine/TextRenderActor.h"
+#include "Components/TextRenderComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -175,11 +181,83 @@ void ATSTSSExplorerCharacter::BeginPlay()
 {
     Super::BeginPlay();
     FirstWakeState = NewObject<UTSTSSFirstWakeState>(this);
+#if WITH_EDITOR
+    if (UWorld* World = GetWorld())
+    {
+        if (UGameInstance* GameInstance = World->GetGameInstance())
+        {
+            if (UTSTSSReviewShoreTravelSubsystem* Travel =
+                    GameInstance->GetSubsystem<UTSTSSReviewShoreTravelSubsystem>())
+            {
+                if (Travel->ConsumeShoreArrival(World, FirstWakeState))
+                {
+                    UE_LOG(LogTemp, Display,
+                        TEXT("TSTSS_FIRSTWAKE_REVIEW_SCENE_ARRIVAL_STORY_RESTORED_NO_RECRUITMENT beat=%d"),
+                        static_cast<int32>(FirstWakeState->GetCurrentBeat()));
+                    const FString Scene = UGameplayStatics::GetCurrentLevelName(World, true);
+                    if (Scene == TEXT("VS03_FirstWakeSky") ||
+                        Scene == TEXT("VS04_SplashdownSea"))
+                    {
+                        // Both scene-review levels have no PlayerStart or walkable
+                        // route. Use a temporary observer pawn, not canonical flight.
+                        GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+                        SetActorLocation(Scene == TEXT("VS03_FirstWakeSky")
+                            ? FVector(-1600.f, -2300.f, 1000.f)
+                            : FVector(-1800.f, -2800.f, 950.f));
+                        if (Controller)
+                        {
+                            Controller->SetControlRotation(FRotator(-12.f, 55.f, 0.f));
+                        }
+                    }
+                    else if (Scene == TEXT("VS05_DenithFuelShanty") &&
+                        FirstWakeState->GetCurrentBeat() ==
+                            ETSTSSFirstWakeBeat::FlotationConfirmed)
+                    {
+                        // The native fuel-shanty map is scenery only. Add one
+                        // review interaction at the player's spawn, requiring E
+                        // before K may advance to the published shoreline.
+                        ATSTSSMilestoneActor* Reserve =
+                            World->SpawnActor<ATSTSSMilestoneActor>(
+                                FVector(-1430.f, -140.f, 180.f),
+                                FRotator::ZeroRotator);
+                        UStaticMesh* ReviewCube = LoadObject<UStaticMesh>(
+                            nullptr, TEXT("/Engine/BasicShapes/Cube.Cube"));
+                        if (IsValid(Reserve) && IsValid(ReviewCube))
+                        {
+                            Reserve->SetActorLabel(
+                                TEXT("TSTSS_SPLASHDOWN_GREYBOX_EmptyReserveMarker"));
+                            Reserve->Milestone = ETSTSSFirstWakeBeat::EmptyReserveInspected;
+                            UStaticMeshComponent* Shape =
+                                Reserve->FindComponentByClass<UStaticMeshComponent>();
+                            if (IsValid(Shape))
+                            {
+                                Shape->SetStaticMesh(ReviewCube);
+                                Shape->SetWorldScale3D(FVector(1.2f));
+                            }
+                            if (ATextRenderActor* Sign = World->SpawnActor<ATextRenderActor>(
+                                    FVector(-1490.f, -230.f, 330.f),
+                                    FRotator::ZeroRotator))
+                            {
+                                Sign->SetActorLabel(TEXT("TSTSS_REVIEW_ReserveCheckNotice"));
+                                Sign->GetTextRender()->SetText(
+                                    FText::FromString(TEXT("EMPTY RESERVES  |  Inspect [E]")));
+                            }
+                        }
+                        else if (IsValid(Reserve))
+                        {
+                            Reserve->Destroy();
+                        }
+                    }
+                }
+            }
+        }
+    }
+#endif
     bPIEReviewQuickSlotOwned = false;
 #if WITH_EDITOR
     bPendingReviewContinue = false;
 #endif
-    ShowFirstWakeReviewObjective(FirstWakeState);
+    ShowObjectiveReview();
 }
 
 void ATSTSSExplorerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -212,6 +290,14 @@ void ATSTSSExplorerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
     }
 #endif
     PlayerInputComponent->BindAction(TEXT("ReviewObjective"), IE_Pressed, this, &ATSTSSExplorerCharacter::ShowObjectiveReview);
+#if WITH_EDITOR
+    if (InputWorld && (InputWorld->WorldType == EWorldType::PIE ||
+                       InputWorld->WorldType == EWorldType::Game))
+    {
+        PlayerInputComponent->BindAction(TEXT("ReviewShoreTravel"), IE_Pressed,
+            this, &ATSTSSExplorerCharacter::ReviewShoreTravel);
+    }
+#endif
 }
 
 void ATSTSSExplorerCharacter::MoveForward(float Value)
@@ -339,7 +425,42 @@ void ATSTSSExplorerCharacter::ShowObjectiveReview()
 {
     // Read-only recall of the existing short-lived objective cue.
     ShowFirstWakeReviewObjective(FirstWakeState);
+#if WITH_EDITOR
+    UWorld* World = GetWorld();
+    if (World && (World->WorldType == EWorldType::PIE ||
+                  World->WorldType == EWorldType::Game) &&
+        UTSTSSReviewShoreTravelSubsystem::IsEligible(
+            FirstWakeState, UGameplayStatics::GetCurrentLevelName(World, true)) && GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 7.f, FColor::Cyan,
+            TEXT("First Wake (review): K = next 3D scene (review only; no visual/gameplay approval)"));
+    }
+#endif
 }
+
+#if WITH_EDITOR
+void ATSTSSExplorerCharacter::ReviewShoreTravel()
+{
+    UWorld* World = GetWorld();
+    UGameInstance* GameInstance = World ? World->GetGameInstance() : nullptr;
+    UTSTSSReviewShoreTravelSubsystem* Travel = GameInstance
+        ? GameInstance->GetSubsystem<UTSTSSReviewShoreTravelSubsystem>() : nullptr;
+    if (!Travel || !Travel->QueueShore(World, FirstWakeState))
+    {
+        if (GEngine)
+        {
+            GEngine->AddOnScreenDebugMessage(-1, 6.f, FColor::Yellow,
+                TEXT("First Wake (review): next scene locked until the current milestone is complete"));
+        }
+        return;
+    }
+    const FString Destination = Travel->GetPendingMapPackage();
+    UE_LOG(LogTemp, Display,
+        TEXT("TSTSS_FIRSTWAKE_REVIEW_SCENE_TRAVEL_QUEUED_NO_RECRUITMENT destination=%s"),
+        *Destination);
+    UGameplayStatics::OpenLevel(this, FName(*Destination));
+}
+#endif
 
 void ATSTSSExplorerCharacter::QuickSave()
 {
