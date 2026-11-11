@@ -104,8 +104,24 @@ def generate():
     if not actor: raise RuntimeError("HOLD: review actor spawn failed")
     actor.set_actor_label("REVIEW ONLY - Ender Centering and Resonant Pulse")
     actor.set_editor_property("tags",[unreal.Name("TSTSSReviewOnly")])
-    actor.set_editor_property("b_enable_focus_review",True)
-    actor.set_editor_property("b_ionia_recruited_for_review",True)
+
+    def enable_required_actor_bool(stem):
+        # Unreal Python strips the C++ leading 'b' for Blueprint-reflected
+        # properties in some UE versions. Never silently omit this opt-in:
+        # without an explicit true value the scene is inert at runtime.
+        for field in (stem, "b_"+stem):
+            try:
+                before=actor.get_editor_property(field)
+            except Exception:
+                continue
+            actor.set_editor_property(field,True)
+            if actor.get_editor_property(field) is not True:
+                raise RuntimeError("HOLD: review flag did not persist: "+field)
+            return field
+        raise RuntimeError("HOLD: review flag not exposed: "+stem)
+
+    enable_required_actor_bool("enable_focus_review")
+    enable_required_actor_bool("ionia_recruited_for_review")
     if not unreal.EditorLevelLibrary.save_current_level():
         raise RuntimeError("HOLD: native review map save failed")
     target=project/"Content/TSTSS/Review/ResonatorFocus"
