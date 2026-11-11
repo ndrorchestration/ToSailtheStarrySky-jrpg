@@ -1,0 +1,35 @@
+name: Unreal First Wake 115-actor GPU review safety (source only)
+on:
+  pull_request:
+    paths:
+      - "unreal/Tools/intake_first_wake_slice_gpu_review.py"
+      - "unreal/Tools/capture_first_wake_slice_objects_d3d11.py"
+      - "unreal/Tools/run_first_wake_slice_objects_d3d11.py"
+      - "unreal/Tools/test_first_wake_slice_gpu_review.py"
+      - "unreal/Content/Python/test_first_wake_slice_object_gpu_review.py"
+      - "unreal/ToSailTheStarrySky.uproject"
+      - "unreal/Docs/FIRST_WAKE_SLICE_OBJECTS_GPU_REVIEW_2026_11_10.md"
+      - ".github/workflows/unreal-first-wake-objects-gpu-review-source.yml"
+  workflow_dispatch:
+jobs:
+  gpu-review-contract-source-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Validate registered review screenshot planning and negative guard fixtures
+        run: |
+          python3 -m py_compile \
+            unreal/Tools/intake_first_wake_slice_gpu_review.py \
+            unreal/Tools/capture_first_wake_slice_objects_d3d11.py \
+            unreal/Tools/run_first_wake_slice_objects_d3d11.py \
+            unreal/Tools/test_first_wake_slice_gpu_review.py \
+            unreal/Content/Python/test_first_wake_slice_object_gpu_review.py
+          python3 -m unittest discover -s unreal/Tools -p "test_first_wake_slice_gpu_review.py" -v
+      - name: Source-only boundary — no fake native D3D11 capture claim
+        run: |
+          echo "SOURCE_ONLY_PASS_NOT_NATIVE_GPU_OR_PIE"
+          test ! -e unreal/Saved/FirstWakeSliceVisualQA/D3D11_FirstWakeObjects_20261110/native_capture_receipt.json
