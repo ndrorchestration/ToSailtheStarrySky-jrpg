@@ -32,7 +32,7 @@ class ConsumedReviewMarkerTests(unittest.TestCase):
     def test_only_editor_authorized_pie_or_standalone_review_actors_become_nonblocking(self):
         s = self.method
         helper = self.source.split("bool IsAuthorizedReviewMilestoneWorld(", 1)[1].split(
-            "\\nATSTSSMilestoneActor::ATSTSSMilestoneActor()", 1)[0]
+            "ATSTSSMilestoneActor::ATSTSSMilestoneActor()", 1)[0]
         self.assertEqual(s.count("#if WITH_EDITOR"), 1)
         self.assertEqual(s.count("#endif"), 1)
         self.assertIn("IsAuthorizedReviewMilestoneWorld(World, GetActorLabel())", s)
