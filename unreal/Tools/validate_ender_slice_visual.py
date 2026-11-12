@@ -75,7 +75,7 @@ def validate_contract(row: dict) -> None:
     binding = row.get("visual_binding", {})
     require(binding.get("world_type") == "PIE_ONLY", "runtime scope expanded")
     require(binding.get("engine_editor_only") is True, "editor-only boundary weakened")
-    for name in ("default_goggles_visible", "default_staff_visible",
+    for name in ("default_hair_visible", "default_goggles_visible", "default_staff_visible",
                  "changes_story_state", "changes_inventory", "changes_savegame",
                  "approval_on_asset_binding"):
         require(binding.get(name) is False, "unsafe source binding: " + name)
@@ -102,6 +102,11 @@ def validate_cpp_guards(header: str, source: str) -> None:
     require('EnderSliceReviewBody.IsNull()' in source, "missing no-asset guard")
     require('Bones.FindBoneIndex(EnderReviewHeadBone)' in source, "head binding not validated")
     require('Bones.FindBoneIndex(EnderReviewGripBone)' in source, "hand binding not validated")
+    require('bShowEnderReviewHair = false' in header, "hair visible by default")
+    require('PreviewAttachment(EnderReviewHairComponent, EnderSliceReviewHair' in source,
+            "hair attachment absent")
+    require('EnderReviewHairLocalOffset' in source and 'EnderReviewHairComponent' in header,
+            "hair interface missing")
     require('bShowEnderReviewGoggles = false' in header, "goggles visible by default")
     require('bShowEnderReviewStaff = false' in header, "staff visible by default")
     require('SetCollisionEnabled(ECollisionEnabled::NoCollision)' in source,

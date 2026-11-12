@@ -86,6 +86,21 @@ class EnderSliceVisualSourceTests(unittest.TestCase):
         with self.assertRaises(gate.ContractError):
             gate.validate_contract(self.altered("native_acceptance", "creator_signoff", True))
 
+    def test_rejects_hair_visible_by_default(self):
+        with self.assertRaises(gate.ContractError):
+            gate.validate_contract(self.altered("visual_binding", "default_hair_visible", True))
+
+    def test_rejects_hair_enabled_in_native_default(self):
+        broken = self.header.replace("bShowEnderReviewHair = false", "bShowEnderReviewHair = true")
+        with self.assertRaises(gate.ContractError):
+            gate.validate_cpp_guards(broken, self.source)
+
+    def test_rejects_absent_hair_attachment(self):
+        broken = self.source.replace(
+            "PreviewAttachment(EnderReviewHairComponent, EnderSliceReviewHair", "/* missing hair */")
+        with self.assertRaises(gate.ContractError):
+            gate.validate_cpp_guards(self.header, broken)
+
     def test_rejects_accessory_visibility_default(self):
         with self.assertRaises(gate.ContractError):
             gate.validate_contract(self.altered("visual_binding",

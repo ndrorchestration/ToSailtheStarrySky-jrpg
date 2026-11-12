@@ -179,6 +179,12 @@ ATSTSSExplorerCharacter::ATSTSSExplorerCharacter()
     GetCharacterMovement()->bOrientRotationToMovement = true;
 #if WITH_EDITOR
     // Existing native player pawn; review appearance is hidden/opt-in by default.
+    EnderReviewHairComponent = CreateDefaultSubobject<UStaticMeshComponent>(
+        TEXT("EnderSliceHair_REVIEW_ONLY"));
+    EnderReviewHairComponent->SetupAttachment(GetMesh());
+    EnderReviewHairComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    EnderReviewHairComponent->SetGenerateOverlapEvents(false);
+    EnderReviewHairComponent->SetVisibility(false);
     EnderReviewGogglesComponent = CreateDefaultSubobject<UStaticMeshComponent>(
         TEXT("EnderSliceGoggles_REVIEW_ONLY"));
     EnderReviewGogglesComponent->SetupAttachment(GetMesh());
@@ -339,6 +345,9 @@ void ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance()
             TEXT("TSTSS_ENDER_ACCESSORY_REVIEW_ATTACHED %s fit_NOT_APPROVED"), Label);
     };
 
+    PreviewAttachment(EnderReviewHairComponent, EnderSliceReviewHair,
+        bShowEnderReviewHair, EnderReviewHeadBone,
+        EnderReviewHairLocalOffset, TEXT("HAIR"));
     PreviewAttachment(EnderReviewGogglesComponent, EnderSliceReviewGoggles,
         bShowEnderReviewGoggles, EnderReviewHeadBone,
         EnderReviewGogglesLocalOffset, TEXT("GOGGLES"));

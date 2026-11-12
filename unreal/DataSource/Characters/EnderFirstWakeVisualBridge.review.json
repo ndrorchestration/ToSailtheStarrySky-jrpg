@@ -44,7 +44,9 @@
     "existing_static_hair": "V9 copper hair, separate unapproved review candidate",
     "existing_static_goggles": "V2 sealed goggles, separate unapproved review candidate",
     "existing_staff": "V1 double-ferrule centered wrap, not gripped",
-    "hairdeck": "HOSTED_EXPERIMENT_ONLY_NO_CANDIDATE_GENERATED"
+    "hairdeck": "HOSTED_EXPERIMENT_ONLY_NO_CANDIDATE_GENERATED",
+    "hair_attachment_proposal": "Optional head-bone static copper hair, native fit/motion/visual approval NOT VERIFIED",
+    "hair_static_unrigged": true
   },
   "visual_binding": {
     "implementation": "ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance",
@@ -62,17 +64,21 @@
     "skeletal_bones_upper_limit": 450,
     "editor_blueprint_variables": [
       "EnderSliceReviewBody",
+      "EnderSliceReviewHair",
       "EnderSliceReviewGoggles",
       "EnderSliceReviewStaff",
+      "bShowEnderReviewHair",
       "bShowEnderReviewGoggles",
       "bShowEnderReviewStaff",
+      "EnderReviewHairLocalOffset",
       "EnderReviewGogglesLocalOffset",
       "EnderReviewStaffLocalOffset"
     ],
     "changes_story_state": false,
     "changes_inventory": false,
     "changes_savegame": false,
-    "approval_on_asset_binding": false
+    "approval_on_asset_binding": false,
+    "default_hair_visible": false
   },
   "native_acceptance": {
     "source_checks": "RUNNABLE_LOCALLY_WITH_PYTHON",

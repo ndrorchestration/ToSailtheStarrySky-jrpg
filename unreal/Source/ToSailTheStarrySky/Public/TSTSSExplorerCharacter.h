@@ -38,10 +38,14 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
     TSoftObjectPtr<USkeletalMesh> EnderSliceReviewBody;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    TSoftObjectPtr<UStaticMesh> EnderSliceReviewHair;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
     TSoftObjectPtr<UStaticMesh> EnderSliceReviewGoggles;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
     TSoftObjectPtr<UStaticMesh> EnderSliceReviewStaff;
     // Disabled until the character's head clearance and staff grip are reviewed.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    bool bShowEnderReviewHair = false;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
     bool bShowEnderReviewGoggles = false;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
@@ -50,6 +54,8 @@ protected:
     FName EnderReviewHeadBone = TEXT("head");
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
     FName EnderReviewGripBone = TEXT("l_hand");
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    FTransform EnderReviewHairLocalOffset = FTransform::Identity;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
     FTransform EnderReviewGogglesLocalOffset = FTransform::Identity;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
@@ -61,6 +67,8 @@ private:
     void ApplyEnderSliceReviewAppearance();
 #endif
 #if WITH_EDITORONLY_DATA
+    UPROPERTY(VisibleAnywhere, Category="TSTSS|Ender|SliceReview")
+    TObjectPtr<UStaticMeshComponent> EnderReviewHairComponent;
     UPROPERTY(VisibleAnywhere, Category="TSTSS|Ender|SliceReview")
     TObjectPtr<UStaticMeshComponent> EnderReviewGogglesComponent;
     UPROPERTY(VisibleAnywhere, Category="TSTSS|Ender|SliceReview")

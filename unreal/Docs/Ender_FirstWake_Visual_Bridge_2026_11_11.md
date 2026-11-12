@@ -64,3 +64,8 @@ Reuse the editor-only mesh/attachment interface and its acceptance tests for Ion
 ## Blocker as of November 11
 
 Neontic's connected Remote Desktop Commander devices report **offline**, so the Unreal engine, locally held private FBX, face/head assets, GPU screenshots, and PIE cannot be accessed from this turn. This draft is a **real source change** but not an actual newly playable character render. No claims of native completion or production merger are made.
+
+
+## 2026-11-11 — Isolated source-only V9 copper hair attachment (unapproved)
+
+The existing PIE-only player character gains a disabled-by-default, collision-free, head-bone-mounted static hair property (EnderSliceReviewHair, bShowEnderReviewHair, EnderReviewHairLocalOffset). The preexisting private V9 copper-hair study is NOT the creator-approved finished hairstyle and is never assigned automatically by the game mode. Blueprint must opt in explicitly. The source-only negative gates protect default invisibility and require an actual head-bone attachment. No native build, visual clearance, deformation, or art acceptance on this new branch is claimed. No ship, party, save, release or production main changes. Do not redistribute private DAZ-derived packages.
