@@ -161,6 +161,19 @@ void ATSTSSMilestoneActor::UpdateReviewBeacon(const UTSTSSFirstWakeState* State)
     }
     bReviewBeaconInitialized = true;
     bReviewBeaconAvailable = bAvailable;
+    // Consumed review markers cannot visually occlude later objectives.
+    // Cosmetic visibility only: the existing collision/story gates stay intact.
+    const bool bConsumed = bIsInspectionStation
+        ? (State->HasStarted() &&
+           (State->GetInspectionMask() &
+            (1u << static_cast<uint8>(InspectionStation))) != 0)
+        : (State->HasStarted() &&
+           static_cast<uint8>(State->GetCurrentBeat()) >=
+           static_cast<uint8>(Milestone));
+    if (IsValid(InteractionMesh))
+    {
+        InteractionMesh->SetVisibility(!bConsumed, false);
+    }
     // Only the currently permitted E marker advertises an E prompt.
     ReviewBeacon->SetVisibility(bAvailable);
     if (IsValid(ReviewBeaconBackdrop))
