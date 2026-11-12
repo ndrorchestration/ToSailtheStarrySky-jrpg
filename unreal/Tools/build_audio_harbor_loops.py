@@ -75,13 +75,13 @@ def pcm_for(name: str) -> bytes:
                       + 0.18 * math.sin(2 * math.pi * 173 * t + 13 * medium)
                       + 1.6 * rumble) * (0.65 + 0.23 * math.cos(3 * turn))
         elif name == "weather_wind_loop.wav":
-            sample = (3.2 * low + 1.2 * middle) * (0.50 + 0.40 * math.cos(2 * turn))
+            sample = (3.2 * rumble + 1.2 * medium) * (0.50 + 0.40 * math.cos(2 * turn))
         elif name == "weather_rain_loop.wav":
             # High-frequency texture plus medium filtered patter.
-            sample = (0.15 * white[idx] + 1.3 * middle + 0.25 * low) * (
+            sample = (0.15 * white[idx] + 1.3 * medium + 0.25 * rumble) * (
                 0.8 + 0.12 * math.cos(4 * turn))
         else:
-            sample = (5.3 * low + 1.4 * middle
+            sample = (5.3 * rumble + 1.4 * medium
                       + 0.14 * math.sin(2 * math.pi * 42 * t)) * (
                           0.55 + 0.30 * math.cos(2 * turn))
         sound.append(sample)
