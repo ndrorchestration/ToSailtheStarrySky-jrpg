@@ -24,6 +24,17 @@ class EngineFocusStagingContractTests(unittest.TestCase):
         self.assertEqual(plan["target_review_map"],
                          "/Game/TSTSS/Review/EngineFocus_V1/M_EnginePresentationReview")
 
+    def test_committed_native_engine_map_serializes_all_focus_anchors(self):
+        package = stage.SOURCE_FILE.read_bytes()
+        for label in (stage.SOURCE_CAMERA, stage.GAUGE, stage.ENGINE):
+            with self.subTest(actor=label):
+                self.assertIn(label.encode("ascii"), package)
+
+    def test_missing_native_engine_focus_anchor_rejected(self):
+        with patch.object(stage, "GAUGE", "TSTSS_VS_REVIEW_MissingGauge"):
+            with self.assertRaisesRegex(RuntimeError, "source actor name absent"):
+                stage.plan()
+
     def test_host_resource_and_exact_head_gate_fixtures(self):
         result = engine_host.self_test()
         self.assertEqual(result["status"], "ENGINE_HOST_GATES_OFFLINE_PASS")
