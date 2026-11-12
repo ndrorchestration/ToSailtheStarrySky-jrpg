@@ -18,7 +18,12 @@ class OpeningDockSourceContract(unittest.TestCase):
         self.assertIn("FPackageName::DoesPackageExist(PreludeMap)", fn)
         self.assertIn("UGameplayStatics::OpenLevel(Controller, FName(*PreludeMap))", fn)
         self.assertIn(START_MAP, fn)
-        self.assertNotIn("RemoveFromParent()", fn)
+        self.assertIn("RemoveFromParent()", fn)
+        self.assertIn("Controller->SetInputMode(FInputModeGameOnly())", fn)
+        self.assertIn("Controller->bShowMouseCursor = false;", fn)
+        self.assertLess(fn.index("if (!FPackageName::DoesPackageExist(PreludeMap))"), fn.index("RemoveFromParent()"))
+        self.assertLess(fn.index("RemoveFromParent()"), fn.index("Controller->SetInputMode(FInputModeGameOnly())"))
+        self.assertLess(fn.index("Controller->SetInputMode(FInputModeGameOnly())"), fn.index("UGameplayStatics::OpenLevel"))
 
     def test_title_map_authoring_requires_exact_head_and_review_opt_in(self):
         stage = (UNREAL / "Tools" / "stage_first_wake_title_review.py").read_text(encoding="utf-8")

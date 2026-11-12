@@ -205,8 +205,15 @@ void UTSTSSOpeningReviewWidget::BeginJourney()
         return; // Keep the menu intact; never pretend the game has started.
     }
 
+    // The title controller explicitly selected UIOnly input. Return focus to
+    // gameplay BEFORE opening the traversable review level; otherwise Slate
+    // may keep the old menu focused and WASD/E never reach the new pawn.
+    RemoveFromParent();
+    Controller->bShowMouseCursor = false;
+    Controller->SetInputMode(FInputModeGameOnly());
+    if (AHUD* CurrentHUD = Controller->GetHUD()) CurrentHUD->bShowHUD = true;
     UE_LOG(LogTemp, Display,
-        TEXT("TSTSS_REVIEW_NEW_GAME_ROUTE route=%s progress_reset_by_fresh_map=1"),
+        TEXT("TSTSS_REVIEW_NEW_GAME_ROUTE route=%s input_mode=game_only progress_reset_by_fresh_map=1"),
         *PreludeMap);
     UGameplayStatics::OpenLevel(Controller, FName(*PreludeMap));
 }
