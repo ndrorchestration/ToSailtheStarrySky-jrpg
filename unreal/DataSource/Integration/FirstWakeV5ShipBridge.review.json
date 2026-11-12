@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "REVIEW_ONLY_SOURCE_TESTED_NATIVE_ADMISSION_HOLD",
+  "status": "REVIEW_ONLY_NATIVE_BUILD_2_TARGETED_TESTS_PASS_ROUTE_NOT_PLAYED",
   "project": "To Sail the Starry Sky",
   "baseline": {
     "branch": "review/ue58-opening-and-dock-rescue-20261111",
@@ -12,7 +12,9 @@
     "branch": "review/ue58-v5-ship-route-bridge-20261112",
     "source_revision": "37a1fc524febfb000084d5b8c795e3671420a942",
     "worktree": "C:\\TSTSS_V5RouteBridge_20261112",
-    "source_report": "docs/reviews/FIRST_WAKE_V5_SHIP_BRIDGE_SOURCE_QA_2026-11-12.md"
+    "source_report": "docs/reviews/FIRST_WAKE_V5_SHIP_BRIDGE_SOURCE_QA_2026-11-12.md",
+    "compiled_source_revision": "505de74c3b958ff8d3ffc084a221418182925b2f",
+    "native_qa_report": "docs/reviews/FIRST_WAKE_V5_SHIP_BRIDGE_NATIVE_QA_2026-11-12.md"
   },
   "route_contract": [
     {
@@ -59,8 +61,8 @@
   "legacy_v2_path_unchanged": true,
   "pr_814_e_gate_activated": false,
   "pr_814_traversal_overlays_created": false,
-  "native_editor_compiled": false,
-  "native_automation_ran": false,
+  "native_editor_compiled": true,
+  "native_automation_ran": true,
   "new_story_beats_granted_from_water_or_audio": false,
   "starbourne_authorized": false,
   "reson_and_aepex_available": false,
@@ -79,15 +81,15 @@
   "source_test_receipt": {
     "selected_tests": 106,
     "selected_tests_passed": 106,
-    "native_tests_run": 0,
+    "native_tests_run": 2,
     "full_source_discovery_pass_not_established": true
   },
   "admission": {
     "engine": "Unreal 5.8.4 Windows Editor",
     "required_free_ram_gib": 6.5,
     "required_free_disk_gib": 14,
-    "observed_disk_free_gib": 11.46,
-    "status": "HOLD_LOW_DISK",
+    "observed_disk_free_gib": 15.611,
+    "status": "PASSED_AT_LAST_CHECK_AFTER_BUILD",
     "transient": true
   },
   "dependencies_pending": [
@@ -115,5 +117,40 @@
       "workstream": "#815 cinematic receiver",
       "gate": "CinematicCamera proposed, not installed or declared in V5"
     }
-  ]
+  ],
+  "native_evidence": {
+    "compiled_source_head": "505de74c3b958ff8d3ffc084a221418182925b2f",
+    "engine": "Unreal Engine 5.8.4",
+    "editor_target": "ToSailTheStarrySkyEditor Win64 Development",
+    "ubt_exit_code": 0,
+    "ubt_result": "Succeeded",
+    "compiled_actions": 6,
+    "native_test_filter": "TSTSS.FirstWake.Review",
+    "automation_exit_code": 0,
+    "automation_discovered": 2,
+    "automation_passed": 2,
+    "automation_failed": 0,
+    "passed_tests": [
+      "TSTSS.FirstWake.ReviewDockReturnBoundaries",
+      "TSTSS.FirstWake.ReviewObjectivesAreReadOnly"
+    ],
+    "native_build_log_local": "unreal/Saved/ResourceCleanup/v5ship_native_build_505de74.log",
+    "native_automation_log_local": "unreal/Saved/ResourceCleanup/v5ship_native_automation_505de74.log",
+    "native_gameplay_traversal_verified": false,
+    "full_native_regression_suite_verified": false
+  },
+  "resource_cleanup": {
+    "scope": "ONLY regenerable unreal/Intermediate/Build in 4 clean review worktrees",
+    "paths": [
+      "C:\\TSTSS_AudioReview_20261111\\unreal\\Intermediate\\Build",
+      "C:\\Users\\Admin\\work\\TSTSS-Slice-Enemies-20261110\\unreal\\Intermediate\\Build",
+      "C:\\TSTSS_CameraReviewFix_20261111\\unreal\\Intermediate\\Build",
+      "C:\\Users\\Admin\\work\\TSTSS-LyraStage-Reconcile-20261110\\unreal\\Intermediate\\Build"
+    ],
+    "total_real_disk_recovered_gib": 6.843,
+    "disk_free_after_new_build_and_tests_gib": 15.611,
+    "git_tracked_sources_and_binaries_preserved": true,
+    "npm_npx_cache_preserved_because_active_processes": true,
+    "receipt_local_directory": "unreal/Saved/ResourceCleanup"
+  }
 }

@@ -78,7 +78,7 @@ class FirstWakeV5ShipBridgeSource(unittest.TestCase):
 
     def test_machine_readable_frontier_denies_unproven_integration(self):
         data = MANIFEST
-        self.assertEqual(data["status"], "REVIEW_ONLY_SOURCE_TESTED_NATIVE_ADMISSION_HOLD")
+        self.assertEqual(data["status"], "REVIEW_ONLY_NATIVE_BUILD_2_TARGETED_TESTS_PASS_ROUTE_NOT_PLAYED")
         self.assertEqual(data["child"]["source_revision"],
                          "37a1fc524febfb000084d5b8c795e3671420a942")
         self.assertEqual(data["baseline"]["revision"],
@@ -89,15 +89,33 @@ class FirstWakeV5ShipBridgeSource(unittest.TestCase):
                           "VS04_SplashdownSea", "VS05_DenithFuelShanty"])
         self.assertEqual(data["route_contract"][0]["story_mutation"], "NONE")
         self.assertEqual(data["route_contract"][1]["story_mutation"], "Launched")
-        for flag in ("pr_814_e_gate_activated", "native_editor_compiled",
-                     "native_automation_ran", "starbourne_authorized",
+        for flag in ("pr_814_e_gate_activated", "starbourne_authorized",
                      "reson_and_aepex_available", "new_module_or_plugin_dependency",
                      "lyra_prior_to_explicit_post_splashdown_recruitment"):
             self.assertIs(data[flag], False, flag)
-        self.assertEqual(data["admission"]["status"], "HOLD_LOW_DISK")
+        self.assertEqual(data["admission"]["status"], "PASSED_AT_LAST_CHECK_AFTER_BUILD")
         self.assertIs(data["admission"]["transient"], True)
-        self.assertTrue(data["admission"]["observed_disk_free_gib"] <
-                        data["admission"]["required_free_disk_gib"])
+        self.assertGreaterEqual(data["admission"]["observed_disk_free_gib"],
+                                data["admission"]["required_free_disk_gib"])
+        self.assertIs(data["native_editor_compiled"], True)
+        self.assertIs(data["native_automation_ran"], True)
+        self.assertEqual(data["source_test_receipt"]["native_tests_run"], 2)
+        self.assertEqual(data["child"]["compiled_source_revision"],
+                         "505de74c3b958ff8d3ffc084a221418182925b2f")
+        self.assertTrue((UNREAL.parent / data["child"]["native_qa_report"]).is_file())
+        native = data["native_evidence"]
+        self.assertEqual(native["ubt_exit_code"], 0)
+        self.assertEqual(native["automation_exit_code"], 0)
+        self.assertEqual(native["automation_passed"], 2)
+        self.assertEqual(native["automation_failed"], 0)
+        self.assertEqual(native["automation_discovered"], 2)
+        self.assertFalse(native["native_gameplay_traversal_verified"])
+        self.assertFalse(native["full_native_regression_suite_verified"])
+        self.assertTrue(all(not x["native_played"] for x in data["route_contract"]))
+        cleanup = data["resource_cleanup"]
+        self.assertEqual(len(cleanup["paths"]), 4)
+        self.assertTrue(cleanup["git_tracked_sources_and_binaries_preserved"])
+        self.assertTrue(cleanup["npm_npx_cache_preserved_because_active_processes"])
 
     def test_do_not_replace_verified_w_e_input_or_fall_recovery(self):
         self.assertIn('TSTSSInteractionReach::IsInsidePlayerReach(', PAWN)
