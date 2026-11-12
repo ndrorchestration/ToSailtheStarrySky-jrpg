@@ -1,0 +1,160 @@
+{
+  "schema_version": "0.1",
+  "date": "2026-11-12",
+  "status": "READ_ONLY_BLOB_COMPARISON_NO_MERGE",
+  "repo": "ndrorchestration/ToSailtheStarrySky-jrpg",
+  "pr813": {
+    "number": 813,
+    "head": "76268b8975ec3ce7b7644b6223c09d4889b658a2",
+    "base": "2afb4b7ea6cda75dc6068014eb19c06718259539",
+    "draft": true,
+    "files": 103
+  },
+  "pr804": {
+    "number": 804,
+    "head_at_comparison": "5fc79350051ad1bfac761fb017ae43b5a01fa6ef",
+    "base": "2afb4b7ea6cda75dc6068014eb19c06718259539",
+    "draft": true,
+    "files": 28
+  },
+  "findings": {
+    "shared_paths": 18,
+    "identical_blob_paths": 10,
+    "divergent_blob_paths": 8,
+    "audio_only_paths_in_pr804": 10
+  },
+  "shared_paths": [
+    {
+      "path": ".github/workflows/firstwake-audio-contract.yml",
+      "pr813_blob": "83396199c35ef87900a2a8288c630a09f55dc9cc",
+      "pr804_blob": "087442ddf4a8b1a5e81a917ca0c92fdab0d8c0aa",
+      "classification": "DIVERGENT_NEEDS_SOURCE_RECONCILIATION"
+    },
+    {
+      "path": "unreal/DataSource/Audio/FirstWakeAudioEvents.review.json",
+      "pr813_blob": "b10dfc217e39c38d696dba69adfff890d1b3bc57",
+      "pr804_blob": "b7ed98c9d858f9c644ac8548f645001a751886cc",
+      "classification": "DIVERGENT_NEEDS_SOURCE_RECONCILIATION"
+    },
+    {
+      "path": "unreal/DataSource/Audio/HistoricalMusicCandidates.review.json",
+      "pr813_blob": "8449c0419521c154a17638da961acb8d1cf33462",
+      "pr804_blob": "8449c0419521c154a17638da961acb8d1cf33462",
+      "classification": "IDENTICAL"
+    },
+    {
+      "path": "unreal/Docs/FIRST_WAKE_AUDIO_FOUNDATION_2026_11_11.md",
+      "pr813_blob": "aed1c577b1b2b2d52434b74d1929499e0c7168b9",
+      "pr804_blob": "fdaa7d41583a79f6e82b67f14ef6df234b33dc9f",
+      "classification": "DIVERGENT_NEEDS_SOURCE_RECONCILIATION"
+    },
+    {
+      "path": "unreal/Source/ToSailTheStarrySky/Private/TSTSSAtmosphereDirector.cpp",
+      "pr813_blob": "ecba44b39980244da1ba55580be62dc560ad65a7",
+      "pr804_blob": "ecba44b39980244da1ba55580be62dc560ad65a7",
+      "classification": "IDENTICAL"
+    },
+    {
+      "path": "unreal/Source/ToSailTheStarrySky/Private/TSTSSAudioCueBankActor.cpp",
+      "pr813_blob": "288537f038f614b0228eb7a8910482f8f265c81a",
+      "pr804_blob": "288537f038f614b0228eb7a8910482f8f265c81a",
+      "classification": "IDENTICAL"
+    },
+    {
+      "path": "unreal/Source/ToSailTheStarrySky/Private/TSTSSAudioEnvironmentDirector.cpp",
+      "pr813_blob": "d0ceb662f6c1e9f3b6b5289b7e20c14c64552c57",
+      "pr804_blob": "d0ceb662f6c1e9f3b6b5289b7e20c14c64552c57",
+      "classification": "IDENTICAL"
+    },
+    {
+      "path": "unreal/Source/ToSailTheStarrySky/Private/TSTSSAudioSubsystem.cpp",
+      "pr813_blob": "b3e51e846dd20064e595507ae8806bf61e3a1ba4",
+      "pr804_blob": "16721c4282b597c2864761a41c73728a93b1de74",
+      "classification": "DIVERGENT_NEEDS_SOURCE_RECONCILIATION"
+    },
+    {
+      "path": "unreal/Source/ToSailTheStarrySky/Private/TSTSSHarborAudioZone.cpp",
+      "pr813_blob": "16caeb5358de879bf9980a8899beb3d7125de522",
+      "pr804_blob": "16caeb5358de879bf9980a8899beb3d7125de522",
+      "classification": "IDENTICAL"
+    },
+    {
+      "path": "unreal/Source/ToSailTheStarrySky/Private/TSTSSMilestoneActor.cpp",
+      "pr813_blob": "3a38b7acae7e74a0cebd957e1e5b93bcdc4d5432",
+      "pr804_blob": "3a38b7acae7e74a0cebd957e1e5b93bcdc4d5432",
+      "classification": "IDENTICAL"
+    },
+    {
+      "path": "unreal/Source/ToSailTheStarrySky/Public/TSTSSAudioCueBankActor.h",
+      "pr813_blob": "ac41b7ed02be98ca3cc6aeacfa8bbf446b47cfcf",
+      "pr804_blob": "ac41b7ed02be98ca3cc6aeacfa8bbf446b47cfcf",
+      "classification": "IDENTICAL"
+    },
+    {
+      "path": "unreal/Source/ToSailTheStarrySky/Public/TSTSSAudioEnvironmentDirector.h",
+      "pr813_blob": "4ede6d557537972aab99d2b3aad395303909b29a",
+      "pr804_blob": "4ede6d557537972aab99d2b3aad395303909b29a",
+      "classification": "IDENTICAL"
+    },
+    {
+      "path": "unreal/Source/ToSailTheStarrySky/Public/TSTSSAudioSubsystem.h",
+      "pr813_blob": "f19963026c213bb68f275708f4ab4d283451a243",
+      "pr804_blob": "f19963026c213bb68f275708f4ab4d283451a243",
+      "classification": "IDENTICAL"
+    },
+    {
+      "path": "unreal/Source/ToSailTheStarrySky/Public/TSTSSHarborAudioZone.h",
+      "pr813_blob": "f568a8442f75734f597ec0772c683c32b5bc4d73",
+      "pr804_blob": "f568a8442f75734f597ec0772c683c32b5bc4d73",
+      "classification": "IDENTICAL"
+    },
+    {
+      "path": "unreal/Tools/build_audio_preview_samples.py",
+      "pr813_blob": "5f8d6dee7e8a11b104d9481b4a3affc2d4aae36d",
+      "pr804_blob": "1228518959fa25e04fe6070631ce65164b28c7ef",
+      "classification": "DIVERGENT_NEEDS_SOURCE_RECONCILIATION"
+    },
+    {
+      "path": "unreal/Tools/import_first_wake_audio_review.py",
+      "pr813_blob": "324a8a1e46f235615c3bf914b607ecfd4142fd75",
+      "pr804_blob": "c48c66393969e56e0ce0a21fd0094b6a736858a6",
+      "classification": "DIVERGENT_NEEDS_SOURCE_RECONCILIATION"
+    },
+    {
+      "path": "unreal/Tools/test_audio_integration_source.py",
+      "pr813_blob": "d8d0dd20a5d62208d0e6d77a9c14ca0c899141a2",
+      "pr804_blob": "2d5d67a915a24e1e37173ca9ab1dcaf38af0ff85",
+      "classification": "DIVERGENT_NEEDS_SOURCE_RECONCILIATION"
+    },
+    {
+      "path": "unreal/Tools/test_audio_review_contract.py",
+      "pr813_blob": "e17d71cdc620350427e64a64a994f5aaa6ee04fc",
+      "pr804_blob": "1e834b3756e2d064b7c0a74317abbba28feab008",
+      "classification": "DIVERGENT_NEEDS_SOURCE_RECONCILIATION"
+    }
+  ],
+  "only_in_pr804": [
+    "unreal/.gitignore",
+    "unreal/DataSource/Audio/FirstWakeSceneAudioBindings.review.json",
+    "unreal/Docs/Evidence/Audio/first_native_compile_and_resource_gate_2026_11_11.review.json",
+    "unreal/Source/ToSailTheStarrySky/Private/TSTSSFootstepAudioDirector.cpp",
+    "unreal/Source/ToSailTheStarrySky/Public/TSTSSFootstepAudioDirector.h",
+    "unreal/Tools/build_audio_harbor_loops.py",
+    "unreal/Tools/stage_first_wake_audio_qa.py",
+    "unreal/Tools/test_audio_harbor_loops.py",
+    "unreal/Tools/test_audio_scene_contract.py",
+    "unreal/Tools/test_audio_stage_source.py"
+  ],
+  "boundaries": [
+    "Shared file blob equality alone does not establish native playable asset integration or scientific validation.",
+    "Do not cherry-pick or merge automatically. Reconcile divergent C++ audio subsystem fix, ten-plus-six QA events/sounds, original license restrictions, and source CI first.",
+    "Both PRs are unmerged draft review branches. Neither is the canonical game build.",
+    "The 18-path overlap is observed at the exact PR heads above; refresh after either branch advances."
+  ],
+  "governance": {
+    "protected_main_modified": false,
+    "merge_performed": false,
+    "native_fixed_head_compilation": "NOT_ESTABLISHED",
+    "audio_preview_licensing": "ORIGINAL_SYNTHETIC_QA_ONLY"
+  }
+}
