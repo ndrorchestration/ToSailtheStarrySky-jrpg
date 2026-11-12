@@ -13,6 +13,10 @@ public:
     virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaSeconds) override;
+#if !UE_BUILD_SHIPPING
+    // Cosmetic aim prompt from the same camera trace and pawn reach as E.
+    FString GetReviewAimStatus() const;
+#endif
     UFUNCTION(BlueprintCallable, Category="TSTSS|First Wake")
     UTSTSSFirstWakeState* GetFirstWakeState() const { return FirstWakeState; }
     UFUNCTION(BlueprintCallable, Category="TSTSS|Interaction")
