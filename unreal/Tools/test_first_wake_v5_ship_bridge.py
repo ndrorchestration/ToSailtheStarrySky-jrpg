@@ -15,6 +15,8 @@ PAWN = (SOURCE / "Private/TSTSSExplorerCharacter.cpp").read_text(encoding="utf-8
 NATIVE = (SOURCE / "Private/Tests/TSTSSFirstWakeReviewObjectiveTests.cpp").read_text(encoding="utf-8")
 MANIFEST = json.loads((UNREAL / "DataSource/Integration/FirstWakeV5ShipBridge.review.json").read_text(encoding="utf-8"))
 HUD = (SOURCE / "Private/TSTSSFirstWakeReviewHUD.cpp").read_text(encoding="utf-8")
+GROUND = (SOURCE / "Public/TSTSSReviewGrounding.h").read_text(encoding="utf-8")
+DOCK_NATIVE = (SOURCE / "Private/Tests/TSTSSReviewDockReturnTests.cpp").read_text(encoding="utf-8")
 
 
 class FirstWakeV5ShipBridgeSource(unittest.TestCase):
@@ -152,6 +154,25 @@ class FirstWakeV5ShipBridgeSource(unittest.TestCase):
         self.assertIn('K locked - %s', travel)
         self.assertIn('FirstWakeState->GetReviewObjectiveText()', travel)
         self.assertIn('UGameplayStatics::OpenLevel(this, FName(*Destination))', travel)
+
+
+    def test_supported_ship_and_fuel_footing_recover_without_sea_shortcuts(self):
+        for map_name in ("FirstWake_PreludeInteraction_V5_VisualReview",
+                         "VS02_AureateInteriors", "VS05_DenithFuelShanty",
+                         "VS06_SplashdownShore"):
+            self.assertIn('ShortName == TEXT("' + map_name + '")', GROUND)
+        for forbidden in ("VS03_FirstWakeSky", "VS04_SplashdownSea"):
+            self.assertNotIn('ShortName == TEXT("' + forbidden + '")', GROUND)
+        self.assertIn('bReviewRuntime && IsWalkableReviewMap(ShortName)', GROUND)
+        self.assertIn('bHasSupportedAnchor && bFalling', GROUND)
+        self.assertIn('Current.Z < Anchor.Z - RecoveryDropCm', GROUND)
+        for name in ("VS02_AureateInteriors", "VS05_DenithFuelShanty"):
+            self.assertIn('ShouldRecover(true, TEXT("' + name + '"), true, true, Drop, Anchor)', DOCK_NATIVE)
+        for name in ("VS03_FirstWakeSky", "VS04_SplashdownSea"):
+            self.assertIn('TestFalse(', DOCK_NATIVE)
+            self.assertIn('ShouldRecover(true, TEXT("' + name + '"), true, true, Drop, Anchor)', DOCK_NATIVE)
+        self.assertIn("HasSupportedReviewFooting(World, Current)", PAWN)
+        self.assertIn("World->FindTeleportSpot(this, Candidate", PAWN)
 
 
 if __name__ == "__main__":
