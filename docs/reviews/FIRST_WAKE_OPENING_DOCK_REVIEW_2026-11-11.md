@@ -19,7 +19,7 @@
 - `python check_first_wake_dock_guard_compiled.py` under VS2022 Build Tools `vcvars64`: **13 actual-header C++ cases passed**; mutated-threshold negative control rejected.
 - Four existing portable source-extracted C++ probes passed: input binding (28), objectives (16), save guard (10), HUD (21 review + 1 shipping).
 - `git diff --check`: passed before the review note was written.
-- **Native UHT/UBT build, map load, PIE fall/return, title click-through and visual approval: NOT RUN.** At development time Neontic showed approximately 7.4 GiB free RAM and 14.0 GiB free disk. A new full worktree Editor build is deliberately held to avoid disrupting parallel work or filling the system drive.
+- **First native Editor build: FAILED at a concrete C++ type mismatch.** Exact tested source head `bfe98d1ac5bebcd8204872a516e140e415dfd854`; Visual Studio 2022 toolchain and Unreal 5.8 UBT/UHT ran. `TSTSSAudioSubsystem.cpp:99` incorrectly declared `UAudioComponent* const*` for a `TMap<FName, TObjectPtr<UAudioComponent>>` lookup. Log: `unreal/Saved/OpeningDockReview/ubt_editor_bfe98d1.log`, exit receipt `6` (OtherCompilationError). The minimal review-branch repair uses `const TObjectPtr<UAudioComponent>*` without changing playback semantics. Associated source test added; 46 relevant source tests pass. **A repaired native build, map load, PIE fall/return, title click-through and visual approval are still unverified.** The initial build used approximately 2.5 GiB of disk for Intermediate artifacts; monitor space before retrying.
 
 ## Required native review gates (not yet established)
 

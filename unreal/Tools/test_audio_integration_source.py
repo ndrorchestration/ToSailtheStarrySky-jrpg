@@ -80,6 +80,13 @@ class AudioReviewIntegrationSourceTests(unittest.TestCase):
         for forbidden in ("AdvanceTo(", "ConfirmWaterContact(", "SaveGameToSlot(", "UnlockStarbourne("):
             self.assertNotIn(forbidden, impl)
 
+    def test_audio_loop_lookup_matches_tobjectptr_storage(self):
+        header = (SOURCES / "Public" / "TSTSSAudioSubsystem.h").read_text(encoding="utf-8")
+        impl = (SOURCES / "Private" / "TSTSSAudioSubsystem.cpp").read_text(encoding="utf-8")
+        self.assertIn("TMap<FName, TObjectPtr<UAudioComponent>> ActiveLoops", header)
+        self.assertIn("const TObjectPtr<UAudioComponent>* Existing = ActiveLoops.Find(EventId)", impl)
+        self.assertNotIn("UAudioComponent* const* Existing = ActiveLoops.Find(EventId)", impl)
+
     def test_spawned_loop_handles_auto_destroy_on_completion(self):
         engine = (SOURCES / "Private" / "TSTSSAudioSubsystem.cpp").read_text(encoding="utf-8")
         self.assertIn("nullptr, nullptr, true)", engine)
