@@ -120,7 +120,7 @@ def verify(rows: dict[str, str]) -> dict:
            and "ETSTSSPresentationMoment::EngineInspection" in ex[accept:publish]
            and "ETSTSSPresentationMoment::IoniaConversation" in ex[accept:publish],
            "opt-in interaction-to-presentation bridge missing")
-    demand(re.search(r"Review->TryPublishMoment\\(\\s*FirstWakeState,\\s*Atmosphere,\\s*Moment,\\s*true,\\s*true\\s*\\)", ex) is not None,
+    demand(re.search(r"Review->TryPublishMoment\(\s*FirstWakeState,\s*Atmosphere,\s*Moment,\s*true,\s*true\s*\)", ex) is not None,
            "interactive pawn must request clarity-first and motion-safe intent")
     demand("WorldType == EWorldType::PIE" in ex[accept:publish],
            "no non-PIE player adapter")
