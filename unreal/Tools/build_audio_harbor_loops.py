@@ -73,7 +73,7 @@ def pcm_for(name: str) -> bytes:
             # Diffuse synthetic murmurs, no spoken words or voice likeness.
             sample = (0.25 * math.sin(2 * math.pi * 126 * t + 11 * rumble)
                       + 0.18 * math.sin(2 * math.pi * 173 * t + 13 * medium)
-                      + 1.6 * low) * (0.65 + 0.23 * math.cos(3 * turn))
+                      + 1.6 * rumble) * (0.65 + 0.23 * math.cos(3 * turn))
         elif name == "weather_wind_loop.wav":
             sample = (3.2 * low + 1.2 * middle) * (0.50 + 0.40 * math.cos(2 * turn))
         elif name == "weather_rain_loop.wav":
