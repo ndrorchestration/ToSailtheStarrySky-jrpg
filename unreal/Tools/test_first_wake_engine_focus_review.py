@@ -87,6 +87,14 @@ class EngineFocusStagingContractTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "reveal lens"):
                 stage.plan()
 
+    def test_embedded_unreal_python_sibling_import_is_bootstrapped(self):
+        text = Path(stage.__file__).read_text(encoding="utf-8")
+        bootstrap = "sys.path.insert(0, str(Path(__file__).resolve().parent))"
+        imported = "from stage_first_wake_bokeh_cameras import ("
+        self.assertIn(bootstrap, text)
+        self.assertIn(imported, text)
+        self.assertLess(text.index(bootstrap), text.index(imported))
+
     def test_src_code_uses_save_map_as_and_fresh_process(self):
         text = Path(stage.__file__).read_text(encoding="utf-8")
         self.assertIn("EditorLoadingAndSavingUtils.save_map(source_world, DEST)", text)
