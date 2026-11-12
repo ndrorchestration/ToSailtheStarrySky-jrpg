@@ -83,7 +83,10 @@ class ReadableInteractionContract(unittest.TestCase):
         self.assertIn("NM_Standalone", src)
         self.assertIn('TEXT("FirstWake_PreludeInteraction_V5_VisualReview")', src)
         self.assertIn("World->GetOutermost()->GetName().StartsWith", src)
-        self.assertIn("GetStaticMeshComponent()->SetMaterial(0, Loaded[Index])", src)
+        self.assertIn("GetStaticMeshComponent()->SetMaterial(", src)
+        self.assertIn("bCompletePBRPack ? PBRLoaded[Index] : Loaded[Index]", src)
+        self.assertIn("if (!IsValid(PBRLoaded[Index])) bCompletePBRPack = false", src)
+        self.assertIn("/Game/TSTSS/Review/PreludePBRV1/", src)
         self.assertIn("bOverride_AutoExposureBias = true", src)
         self.assertIn("AutoExposureBias = -2.2f", src)
         for name in ("Harbor_TraversalFloor", "Ocean_VISUAL_ONLY_NO_BUOYANCY",
