@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "status": "REVIEW_ONLY_SOURCE_TESTED_NATIVE_ADMISSION_HOLD",
+  "project": "To Sail the Starry Sky",
+  "baseline": {
+    "branch": "review/ue58-opening-and-dock-rescue-20261111",
+    "revision": "d4d860b4a6565a4791aab557758b895b3540ffd2",
+    "runtime_evidence": "docs/reviews/FIRST_WAKE_V5_NATIVE_PLAYABILITY_EVIDENCE_2026-11-11.md",
+    "source_frontier": "unreal/DataSource/Integration/FirstWakeV5DependencyFrontier.review.json"
+  },
+  "child": {
+    "branch": "review/ue58-v5-ship-route-bridge-20261112",
+    "source_revision": "37a1fc524febfb000084d5b8c795e3671420a942",
+    "worktree": "C:\\TSTSS_V5RouteBridge_20261112",
+    "source_report": "docs/reviews/FIRST_WAKE_V5_SHIP_BRIDGE_SOURCE_QA_2026-11-12.md"
+  },
+  "route_contract": [
+    {
+      "from": "FirstWake_PreludeInteraction_V5_VisualReview",
+      "to": "VS02_AureateInteriors",
+      "input": "K",
+      "precondition": "EngineeringChecked; inspection mask 0x07",
+      "story_mutation": "NONE",
+      "native_played": false
+    },
+    {
+      "from": "VS02_AureateInteriors",
+      "to": "VS03_FirstWakeSky",
+      "input": "K",
+      "precondition": "EngineeringChecked; inspection mask 0x07",
+      "story_mutation": "Launched",
+      "native_played": false
+    },
+    {
+      "from": "VS03_FirstWakeSky",
+      "to": "VS04_SplashdownSea",
+      "input": "K",
+      "precondition": "Launched; inspection mask 0x07",
+      "story_mutation": "NONE",
+      "native_played": false
+    },
+    {
+      "from": "VS04_SplashdownSea",
+      "to": "VS05_DenithFuelShanty",
+      "input": "K",
+      "precondition": "FlotationConfirmed FROM PHYSICAL WATER GATE; inspection mask 0x07",
+      "story_mutation": "NONE",
+      "native_played": false
+    },
+    {
+      "from": "VS05_DenithFuelShanty",
+      "to": "L_VS06_ShoreMagicEnemyGear_Review",
+      "input": "K",
+      "precondition": "EmptyReserveInspected; inspection mask 0x07",
+      "story_mutation": "NONE",
+      "native_played": false
+    }
+  ],
+  "legacy_v2_path_unchanged": true,
+  "pr_814_e_gate_activated": false,
+  "pr_814_traversal_overlays_created": false,
+  "native_editor_compiled": false,
+  "native_automation_ran": false,
+  "new_story_beats_granted_from_water_or_audio": false,
+  "starbourne_authorized": false,
+  "reson_and_aepex_available": false,
+  "lyra_prior_to_explicit_post_splashdown_recruitment": false,
+  "new_module_or_plugin_dependency": false,
+  "review_collision_repair": {
+    "only_named_review_maps": true,
+    "allowed_runtime_types": [
+      "PIE",
+      "Game"
+    ],
+    "network_mode": "NM_Standalone",
+    "saved_asset_mutation": false,
+    "native_tested": false
+  },
+  "source_test_receipt": {
+    "selected_tests": 106,
+    "selected_tests_passed": 106,
+    "native_tests_run": 0,
+    "full_source_discovery_pass_not_established": true
+  },
+  "admission": {
+    "engine": "Unreal 5.8.4 Windows Editor",
+    "required_free_ram_gib": 6.5,
+    "required_free_disk_gib": 14,
+    "observed_disk_free_gib": 11.46,
+    "status": "HOLD_LOW_DISK",
+    "transient": true
+  },
+  "dependencies_pending": [
+    {
+      "workstream": "#814 guarded E route",
+      "gate": "Pick single route owner; source-only reviewed; PIE-only needs Game/PIE policy and native overlays"
+    },
+    {
+      "workstream": "#794 real six-map worlds",
+      "gate": "VS02 PlayerStart/floor support/edge safety and native readback"
+    },
+    {
+      "workstream": "#808 Lyra recruitment",
+      "gate": "After physical splashdown and explicit recruitment, no automatic loadout"
+    },
+    {
+      "workstream": "#799/#813 multipath source",
+      "gate": "Exact-head conflict/ancestry audit and full native revalidation before integration"
+    },
+    {
+      "workstream": "#804 sound and music",
+      "gate": "Audio never authorizes story; rights and audible PIE still pending"
+    },
+    {
+      "workstream": "#815 cinematic receiver",
+      "gate": "CinematicCamera proposed, not installed or declared in V5"
+    }
+  ]
+}

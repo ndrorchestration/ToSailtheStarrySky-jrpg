@@ -4,6 +4,7 @@ No Unreal build, packaged game, native PIE or visual approval is claimed.
 """
 from pathlib import Path
 import hashlib
+import json
 import unittest
 
 UNREAL = Path(__file__).resolve().parents[1]
@@ -12,6 +13,7 @@ TRAVEL = (SOURCE / "Private/TSTSSReviewShoreTravelSubsystem.cpp").read_text(enco
 MILESTONE = (SOURCE / "Private/TSTSSMilestoneActor.cpp").read_text(encoding="utf-8")
 PAWN = (SOURCE / "Private/TSTSSExplorerCharacter.cpp").read_text(encoding="utf-8")
 NATIVE = (SOURCE / "Private/Tests/TSTSSFirstWakeReviewObjectiveTests.cpp").read_text(encoding="utf-8")
+MANIFEST = json.loads((UNREAL / "DataSource/Integration/FirstWakeV5ShipBridge.review.json").read_text(encoding="utf-8"))
 
 
 class FirstWakeV5ShipBridgeSource(unittest.TestCase):
@@ -73,6 +75,29 @@ class FirstWakeV5ShipBridgeSource(unittest.TestCase):
         self.assertIn('SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore)', MILESTONE)
         self.assertNotIn('FirstWake_PreludeInteraction_V3_VisualReview', MILESTONE)
         self.assertNotIn('FirstWake_PreludeInteraction_V4_VisualReview', MILESTONE)
+
+    def test_machine_readable_frontier_denies_unproven_integration(self):
+        data = MANIFEST
+        self.assertEqual(data["status"], "REVIEW_ONLY_SOURCE_TESTED_NATIVE_ADMISSION_HOLD")
+        self.assertEqual(data["child"]["source_revision"],
+                         "37a1fc524febfb000084d5b8c795e3671420a942")
+        self.assertEqual(data["baseline"]["revision"],
+                         "d4d860b4a6565a4791aab557758b895b3540ffd2")
+        self.assertEqual([x["from"] for x in data["route_contract"]],
+                         ["FirstWake_PreludeInteraction_V5_VisualReview",
+                          "VS02_AureateInteriors", "VS03_FirstWakeSky",
+                          "VS04_SplashdownSea", "VS05_DenithFuelShanty"])
+        self.assertEqual(data["route_contract"][0]["story_mutation"], "NONE")
+        self.assertEqual(data["route_contract"][1]["story_mutation"], "Launched")
+        for flag in ("pr_814_e_gate_activated", "native_editor_compiled",
+                     "native_automation_ran", "starbourne_authorized",
+                     "reson_and_aepex_available", "new_module_or_plugin_dependency",
+                     "lyra_prior_to_explicit_post_splashdown_recruitment"):
+            self.assertIs(data[flag], False, flag)
+        self.assertEqual(data["admission"]["status"], "HOLD_LOW_DISK")
+        self.assertIs(data["admission"]["transient"], True)
+        self.assertTrue(data["admission"]["observed_disk_free_gib"] <
+                        data["admission"]["required_free_disk_gib"])
 
     def test_do_not_replace_verified_w_e_input_or_fall_recovery(self):
         self.assertIn('TSTSSInteractionReach::IsInsidePlayerReach(', PAWN)
