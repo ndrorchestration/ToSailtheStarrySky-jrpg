@@ -1,0 +1,128 @@
+{
+  "schema": "tstss.ender.firstwake.visual-bridge.v1",
+  "status": "REVIEW_ONLY__PIE_NOT_TESTED",
+  "engine": "Unreal Engine 5.8.4",
+  "based_on": {
+    "integration_pr": 799,
+    "exact_parent": "2afb4b7ea6cda75dc6068014eb19c06718259539",
+    "equipment_pr": 793,
+    "magic_pr": 810,
+    "lyra_recruitment_repair_pr": 808
+  },
+  "authority": {
+    "current_title": "To Sail the Starry Sky",
+    "hero": "Ender",
+    "affinity": "Spirit",
+    "job": "Resonator",
+    "playable_pre_splashdown": [
+      "Ender",
+      "Ionia"
+    ],
+    "first_recruit_post_splashdown": "Lyra",
+    "unavailable_in_slice": [
+      "Reson",
+      "Aepex"
+    ],
+    "starbourne": "LOCKED",
+    "identity": "Creator-approved November 11 cast-bible illustration: Ender in second panel from left. Earlier very-short/buzz-cut references are historically superseded; generic Genesis 9 face is not approved.",
+    "face": "Match the youthful expressive 22-year-old with defined brow, light facial stubble and confident/curious/upbeat expressions shown in the approved cast-bible Ender panel; preserve bright-green in-game eyes and avoid generic Genesis 9 likeness.",
+    "eyes": "Bright green; final eyes require actual textured iris/cornea and native lighting review.",
+    "hair": "CREATOR APPROVED: textured, full-volume, tousled dark brown hair with copper/auburn undertones as depicted on Ender in the November 11 cast bible. Supersedes prior buzz-cut direction. V9 thin hair-card prototype remains unapproved.",
+    "costume": "CREATOR APPROVED SILHOUETTE: rolled-sleeve olive/sage practical mechanic jacket and shirt, dark brown fitted leather chest harness, belts and pouches, aged brass buckles and subtle teal glowing mechanical components; match second-panel reference. The current generic DAZ shirt/shorts are not final.",
+    "goggles": "Brass/bronze sealed aviator goggles worn on head, teal-tinted lenses and proportional fit matched to approved cast-bible Ender panel; no eyeglasses. Native clearance/attachment still pending.",
+    "staff": "Full-length centered-wrap wooden resonance staff with twin brass ferrules; anatomically valid hand grip required."
+  },
+  "source_review": {
+    "daZ_merged_fbx": "Genesis9_BaseShirtShorts_MergedRig_REVIEW.fbx",
+    "provenance": "Private Neontic study; NOT committed because licensed mesh/source rights have not been verified for redistribution.",
+    "observed_skeletal_meshes": 1,
+    "observed_skeletons": 1,
+    "observed_bones": 152,
+    "observed_material_slots": 25,
+    "native_import": "PASSED_IN_DISPOSABLE_SANDBOX_NOT_IN_INTEGRATED_GAME",
+    "native_motion": "HOLD__BONE_MOVES_RENDER_MESH_UNCHANGED",
+    "existing_static_hair": "V9 copper hair, separate unapproved review candidate",
+    "existing_static_goggles": "V2 sealed goggles, separate unapproved review candidate",
+    "existing_staff": "V1 double-ferrule centered wrap, not gripped",
+    "hairdeck": "HOSTED_EXPERIMENT_ONLY_NO_CANDIDATE_GENERATED",
+    "hair_attachment_proposal": "Optional head-bone static copper hair, native fit/motion/visual approval NOT VERIFIED",
+    "hair_static_unrigged": true
+  },
+  "visual_binding": {
+    "implementation": "ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance",
+    "world_type": "PIE_ONLY",
+    "engine_editor_only": true,
+    "default_candidate_mesh": null,
+    "default_goggles_visible": false,
+    "default_staff_visible": false,
+    "requires_valid_skeleton": true,
+    "required_bones": [
+      "head",
+      "l_hand"
+    ],
+    "skeletal_bones_lower_limit": 80,
+    "skeletal_bones_upper_limit": 450,
+    "editor_blueprint_variables": [
+      "EnderSliceReviewBody",
+      "EnderSliceReviewHair",
+      "EnderSliceReviewGoggles",
+      "EnderSliceReviewStaff",
+      "bShowEnderReviewHair",
+      "bShowEnderReviewGoggles",
+      "bShowEnderReviewStaff",
+      "EnderReviewHairLocalOffset",
+      "EnderReviewGogglesLocalOffset",
+      "EnderReviewStaffLocalOffset"
+    ],
+    "changes_story_state": false,
+    "changes_inventory": false,
+    "changes_savegame": false,
+    "approval_on_asset_binding": false,
+    "default_hair_visible": false
+  },
+  "native_acceptance": {
+    "source_checks": "RUNNABLE_LOCALLY_WITH_PYTHON",
+    "unreal_build": "NOT_RUN_NEONTIC_OFFLINE",
+    "asset_intake": "NOT_RUN_IN_INTEGRATED_GAME",
+    "pie_player_visual": "NOT_RUN",
+    "animation_deformation": "NOT_VERIFIED",
+    "clothing_tracking": "NOT_VERIFIED",
+    "goggles_clearance": "NOT_VERIFIED",
+    "staff_grip": "NOT_VERIFIED",
+    "head_likeness": "NOT_APPROVED",
+    "cinematic_multiview": "NOT_APPROVED",
+    "creator_signoff": false,
+    "canonical_promotion": false,
+    "test_sequence": [
+      "Verify exact-integrated-head Win64 Editor build plus 35 native automation names",
+      "Import a rights-cleared skinned Ender mesh into unique /Game/TSTSS/Review/Ender... package",
+      "Bind only a disposable PIE pawn subclass; do not assign default mesh to production pawn",
+      "Capture rest→arm-raised→visibility positive control with lit GPU and fixed camera",
+      "Require actual body/shirt pixel change and visible clean elbow/shoulder sleeve contact",
+      "Fit correct head/eye/hair/goggle and costume references with side-by-side review",
+      "Place staff on valid hand socket; prove true grip during idle, walk, attack",
+      "Test real player movement, interaction, save/load and First Wake progression without Lyra early",
+      "Verify first party and Starbourne gates unchanged; request creator approval only after native evidence"
+    ]
+  },
+  "appearance_reference": {
+    "status": "CREATOR_APPROVED_VISUAL_REFERENCE_ONLY",
+    "approved_on": "2026-11-11",
+    "source": "User-uploaded To Sail the Starry Sky — Cast & Gameplay Bible — Main Party (Act 1), SECOND PANEL FROM LEFT (ENDER)",
+    "access": "CONVERSATION_IMAGE; not yet embedded in repository/Notion",
+    "prior_hair_reference": "VERY_SHORT_AUBURN_BUZZ_CUT_SUPERSEDED",
+    "avatar_model_approved": false,
+    "mesh_rig_animation_approved": false,
+    "game_stats_and_job_redefined": false,
+    "accepted_hair": "TOUSLED_DARK_COPPER_BROWN_FULL_VOLUME",
+    "accepted_face": "YOUTHFUL_EXPRESSIVE_WITH_LIGHT_STUBBLE",
+    "accepted_outfit": "OLIVE_SLEEVES_LEATHER_HARNESS_BRASS_TEAL_GADGETS",
+    "accepted_goggles": "BRASS_TEAL_LENSES_ON_HEAD",
+    "original_filename": "1000009325.png",
+    "source_sha256": "b48954f09cbc8ee738a170373dc2e1949a8280c46ad45425d16a0bffb3c8dd67",
+    "image_width_px": 1536,
+    "image_height_px": 1024,
+    "image_bytes": 805243,
+    "source_binary_committed": false
+  }
+}
