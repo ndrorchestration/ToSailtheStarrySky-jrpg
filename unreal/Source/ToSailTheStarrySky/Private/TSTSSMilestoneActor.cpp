@@ -3,7 +3,9 @@
 #include "Components/StaticMeshComponent.h"
 #if WITH_EDITOR
 #include "Components/TextRenderComponent.h"
+#include "Engine/StaticMesh.h"
 #include "Materials/MaterialInterface.h"
+#include "UObject/ConstructorHelpers.h"
 #endif
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
@@ -52,6 +54,23 @@ ATSTSSMilestoneActor::ATSTSSMilestoneActor()
     ReviewBeacon->SetTextRenderColor(FColor(255, 205, 96));
     ReviewBeacon->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     ReviewBeacon->SetVisibility(false);
+    // Slate backing is visual only; no collisions, shadows, or E ray.
+    ReviewBeaconBackdrop = CreateDefaultSubobject<UStaticMeshComponent>(
+        TEXT("ReviewBeaconBackdrop"));
+    ReviewBeaconBackdrop->SetupAttachment(InteractionMesh);
+    static ConstructorHelpers::FObjectFinder<UStaticMesh> PanelMesh(
+        TEXT("/Engine/BasicShapes/Cube.Cube"));
+    if (PanelMesh.Succeeded())
+    {
+        ReviewBeaconBackdrop->SetStaticMesh(PanelMesh.Object);
+    }
+    ReviewBeaconBackdrop->SetRelativeLocation(FVector(8.f, 0.f, 155.f));
+    ReviewBeaconBackdrop->SetRelativeScale3D(FVector(.09f, 6.2f, .68f));
+    ReviewBeaconBackdrop->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    ReviewBeaconBackdrop->SetCollisionResponseToAllChannels(ECR_Ignore);
+    ReviewBeaconBackdrop->SetGenerateOverlapEvents(false);
+    ReviewBeaconBackdrop->SetCastShadow(false);
+    ReviewBeaconBackdrop->SetVisibility(false);
 #endif
 }
 
@@ -66,6 +85,7 @@ void ATSTSSMilestoneActor::BeginPlay()
     InteractionMesh->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 #if WITH_EDITOR
     if (ReviewBeacon) ReviewBeacon->SetVisibility(false);
+    if (ReviewBeaconBackdrop) ReviewBeaconBackdrop->SetVisibility(false);
 #endif
 }
 
@@ -143,6 +163,18 @@ void ATSTSSMilestoneActor::UpdateReviewBeacon(const UTSTSSFirstWakeState* State)
     bReviewBeaconAvailable = bAvailable;
     // Only the currently permitted E marker advertises an E prompt.
     ReviewBeacon->SetVisibility(bAvailable);
+    if (IsValid(ReviewBeaconBackdrop))
+    {
+        ReviewBeaconBackdrop->SetVisibility(bAvailable);
+        if (bAvailable)
+        {
+            if (UMaterialInterface* Slate = LoadObject<UMaterialInterface>(
+                nullptr, TEXT("/Game/TSTSS/Review/MultipathV1/ObjectImports/HarborLantern/HarborLantern/Materials/TSTSS_dark_iron.TSTSS_dark_iron")))
+            {
+                ReviewBeaconBackdrop->SetMaterial(0, Slate);
+            }
+        }
+    }
     if (bAvailable)
     {
         ReviewBeacon->SetText(FText::FromString(
