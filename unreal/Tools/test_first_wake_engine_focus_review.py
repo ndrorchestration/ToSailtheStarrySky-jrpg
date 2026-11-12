@@ -8,6 +8,7 @@ import unittest
 from unittest.mock import patch
 
 import stage_first_wake_engine_focus_review as stage
+import check_first_wake_engine_focus_host as engine_host
 
 
 class EngineFocusStagingContractTests(unittest.TestCase):
@@ -22,6 +23,12 @@ class EngineFocusStagingContractTests(unittest.TestCase):
                          "/Game/TSTSS/Review/VerticalSlice/VS02_AureateInteriors")
         self.assertEqual(plan["target_review_map"],
                          "/Game/TSTSS/Review/EngineFocus_V1/M_EnginePresentationReview")
+
+    def test_host_resource_and_exact_head_gate_fixtures(self):
+        result = engine_host.self_test()
+        self.assertEqual(result["status"], "ENGINE_HOST_GATES_OFFLINE_PASS")
+        self.assertEqual(result["checks"], 7)
+        self.assertEqual(result["native_launch"], "NOT_RUN")
 
     def test_source_only_self_test_is_not_native_evidence(self):
         result = stage.self_test()
