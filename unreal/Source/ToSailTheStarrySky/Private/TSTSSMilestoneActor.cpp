@@ -216,18 +216,28 @@ void ATSTSSMilestoneActor::EnsureV5ReviewObjectProxy()
     }
     // Scale each real import to a plausible marker footprint, avoiding
     // overlarge mesh collision/visibility changes in the playable corridor.
-    constexpr float MaxHalfXY = 61.f;
-    constexpr float MaxHalfZ = 82.f;
+    constexpr float MaxHalfXY = 80.f;
+    constexpr float MaxHalfZ = 108.f;
     const double XY = FMath::Max(Extents.X, Extents.Y);
     const double TargetScale = FMath::Clamp(
         FMath::Min(MaxHalfXY / FMath::Max(XY, 0.01),
                    MaxHalfZ / FMath::Max(Extents.Z, 0.01)), 0.002, 20.);
     if (!FMath::IsFinite(TargetScale)) return;
     ReviewObjectProxy->SetStaticMesh(Asset);
+    // Face the more planar flyer/desk set pieces toward the incoming dock
+    // player; use true local bounds and rotate the pivot offset as well.
+    const bool bFrontFacingReviewProp = !bIsInspectionStation &&
+        (Milestone == ETSTSSFirstWakeBeat::FlyerDiscovered ||
+         Milestone == ETSTSSFirstWakeBeat::IoniaHired);
+    const FQuat ProxyRotation = bFrontFacingReviewProp
+        ? FRotator(0.f, 90.f, 0.f).Quaternion()
+        : FQuat::Identity;
+    ReviewObjectProxy->SetWorldRotation(ProxyRotation);
     ReviewObjectProxy->SetWorldScale3D(FVector(TargetScale));
     const FVector TargetCenter = GetActorLocation() +
         FVector(0.f, 0.f, -65.f + Extents.Z * TargetScale);
-    ReviewObjectProxy->SetWorldLocation(TargetCenter - Bounds.Origin * TargetScale);
+    ReviewObjectProxy->SetWorldLocation(
+        TargetCenter - ProxyRotation.RotateVector(Bounds.Origin * TargetScale));
     ReviewObjectProxy->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     ReviewObjectProxy->SetCollisionResponseToAllChannels(ECR_Ignore);
     ReviewObjectProxy->SetGenerateOverlapEvents(false);

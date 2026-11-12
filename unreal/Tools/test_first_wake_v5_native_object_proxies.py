@@ -47,9 +47,12 @@ class FirstWakeV5ObjectProxySourceTest(unittest.TestCase):
         self.assertIn("bReviewProxyReady = true;", section)
         self.assertIn("TSTSS_V5_OBJECT_PROXY_HOLD", section)
         self.assertIn("GetBounds()", section)
+        self.assertIn("bFrontFacingReviewProp", section)
+        self.assertIn("ProxyRotation.RotateVector(Bounds.Origin * TargetScale)", section)
+        self.assertIn("FRotator(0.f, 90.f, 0.f).Quaternion()", section)
         self.assertIn("Extents.ContainsNaN()", section)
-        self.assertIn("constexpr float MaxHalfXY = 61.f;", section)
-        self.assertIn("constexpr float MaxHalfZ = 82.f;", section)
+        self.assertIn("constexpr float MaxHalfXY = 80.f;", section)
+        self.assertIn("constexpr float MaxHalfZ = 108.f;", section)
 
     def test_proxy_is_independent_from_authoritative_e_ray_and_story(self):
         self.assertIn("ReviewObjectProxy = CreateDefaultSubobject<UStaticMeshComponent>", CPP)
