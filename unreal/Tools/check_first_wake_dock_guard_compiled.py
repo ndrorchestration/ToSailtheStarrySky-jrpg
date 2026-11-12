@@ -42,6 +42,9 @@ int main() {
     const FVector down(0.f, 0.f, -241.f);
     expect(ShouldRecover(true, "VS01_DenithHarbor", true, true, down, anchor), true, "harbor");
     expect(ShouldRecover(true, "FirstWake_PreludeInteraction_V2", true, true, down, anchor), true, "prelude");
+    expect(ShouldRecover(true, "FirstWake_PreludeInteraction_V5_VisualReview", true, true, down, anchor), true, "v5 prelude");
+    expect(ShouldRecover(true, "FirstWake_PreludeInteraction_V3_VisualReview", true, true, down, anchor), false, "unapproved v3");
+    expect(ShouldRecover(true, "FirstWake_PreludeInteraction_V4_VisualReview", true, true, down, anchor), false, "unapproved v4");
     expect(ShouldRecover(true, "VS06_SplashdownShore", true, true, down, anchor), true, "shore");
     expect(ShouldRecover(true, "L_VS06_ShoreMagicEnemyGear_Review", true, true, down, anchor), true, "shore gear");
     expect(ShouldRecover(true, "VS04_SplashdownSea", true, true, down, anchor), false, "no sea travel");

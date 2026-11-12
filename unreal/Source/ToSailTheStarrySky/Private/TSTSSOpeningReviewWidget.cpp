@@ -191,7 +191,7 @@ void UTSTSSOpeningReviewWidget::BeginJourney()
     // Begin at the existing seven-stop playable prelude, not the decorative
     // VS01 staging map. This does not skip hiring, inspections, sea contact,
     // flotation, or any explicit subsequent K scene-travel gate.
-    const FString PreludeMap(TEXT("/Game/TSTSS/Review/FirstWake_PreludeInteraction_V2"));
+    const FString PreludeMap(TEXT("/Game/TSTSS/Review/FirstWake_PreludeInteraction_V5_VisualReview"));
     if (!FPackageName::DoesPackageExist(PreludeMap))
     {
         UE_LOG(LogTemp, Error,

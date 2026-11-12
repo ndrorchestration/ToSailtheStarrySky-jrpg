@@ -6,6 +6,11 @@
 namespace
 {
 constexpr const TCHAR* PreludeName = TEXT("FirstWake_PreludeInteraction_V2");
+constexpr const TCHAR* VisualReviewPreludeName = TEXT("FirstWake_PreludeInteraction_V5_VisualReview");
+inline bool IsPreludeScene(const FString& Name)
+{
+    return Name == PreludeName || Name == VisualReviewPreludeName;
+}
 constexpr const TCHAR* SkyName = TEXT("VS03_FirstWakeSky");
 constexpr const TCHAR* SeaName = TEXT("VS04_SplashdownSea");
 constexpr const TCHAR* FuelName = TEXT("VS05_DenithFuelShanty");
@@ -25,7 +30,7 @@ FString UTSTSSReviewShoreTravelSubsystem::NextReviewMap(
         return FString();
     }
     const ETSTSSFirstWakeBeat Beat = State->GetCurrentBeat();
-    if (SourceMap == PreludeName && Beat == ETSTSSFirstWakeBeat::EngineeringChecked)
+    if (IsPreludeScene(SourceMap) && Beat == ETSTSSFirstWakeBeat::EngineeringChecked)
     {
         return TEXT("/Game/TSTSS/Review/VerticalSlice/VS03_FirstWakeSky");
     }
@@ -70,7 +75,7 @@ bool UTSTSSReviewShoreTravelSubsystem::QueueShore(
     }
     // Pressing K is the explicit launch action. Never manufacture sea contact
     // or flotation; only native water physics may authorize those beats.
-    if (SourceMap == PreludeName && !State->AdvanceTo(ETSTSSFirstWakeBeat::Launched))
+    if (IsPreludeScene(SourceMap) && !State->AdvanceTo(ETSTSSFirstWakeBeat::Launched))
     {
         return false;
     }

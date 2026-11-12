@@ -8,7 +8,7 @@ PLAYER = (SRC / "Private" / "TSTSSExplorerCharacter.cpp").read_text(encoding="ut
 GROUND = (SRC / "Public" / "TSTSSReviewGrounding.h").read_text(encoding="utf-8")
 OPENING = (SRC / "Private" / "TSTSSOpeningReviewWidget.cpp").read_text(encoding="utf-8")
 NATIVE_TEST = (SRC / "Private" / "Tests" / "TSTSSReviewDockReturnTests.cpp").read_text(encoding="utf-8")
-START_MAP = "/Game/TSTSS/Review/FirstWake_PreludeInteraction_V2"
+START_MAP = "/Game/TSTSS/Review/FirstWake_PreludeInteraction_V5_VisualReview"
 
 
 class OpeningDockSourceContract(unittest.TestCase):
@@ -32,13 +32,29 @@ class OpeningDockSourceContract(unittest.TestCase):
         default_engine = (UNREAL / 'Config' / 'DefaultEngine.ini').read_text(encoding='utf-8')
         self.assertIn('GameDefaultMap=/Engine/Maps/Entry', default_engine)
 
+    def test_v5_title_route_and_review_scene_gates(self):
+        import hashlib
+        travel = (SRC / "Private" / "TSTSSReviewShoreTravelSubsystem.cpp").read_text(encoding="utf-8")
+        v2 = UNREAL / "Content/TSTSS/Review/FirstWake_PreludeInteraction_V2.umap"
+        self.assertEqual(hashlib.sha256(v2.read_bytes()).hexdigest(),
+                         "4c96f1fb28fe4af91b879977e473c20de32bd933f741a5384bb8403a00254b80")
+        self.assertIn('Name == PreludeName || Name == VisualReviewPreludeName', travel)
+        self.assertEqual(travel.count('IsPreludeScene(SourceMap)'), 2)
+        self.assertIn('FirstWake_PreludeInteraction_V5_VisualReview', travel)
+        self.assertNotIn('FirstWake_PreludeInteraction_V3_VisualReview', travel)
+        self.assertNotIn('FirstWake_PreludeInteraction_V4_VisualReview', travel)
+        for label in ("V5 playable review prelude drop rescued",
+                      "Unapproved V3 visual prelude has no rescue authority",
+                      "Unapproved V4 visual prelude has no rescue authority"):
+            self.assertIn(label, NATIVE_TEST)
+
     def test_absent_map_does_not_fake_success(self):
         fn = OPENING.split("void UTSTSSOpeningReviewWidget::BeginJourney()", 1)[1]
         guard = fn.split("if (!FPackageName::DoesPackageExist(PreludeMap))", 1)[1]
         self.assertLess(guard.index("return;"), guard.index("UGameplayStatics::OpenLevel"))
 
     def test_recovery_is_review_only(self):
-        for name in ("FirstWake_PreludeInteraction_V2", "VS01_DenithHarbor",
+        for name in ("FirstWake_PreludeInteraction_V2", "FirstWake_PreludeInteraction_V5_VisualReview", "VS01_DenithHarbor",
                      "VS06_SplashdownShore", "L_VS06_ShoreMagicEnemyGear_Review"):
             self.assertIn(name, GROUND)
         self.assertNotIn("VS04_SplashdownSea", GROUND)

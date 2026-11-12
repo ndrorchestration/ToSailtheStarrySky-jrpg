@@ -69,17 +69,27 @@ bool FTSTSSFirstWakeReviewObjectiveTest::RunTest(const FString& Parameters)
     // shortcut around the physical sea-landing gate.
     using Route = UTSTSSReviewShoreTravelSubsystem;
     const FString Prelude(TEXT("FirstWake_PreludeInteraction_V2"));
+    const FString VisualPrelude(TEXT("FirstWake_PreludeInteraction_V5_VisualReview"));
     TestFalse(TEXT("Unstarted review cannot travel"),
         Route::IsEligible(State, Prelude));
     TestTrue(TEXT("Fixture restores boarded ship"),
         State->Restore(true, ETSTSSFirstWakeBeat::BoardedAureateWake, 0));
     TestFalse(TEXT("Pre-inspection launch is refused"),
         Route::IsEligible(State, Prelude));
+    TestFalse(TEXT("V5 cannot launch before inspections"),
+        Route::IsEligible(State, VisualPrelude));
     TestTrue(TEXT("Fixture restores engineering signoff"),
         State->Restore(true, ETSTSSFirstWakeBeat::EngineeringChecked, 0x07));
     TestEqual(TEXT("Engineering opens only the sky review"),
         Route::NextReviewMap(State, Prelude),
         FString(TEXT("/Game/TSTSS/Review/VerticalSlice/VS03_FirstWakeSky")));
+    TestEqual(TEXT("V5 visual prelude opens the same gated sky destination"),
+        Route::NextReviewMap(State, VisualPrelude),
+        FString(TEXT("/Game/TSTSS/Review/VerticalSlice/VS03_FirstWakeSky")));
+    TestFalse(TEXT("Unapproved V3 has no launch authority"),
+        Route::IsEligible(State, TEXT("FirstWake_PreludeInteraction_V3_VisualReview")));
+    TestFalse(TEXT("Unapproved V4 has no launch authority"),
+        Route::IsEligible(State, TEXT("FirstWake_PreludeInteraction_V4_VisualReview")));
     TestFalse(TEXT("Cannot start in sea map"),
         Route::IsEligible(State, TEXT("VS04_SplashdownSea")));
     TestTrue(TEXT("Fixture restores launch"),

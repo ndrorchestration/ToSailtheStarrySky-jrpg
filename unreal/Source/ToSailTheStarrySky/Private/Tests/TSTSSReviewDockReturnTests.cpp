@@ -14,6 +14,9 @@ bool FTSTSSReviewDockReturnTest::RunTest(const FString& Parameters)
     const FVector Drop(800.f, 100.f, -300.f);
     TestTrue(TEXT("Harbor drop rescued"), ShouldRecover(true, TEXT("VS01_DenithHarbor"), true, true, Drop, Anchor));
     TestTrue(TEXT("Prelude drop rescued"), ShouldRecover(true, TEXT("FirstWake_PreludeInteraction_V2"), true, true, Drop, Anchor));
+    TestTrue(TEXT("V5 playable review prelude drop rescued"), ShouldRecover(true, TEXT("FirstWake_PreludeInteraction_V5_VisualReview"), true, true, Drop, Anchor));
+    TestFalse(TEXT("Unapproved V3 visual prelude has no rescue authority"), ShouldRecover(true, TEXT("FirstWake_PreludeInteraction_V3_VisualReview"), true, true, Drop, Anchor));
+    TestFalse(TEXT("Unapproved V4 visual prelude has no rescue authority"), ShouldRecover(true, TEXT("FirstWake_PreludeInteraction_V4_VisualReview"), true, true, Drop, Anchor));
     TestTrue(TEXT("Shore drop rescued"), ShouldRecover(true, TEXT("VS06_SplashdownShore"), true, true, Drop, Anchor));
     TestTrue(TEXT("Shore enemy gear review rescued"), ShouldRecover(true, TEXT("L_VS06_ShoreMagicEnemyGear_Review"), true, true, Drop, Anchor));
     TestFalse(TEXT("A sea fall is not auto-corrected"), ShouldRecover(true, TEXT("VS04_SplashdownSea"), true, true, Drop, Anchor));
