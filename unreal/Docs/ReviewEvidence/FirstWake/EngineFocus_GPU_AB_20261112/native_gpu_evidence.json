@@ -1,0 +1,54 @@
+{
+  "schema": "tstss.engine_focus.native_gpu_ab_evidence.v1",
+  "capture_source_commit": "e62a3d9b4d711ad95484d609b2e6282f6b4da673",
+  "evidence_status": "NATIVE_GPU_PNG_PAIR_VERIFIED_NOT_CINEMATIC_APPROVED",
+  "engine": "Unreal Engine 5.8.4",
+  "real_rhi": "D3D12 (confirmed by local UE process log)",
+  "hardware": "Intel Iris Xe",
+  "scene_package": "/Game/TSTSS/Review/EngineFocus_V1/M_EnginePresentationReview",
+  "scene_sha256": "9338c2abdebd7eeb19e50fb98733a9358d417f0633f8947aa9c6d48259c5e65a",
+  "source_scene_sha256": "a97fbb057cb87c0e35fe95195ca06c30de1a5cc60158bf31a657f738b22a9d69",
+  "camera_pair": {
+    "manual_focus": "65mm f/2.8 at 716.118 cm",
+    "control": "65mm f/2.8; DOF disabled; same position/rotation",
+    "receiver_enabled": false
+  },
+  "requested_resolution": [
+    960,
+    540
+  ],
+  "native_filmback_output_resolution": [
+    810,
+    540
+  ],
+  "pixel_difference": {
+    "mean_absolute_rgb_channel_delta_over_255": 1.137,
+    "grayscale_pixels_above_delta8_percent": 3.23
+  },
+  "files": [
+    {
+      "path": "EngineInspection_Optical_GPU.png",
+      "sha256": "ef914f0449da9b77bf71eebaf4fd964f978aeaba4d81280fbc5c4ef419f3d8a3",
+      "bytes": 317547
+    },
+    {
+      "path": "EngineInspection_NoDOF_GPU.png",
+      "sha256": "7e8e16878560f541cf0a66c2bd57bffc213dea30e5799fd986f2ad51a129bc08",
+      "bytes": 299462
+    },
+    {
+      "path": "NATIVE_EngineFocus_AB_Comparison.png",
+      "sha256": "672839fcee6c66165cfea31f9f1fe696306e35df747867a33d9ee68ff361d57a",
+      "bytes": 436083
+    }
+  ],
+  "visual_approval": "NOT_ESTABLISHED",
+  "pie": "NOT_RUN",
+  "final_game_art": "NOT_ESTABLISHED",
+  "limitations": [
+    "Current view shows proxy geometry, not approved cinematic content",
+    "Visual difference is subtle, not cinematic acceptance",
+    "Rendered view does not test gameplay transition, audio, or world-driven focus timing",
+    "Not merged or promoted into playable content"
+  ]
+}
