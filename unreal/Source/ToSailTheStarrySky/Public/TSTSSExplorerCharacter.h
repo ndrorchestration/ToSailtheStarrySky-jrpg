@@ -12,6 +12,7 @@ public:
     ATSTSSExplorerCharacter();
     virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
     virtual void BeginPlay() override;
+    virtual void Tick(float DeltaSeconds) override;
     UFUNCTION(BlueprintCallable, Category="TSTSS|First Wake")
     UTSTSSFirstWakeState* GetFirstWakeState() const { return FirstWakeState; }
     UFUNCTION(BlueprintCallable, Category="TSTSS|Interaction")
@@ -30,6 +31,11 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Interaction")
     float InteractionDistance = 300.f;
 private:
+#if !UE_BUILD_SHIPPING
+    bool HasSupportedReviewFooting(const UWorld* World, const FVector& PawnLocation) const;
+    FVector LastSupportedReviewLocation = FVector::ZeroVector;
+    bool bHasSupportedReviewLocation = false;
+#endif
     void MoveForward(float Value);
     void MoveRight(float Value);
     void Turn(float Value);

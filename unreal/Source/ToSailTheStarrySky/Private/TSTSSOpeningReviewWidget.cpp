@@ -15,6 +15,8 @@
 #include "GameFramework/HUD.h"
 #include "GameFramework/PlayerController.h"
 #include "HAL/PlatformFileManager.h"
+#include "Kismet/GameplayStatics.h"
+#include "Misc/PackageName.h"
 #include "MediaPlayer.h"
 #include "MediaSoundComponent.h"
 #include "MediaTexture.h"
@@ -177,9 +179,34 @@ void UTSTSSOpeningReviewWidget::NativeDestruct()
 void UTSTSSOpeningReviewWidget::BeginJourney()
 {
     APlayerController* Controller = GetOwningPlayer();
-    if (!Controller) return;
-    RemoveFromParent();
-    Controller->bShowMouseCursor = false;
-    Controller->SetInputMode(FInputModeGameOnly());
-    if (AHUD* CurrentHUD = Controller->GetHUD()) CurrentHUD->bShowHUD = true;
+    UWorld* World = Controller ? Controller->GetWorld() : nullptr;
+    if (!World || (World->WorldType != EWorldType::PIE &&
+                   World->WorldType != EWorldType::Game))
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_REVIEW_NEW_GAME_HOLD reason=not_playable_world"));
+        return;
+    }
+
+    // Begin at the existing seven-stop playable prelude, not the decorative
+    // VS01 staging map. This does not skip hiring, inspections, sea contact,
+    // flotation, or any explicit subsequent K scene-travel gate.
+    const FString PreludeMap(TEXT("/Game/TSTSS/Review/FirstWake_PreludeInteraction_V2"));
+    if (!FPackageName::DoesPackageExist(PreludeMap))
+    {
+        UE_LOG(LogTemp, Error,
+            TEXT("TSTSS_REVIEW_NEW_GAME_HOLD reason=prelude_map_missing path=%s"),
+            *PreludeMap);
+        if (GEngine)
+        {
+            GEngine->AddOnScreenDebugMessage(-1, 8.f, FColor::Red,
+                TEXT("Review New Game unavailable: the playable Prelude map is missing"));
+        }
+        return; // Keep the menu intact; never pretend the game has started.
+    }
+
+    UE_LOG(LogTemp, Display,
+        TEXT("TSTSS_REVIEW_NEW_GAME_ROUTE route=%s progress_reset_by_fresh_map=1"),
+        *PreludeMap);
+    UGameplayStatics::OpenLevel(Controller, FName(*PreludeMap));
 }

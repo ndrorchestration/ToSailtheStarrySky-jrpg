@@ -1,4 +1,5 @@
 #include "TSTSSExplorerCharacter.h"
+#include "TSTSSReviewGrounding.h"
 #include "TSTSSMilestoneActor.h"
 #include "TSTSSPersistence.h"
 #include "TSTSSInteractionReach.h"
@@ -166,6 +167,11 @@ bool LoadBoundReviewContinueCandidate(const UWorld* World, const FString& Slot,
 ATSTSSExplorerCharacter::ATSTSSExplorerCharacter()
 {
     PrimaryActorTick.bCanEverTick = false;
+#if !UE_BUILD_SHIPPING
+    // Lightweight fall rescue only in four explicitly scoped review maps.
+    PrimaryActorTick.bCanEverTick = true;
+    PrimaryActorTick.TickInterval = 0.2f;
+#endif
     CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
     CameraBoom->SetupAttachment(GetRootComponent());
     CameraBoom->TargetArmLength = 360.f;
@@ -258,6 +264,96 @@ void ATSTSSExplorerCharacter::BeginPlay()
     bPendingReviewContinue = false;
 #endif
     ShowObjectiveReview();
+}
+
+#if !UE_BUILD_SHIPPING
+bool ATSTSSExplorerCharacter::HasSupportedReviewFooting(
+    const UWorld* World, const FVector& PawnLocation) const
+{
+    if (!World || PawnLocation.ContainsNaN()) return false;
+    // A center-only contact can record an unsafe anchor right on the edge.
+    // Require support under the center and four capsule-adjacent points.
+    constexpr float RadiusCm = 35.f;
+    const FVector Offsets[] = {
+        FVector::ZeroVector,
+        FVector(RadiusCm, 0.f, 0.f),
+        FVector(-RadiusCm, 0.f, 0.f),
+        FVector(0.f, RadiusCm, 0.f),
+        FVector(0.f, -RadiusCm, 0.f)
+    };
+    const FCollisionObjectQueryParams Objects(ECC_WorldStatic);
+    const FCollisionQueryParams Query(SCENE_QUERY_STAT(TSTSSReviewSupportedFloor), false, this);
+    for (const FVector& Offset : Offsets)
+    {
+        FHitResult Hit;
+        if (!World->LineTraceSingleByObjectType(
+                Hit, PawnLocation + Offset + FVector(0.f, 0.f, 15.f),
+                PawnLocation + Offset - FVector(0.f, 0.f, 160.f),
+                Objects, Query) ||
+            !Hit.bBlockingHit || Hit.ImpactNormal.Z < 0.7f)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+#endif
+
+void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
+{
+    Super::Tick(DeltaSeconds);
+#if !UE_BUILD_SHIPPING
+    UWorld* World = GetWorld();
+    if (!World || (World->WorldType != EWorldType::PIE &&
+                   World->WorldType != EWorldType::Game) ||
+        !IsPlayerControlled())
+    {
+        return;
+    }
+    // Reject same-named production maps outside the explicit review namespace.
+    const bool bReviewNamespace = World->GetOutermost() &&
+        World->GetOutermost()->GetName().StartsWith(TEXT("/Game/TSTSS/Review/"));
+    const FString Scene = UGameplayStatics::GetCurrentLevelName(World, true);
+    if (!bReviewNamespace || !TSTSSReviewGrounding::IsWalkableReviewMap(Scene)) return;
+    UCharacterMovementComponent* Movement = GetCharacterMovement();
+    if (!Movement) return;
+
+    const FVector Current = GetActorLocation();
+    if (Movement->IsMovingOnGround() &&
+        HasSupportedReviewFooting(World, Current))
+    {
+        LastSupportedReviewLocation = Current;
+        bHasSupportedReviewLocation = true;
+    }
+    if (!TSTSSReviewGrounding::ShouldRecover(
+            bReviewNamespace, Scene, bHasSupportedReviewLocation,
+            Movement->IsFalling(), Current, LastSupportedReviewLocation))
+    {
+        return;
+    }
+
+    FVector Candidate = LastSupportedReviewLocation + FVector(0.f, 0.f, 15.f);
+    if (!World->FindTeleportSpot(this, Candidate, GetActorRotation()) ||
+        FVector::Dist(Candidate, LastSupportedReviewLocation) > 80.f ||
+        !TeleportTo(Candidate, GetActorRotation(), false, false))
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_REVIEW_FALL_RETURN_REJECT map=%s from=%s"),
+            *Scene, *Current.ToCompactString());
+        return;
+    }
+
+    Movement->StopMovementImmediately();
+    Movement->SetMovementMode(MOVE_Walking);
+    UE_LOG(LogTemp, Display,
+        TEXT("TSTSS_REVIEW_FALL_RETURN map=%s from=%s to=%s story_unchanged=1"),
+        *Scene, *Current.ToCompactString(), *GetActorLocation().ToCompactString());
+    if (GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Cyan,
+            TEXT("Review: returned to the last supported walkway"));
+    }
+#endif
 }
 
 void ATSTSSExplorerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
