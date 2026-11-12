@@ -258,7 +258,12 @@ def main():
     parser.add_argument("--plan", action="store_true")
     parser.add_argument("--stage-native", action="store_true")
     options, _unknown = parser.parse_known_args()
-    if options.stage_native:
+    if options.plan:
+        result = source_inventory()
+    elif options.stage_native or os.environ.get("TSTSS_V5_PBR_OPT_IN") == OPT_IN:
+        # Unreal -ExecutePythonScript invokes the file without forwarding
+        # arbitrary trailing CLI flags on every engine patch. The explicit,
+        # single-purpose opt-in environment gate remains mandatory inside stage().
         result = stage()
     else:
         result = source_inventory()
