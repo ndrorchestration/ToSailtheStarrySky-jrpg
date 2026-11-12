@@ -47,11 +47,11 @@ ATSTSSMilestoneActor::ATSTSSMilestoneActor()
     // Cosmetic local review beacon. No collision or shipping UI authority.
     ReviewBeacon = CreateDefaultSubobject<UTextRenderComponent>(TEXT("ReviewBeacon"));
     ReviewBeacon->SetupAttachment(InteractionMesh);
-    ReviewBeacon->SetRelativeLocation(FVector(0.f, 0.f, 155.f));
+    ReviewBeacon->SetRelativeLocation(FVector(0.f, 0.f, 55.f));
     ReviewBeacon->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
     ReviewBeacon->SetHorizontalAlignment(EHTA_Center);
-    ReviewBeacon->SetWorldSize(32.f);
-    ReviewBeacon->SetTextRenderColor(FColor(255, 205, 96));
+    ReviewBeacon->SetWorldSize(40.f);
+    ReviewBeacon->SetTextRenderColor(FColor(255, 239, 177));
     ReviewBeacon->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     ReviewBeacon->SetVisibility(false);
     // Slate backing is visual only; no collisions, shadows, or E ray.
@@ -64,7 +64,7 @@ ATSTSSMilestoneActor::ATSTSSMilestoneActor()
     {
         ReviewBeaconBackdrop->SetStaticMesh(PanelMesh.Object);
     }
-    ReviewBeaconBackdrop->SetRelativeLocation(FVector(8.f, 0.f, 155.f));
+    ReviewBeaconBackdrop->SetRelativeLocation(FVector(8.f, 0.f, 55.f));
     ReviewBeaconBackdrop->SetRelativeScale3D(FVector(.09f, 6.2f, .68f));
     ReviewBeaconBackdrop->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     ReviewBeaconBackdrop->SetCollisionResponseToAllChannels(ECR_Ignore);
@@ -179,7 +179,7 @@ void ATSTSSMilestoneActor::UpdateReviewBeacon(const UTSTSSFirstWakeState* State)
     {
         ReviewBeacon->SetText(FText::FromString(
             FString::Printf(TEXT("[E]  %s"), *GetReviewDisplayName())));
-        ReviewBeacon->SetTextRenderColor(FColor(255, 205, 96));
+        ReviewBeacon->SetTextRenderColor(FColor(255, 239, 177));
     }
 
     // Reuse existing local review-material assets; this changes only the

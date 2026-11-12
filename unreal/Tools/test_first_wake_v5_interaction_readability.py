@@ -31,7 +31,7 @@ class ReadableInteractionContract(unittest.TestCase):
         self.assertIn("TObjectPtr<class UStaticMeshComponent> ReviewBeaconBackdrop", ACTOR_H)
         self.assertIn("bReviewBeaconAvailable == bAvailable", ACTOR)
         self.assertIn("void UpdateReviewBeacon(const UTSTSSFirstWakeState* State)", ACTOR_H)
-        self.assertIn("ReviewBeacon->SetTextRenderColor(FColor(255, 205, 96))", ACTOR)
+        self.assertIn("ReviewBeacon->SetTextRenderColor(FColor(255, 239, 177))", ACTOR)
 
     def test_beacon_availability_follows_story_not_a_shortcut(self):
         helper = ACTOR.split(
