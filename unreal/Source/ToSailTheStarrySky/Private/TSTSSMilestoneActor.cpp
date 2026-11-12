@@ -1,6 +1,10 @@
 #include "TSTSSMilestoneActor.h"
 #include "TSTSSAudioSubsystem.h"
 #include "Components/StaticMeshComponent.h"
+#if WITH_EDITOR
+#include "Components/TextRenderComponent.h"
+#include "Materials/MaterialInterface.h"
+#endif
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -37,6 +41,18 @@ ATSTSSMilestoneActor::ATSTSSMilestoneActor()
     InteractionMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     InteractionMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
     InteractionMesh->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+#if WITH_EDITOR
+    // Cosmetic local review beacon. No collision or shipping UI authority.
+    ReviewBeacon = CreateDefaultSubobject<UTextRenderComponent>(TEXT("ReviewBeacon"));
+    ReviewBeacon->SetupAttachment(InteractionMesh);
+    ReviewBeacon->SetRelativeLocation(FVector(0.f, 0.f, 155.f));
+    ReviewBeacon->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
+    ReviewBeacon->SetHorizontalAlignment(EHTA_Center);
+    ReviewBeacon->SetWorldSize(32.f);
+    ReviewBeacon->SetTextRenderColor(FColor(255, 205, 96));
+    ReviewBeacon->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    ReviewBeacon->SetVisibility(false);
+#endif
 }
 
 void ATSTSSMilestoneActor::BeginPlay()
@@ -48,7 +64,106 @@ void ATSTSSMilestoneActor::BeginPlay()
     InteractionMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     InteractionMesh->SetCollisionResponseToAllChannels(ECR_Ignore);
     InteractionMesh->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+#if WITH_EDITOR
+    if (ReviewBeacon) ReviewBeacon->SetVisibility(false);
+#endif
 }
+
+#if WITH_EDITOR
+FString ATSTSSMilestoneActor::GetReviewDisplayName() const
+{
+    if (bIsInspectionStation)
+    {
+        switch (InspectionStation)
+        {
+        case ETSTSSInspectionStation::Lift: return TEXT("INSPECT LIFT");
+        case ETSTSSInspectionStation::Pressure: return TEXT("CHECK PRESSURE");
+        case ETSTSSInspectionStation::Reserve: return TEXT("CHECK RESERVES");
+        default: return TEXT("INSPECT SYSTEM");
+        }
+    }
+    switch (Milestone)
+    {
+    case ETSTSSFirstWakeBeat::FlyerDiscovered: return TEXT("READ IONIA'S FLYER");
+    case ETSTSSFirstWakeBeat::IoniaHired: return TEXT("SPEAK TO IONIA");
+    case ETSTSSFirstWakeBeat::BoardedAureateWake: return TEXT("BOARD AUREATE WAKE");
+    case ETSTSSFirstWakeBeat::EngineeringChecked: return TEXT("ENGINEERING SIGNOFF");
+    case ETSTSSFirstWakeBeat::EmptyReserveInspected: return TEXT("CHECK EMPTY RESERVES");
+    case ETSTSSFirstWakeBeat::ReturnedToBerth: return TEXT("RETURN TO BERTH");
+    default: return TEXT("REVIEW INTERACTION");
+    }
+}
+
+bool ATSTSSMilestoneActor::IsReviewActionable(const UTSTSSFirstWakeState* State) const
+{
+    if (!IsValid(State) || !IsAuthorizedReviewMilestoneWorld(GetWorld(), GetActorLabel()) ||
+        Milestone == ETSTSSFirstWakeBeat::SeaContact ||
+        Milestone == ETSTSSFirstWakeBeat::FlotationConfirmed)
+    {
+        return false;
+    }
+    if (bIsInspectionStation)
+    {
+        const uint8 Index = static_cast<uint8>(InspectionStation);
+        return Index <= 2 && State->HasStarted() &&
+            State->GetCurrentBeat() == ETSTSSFirstWakeBeat::BoardedAureateWake &&
+            (State->GetInspectionMask() & (1u << Index)) == 0;
+    }
+    if (!State->HasStarted())
+    {
+        return Milestone == ETSTSSFirstWakeBeat::FlyerDiscovered;
+    }
+    const int32 Current = static_cast<int32>(State->GetCurrentBeat());
+    const int32 Requested = static_cast<int32>(Milestone);
+    if (Requested != Current + 1 || Requested >
+        static_cast<int32>(ETSTSSFirstWakeBeat::ReturnedToBerth))
+    {
+        return false;
+    }
+    if (Milestone == ETSTSSFirstWakeBeat::EngineeringChecked)
+    {
+        return State->AreInspectionsComplete();
+    }
+    return true;
+}
+
+void ATSTSSMilestoneActor::UpdateReviewBeacon(const UTSTSSFirstWakeState* State)
+{
+    if (!IsValid(ReviewBeacon) ||
+        !IsAuthorizedReviewMilestoneWorld(GetWorld(), GetActorLabel()))
+    {
+        return;
+    }
+    const bool bAvailable = IsReviewActionable(State);
+    if (bReviewBeaconInitialized && bReviewBeaconAvailable == bAvailable)
+    {
+        return;
+    }
+    bReviewBeaconInitialized = true;
+    bReviewBeaconAvailable = bAvailable;
+    // Only the currently permitted E marker advertises an E prompt.
+    ReviewBeacon->SetVisibility(bAvailable);
+    if (bAvailable)
+    {
+        ReviewBeacon->SetText(FText::FromString(
+            FString::Printf(TEXT("[E]  %s"), *GetReviewDisplayName())));
+        ReviewBeacon->SetTextRenderColor(FColor(255, 205, 96));
+    }
+
+    // Reuse existing local review-material assets; this changes only the
+    // rendered material of the additive marker, never collision/story.
+    const TCHAR* MaterialPath = bAvailable
+        ? TEXT("/Game/TSTSS/Review/MultipathV1/ObjectImports/HarborLantern/HarborLantern/Materials/TSTSS_brass.TSTSS_brass")
+        : TEXT("/Game/TSTSS/Review/MultipathV1/ObjectImports/HarborLantern/HarborLantern/Materials/TSTSS_dark_iron.TSTSS_dark_iron");
+    if (IsValid(InteractionMesh))
+    {
+        if (UMaterialInterface* Look = LoadObject<UMaterialInterface>(nullptr, MaterialPath))
+        {
+            InteractionMesh->SetMaterial(0, Look);
+        }
+    }
+}
+#endif
 
 bool ATSTSSMilestoneActor::TryActivate(UTSTSSFirstWakeState* State)
 {
