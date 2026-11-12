@@ -1,0 +1,44 @@
+{
+  "schema_version": "0.1",
+  "evidence_type": "NATIVE_UE_EDITOR_BUILD_ATTEMPT_AND_ADMISSION_BOUNDARY",
+  "date_local": "2026-11-11",
+  "source_head_compiled": "9768f976a4b2fd80498f0759ba2c6335574d96d8",
+  "source_head_repaired": "a918f4b7a951844cee923c46e9c6e61b8aad01c6",
+  "source_head_regression_test": "0cf1fddbf24ae0b3c07e30f1c833c3f79454e0a2",
+  "engine_version": "5.8.4",
+  "host": "Neontic (authorized Windows development workstation)",
+  "native_tool": "UnrealBuildTool / ToSailTheStarrySkyEditor Win64 Development",
+  "compiler": "MSVC 14.44.35229",
+  "native_build_result": "FAILED_C2440",
+  "build_exit_code": 6,
+  "diagnostic_location": "unreal/Source/ToSailTheStarrySky/Private/TSTSSAudioSubsystem.cpp:99",
+  "diagnostic": "C2440: ActiveLoops.Find(EventId) returns TObjectPtr<UAudioComponent>* not UAudioComponent* const*; native compiler rejected raw-pointer initialization",
+  "fix": "Use const TObjectPtr<UAudioComponent>* and explicit Get() for the loop-handle lookup",
+  "compiled_fixed_head": "NOT_EXECUTED",
+  "native_automation": "NOT_EXECUTED",
+  "pie_audio_playback": "NOT_EXECUTED",
+  "qa_soundwave_import": "NOT_EXECUTED",
+  "qa_scene_placed": "NOT_EXECUTED",
+  "approval": "NONE",
+  "initial_resource_snapshot": {
+    "free_ram_gib": 7.72,
+    "free_disk_C_gib": 15.31
+  },
+  "post_failed_compile_snapshot": {
+    "free_ram_gib": 7.55,
+    "free_disk_C_gib": 12.83
+  },
+  "isolated_generated_pch": {
+    "logical_bytes": 2575237120,
+    "ntfs_compressed_physical_bytes": 926978048,
+    "compression_ratio": "2.8:1",
+    "scope": "Disposable AudioReview worktree only"
+  },
+  "next_build_attempt": "DENIED_BEFORE_UBT_RESOURCE_GATE_C_FREE_LT_14_GIB",
+  "latest_read_only_check": {
+    "free_ram_gib": 7.56,
+    "free_disk_C_gib": 13.81
+  },
+  "file_side_effects": "Only disposable worktree / Intermediate / Saved and isolated scratch WAV samples were written; protected main, upstream base, third-party audio and game SaveGames unchanged",
+  "authority_constraints": "Source tests passing do not mean UHT/UBT fixed-head success, playable audio, third-party rights, or cinematic signoff"
+}

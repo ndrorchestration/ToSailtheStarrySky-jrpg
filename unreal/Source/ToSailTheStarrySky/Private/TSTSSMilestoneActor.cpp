@@ -1,4 +1,5 @@
 #include "TSTSSMilestoneActor.h"
+#include "TSTSSAudioSubsystem.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/World.h"
 
@@ -34,6 +35,16 @@ bool ATSTSSMilestoneActor::TryActivate(UTSTSSFirstWakeState* State)
         : State->AdvanceTo(Milestone);
     if (!bSucceeded) return false;
     OnMilestoneActivated();
+    // Audio is cosmetic and fires only AFTER the authoritative story state accepted the action.
+    if (UWorld* AudioWorld = GetWorld())
+    {
+        if (UTSTSSAudioSubsystem* Audio = AudioWorld->GetSubsystem<UTSTSSAudioSubsystem>())
+        {
+            Audio->EmitCue(bIsInspectionStation
+                ? FName(TEXT("repair.station_inspect.success"))
+                : FName(TEXT("story.first_wake.milestone")), GetActorLocation());
+        }
+    }
 
 #if WITH_EDITOR
     // These bright, solid review cubes are *not* production interaction art.

@@ -1,4 +1,5 @@
 #include "TSTSSAtmosphereDirector.h"
+#include "TSTSSAudioSubsystem.h"
 
 #include "Camera/PlayerCameraManager.h"
 #include "Components/DirectionalLightComponent.h"
@@ -216,8 +217,29 @@ void ATSTSSAtmosphereDirector::RequestWeather(ETSTSSWeather InWeather, float Tra
     {
         return;
     }
+    const ETSTSSWeather PreviousWeather = DesiredWeather;
     DesiredWeather = InWeather;
     TransitionTo(ProfileFor(DesiredWeather, bBlending ? To.ClockHours : Current.ClockHours), TransitionSeconds);
+
+    // Accepted transitions may request only the corresponding audio; weather visuals
+    // and sound may not certify a storm event, alter physics or advance story state.
+    if (PreviousWeather != InWeather)
+    {
+        const FName WeatherEvent = InWeather == ETSTSSWeather::Storm
+            ? FName(TEXT("weather.storm.begin"))
+            : (PreviousWeather == ETSTSSWeather::Storm
+                ? FName(TEXT("weather.storm.end")) : NAME_None);
+        if (!WeatherEvent.IsNone())
+        {
+            if (UWorld* AudioWorld = GetWorld())
+            {
+                if (UTSTSSAudioSubsystem* Audio = AudioWorld->GetSubsystem<UTSTSSAudioSubsystem>())
+                {
+                    Audio->EmitCue(WeatherEvent, GetActorLocation());
+                }
+            }
+        }
+    }
 }
 
 void ATSTSSAtmosphereDirector::RequestTimeOfDay(float InClockHours, float TransitionSeconds)
