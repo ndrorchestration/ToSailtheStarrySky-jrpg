@@ -14,12 +14,21 @@ import shutil
 import subprocess
 import sys
 
+from build_audio_harbor_loops import LOOPS, verify as verify_harbor_loops
 from import_first_wake_audio_review import (
     DESTINATION, EXPECTED, OPT_IN as IMPORT_OPT_IN, MIN_DISK_BYTES,
     MIN_RAM_BYTES, available_ram_bytes, verify_source,
 )
 
 STAGE_OPT_IN = "I_APPROVE_DISPOSABLE_QA_MAP_ONLY"
+AMBIENCE_BINDINGS = {
+    "harbor_surf_loop.wav": "surf_loop",
+    "harbor_gulls_loop.wav": "gull_loop",
+    "harbor_market_loop.wav": "market_loop",
+    "weather_wind_loop.wav": "wind_loop",
+    "weather_rain_loop.wav": "rain_loop",
+    "weather_storm_loop.wav": "storm_bed_loop",
+}
 SOURCE_MAP = "/Game/TSTSS/Review/VerticalSlice/VS01_DenithHarbor"
 DEST_MAP = "/Game/TSTSS/Audio/QAReview/VS01_DenithHarbor_OriginalQATest"
 CUES = {
@@ -78,12 +87,19 @@ def preflight(project_dir: Path):
     paths = verify_source(Path(source))
     if {x.name for x in paths} != EXPECTED or set(CUES) != EXPECTED:
         raise RuntimeError("QA WAV source list and cue bindings disagree")
-    return root, paths, expected_sha
+    ambiance_source = os.environ.get("TSTSS_AUDIO_AMBIENCE_SOURCE")
+    if not ambiance_source:
+        raise RuntimeError("Missing guarded original harbor ambience source")
+    ambient_paths = verify_harbor_loops(Path(ambiance_source))
+    if {p.name for p in ambient_paths} != set(LOOPS) or set(AMBIENCE_BINDINGS) != set(LOOPS):
+        raise RuntimeError("Harbor loop manifest and mixer binding mismatch")
+    return root, paths, ambient_paths, expected_sha
 
 def stage():
     import unreal  # editor-only, after import/rights/resource guard
     project = Path(unreal.Paths.project_dir())
-    root, paths, sha = preflight(project)
+    root, paths, ambient_paths, sha = preflight(project)
+    all_paths = sorted(paths + ambient_paths)
     level = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
     assets = unreal.get_editor_subsystem(unreal.EditorAssetSubsystem)
     actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
@@ -94,14 +110,14 @@ def stage():
         raise RuntimeError("Missing source Denith Harbor map")
     if assets.does_asset_exist(DEST_MAP):
         raise RuntimeError("Disposable audio map exists; never overwrite")
-    for path in paths:
+    for path in all_paths:
         if assets.does_asset_exist(DESTINATION + "/QA_" + path.stem):
             raise RuntimeError("QA imported SoundWave already exists; refuse overwrite")
 
     # Always source original synthetic QA WAVs through Unreal's import task.
     # Interchange may ignore destination_name, so validate actual paths.
     tasks = []
-    for file in sorted(paths):
+    for file in all_paths:
         task = unreal.AssetImportTask()
         task.filename = str(file)
         task.destination_path = DESTINATION
@@ -112,17 +128,23 @@ def stage():
         tasks.append(task)
     unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks(tasks)
     actual = [str(obj) for task in tasks for obj in task.imported_object_paths]
-    if len(actual) != len(EXPECTED):
+    if len(actual) != len(EXPECTED) + len(LOOPS):
         raise RuntimeError("Incorrect QA SoundWave import count; stop without map edits")
 
     sound_by_filename = {}
-    for task, file in zip(tasks, sorted(paths)):
+    for task, file in zip(tasks, all_paths):
         obj_paths = [str(p) for p in task.imported_object_paths]
         if len(obj_paths) != 1 or not obj_paths[0].startswith(DESTINATION + "/"):
             raise RuntimeError("Imported source outside isolated QA directory")
         sound = assets.load_asset(obj_paths[0])
         if sound is None or not isinstance(sound, unreal.SoundWave):
             raise RuntimeError("Imported asset is not a SoundWave: " + file.name)
+        if file.name in LOOPS:
+            # UE SoundWave explicitly supports its own directly played bLooping flag.
+            # This must be set on the actual imported instance, not just a C++ cue.
+            sound.set_editor_property("looping", True)
+            if not bool(sound.get_editor_property("looping")):
+                raise RuntimeError("Failed to activate native QA loop: " + file.name)
         sound_by_filename[file.name] = sound
 
     # No source map is opened or saved. Copy to the guaranteed-absent QA path
@@ -162,12 +184,14 @@ def stage():
         entries.append(cue)
     bank.set_editor_property("cues", entries)
     zone.set_editor_property("harbor_audio", mix)
-    # Ambience fields remain empty rather than pretending the ten review
-    # samples contain real surf/gulls/market loops or cleared music.
+    for filename, property_name in sorted(AMBIENCE_BINDINGS.items()):
+        mix.set_editor_property(property_name, sound_by_filename[filename])
+    # All six ambience beds are original procedural *QA* loops, not approved
+    # field-recorded Foley, speech, wildlife, or licensed shanty/music.
 
     # Save only QA audio source packages before their referring map package.
     # This avoids saving a map referencing still-unsaved SoundWaves.
-    for filename in sorted(CUES):
+    for filename in sorted(set(CUES) | set(AMBIENCE_BINDINGS)):
         path = DESTINATION + "/QA_" + Path(filename).stem
         if not assets.save_asset(path, False):
             raise RuntimeError("QA-only SoundWave save failed: " + filename)
@@ -178,7 +202,9 @@ def stage():
         "source_sha": sha,
         "review_map": DEST_MAP,
         "placed_actors": 4,
-        "soundwave_count": len(CUES),
+        "soundwave_count": len(CUES) + len(AMBIENCE_BINDINGS),
+        "ambient_qa_loops": len(AMBIENCE_BINDINGS),
+        "loop_seam_check": "PASS_SOURCE_RECEIPT_NOT_NATIVE_AUDIBLE",
         "audio_monitoring": "NOT_TESTED",
         "gameplay_physics": "UNCHANGED",
         "sample_rights": "ORIGINAL_SYNTHETIC_QA_ONLY",
