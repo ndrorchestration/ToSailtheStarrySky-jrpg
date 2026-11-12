@@ -525,11 +525,32 @@ void ATSTSSExplorerCharacter::ShowObjectiveReview()
     UWorld* World = GetWorld();
     if (World && (World->WorldType == EWorldType::PIE ||
                   World->WorldType == EWorldType::Game) &&
-        UTSTSSReviewShoreTravelSubsystem::IsEligible(
-            FirstWakeState, UGameplayStatics::GetCurrentLevelName(World, true)) && GEngine)
+        World->GetNetMode() == NM_Standalone &&
+        World->GetOutermost() &&
+        World->GetOutermost()->GetName().StartsWith(TEXT("/Game/TSTSS/Review/")) &&
+        GEngine)
     {
-        GEngine->AddOnScreenDebugMessage(-1, 7.f, FColor::Cyan,
-            TEXT("First Wake (review): K = next 3D scene (review only; no visual/gameplay approval)"));
+        // J makes K discoverable, but never opens a level or grants a beat.
+        // Keep K locked until the live state passes the existing route gate.
+        const FString Scene = UGameplayStatics::GetCurrentLevelName(World, true);
+        if (UTSTSSReviewShoreTravelSubsystem::IsEligible(FirstWakeState, Scene))
+        {
+            const FString Destination =
+                UTSTSSReviewShoreTravelSubsystem::NextReviewMap(FirstWakeState, Scene);
+            const FString ShortDestination = FPackageName::GetShortName(Destination);
+            GEngine->AddOnScreenDebugMessage(-1, 7.f, FColor::Cyan,
+                FString::Printf(TEXT("First Wake (review): K = %s (temporary scene review)"),
+                    *ShortDestination));
+        }
+        else if (Scene == TEXT("FirstWake_PreludeInteraction_V5_VisualReview") ||
+                 Scene == TEXT("VS02_AureateInteriors") ||
+                 Scene == TEXT("VS03_FirstWakeSky") ||
+                 Scene == TEXT("VS04_SplashdownSea") ||
+                 Scene == TEXT("VS05_DenithFuelShanty"))
+        {
+            GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow,
+                TEXT("First Wake (review): K locked until current objective is complete"));
+        }
     }
 #endif
 }
@@ -545,8 +566,11 @@ void ATSTSSExplorerCharacter::ReviewShoreTravel()
     {
         if (GEngine)
         {
+            const FString Objective = IsValid(FirstWakeState)
+                ? FirstWakeState->GetReviewObjectiveText()
+                : TEXT("story state unavailable");
             GEngine->AddOnScreenDebugMessage(-1, 6.f, FColor::Yellow,
-                TEXT("First Wake (review): next scene locked until the current milestone is complete"));
+                FString::Printf(TEXT("First Wake (review): K locked - %s"), *Objective));
         }
         return;
     }
