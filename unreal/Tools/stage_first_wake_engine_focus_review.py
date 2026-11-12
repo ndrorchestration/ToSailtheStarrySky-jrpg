@@ -17,6 +17,11 @@ import re
 import subprocess
 import sys
 
+# Embedded Unreal Python does not necessarily include this script's directory
+# on sys.path when launched with -ExecutePythonScript. Bind sibling helper imports
+# to this exact reviewed directory instead of relying on process-wide PYTHONPATH.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
 from stage_first_wake_bokeh_cameras import (
     actor_by_label, camera_setup, digest, distance, git, profile_data, require,
 )
