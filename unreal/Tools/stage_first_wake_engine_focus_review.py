@@ -78,7 +78,7 @@ def plan() -> dict:
         "receivers_enabled": False,
         "requires_compiled_cine_receiver": NATIVE_RECEIVER,
         "two_independent_editor_processes": True,
-        "copy_method": "UnrealEditorLoadingAndSavingUtils.save_map_as",
+        "copy_method": "EditorLoadingAndSavingUtils.save_map(source_world, DEST)",
         "auto_switches_player_camera": False,
         "changes_gameplay": False,
         "changes_save_data": False,
@@ -305,7 +305,7 @@ def self_test() -> dict:
             "no opt-in or gameplay ownership deviation")
     require(p["target_review_map"] != p["source_map"],
             "source map cannot be a destination")
-    require(p["copy_method"] == "UnrealEditorLoadingAndSavingUtils.save_map_as"
+    require(p["copy_method"] == "EditorLoadingAndSavingUtils.save_map(source_world, DEST)"
             and p["two_independent_editor_processes"],
             "required two-process safe Save Map As route missing")
     require(all(not p[k] for k in ("changes_gameplay", "changes_save_data",
