@@ -2,6 +2,7 @@
 #include "TSTSSAtmosphereDirector.h"
 #include "TSTSSFirstWakeState.h"
 #include "Review/TSTSSPresentationCoordinatorSubsystem.h"
+#include "Review/TSTSSReviewFocusReceiver.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTSTSSAtmospherePresetsTest,
@@ -122,6 +123,38 @@ bool FTSTSSAtmospherePresetsTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("Night-sky look must not invent shore-night lighting"), Resolve(
         EPM::NightSkyWonder, TEXT("VS06_SplashdownShore"),
         ETSTSSWeather::Clear).bEligible);
+    TestTrue(TEXT("Explicit PIE review camera may receive authorized engine inspection focus"),
+        ATSTSSReviewFocusReceiver::IsFocusCueApplicable(
+            Engine, EPM::EngineInspection, true, true));
+    TestFalse(TEXT("Review camera requires explicit operator opt-in"),
+        ATSTSSReviewFocusReceiver::IsFocusCueApplicable(
+            Engine, EPM::EngineInspection, false, true));
+    TestFalse(TEXT("Review camera must fail outside PIE"),
+        ATSTSSReviewFocusReceiver::IsFocusCueApplicable(
+            Engine, EPM::EngineInspection, true, false));
+    TestFalse(TEXT("An engine inspection cue cannot masquerade as awakening"),
+        ATSTSSReviewFocusReceiver::IsFocusCueApplicable(
+            Engine, EPM::EngineAwakening, true, true));
+    TestFalse(TEXT("Reduced motion makes optical cue ineligible"),
+        ATSTSSReviewFocusReceiver::IsFocusCueApplicable(
+            Reduced, EPM::EngineInspection, true, true));
+    TestFalse(TEXT("Gameplay clarity prevents optical focus"),
+        ATSTSSReviewFocusReceiver::IsFocusCueApplicable(
+            Clarity, EPM::EngineInspection, true, true));
+    const FTSTSSPresentationIntent Awakened = Resolve(
+        EPM::EngineAwakening, TEXT("VS02_AureateInteriors"),
+        ETSTSSWeather::Clear);
+    TestTrue(TEXT("A real inspected-engine reveal permits an isolated authored lens"),
+        ATSTSSReviewFocusReceiver::IsFocusCueApplicable(
+            Awakened, EPM::EngineAwakening, true, true));
+    const FTSTSSPresentationIntent ReviewMap = Resolve(
+        EPM::EngineInspection, TEXT("UEDPIE_1_M_EnginePresentationReview"),
+        ETSTSSWeather::Clear);
+    TestTrue(TEXT("Only the explicitly named engine review map permits the optical pilot"),
+        ReviewMap.bEligible);
+    TestFalse(TEXT("Spoofed engine review map is rejected"),
+        Resolve(EPM::EngineInspection, TEXT("MaliciousM_EnginePresentationReview"),
+                ETSTSSWeather::Clear).bEligible);
     Story->Reset();
     TestEqual(TEXT("Reset invalidation reaches visual observer"), AcceptedSignals, 7);
     TestFalse(TEXT("Reset invalidates previously observed story snapshot"),
