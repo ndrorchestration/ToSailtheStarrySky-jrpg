@@ -395,15 +395,9 @@ void ATSTSSExplorerCharacter::Interact()
                                     // No cinematic focus while the pawn retains
                                     // gameplay control. Reduced-motion-safe
                                     // until the real accessibility source binds.
-                                    const FTSTSSPresentationIntent Intent =
-                                        Review->TryPublishMoment(
-                                            FirstWakeState, Atmosphere, Moment,
-                                            true, true);
-                                    UE_LOG(LogTemp, Display,
-                                        TEXT("TSTSS_PIE_PRESENTATION_INTENT eligible=%d shot=%s reason=%s"),
-                                        Intent.bEligible ? 1 : 0,
-                                        *Intent.ShotId.ToString(),
-                                        *Intent.Reason);
+                                    Review->TryPublishMoment(
+                                        FirstWakeState, Atmosphere, Moment,
+                                        true, true);
                                 }
                             }
                         }
