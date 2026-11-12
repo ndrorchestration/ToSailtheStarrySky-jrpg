@@ -191,7 +191,12 @@ FTSTSSPresentationIntent UTSTSSPresentationCoordinatorSubsystem::ResolveForRevie
             || Moment == ETSTSSPresentationMoment::IoniaConversation)
         && NativeMapName.Equals(TEXT("M_DenithHarborBokehStudy"),
                                 ESearchCase::CaseSensitive);
-    if (!bMapMatches && !bHarborReviewCopy)
+    const bool bEngineReviewCopy =
+        (Moment == ETSTSSPresentationMoment::EngineInspection
+            || Moment == ETSTSSPresentationMoment::EngineAwakening)
+        && NativeMapName.Equals(TEXT("M_EnginePresentationReview"),
+                                ESearchCase::CaseSensitive);
+    if (!bMapMatches && !bHarborReviewCopy && !bEngineReviewCopy)
     {
         Intent.Reason = TEXT("DENIED_WRONG_NATIVE_MAP");
         return Intent;
