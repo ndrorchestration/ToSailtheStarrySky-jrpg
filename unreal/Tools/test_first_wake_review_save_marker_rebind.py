@@ -56,12 +56,20 @@ class FirstWakeReviewRestoreCollisionContract(unittest.TestCase):
         self.assertIn("if (bPIE && !bPIEReviewQuickSlotOwned)",CHARACTER)
         self.assertIn("existing PIE quicksave protected; refusing overwrite",CHARACTER)
 
-    def test_native_review_negative_and_positive_cases_added(self):
-        self.assertIn("Quickload reactivates not-yet-launched visibility",NATIVE)
-        self.assertIn("Saved-complete flyer remains transparent",NATIVE)
-        self.assertIn("Uninspected lift remains interactable",NATIVE)
-        self.assertIn("Already inspected Lift stops blocking",NATIVE)
-        self.assertIn("Production-like actor keeps visibility blocking",NATIVE)
+    def test_native_transient_pie_world_stays_fail_closed(self):
+        # The native integration fixture creates a named transient PIE world,
+        # not the actual /Game/TSTSS/Review/... package. Positive ray release
+        # authority belongs only to the scoped real-review-world helper.
+        self.assertIn("TSTSSConsumedSplashdownReviewTest", NATIVE)
+        self.assertIn("Quickload reactivates not-yet-launched visibility", NATIVE)
+        self.assertIn("Accepted launch in unrelated transient PIE keeps visibility blocking", NATIVE)
+        self.assertIn("Saved-complete flyer stays blocked outside package-scoped review maps", NATIVE)
+        self.assertIn("Uninspected lift remains interactable", NATIVE)
+        self.assertIn("Already inspected Lift cannot alter marker ray outside review map", NATIVE)
+        self.assertIn("Production-like actor keeps visibility blocking", NATIVE)
+        self.assertIn("IsAuthorizedReviewMilestoneWorld(World, GetActorLabel())", MILESTONE)
+        self.assertIn("World->GetOutermost()->GetName().StartsWith", MILESTONE)
+        self.assertIn("VS05_DenithFuelShanty", MILESTONE)
 
 if __name__=="__main__":
     unittest.main()
