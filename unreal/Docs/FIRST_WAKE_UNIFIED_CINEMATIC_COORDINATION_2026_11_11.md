@@ -1,6 +1,6 @@
 # First Wake — Unified Cinematic Experience Coordination (review design v0.1)
 
-**Status:** DESIGN / CROSS-PR SOURCE CONTRACT ONLY — NOT RUNTIME-WIRED, NOT NATIVE-RENDERED, NOT ART-APPROVED.  
+**Status:** SOURCE-IMPLEMENTED PIE REVIEW COORDINATOR / CROSS-PR CONTRACT — NOT NATIVE-COMPILED, NOT CAMERA/PPV/APPLIED-AUDIO CONNECTED, NOT ART-APPROVED.  
 **Date:** 2026-11-11. **Engine target:** Unreal Engine 5.8.4.  
 **Location:** stacked draft PR #815 on unmerged First Wake P0 convergence PR #813; no production merge or scene promotion.
 
@@ -43,8 +43,32 @@ Truth / authority (read only)          Artistic intent (review data)
 - **Declarative input:** `unreal/DataSource/Cinematics/FirstWakePresentationBindings.review.json` (nine focus shot IDs, six existing map IDs, references to original #796 lighting look identifiers and #798 weather modes, semantic sound intentions, story prerequisites and safety gates).
 - **Existing focused optical profiles:** `FirstWakeFocusProfiles.review.json` for lenses/f-stop/focus.
 - **Source-only gate:** `python unreal/Tools/validate_first_wake_presentation_bindings.py --self-test`.
-- **Future runtime proposal:** a small `UGameInstanceSubsystem` or view-layer component that *reads* an immutable `FPresentationSnapshot`, resolves one `FPresentationIntent`, and forwards intents to existing owner components. Using a subsystem is a recommendation, **not** a completed class or native test. Avoid a global tick that spawns actors or traverses every scene object; cache named interest anchors and update only on significant state changes.
+- **Implemented C++ source (review only):** `UTSTSSPresentationCoordinatorSubsystem` is a disabled-by-default, PIE-only `UWorldSubsystem` publishing `FTSTSSPresentationIntent` to Blueprint listeners. It binds to the actual explorer-owned `UTSTSSFirstWakeState`, requires a same-world atmosphere actor, rejects unsupported maps/weather/story stages, and invalidates cached intent after an accepted state change or a stale snapshot. It does not Tick, switch player cameras, spawn actors, start audio, mutate story, or apply post-processing. **This is source code, not proof that native UHT/C++ builds or PIE functions.**
 - **No circular effects:** presentation sends no commands to world progression. For example, the camera may respond to genuine `SeaContact` after physics established it, but never grant `SeaContact`, `Launched`, `FlotationConfirmed` or `LyraRecruited`.
+
+## Source implementation and exact-head QA (2026-11-11)
+
+**Bounded event pipeline (source authored, native pending):**
+
+```text
+Player E interaction (existing physical reach / accepted TryActivate)
+  → authoritative UTSTSSFirstWakeState successful mutation
+  → OnAcceptedChange native observer broadcast (7 accepted mutation paths)
+  → old presentation cue is cleared
+  → disabled-by-default PIE adapter, only when explicitly enabled
+  → verify actual local player's state pointer, map, world atmosphere, weather,
+     story prerequisite, reduced motion and gameplay-clarity override
+  → broadcast an FTSTSSPresentationIntent (not a renderer, audio event or unlock)
+  → potential Blueprint camera/lighting/audio owner later, after native review
+```
+
+The existing **35 registered Unreal automation test identities are preserved**. Source for one existing atmosphere automation now exercises the coordinator's story gates, expected scene/lighting IDs, malformed and spoofed map rejection, weather denial, muted/reduced-motion intent and accepted-state observer notifications. The native automation assertions have **not been executed** at the new source head.
+
+**Positive source evidence** from Neontic at `449a4bd2ed4a69508a0cd0607f857830273d33f7`: 521/521 Python unit tests PASS; source-contract checks PASS (nine shot cases and ten negative fixtures); presentation-binding checks PASS (nine mappings and eleven negative fixtures); observer/interaction-contract checks PASS (seven accepted transition signal paths and ten negative fixtures). The full Python suite initially found an extra interaction log (521 tests, one failure); the nonessential log was removed without weakening the test, and the entire suite passed on rerun.
+
+**Host gate:** exact-head source clean; UE 5.8.4 present; no concurrent Unreal editor detected; **7.50 GiB free RAM** (>=6.50 GiB requirement), **13.28 GiB free disk** (below 14.00 GiB requirement). Native preparation correctly returned `HOLD: LOW_DISK`, exit 2, without starting Unreal or writing a map. No executed C++ build, PIE scene, screenshot, rendered bokeh, integrated audio cue, GPU profile, or creator approval has been established.
+
+**Remaining integration gates:** first create a safe native build/capture at the exact head; then reconcile atmosphere and lighting ownership from the unmerged draft branches; then wire an authored cine-camera receiver and owned audio routes in one disposable review scene; then verify an uninterrupted First Wake interaction-to-cinematic-to-gameplay recovery. The coordinator currently emits **semantic intentions only**. Do not describe these as applied effects or gameplay-complete.
 
 ## Priority, blending, and compositional grammar
 
