@@ -2,6 +2,32 @@
 #include "TSTSSAudioSubsystem.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/World.h"
+#include "Kismet/GameplayStatics.h"
+
+#if WITH_EDITOR
+namespace
+{
+// Preserve consumed E-marker pass-through in standalone Editor Game and PIE,
+// but never in unrelated, networked, failed-V3/V4, or shipping worlds.
+bool IsAuthorizedReviewMilestoneWorld(const UWorld* World, const FString& Label)
+{
+    if (!World || (World->WorldType != EWorldType::PIE &&
+                   World->WorldType != EWorldType::Game) ||
+        World->GetNetMode() != NM_Standalone ||
+        !World->GetOutermost() ||
+        !World->GetOutermost()->GetName().StartsWith(TEXT("/Game/TSTSS/Review/")))
+    {
+        return false;
+    }
+    const FString Scene = UGameplayStatics::GetCurrentLevelName(World, true);
+    return (Label.StartsWith(TEXT("TSTSS_PRELUDE_REVIEW_")) &&
+            (Scene == TEXT("FirstWake_PreludeInteraction_V2") ||
+             Scene == TEXT("FirstWake_PreludeInteraction_V5_VisualReview"))) ||
+           (Label.StartsWith(TEXT("TSTSS_SPLASHDOWN_GREYBOX_")) &&
+            Scene == TEXT("VS05_DenithFuelShanty"));
+}
+}
+#endif
 
 ATSTSSMilestoneActor::ATSTSSMilestoneActor()
 {
@@ -48,15 +74,12 @@ bool ATSTSSMilestoneActor::TryActivate(UTSTSSFirstWakeState* State)
 
 #if WITH_EDITOR
     // These bright, solid review cubes are *not* production interaction art.
-    // After a successful E press they must stop blocking the next marker's
-    // camera ray and the reviewing pawn's route. This applies to the original
-    // seven Prelude stops AND the three additive splashdown/recovery stops.
-    // Never change failed/out-of-order gates, other actors, non-PIE worlds,
-    // water physics, or gameplay saves.
+    // After a successful E press these non-shipping review markers must
+    // stop hiding later E prompts in PIE AND standalone Editor Game mode.
+    // Deny all production, unrelated and failed V3/V4 Worlds; never touch
+    // gameplay saves, other actors, water authority or rejected markers.
     const UWorld* World = GetWorld();
-    if (World && World->WorldType == EWorldType::PIE &&
-        (GetActorLabel().StartsWith(TEXT("TSTSS_PRELUDE_REVIEW_")) ||
-         GetActorLabel().StartsWith(TEXT("TSTSS_SPLASHDOWN_GREYBOX_"))) &&
+    if (IsAuthorizedReviewMilestoneWorld(World, GetActorLabel()) &&
         IsValid(InteractionMesh))
     {
         InteractionMesh->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
@@ -74,7 +97,8 @@ void ATSTSSMilestoneActor::ReconcileReviewCollisionAfterRestore(
     // This is visual review collision state only. Never grants story beats,
     // changes water contact, or touches real production actor collision.
     const UWorld* World = GetWorld();
-    if (!IsValid(State) || !World || World->WorldType != EWorldType::PIE ||
+    if (!IsValid(State) ||
+        !IsAuthorizedReviewMilestoneWorld(World, GetActorLabel()) ||
         !IsValid(InteractionMesh))
     {
         return;

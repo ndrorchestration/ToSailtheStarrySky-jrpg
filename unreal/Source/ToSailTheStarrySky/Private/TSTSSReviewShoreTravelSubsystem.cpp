@@ -11,6 +11,7 @@ inline bool IsPreludeScene(const FString& Name)
 {
     return Name == PreludeName || Name == VisualReviewPreludeName;
 }
+constexpr const TCHAR* ShipName = TEXT("VS02_AureateInteriors");
 constexpr const TCHAR* SkyName = TEXT("VS03_FirstWakeSky");
 constexpr const TCHAR* SeaName = TEXT("VS04_SplashdownSea");
 constexpr const TCHAR* FuelName = TEXT("VS05_DenithFuelShanty");
@@ -32,6 +33,15 @@ FString UTSTSSReviewShoreTravelSubsystem::NextReviewMap(
     const ETSTSSFirstWakeBeat Beat = State->GetCurrentBeat();
     if (IsPreludeScene(SourceMap) && Beat == ETSTSSFirstWakeBeat::EngineeringChecked)
     {
+        // The visually verified V5 route must visit the ship interior before
+        // launch. Keep the original V2 review route unchanged for regression.
+        return SourceMap == VisualReviewPreludeName
+            ? TEXT("/Game/TSTSS/Review/VerticalSlice/VS02_AureateInteriors")
+            : TEXT("/Game/TSTSS/Review/VerticalSlice/VS03_FirstWakeSky");
+    }
+    if (SourceMap == ShipName && Beat == ETSTSSFirstWakeBeat::EngineeringChecked)
+    {
+        // No sky/sea claim until the player explicitly requests departure.
         return TEXT("/Game/TSTSS/Review/VerticalSlice/VS03_FirstWakeSky");
     }
     if (SourceMap == SkyName && Beat == ETSTSSFirstWakeBeat::Launched)
@@ -63,7 +73,10 @@ bool UTSTSSReviewShoreTravelSubsystem::QueueShore(
     // native target package, and no duplicate outstanding handoff.
     if (!World ||
         (World->WorldType != EWorldType::PIE && World->WorldType != EWorldType::Game) ||
-        World->GetNetMode() != NM_Standalone || bPending)
+        World->GetNetMode() != NM_Standalone ||
+        !World->GetOutermost() ||
+        !World->GetOutermost()->GetName().StartsWith(TEXT("/Game/TSTSS/Review/")) ||
+        bPending)
     {
         return false;
     }
@@ -73,9 +86,14 @@ bool UTSTSSReviewShoreTravelSubsystem::QueueShore(
     {
         return false;
     }
-    // Pressing K is the explicit launch action. Never manufacture sea contact
-    // or flotation; only native water physics may authorize those beats.
-    if (IsPreludeScene(SourceMap) && !State->AdvanceTo(ETSTSSFirstWakeBeat::Launched))
+    // K explicitly requests travel; only the outbound ship/legacy V2
+    // departure counts as launch. Water beats require physical observation.
+    // V5 -> ship preserves EngineeringChecked. The actual launch action
+    // occurs only from the ship interior (or from the legacy V2 test map).
+    // No level travel may synthesize SeaContact or FlotationConfirmed.
+    if (((IsPreludeScene(SourceMap) && SourceMap != VisualReviewPreludeName) ||
+         SourceMap == ShipName) &&
+        !State->AdvanceTo(ETSTSSFirstWakeBeat::Launched))
     {
         return false;
     }
@@ -104,6 +122,9 @@ bool UTSTSSReviewShoreTravelSubsystem::ConsumeShoreArrival(
 #if WITH_EDITOR
     if (bHadTicket && World &&
         (World->WorldType == EWorldType::PIE || World->WorldType == EWorldType::Game) &&
+        World->GetNetMode() == NM_Standalone && World->GetOutermost() &&
+        World->GetOutermost()->GetName().StartsWith(TEXT("/Game/TSTSS/Review/")) &&
+        Target.StartsWith(TEXT("/Game/TSTSS/Review/")) &&
         UGameplayStatics::GetCurrentLevelName(World, true) == FPackageName::GetShortName(Target) &&
         IsValid(State))
     {
