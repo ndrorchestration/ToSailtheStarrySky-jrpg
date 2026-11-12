@@ -246,7 +246,6 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
         Light->SetIntensity(700.f);
         Light->SetAttenuationRadius(560.f);
         Light->SetCastShadows(false);
-        Light->SetCollisionEnabled(ECollisionEnabled::NoCollision);
         Owner->AddInstanceComponent(Light);
         Light->RegisterComponent();
         ++PracticalLights;
