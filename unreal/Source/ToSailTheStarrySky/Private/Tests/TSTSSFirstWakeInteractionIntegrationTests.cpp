@@ -247,9 +247,11 @@ bool FTSTSSFirstWakeInteractionSplashdownTest::RunTest(const FString& Parameters
     TestTrue(TEXT("Prelaunch Continue binding remains allowed"),
         Bound(GoodProject, GoodMap, GoodDigest));
 
-    // Native PIE-world contract for both review namespaces. Consumed
-    // splashdown markers must release the camera ray and pawn, but rejected
-    // milestones and unrelated production actors must keep their collision.
+    // Native *negative* sandbox test: an arbitrarily named transient PIE
+    // world cannot inherit permissions of the saved, package-scoped V5/V2
+    // Prelude or VS05 fuel-shanty review world. State transitions may succeed
+    // while the cosmetic visibility mutation must fail closed. Keep the
+    // package/scene/actor allowlist in TSTSSMilestoneActor authoritative.
     UWorld* ReviewWorld = UWorld::CreateWorld(
         EWorldType::PIE, false, FName(TEXT("TSTSSConsumedSplashdownReviewTest")));
     if (!TestNotNull(TEXT("Transient PIE-world available"), ReviewWorld))
@@ -276,8 +278,8 @@ bool FTSTSSFirstWakeInteractionSplashdownTest::RunTest(const FString& Parameters
                 ReviewMesh->GetCollisionResponseToChannel(ECC_Visibility), ECR_Block);
             TestTrue(TEXT("Launch accepted by real native actor"),
                 LaunchMarker->TryActivate(LaunchStory));
-            TestEqual(TEXT("Accepted launch marker releases visibility ray"),
-                ReviewMesh->GetCollisionResponseToChannel(ECC_Visibility), ECR_Ignore);
+            TestEqual(TEXT("Accepted launch in unrelated transient PIE keeps visibility blocking"),
+                ReviewMesh->GetCollisionResponseToChannel(ECC_Visibility), ECR_Block);
             TestEqual(TEXT("Accepted launch marker releases pawn movement"),
                 ReviewMesh->GetCollisionResponseToChannel(ECC_Pawn), ECR_Ignore);
             TestFalse(TEXT("Consumed launch marker cannot advance twice"),
@@ -292,8 +294,8 @@ bool FTSTSSFirstWakeInteractionSplashdownTest::RunTest(const FString& Parameters
                 ReviewMesh->GetCollisionResponseToChannel(ECC_Pawn), ECR_Ignore);
             TestTrue(TEXT("Reactivated launch requires and accepts a fresh E"),
                 LaunchMarker->TryActivate(LaunchStory));
-            TestEqual(TEXT("Fresh accepted E again releases launch marker"),
-                ReviewMesh->GetCollisionResponseToChannel(ECC_Visibility), ECR_Ignore);
+            TestEqual(TEXT("Fresh E in unrelated transient PIE cannot grant marker transparency"),
+                ReviewMesh->GetCollisionResponseToChannel(ECC_Visibility), ECR_Block);
         }
     }
 
@@ -352,8 +354,8 @@ bool FTSTSSFirstWakeInteractionSplashdownTest::RunTest(const FString& Parameters
         AlreadyCompletedFlyer->ReconcileReviewCollisionAfterRestore(SavedIoniaStory);
         if (TestNotNull(TEXT("Completed flyer mesh exists"), CompletedMesh))
         {
-            TestEqual(TEXT("Saved-complete flyer remains transparent to camera"),
-                CompletedMesh->GetCollisionResponseToChannel(ECC_Visibility), ECR_Ignore);
+            TestEqual(TEXT("Saved-complete flyer stays blocked outside package-scoped review maps"),
+                CompletedMesh->GetCollisionResponseToChannel(ECC_Visibility), ECR_Block);
         }
     }
 
@@ -379,8 +381,8 @@ bool FTSTSSFirstWakeInteractionSplashdownTest::RunTest(const FString& Parameters
                 PartialInspectionStory->Restore(
                     true, ETSTSSFirstWakeBeat::BoardedAureateWake, 0x01));
             LiftReview->ReconcileReviewCollisionAfterRestore(PartialInspectionStory);
-            TestEqual(TEXT("Already inspected Lift stops blocking on load"),
-                LiftMesh->GetCollisionResponseToChannel(ECC_Visibility), ECR_Ignore);
+            TestEqual(TEXT("Already inspected Lift cannot alter marker ray outside review map"),
+                LiftMesh->GetCollisionResponseToChannel(ECC_Visibility), ECR_Block);
         }
     }
     ReviewWorld->DestroyWorld(false);
