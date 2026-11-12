@@ -185,7 +185,7 @@ foreach ($Guard in $ConfigGuards) {
 }
 $ReportPath = Join-Path $Evidence 'AutomationReport/index.json'
 if (-not (Test-Path $ReportPath)) { throw 'No automation JSON evidence; refusing to mark PASS' }
-# Keep the 35-name registry local; a separate read-only PowerShell function
+# Keep the complete named registry local; a separate read-only PowerShell function
 # checks that JSON summary and distinct per-test paths genuinely agree.
 $RequiredTests = @(
     'TSTSS.Combat.TransactionalActions',
@@ -209,6 +209,7 @@ $RequiredTests = @(
     'TSTSS.Atmosphere.PresetsAndNightContinuity',
     'TSTSS.FirstWake.InteractionCameraBoomReach',
     'TSTSS.FirstWake.ReviewObjectivesAreReadOnly',
+    'TSTSS.FirstWake.ReviewDockReturnBoundaries',
     'TSTSS.CombatIntegration.EnderGearSpellBattleReview',
     'TSTSS.Equipment.PartySliceStageGate',
     'TSTSS.Slice.Enemies.RegistryAndAdmission',
