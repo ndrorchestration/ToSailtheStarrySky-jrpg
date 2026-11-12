@@ -24,7 +24,14 @@ API = r"""
 #include <string>
 #include <vector>
 #define TEXT(x) x
-using FString = std::string;
+struct FString : std::string {
+    using std::string::string;
+    using std::string::operator=;
+    FString() = default;
+    FString(const std::string& str) : std::string(str) {}
+    bool StartsWith(const char* prefix) const { return rfind(prefix, 0) == 0; }
+    bool IsEmpty() const { return empty(); }
+};
 struct FLinearColor {
     float r, g, b, a;
     FLinearColor(float red, float green, float blue, float alpha)
@@ -44,7 +51,9 @@ struct UTSTSSFirstWakeState {
 struct APawn { virtual ~APawn() = default; };
 struct ATSTSSExplorerCharacter : APawn {
     UTSTSSFirstWakeState* State = nullptr;
+    FString Prompt;
     UTSTSSFirstWakeState* GetFirstWakeState() const { return State; }
+    FString GetReviewAimStatus() const { return Prompt; }
 };
 struct APlayerController {
     APawn* Pawn = nullptr;
@@ -146,8 +155,10 @@ int main() {
         expect(hud.text.empty(), "short view should hide rather than clip");
         canvas.ClipY = 720.f;
         hud.DrawHUD();
-        expect(hud.rects.size() == 4 && hud.text.size() == 5,
-               "valid Prelude must draw one panel, three inspection lamps and five cues");
+        expect(hud.rects.size() == 7 && hud.text.size() == 6,
+               "valid Prelude draws objective, lamps, controls plus contrast-protected interaction prompt");
+        expect(hud.text[5].value.find("FOLLOW THE GOLD MARKER") != FString::npos,
+               "readable hint must lead to the current highlighted marker");
         expect(hud.text[0].value.find("PRELUDE REVIEW") != FString::npos,
                "persistent overlay must identify review provenance");
         expect(hud.text[1].value == "Find Ionia's flyer",
@@ -170,17 +181,17 @@ int main() {
         state.Objective = "Board the Aureate Wake";
         state.Mask = 0x03u;
         hud.DrawHUD();
-        expect(hud.text.back().value.find("no launch") != FString::npos &&
-               hud.text[hud.text.size() - 4].value == "Board the Aureate Wake",
+        expect(hud.text[hud.text.size() - 2].value.find("no launch") != FString::npos &&
+               hud.text[hud.text.size() - 5].value == "Board the Aureate Wake",
                "next frame must reflect current state without cached objective");
-        expect(hud.rects[5].color.g > 0.8f && hud.rects[6].color.g > 0.8f &&
-               hud.rects[7].color.g < 0.4f,
+        expect(hud.rects[8].color.g > 0.8f && hud.rects[9].color.g > 0.8f &&
+               hud.rects[10].color.g < 0.4f,
                "inspection lamps must reflect the current, uncached story mask");
         state.Mask = 0x07u;
         hud.DrawHUD();
-        expect(hud.rects[9].color.g > 0.8f &&
-               hud.rects[10].color.g > 0.8f &&
-               hud.rects[11].color.g > 0.8f,
+        expect(hud.rects[15].color.g > 0.8f &&
+               hud.rects[16].color.g > 0.8f &&
+               hud.rects[17].color.g > 0.8f,
                "all three engineering systems must illuminate after inspection");
         canvas.ClipX = 500.f;
         hud.DrawHUD();
@@ -190,6 +201,19 @@ int main() {
                hud.text[hud.text.size()-2].value.find("PIE F6 save F9 load F7 Continue") != FString::npos &&
                hud.text.back().value.find("no sea landing") != FString::npos,
                "compact layout must use shortened controls and review disclaimer");
+        // Scope and visibility checks must also exercise the real, active E
+        // cue, not merely compile its presentation behind API stand-ins.
+        canvas.ClipX = 1280.f;
+        explorer.Prompt = "[E]  SPEAK TO IONIA";
+        hud.DrawHUD();
+        expect(hud.text.back().value == "[E]  SPEAK TO IONIA",
+               "real aim cue must announce only the eligible E target");
+        expect(hud.rects.back().color.r > 0.95f,
+               "eligible reticle must have warm high-contrast emphasis");
+        explorer.Prompt = "MOVE CLOSER  |  SPEAK TO IONIA";
+        hud.DrawHUD();
+        expect(hud.text.back().value.find("MOVE CLOSER") != FString::npos,
+               "out-of-reach prompts must never look like an actionable E");
         const auto beforeChapter = hud.text.size();
         state.ChapterOne = true;
         hud.DrawHUD();

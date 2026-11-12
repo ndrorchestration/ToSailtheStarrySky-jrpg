@@ -67,5 +67,31 @@ void ATSTSSFirstWakeReviewHUD::DrawHUD()
                       : TEXT("Review only: no launch, water landing, or Chapter 1 progression authorized"),
              FLinearColor(0.96f, 0.77f, 0.45f, 1.f),
              Margin + 16.f, Margin + 109.f, GEngine->GetSmallFont(), bCompact ? 0.72f : 0.75f);
+
+    // Strongly contrasted review-only interaction prompt. The pawn uses the
+    // exact camera trace and *separate* 300 cm pawn reach as E; display does
+    // not grant an action, broaden reach or advance the story.
+    if (Canvas->ClipX >= 640.f && Canvas->ClipY >= 360.f)
+    {
+        const FString AimedPrompt = Explorer->GetReviewAimStatus();
+        const bool bReady = AimedPrompt.StartsWith(TEXT("[E]"));
+        const FString Prompt = AimedPrompt.IsEmpty()
+            ? TEXT("FOLLOW THE GOLD MARKER  |  LOOK AT IT TO INTERACT")
+            : AimedPrompt;
+        const float Width = FMath::Min(690.f, Canvas->ClipX - 48.f);
+        const float Left = (Canvas->ClipX - Width) * 0.5f;
+        const float Top = Canvas->ClipY - 88.f;
+        const FLinearColor Accent = bReady
+            ? FLinearColor(1.f, 0.81f, 0.39f, 1.f)
+            : FLinearColor(0.76f, 0.88f, 0.93f, 1.f);
+        DrawRect(FLinearColor(0.015f, 0.028f, 0.039f, 0.92f),
+                 Left, Top, Width, 55.f);
+        DrawRect(Accent, Left, Top, 5.f, 55.f);
+        DrawText(Prompt, Accent, Left + 20.f, Top + 15.f,
+                 GEngine->GetMediumFont(), Width < 580.f ? .70f : .90f);
+        // A minimal reticle makes aiming at the true E visibility ray clear.
+        DrawRect(Accent, Canvas->ClipX * .5f - 3.f,
+                 Canvas->ClipY * .5f - 3.f, 6.f, 6.f);
+    }
 #endif
 }

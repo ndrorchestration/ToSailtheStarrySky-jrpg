@@ -101,18 +101,31 @@ class FirstWakeContractTests(unittest.TestCase):
     def test_current_source_contract(self):
         self.assertEqual(contract(self.sources), [])
 
+    @staticmethod
+    def mutate_real_activation_guard(text: str, old: str, new: str) -> str:
+        # New read-only review visibility helpers may contain the same enum.
+        # Negative controls must mutate the *authoritative* TryActivate body,
+        # not the first cosmetic occurrence in the translation unit.
+        entry = "bool ATSTSSMilestoneActor::TryActivate("
+        before, sep, body = text.partition(entry)
+        if not sep or old not in body.split(
+            "\n#if WITH_EDITOR\nvoid ATSTSSMilestoneActor::ReconcileReviewCollisionAfterRestore(", 1
+        )[0]:
+            raise AssertionError("native activation guard missing from fixture")
+        return before + sep + body.replace(old, new, 1)
+
     def test_forged_contact_negative_control(self):
         mutated = dict(self.sources)
-        mutated["actor"] = mutated["actor"].replace(
-            "Milestone == ETSTSSFirstWakeBeat::SeaContact",
-            "Milestone == ETSTSSFirstWakeBeat::Launched", 1)
+        mutated["actor"] = self.mutate_real_activation_guard(
+            mutated["actor"], "Milestone == ETSTSSFirstWakeBeat::SeaContact",
+            "Milestone == ETSTSSFirstWakeBeat::Launched")
         self.assertTrue(contract(mutated))
 
     def test_lost_flotation_guard_negative_control(self):
         mutated = dict(self.sources)
-        mutated["actor"] = mutated["actor"].replace(
-            "Milestone == ETSTSSFirstWakeBeat::FlotationConfirmed",
-            "Milestone == ETSTSSFirstWakeBeat::EngineeringChecked", 1)
+        mutated["actor"] = self.mutate_real_activation_guard(
+            mutated["actor"], "Milestone == ETSTSSFirstWakeBeat::FlotationConfirmed",
+            "Milestone == ETSTSSFirstWakeBeat::EngineeringChecked")
         self.assertTrue(contract(mutated))
 
     def test_changed_physics_threshold_negative_control(self):

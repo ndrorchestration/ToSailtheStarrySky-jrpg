@@ -6,6 +6,12 @@
 #include "TSTSSSaveGame.h"
 #include "TSTSSReviewShoreTravelSubsystem.h"
 #include "Engine/GameInstance.h"
+#if WITH_EDITOR
+#include "TSTSSV5HarborReviewDressing.h"
+#include "Engine/StaticMeshActor.h"
+#include "Engine/PostProcessVolume.h"
+#include "Materials/MaterialInterface.h"
+#endif
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/TextRenderActor.h"
@@ -98,6 +104,112 @@ void ShowFirstWakeReviewObjective(const UTSTSSFirstWakeState* State)
 }
 
 #if WITH_EDITOR
+void ApplyV5HarborReviewLookdev(UWorld* World)
+{
+    if (!World || (World->WorldType != EWorldType::PIE &&
+                   World->WorldType != EWorldType::Game) ||
+        World->GetNetMode() != NM_Standalone || !World->GetOutermost() ||
+        !World->GetOutermost()->GetName().StartsWith(TEXT("/Game/TSTSS/Review/")) ||
+        UGameplayStatics::GetCurrentLevelName(World, true) !=
+            TEXT("FirstWake_PreludeInteraction_V5_VisualReview"))
+    {
+        return;
+    }
+    // Source-locked V5 static blockout only. Existing imported material
+    // assets provide the first harbor palette; no source .umap is saved.
+    struct FLook
+    {
+        const TCHAR* Label;
+        const TCHAR* Material;
+        const TCHAR* PBRFamily;
+    };
+    const FLook Palette[] =
+    {
+        {TEXT("TSTSS_PRELUDE_REVIEW_Harbor_TraversalFloor"), TEXT("TSTSS_wood"), TEXT("timber")},
+        {TEXT("TSTSS_PRELUDE_REVIEW_Ocean_VISUAL_ONLY_NO_BUOYANCY"), TEXT("TSTSS_teal_glass"), TEXT("ocean")},
+        {TEXT("TSTSS_PRELUDE_REVIEW_QuaysideWall"), TEXT("TSTSS_dark_iron"), TEXT("stone")},
+        {TEXT("TSTSS_PRELUDE_REVIEW_GangwayVisualMarker"), TEXT("TSTSS_brass"), TEXT("brass")},
+        {TEXT("TSTSS_PRELUDE_REVIEW_EngineBayVisualMarker"), TEXT("TSTSS_patina"), TEXT("aether")},
+        {TEXT("TSTSS_PRELUDE_REVIEW_HarborStorehouseBlockout"), TEXT("TSTSS_wood"), TEXT("timber")}
+    };
+    const FString MaterialRoot =
+        TEXT("/Game/TSTSS/Review/MultipathV1/ObjectImports/HarborLantern/HarborLantern/Materials/");
+    const FString PBRRoot = TEXT("/Game/TSTSS/Review/PreludePBRV1/");
+    UMaterialInterface* Loaded[UE_ARRAY_COUNT(Palette)] = {};
+    UMaterialInterface* PBRLoaded[UE_ARRAY_COUNT(Palette)] = {};
+    AStaticMeshActor* Found[UE_ARRAY_COUNT(Palette)] = {};
+    bool bCompletePBRPack = true;
+    for (int32 Index = 0; Index < UE_ARRAY_COUNT(Palette); ++Index)
+    {
+        const FString Name = Palette[Index].Material;
+        const FString ObjectPath = MaterialRoot + Name + TEXT(".") + Name;
+        Loaded[Index] = LoadObject<UMaterialInterface>(nullptr, *ObjectPath);
+        if (!IsValid(Loaded[Index]))
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("TSTSS_V5_LOOKDEV_HOLD missing material=%s"), *ObjectPath);
+            return; // Never partially re-skin a failed asset inventory.
+        }
+        // Optional 512px albedo/normal/ORM native imports. All-or-nothing:
+        // no mixed partially imported PBR palette may influence the review.
+        const FString Family = Palette[Index].PBRFamily;
+        const FString Package = PBRRoot + TEXT("M_FW_") + Family;
+        PBRLoaded[Index] = LoadObject<UMaterialInterface>(
+            nullptr, *(Package + TEXT(".M_FW_") + Family));
+        if (!IsValid(PBRLoaded[Index])) bCompletePBRPack = false;
+    }
+    for (TActorIterator<AStaticMeshActor> It(World); It; ++It)
+    {
+        for (int32 Index = 0; Index < UE_ARRAY_COUNT(Palette); ++Index)
+        {
+            if (It->GetActorLabel() == Palette[Index].Label)
+            {
+                Found[Index] = *It;
+            }
+        }
+    }
+    for (int32 Index = 0; Index < UE_ARRAY_COUNT(Palette); ++Index)
+    {
+        if (!IsValid(Found[Index]) ||
+            !IsValid(Found[Index]->GetStaticMeshComponent()))
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("TSTSS_V5_LOOKDEV_HOLD missing geometry=%s"), Palette[Index].Label);
+            return;
+        }
+    }
+    for (int32 Index = 0; Index < UE_ARRAY_COUNT(Palette); ++Index)
+    {
+        // Material override affects visual slot 0, not collision or footing.
+        Found[Index]->GetStaticMeshComponent()->SetMaterial(
+            0, bCompletePBRPack ? PBRLoaded[Index] : Loaded[Index]);
+    }
+
+    // V5 screenshot is severely overexposed; this scoped, unbound local
+    // postprocess is intentionally provisional and never saved to a map.
+    if (APostProcessVolume* Exposure =
+        World->SpawnActor<APostProcessVolume>(FVector::ZeroVector, FRotator::ZeroRotator))
+    {
+        Exposure->bUnbound = true;
+        Exposure->Priority = 100.f;
+        Exposure->Settings.bOverride_AutoExposureBias = true;
+        Exposure->Settings.AutoExposureBias = -2.2f;
+    }
+    // A separate unsaved harbor-dressing actor makes the first real PBR
+    // texture pass readable as dock architecture instead of a single floor.
+    // A partial or missing PBR asset set must never create mismatched props.
+    if (bCompletePBRPack)
+    {
+        TSTSSV5HarborReviewDressing::Apply(
+            World, PBRLoaded[0], PBRLoaded[2], PBRLoaded[3], PBRLoaded[4]);
+    }
+    UE_LOG(LogTemp, Display,
+        TEXT("TSTSS_V5_LOOKDEV_APPLIED material_slots=6 pbr=%d exposure_bias=-2.2 source_map_unchanged=1"),
+        bCompletePBRPack ? 1 : 0);
+}
+#endif
+
+#if WITH_EDITOR
 constexpr const TCHAR* ReviewPrimarySlot = TEXT("tstss_prelude_pie_quick");
 constexpr const TCHAR* ReviewManifestSlot = TEXT("tstss_prelude_pie_manifest_v1");
 
@@ -188,6 +300,7 @@ void ATSTSSExplorerCharacter::BeginPlay()
     Super::BeginPlay();
     FirstWakeState = NewObject<UTSTSSFirstWakeState>(this);
 #if WITH_EDITOR
+    ApplyV5HarborReviewLookdev(GetWorld());
     if (UWorld* World = GetWorld())
     {
         if (UGameInstance* GameInstance = World->GetGameInstance())
@@ -314,6 +427,32 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
     const bool bReviewNamespace = World->GetOutermost() &&
         World->GetOutermost()->GetName().StartsWith(TEXT("/Game/TSTSS/Review/"));
     const FString Scene = UGameplayStatics::GetCurrentLevelName(World, true);
+#if WITH_EDITOR
+    // Only scoped review worlds advertise live interaction. Visual refresh
+    // reads the authoritative state; it cannot advance or save a story beat.
+    if (bReviewNamespace && World->GetNetMode() == NM_Standalone &&
+        (Scene == TEXT("FirstWake_PreludeInteraction_V5_VisualReview") ||
+         Scene == TEXT("VS05_DenithFuelShanty")))
+    {
+        for (TActorIterator<ATSTSSMilestoneActor> It(World); It; ++It)
+        {
+            It->UpdateReviewBeacon(FirstWakeState);
+        }
+        if (Scene == TEXT("FirstWake_PreludeInteraction_V5_VisualReview"))
+        {
+            // Obsolete always-on captions obscure the actual next marker.
+            // Keep actor bytes in the saved map and hide only this runtime.
+            for (TActorIterator<ATextRenderActor> It(World); It; ++It)
+            {
+                if (It->GetActorLabel().StartsWith(
+                        TEXT("TSTSS_PRELUDE_REVIEW_SIGN_")))
+                {
+                    It->SetActorHiddenInGame(true);
+                }
+            }
+        }
+    }
+#endif
     if (!bReviewNamespace || !TSTSSReviewGrounding::IsWalkableReviewMap(Scene)) return;
     UCharacterMovementComponent* Movement = GetCharacterMovement();
     if (!Movement) return;
@@ -414,6 +553,51 @@ void ATSTSSExplorerCharacter::MoveRight(float Value)
 }
 void ATSTSSExplorerCharacter::Turn(float Value) { AddControllerYawInput(Value); }
 void ATSTSSExplorerCharacter::LookUp(float Value) { AddControllerPitchInput(Value); }
+
+#if !UE_BUILD_SHIPPING
+FString ATSTSSExplorerCharacter::GetReviewAimStatus() const
+{
+#if WITH_EDITOR
+    const UWorld* World = GetWorld();
+    if (!World || !IsValid(FirstWakeState) || !IsValid(FollowCamera) ||
+        (World->WorldType != EWorldType::PIE && World->WorldType != EWorldType::Game) ||
+        World->GetNetMode() != NM_Standalone ||
+        !World->GetOutermost() ||
+        !World->GetOutermost()->GetName().StartsWith(TEXT("/Game/TSTSS/Review/")))
+    {
+        return FString();
+    }
+    const FVector Camera = FollowCamera->GetComponentLocation();
+    const FVector Pawn = GetActorLocation();
+    const float Distance =
+        TSTSSInteractionReach::GetCameraTraceLength(Camera, Pawn, InteractionDistance);
+    if (Distance <= 0.f) return FString();
+    FHitResult Hit;
+    FCollisionQueryParams Query(SCENE_QUERY_STAT(TSTSSReviewAim), false, this);
+    if (!World->LineTraceSingleByChannel(Hit, Camera,
+        Camera + FollowCamera->GetForwardVector() * Distance,
+        ECC_Visibility, Query))
+    {
+        return FString();
+    }
+    const ATSTSSMilestoneActor* Marker = Cast<ATSTSSMilestoneActor>(Hit.GetActor());
+    if (!IsValid(Marker)) return FString();
+    const FString Display = Marker->GetReviewDisplayName();
+    if (!Marker->IsReviewActionable(FirstWakeState))
+    {
+        return TEXT("LOCKED  |  COMPLETE CURRENT OBJECTIVE FIRST");
+    }
+    if (!TSTSSInteractionReach::IsInsidePlayerReach(
+            Pawn, Hit.ImpactPoint, InteractionDistance))
+    {
+        return FString::Printf(TEXT("MOVE CLOSER  |  %s"), *Display);
+    }
+    return FString::Printf(TEXT("[E]  %s"), *Display);
+#else
+    return FString();
+#endif
+}
+#endif
 
 void ATSTSSExplorerCharacter::Interact()
 {
