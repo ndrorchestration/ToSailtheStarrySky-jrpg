@@ -23,9 +23,21 @@ class FirstWakeDependencyContractTests(unittest.TestCase):
         result = checker.check_snapshot(*self.original)
         self.assertEqual(result["status"], "SOURCE_DECLARATIONS_MATCH_NOT_NATIVE_VERIFICATION")
         self.assertEqual(result["engine_family"], "5.8")
-        self.assertEqual(result["module_count"], 8)
+        self.assertEqual(result["module_count"], 9)
+        self.assertIn("CinematicCamera", result["public_native_dependencies"])
         self.assertEqual(result["enabled_plugins"], ["PythonScriptPlugin"])
         self.assertFalse(result["unreal_native_execution"])
+        self.assertFalse(result["install_or_upgrade_performed"])
+
+    def test_built_in_cinematic_camera_module_cannot_be_removed_silently(self):
+        args = list(copy.deepcopy(self.original))
+        args[2] = args[2].replace(', "CinematicCamera"', "")
+        self.assert_rejected(args, "Native module dependency drift")
+
+    def test_cinematic_camera_has_no_external_plugin_enablement(self):
+        result = checker.check_snapshot(*self.original)
+        self.assertEqual(result["enabled_plugins"], ["PythonScriptPlugin"])
+        self.assertIn("CinematicCamera", result["public_native_dependencies"])
         self.assertFalse(result["install_or_upgrade_performed"])
 
     def test_engine_family_change_must_be_reviewed(self):
