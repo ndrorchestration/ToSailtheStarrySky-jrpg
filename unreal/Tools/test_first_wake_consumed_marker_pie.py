@@ -1,4 +1,4 @@
-"""Source-only guard for nonblocking *consumed* PIE review markers.
+"""Source-only guard for nonblocking consumed PIE/standalone review markers.
 
 These tests do not assert native collision correctness; that needs a real
 Unreal Editor run and input evidence bound to the exact new commit.
@@ -29,15 +29,25 @@ class ConsumedReviewMarkerTests(unittest.TestCase):
         self.assertLess(s.index("OnMilestoneActivated();"),
                         s.index("SetCollisionResponseToChannel("))
 
-    def test_only_editor_pie_named_review_actors_can_become_nonblocking(self):
+    def test_only_editor_authorized_pie_or_standalone_review_actors_become_nonblocking(self):
         s = self.method
+        helper = self.source.split("bool IsAuthorizedReviewMilestoneWorld(", 1)[1].split(
+            "\\nATSTSSMilestoneActor::ATSTSSMilestoneActor()", 1)[0]
         self.assertEqual(s.count("#if WITH_EDITOR"), 1)
         self.assertEqual(s.count("#endif"), 1)
-        self.assertIn("World->WorldType == EWorldType::PIE", s)
-        self.assertIn('GetActorLabel().StartsWith(TEXT("TSTSS_PRELUDE_REVIEW_"))', s)
-        self.assertIn('GetActorLabel().StartsWith(TEXT("TSTSS_SPLASHDOWN_GREYBOX_"))', s)
-        # Both known review namespaces are under the same exact PIE-only gate.
-        self.assertRegex(s, r'World->WorldType == EWorldType::PIE &&\s*\(')
+        self.assertIn("IsAuthorizedReviewMilestoneWorld(World, GetActorLabel())", s)
+        self.assertIn("World->WorldType != EWorldType::PIE", helper)
+        self.assertIn("World->WorldType != EWorldType::Game", helper)
+        self.assertIn("World->GetNetMode() != NM_Standalone", helper)
+        self.assertIn('StartsWith(TEXT("/Game/TSTSS/Review/"))', helper)
+        self.assertIn('Label.StartsWith(TEXT("TSTSS_PRELUDE_REVIEW_"))', helper)
+        self.assertIn('Label.StartsWith(TEXT("TSTSS_SPLASHDOWN_GREYBOX_"))', helper)
+        for name in ("FirstWake_PreludeInteraction_V2",
+                     "FirstWake_PreludeInteraction_V5_VisualReview", "VS05_DenithFuelShanty"):
+            self.assertIn(name, helper)
+        for forbidden in ("FirstWake_PreludeInteraction_V3_VisualReview",
+                          "FirstWake_PreludeInteraction_V4_VisualReview"):
+            self.assertNotIn(forbidden, helper)
         self.assertIn("IsValid(InteractionMesh)", s)
         self.assertLess(s.index("#if WITH_EDITOR"),
                         s.index("SetCollisionResponseToChannel("))
