@@ -260,7 +260,7 @@ def stage(phase: str) -> dict:
     receiver.set_editor_property("authored_engine_focus_anchor", gauge)
     # Do NOT set bExplicitReviewOptIn true. Explicit scene operator signoff
     # and a genuinely owned atmosphere director are still outstanding.
-    require(receiver.get_editor_property("b_explicit_review_opt_in") is False,
+    require(receiver.get_editor_property("explicit_review_opt_in") is False,
             "focus receiver unexpectedly auto-enabled")
     require(receiver.get_editor_property("staged_review_camera") == focus_cam
             and receiver.get_editor_property("authored_engine_focus_anchor") == gauge,
