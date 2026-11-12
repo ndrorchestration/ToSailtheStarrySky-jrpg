@@ -96,7 +96,8 @@ def validate(data):
         if ("'" + glob + "'") not in preflight:
             errors.append("source-preflight-trigger-coverage")
     # The integration manifest records its historical 35-name snapshot; the
-    # current source verifier must include the later dock-return test (36).\n    registry = (UNREAL / "Tools/Verify-Unreal.ps1").read_text(encoding="utf-8")
+    # current source verifier must include the later dock-return test (36).
+    registry = (UNREAL / "Tools/Verify-Unreal.ps1").read_text(encoding="utf-8")
     names = re.findall(r"^\s*'(TSTSS\.[^']+)'", registry, re.M)
     if data.get("required_native_names") != 35 or len(names) != 36 or len(set(names)) != 36:
         errors.append("native-registration-count")
