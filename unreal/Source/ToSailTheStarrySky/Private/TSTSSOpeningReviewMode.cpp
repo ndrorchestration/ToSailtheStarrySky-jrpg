@@ -2,10 +2,14 @@
 #include "TSTSSOpeningReviewWidget.h"
 #include "Blueprint/UserWidget.h"
 #include "GameFramework/HUD.h"
+#include "GameFramework/SpectatorPawn.h"
 
 ATSTSSOpeningReviewMode::ATSTSSOpeningReviewMode()
 {
     PlayerControllerClass = ATSTSSOpeningReviewController::StaticClass();
+    // Review title has no walking floor: avoid spawning a falling Explorer pawn
+    // while the screen is active. New Game loads the dedicated playable map.
+    DefaultPawnClass = ASpectatorPawn::StaticClass();
 }
 
 void ATSTSSOpeningReviewController::BeginPlay()

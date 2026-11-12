@@ -20,6 +20,18 @@ class OpeningDockSourceContract(unittest.TestCase):
         self.assertIn(START_MAP, fn)
         self.assertNotIn("RemoveFromParent()", fn)
 
+    def test_title_map_authoring_requires_exact_head_and_review_opt_in(self):
+        stage = (UNREAL / "Tools" / "stage_first_wake_title_review.py").read_text(encoding="utf-8")
+        mode = (SRC / "Private" / "TSTSSOpeningReviewMode.cpp").read_text(encoding="utf-8")
+        self.assertIn('TSTSS_TITLE_REVIEW_EXPECTED_HEAD', stage)
+        self.assertIn('TSTSS_TITLE_REVIEW_OPT_IN', stage)
+        self.assertIn('NATIVE_TITLE_MAP_SAVED_NOT_PIE_OR_VISUALLY_APPROVED', stage)
+        self.assertIn('get_editor_property("default_game_mode") != cls', stage)
+        self.assertIn('hashlib.sha256(prelude.read_bytes()).hexdigest() != before', stage)
+        self.assertIn('DefaultPawnClass = ASpectatorPawn::StaticClass()', mode)
+        default_engine = (UNREAL / 'Config' / 'DefaultEngine.ini').read_text(encoding='utf-8')
+        self.assertIn('GameDefaultMap=/Engine/Maps/Entry', default_engine)
+
     def test_absent_map_does_not_fake_success(self):
         fn = OPENING.split("void UTSTSSOpeningReviewWidget::BeginJourney()", 1)[1]
         guard = fn.split("if (!FPackageName::DoesPackageExist(PreludeMap))", 1)[1]
