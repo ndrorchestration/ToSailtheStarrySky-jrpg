@@ -37,9 +37,11 @@ protected:
     virtual void BeginPlay() override;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     TObjectPtr<class UStaticMeshComponent> InteractionMesh;
-#if WITH_EDITOR
+#if WITH_EDITORONLY_DATA
     UPROPERTY(VisibleAnywhere, Category="TSTSS|Review")
     TObjectPtr<class UTextRenderComponent> ReviewBeacon;
+#endif
+#if WITH_EDITOR
     bool bReviewBeaconInitialized = false;
     bool bReviewBeaconAvailable = false;
 #endif
