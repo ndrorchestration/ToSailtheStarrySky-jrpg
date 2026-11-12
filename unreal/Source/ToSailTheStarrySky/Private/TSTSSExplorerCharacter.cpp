@@ -7,6 +7,7 @@
 #include "TSTSSReviewShoreTravelSubsystem.h"
 #include "Engine/GameInstance.h"
 #if WITH_EDITOR
+#include "TSTSSV5HarborReviewDressing.h"
 #include "Engine/StaticMeshActor.h"
 #include "Engine/PostProcessVolume.h"
 #include "Materials/MaterialInterface.h"
@@ -193,6 +194,14 @@ void ApplyV5HarborReviewLookdev(UWorld* World)
         Exposure->Priority = 100.f;
         Exposure->Settings.bOverride_AutoExposureBias = true;
         Exposure->Settings.AutoExposureBias = -2.2f;
+    }
+    // A separate unsaved harbor-dressing actor makes the first real PBR
+    // texture pass readable as dock architecture instead of a single floor.
+    // A partial or missing PBR asset set must never create mismatched props.
+    if (bCompletePBRPack)
+    {
+        TSTSSV5HarborReviewDressing::Apply(
+            World, PBRLoaded[0], PBRLoaded[2], PBRLoaded[3], PBRLoaded[4]);
     }
     UE_LOG(LogTemp, Display,
         TEXT("TSTSS_V5_LOOKDEV_APPLIED material_slots=6 pbr=%d exposure_bias=-2.2 source_map_unchanged=1"),
