@@ -1,0 +1,326 @@
+{
+  "schema_version": 1,
+  "status": "REVIEW_ONLY_DEPENDENCY_RECONCILIATION_NOT_INTEGRATED",
+  "as_of": "2026-11-11",
+  "repository": "ndrorchestration/ToSailtheStarrySky-jrpg",
+  "review_branch": "review/ue58-opening-and-dock-rescue-20261111",
+  "verified_playability_head": "f44b2bb1296cca888235433bd2adbf84f825e287",
+  "evidence": "docs/reviews/FIRST_WAKE_V5_NATIVE_PLAYABILITY_EVIDENCE_2026-11-11.md",
+  "proven_runtime": [
+    "standalone_title_to_V5",
+    "W_player_movement",
+    "first_flyer_E_objective_advance",
+    "V5_edge_fall_return_story_unchanged"
+  ],
+  "unproven_runtime": [
+    "seven_stop_prelaunch_completion",
+    "six_map_visited_end_to_end",
+    "physical_sea_contact_stability",
+    "Lyra_recruited_after_splashdown",
+    "combat_or_gear_menu",
+    "music_or_audio_playback",
+    "Ender_final_visual",
+    "cinematic_art_approval",
+    "packaged_build"
+  ],
+  "installed_or_declared_module_authority": "unreal/Tools/first_wake_dependency_contract.json",
+  "declared_engine_family": "5.8",
+  "review_host_patch_observed": "5.8.4",
+  "new_runtime_dependency_admitted": false,
+  "proposed_native_modules_not_yet_admitted": [
+    "CinematicCamera"
+  ],
+  "new_plugins_installed": [],
+  "unchanged_baseline_plugins": [
+    "PythonScriptPlugin"
+  ],
+  "main_merge_authorized": false,
+  "production_art_promoted": false,
+  "roster_gate": {
+    "starting": [
+      "Ender",
+      "Ionia"
+    ],
+    "after_physical_splashdown_recruitment": [
+      "Lyra"
+    ],
+    "excluded": [
+      "Reson",
+      "Aepex"
+    ]
+  },
+  "Starbourne": "LOCKED_FAIL_CLOSED",
+  "workstreams": [
+    {
+      "pr": 794,
+      "name": "six native environment maps",
+      "status": "NATIVE_MAP_ASSETS_REVIEW_ONLY",
+      "reconcile": "reference existing VS01-VS06 asset paths and collision/topography; never overwrite V5 or V2",
+      "priority": "P0",
+      "depends_on": [
+        "V5 authored route",
+        "native actor and collision readback"
+      ],
+      "collision_surface": [
+        "review map hierarchy"
+      ]
+    },
+    {
+      "pr": 814,
+      "name": "six-map traversal session",
+      "status": "SOURCE_CANDIDATE_UNMERGED",
+      "reconcile": "adapt guarded route session to V5 short map name, preserve story before travel, verify K each boundary",
+      "priority": "P0",
+      "depends_on": [
+        "#794 map existence",
+        "#808 Lyra gate",
+        "no fabricated flotation"
+      ],
+      "collision_surface": [
+        "TSTSSExplorerCharacter.cpp",
+        "route session and state ownership"
+      ]
+    },
+    {
+      "pr": 799,
+      "name": "nine-path integrated foundation",
+      "status": "SOURCE_CONVERGENCE_CANDIDATE",
+      "reconcile": "compare against V5 input focus, opening route, and review recovery; pick one source owner before tests",
+      "priority": "P0",
+      "depends_on": [
+        "no-loss ancestry and source diff",
+        "exact combined SHA"
+      ],
+      "collision_surface": [
+        "explorer source",
+        "input map",
+        "review map and UHT tests"
+      ]
+    },
+    {
+      "pr": 813,
+      "name": "Lyra, sound, surfaces, Resonator convergence",
+      "status": "SOURCE_CONVERGENCE_CANDIDATE",
+      "reconcile": "use as a selective code/asset donor only after #799/#814 compatibility; do not assume it contains V5 runtime acceptance",
+      "priority": "P0",
+      "depends_on": [
+        "#799",
+        "#808",
+        "#804",
+        "#810"
+      ],
+      "collision_surface": [
+        "audio and texture registries",
+        "story and combat actors"
+      ]
+    },
+    {
+      "pr": 808,
+      "name": "Lyra post-splashdown recruitment",
+      "status": "SOURCE_CONTRACT_AND_NATIVE_SUBSET_REVIEW",
+      "reconcile": "preserve explicit recruitment before party gear; Lyra never starts with Ender/Ionia",
+      "priority": "P0",
+      "depends_on": [
+        "observed physical splashdown",
+        "authorized Lyra scene"
+      ],
+      "collision_surface": [
+        "party equipment source",
+        "integration registry"
+      ]
+    },
+    {
+      "pr": 804,
+      "name": "First Wake event bank and SFX",
+      "status": "SOURCE_VERIFIED_AUDIBLE_NATIVE_QA_HOLD",
+      "reconcile": "reuse semantic events and original QA samples after compile/rights/native audio; do not declare audible music",
+      "priority": "P1",
+      "depends_on": [
+        "one atmosphere owner",
+        "audio rights manifest",
+        "native C++ revalidation"
+      ],
+      "collision_surface": [
+        "TSTSSAudioSubsystem.cpp",
+        "TSTSSAtmosphereDirector.cpp",
+        "TSTSSMilestoneActor.cpp"
+      ]
+    },
+    {
+      "pr": 798,
+      "name": "atmosphere day/night/weather",
+      "status": "NATIVE_MODULE_BUILD_VERIFIED_SEPARATE_HEAD_NOT_INTEGRATED",
+      "reconcile": "make atmosphere actor the single world/weather driver; V5 lighting may not spawn a rival sun director",
+      "priority": "P1",
+      "depends_on": [
+        "world actor ownership",
+        "map-by-map sky evidence"
+      ],
+      "collision_surface": [
+        "TSTSSAtmosphereDirector.cpp",
+        "light and skylight actor ownership"
+      ]
+    },
+    {
+      "pr": 796,
+      "name": "eleven lighting looks",
+      "status": "SOURCE_LOOK_CANDIDATES_NOT_VISUALLY_ACCEPTED",
+      "reconcile": "retain look definitions; use V5 1500-lux exposure correction as tested review baseline, not universal light values",
+      "priority": "P1",
+      "depends_on": [
+        "#798 world owner",
+        "shared PostProcess policy",
+        "native image review"
+      ],
+      "collision_surface": [
+        "sun and fog actors",
+        "global exposure"
+      ]
+    },
+    {
+      "pr": 815,
+      "name": "bokeh/focus presentation coordinator",
+      "status": "NATIVE_ENGINE_FOCUS_MAP_EDITOR_READBACK_ONLY",
+      "reconcile": "single focus and PP owner, optional only, no player camera takeover; deferred CinematicCamera module admission",
+      "priority": "P2",
+      "depends_on": [
+        "#796",
+        "#798",
+        "approved shot intent",
+        "new module native compile"
+      ],
+      "collision_surface": [
+        "TSTSSExplorerCharacter.cpp",
+        "TSTSSFirstWakeState.cpp",
+        "TSTSSAudioSubsystem.cpp",
+        "Build.cs",
+        "PostProcess actors"
+      ]
+    },
+    {
+      "pr": 807,
+      "name": "PBR harbor renderer and native screenshots",
+      "status": "NATIVE_RENDER_EVIDENCE_REVIEW_ONLY",
+      "reconcile": "asset/layout donor, not same World as V5 and not proof of V5 collisions; A/B legibility/scale with V5 floor",
+      "priority": "P1",
+      "depends_on": [
+        "#794 map layout",
+        "#801 material manifest",
+        "visual acceptance"
+      ],
+      "collision_surface": [
+        "map/material/light composition"
+      ]
+    },
+    {
+      "pr": 801,
+      "name": "PBR surface and texture registry",
+      "status": "SOURCE_TEXTURE_CANDIDATE",
+      "reconcile": "import reviewed material set in separate map; preserve original surface hashes and license provenance",
+      "priority": "P1",
+      "depends_on": [
+        "#794",
+        "#807"
+      ],
+      "collision_surface": [
+        "materials, foliage and lighting"
+      ]
+    },
+    {
+      "pr": 812,
+      "name": "Ender in-pawn visual candidate",
+      "status": "PIE_OPT_IN_SOURCE_VISUAL_HOLD",
+      "reconcile": "isolated owner for pawn mesh components and accessory attachment; keep candidate disabled until rig/fit/native readback",
+      "priority": "P1",
+      "depends_on": [
+        "creator face/hair approval",
+        "V5 pawn and camera safety"
+      ],
+      "collision_surface": [
+        "TSTSSExplorerCharacter.cpp",
+        ".h"
+      ]
+    },
+    {
+      "pr": 793,
+      "name": "Ender Ionia Lyra equipment and menus",
+      "status": "REVIEW_MENU_ASSETS_UNMERGED",
+      "reconcile": "preserve V5 WASD E F5/F6/F7/F9 and no premature Lyra gear; reconcile input collisions explicitly",
+      "priority": "P1",
+      "depends_on": [
+        "#808 Lyra gate",
+        "V5 input focus",
+        "equipment ownership"
+      ],
+      "collision_surface": [
+        "DefaultInput.ini",
+        "Explorer.cpp",
+        "equipment tests"
+      ]
+    },
+    {
+      "pr": 810,
+      "name": "Centering and Resonant Pulse",
+      "status": "REVIEW_COMBAT_VFX_UNMERGED",
+      "reconcile": "keep correspondence spells held; add only after playable input + MP/cooldown + FX/audio rollback tests",
+      "priority": "P1",
+      "depends_on": [
+        "Ender Resonator authorization",
+        "party UI",
+        "audio owner"
+      ],
+      "collision_surface": [
+        "combat turn manager",
+        "skill system",
+        "audio cue ownership"
+      ]
+    },
+    {
+      "pr": 791,
+      "name": "enemies and random encounters",
+      "status": "REVIEW_ENCOUNTER_CANDIDATE_NOT_IN_ROUTE",
+      "reconcile": "keep opt-in arena/encounter; battle only after movement and first E flow remain stable",
+      "priority": "P2",
+      "depends_on": [
+        "combat bridge",
+        "encounter UX and scene transition",
+        "recovery/save tests"
+      ],
+      "collision_surface": [
+        "combat and encounter state"
+      ]
+    },
+    {
+      "pr": 811,
+      "name": "camera Python Rotator axis repair",
+      "status": "SOURCE_TECHNIQUE_ALREADY_APPLIED_IN_V4_V5",
+      "reconcile": "V5 independently uses named pitch/yaw/roll after native V3 roll failure; inspect #811 for other camera usages, do not duplicate repair",
+      "priority": "P1",
+      "depends_on": [
+        "native camera readback"
+      ],
+      "collision_surface": [
+        "camera staging scripts"
+      ]
+    }
+  ],
+  "admission_sequence": [
+    "exact-head diff and conflict audit",
+    "#799/#813/#814 source plan",
+    "one input/route/story owner",
+    "source tests + native build",
+    "registered native tests",
+    "live full seven-stop input",
+    "K across gated maps",
+    "native sea physics and Lyra",
+    "visual and audio approvals",
+    "packaged Windows review"
+  ],
+  "environment_admission": {
+    "heavy_unreal_requires_free_ram_gib": 6.5,
+    "heavy_unreal_requires_free_disk_gib": 14,
+    "last_observed_free_disk_gib": 11.51,
+    "heavy_unreal_now": "HOLD_LOW_DISK",
+    "observation_is_transient": true
+  }
+}
