@@ -147,3 +147,36 @@ Another present issue: legacy #796/#798 map-staging scripts use `EditorAssetLibr
   - Audio Modulation is optional/disabled by default: **do not assume it is enabled or integrated**. Existing owned audio bank and native compile must be reconciled first.
 
 **No unverified assertion in this document should be promoted to a gameplay or scientific fact by a downstream tool.**
+
+
+## 2026-11-11 — Engine-room optical pilot (later reviewed increment)
+
+**Current status:** SOURCE-VALIDATED / NATIVE COMPILE AND SCENE MATERIALIZATION NOT RUN. All changes remain confined to the unmerged, draft PR #815. Do not interpret source test success or a camera plan as Unreal-rendered visual evidence.
+
+### Opt-in native receiver contract
+
+- \`Review/TSTSSReviewFocusReceiver.h/.cpp\` supplies \`ATSTSSReviewFocusReceiver\`. Enabled only by explicit review-level opt-in; PIE-only, must be bound to a same-world, dedicated Cine Camera labeled \`TSTSS_BOKEH_ENGINE_REVIEW_*\` and a native engine-proxy focus anchor labeled \`TSTSS_VS_REVIEW_*\`.
+- The active player's view target is explicitly excluded. Ineligible, reduced-motion, gameplay-clarity, stale-story or stale-weather cues restore the camera's original focal length, aperture and focus settings. Focus polling runs at 0.25 s only during a live optical review; ordinary gameplay does not acquire a new per-frame Tick.
+- The receiver listens to the already-authoritative \`UTSTSSPresentationCoordinatorSubsystem\`, and cannot grant First Wake story progression, water contact, saves, magic casts, audio playback, weather changes, Post Process Volume changes or camera switches.
+- The bounded engine camera profiles are \`FW03_Engine_Inspection\` (65 mm, f/2.8) and \`FW04_Engine_Awakening\` (50 mm, f/4). Native source methods are checked against the installed UE 5.8.4 CineCamera headers, but have **not been built by UHT/UBT** at this draft head.
+- \`ToSailTheStarrySky.Build.cs\` declares the built-in \`CinematicCamera\` module, with explicit matching revisions to \`unreal/Tools/dependency_baseline.json\` and \`first_wake_dependency_contract.json\`. This adds **no third-party package or project plugin**, and preserves all no-auto-merge, no-release and no-upgrade gates.
+
+### Review map / evidence workflow
+
+1. Existing immutable review source: \`/Game/TSTSS/Review/VerticalSlice/VS02_AureateInteriors\`. New isolated destination: \`/Game/TSTSS/Review/EngineFocus_V1/M_EnginePresentationReview\`.
+2. Read-only prelaunch gate: \`python unreal/Tools/check_first_wake_engine_focus_host.py --check --expected-head <40-hex-source-head> --phase prepare\`. Requires the dedicated \`TSTSS_BokehFocusReview_20261111\` Windows worktree, exact head, clean tracked source, installed UE 5.8.4, no busy Editor, source map present, no occupied destination, >=6.5 GiB RAM free and >=14.0 GiB C: free. Repeat with \`--phase compose\` before the second Editor.
+3. After prelaunch admission, use an explicitly opt-in UE Editor Python run of \`unreal/Tools/stage_first_wake_engine_focus_review.py\` with \`TSTSS_ENGINE_FOCUS_EXPECTED_HEAD\`, \`TSTSS_ENGINE_FOCUS_STAGE_EXPLICIT=1\`, and \`TSTSS_ENGINE_FOCUS_PHASE=prepare\`; quit Editor. This **Save Map As** pass does not use the unsafe \`EditorAssetLibrary.duplicate_asset\` UWorld path.
+4. Start a **fresh** Editor process after the compose host gate; explicitly invoke the same tool with \`TSTSS_ENGINE_FOCUS_PHASE=compose\`. This requires a compiled native focus-receiver class and records four camera actors (engineering wide/deep focus, gauge optical, identical gauge no-DOF control, engine-reveal optical) plus a **disabled-by-default** focus receiver. Source and protected config hashes are verified again, and isolated receipts are recorded under \`Saved/EngineFocusReviewV1\`.
+5. **Actual acceptance still requires** exact-head Win64 Editor C++ build, registered native automation execution, real PIE review with explicit focus activation and a single authoritative atmosphere source, matching native screenshots with DOF on/off, first-person navigation HUD/ledge legibility, GPU/CPU/memory evidence, and creator review. No assembled/approved Ender or Ionia character likeness, finished Aureate Wake ship art, Starbourne release, Reson/Aepex availability, or real audio cue is claimed by the provisional map.
+
+### Exact-head proof and current hold
+
+- **Tested source commit:** \`df6cc367f53c43e63fa5be43c1cdf4d7ff6ab894\`.
+- Neontic Python regression suite: **534/534 PASS**, exit 0, clean worktree.
+- Stage \`--self-test\`: **PASS** (five source planning checks), no map created.
+- Engine host \`--self-test\`: **PASS** (seven synthetic host gate checks), no Unreal process launched.
+- Cine optical receiver source-lock validator: prior exact-head source run **one positive + 14 negative cases PASS**; native C++ not compiled.
+- Real engine prelaunch: **HOLD: LOW_DISK**, exit 2. Free RAM 7.43 GiB >=6.5; free disk 13.28 GiB <14.0. Correct engine, matching exact Git head, source map, no active UE Editor, clean worktree, and vacant review destination all verified.
+- No native Editor launch, new .umap materialization, native test execution, screenshot, audio playback, performance acceptance, art approval or merge has occurred under this increment.
+
+**Critical next step:** Establish sufficient safe disk headroom without disrupting shared development caches or other parallel tasks, then run native C++/UHT, two-phase camera-map staging, exact-head native tests and A/B screenshots. Keep the gap between visual review and actual playable integration explicit.
