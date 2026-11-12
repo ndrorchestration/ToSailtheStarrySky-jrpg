@@ -8,4 +8,10 @@
 - Current art is placeholder proxy geometry. This does not establish final Ender, Ionia or ship art, PIE, gameplay transitions, sound, or production performance.
 - Safety: no game-map override, no playable-camera transition, no save-state mutation, no Starbourne unlock; focus receiver remains default disabled. PR draft/unmerged.
 
-Retain both original PNG frames, the labeled comparison and native_gpu_evidence.json for review provenance. Source-locked capture scripts and native runtime logs remain on Neontic in unreal/Saved/EngineFocusReviewV1.
+Retain both original PNG frames, the labeled comparison, native_gpu_evidence.json and capture_source_exact_e62a3d9.py for review provenance. The archived capture source is pinned to its tested earlier commit and output namespace; it is historical evidence, not a turnkey production renderer. Original session-local logs remain on Neontic in unreal/Saved/EngineFocusReviewV1.
+
+## Visual findings and acceptance frontier
+
+This is native GPU evidence of an implemented camera effect, **not** an approved look. The bright cyan foreground spans much of the lower frame and partially blocks the engine-instrument view; the background and yellow engine proxy have flat review materials, limited practical highlights, and little atmospheric separation. A global mean RGB delta of 1.137/255 is too subtle by itself to establish purposeful, readable bokeh. The framing contains clipped background review text.
+
+The next safe improvement is a separately authored draft look-development variant with motivated engine/instrument practical lights, clear focal subject, foreground sightline clearance, material roughness/depth cues, and the same paired optical control. Re-capture in a real RHI with equal camera position, lens and exposure, then check player-view legibility and frame time before any visual approval. The existing authoritative presentation coordinator must continue to own story/weather cues; no new gameplay or player-camera authority is granted.
