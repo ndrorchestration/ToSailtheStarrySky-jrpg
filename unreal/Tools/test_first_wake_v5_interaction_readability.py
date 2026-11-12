@@ -27,6 +27,8 @@ class ReadableInteractionContract(unittest.TestCase):
         self.assertIn("State->GetCurrentBeat()", ACTOR)
         self.assertIn("State->GetInspectionMask()", ACTOR)
         self.assertIn("ReviewBeaconBackdrop->SetVisibility(bAvailable)", ACTOR)
+        self.assertIn("ReviewBeacon->SetRelativeLocation(FVector(0.f, 0.f, 120.f))", ACTOR)
+        self.assertIn("ReviewBeaconBackdrop->SetRelativeLocation(FVector(8.f, 0.f, 120.f))", ACTOR)
         self.assertIn("ReviewBeaconBackdrop->SetCollisionEnabled(ECollisionEnabled::NoCollision)", ACTOR)
         self.assertIn("ReviewBeaconBackdrop->SetCollisionResponseToAllChannels(ECR_Ignore)", ACTOR)
         self.assertIn("ReviewBeaconBackdrop->SetGenerateOverlapEvents(false)", ACTOR)

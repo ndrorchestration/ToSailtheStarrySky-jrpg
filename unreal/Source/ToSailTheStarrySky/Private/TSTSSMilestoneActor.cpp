@@ -47,7 +47,7 @@ ATSTSSMilestoneActor::ATSTSSMilestoneActor()
     // Cosmetic local review beacon. No collision or shipping UI authority.
     ReviewBeacon = CreateDefaultSubobject<UTextRenderComponent>(TEXT("ReviewBeacon"));
     ReviewBeacon->SetupAttachment(InteractionMesh);
-    ReviewBeacon->SetRelativeLocation(FVector(0.f, 0.f, 55.f));
+    ReviewBeacon->SetRelativeLocation(FVector(0.f, 0.f, 120.f));
     ReviewBeacon->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
     ReviewBeacon->SetHorizontalAlignment(EHTA_Center);
     ReviewBeacon->SetWorldSize(40.f);
@@ -64,7 +64,7 @@ ATSTSSMilestoneActor::ATSTSSMilestoneActor()
     {
         ReviewBeaconBackdrop->SetStaticMesh(PanelMesh.Object);
     }
-    ReviewBeaconBackdrop->SetRelativeLocation(FVector(8.f, 0.f, 55.f));
+    ReviewBeaconBackdrop->SetRelativeLocation(FVector(8.f, 0.f, 120.f));
     ReviewBeaconBackdrop->SetRelativeScale3D(FVector(.09f, 6.2f, .68f));
     ReviewBeaconBackdrop->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     ReviewBeaconBackdrop->SetCollisionResponseToAllChannels(ECR_Ignore);
