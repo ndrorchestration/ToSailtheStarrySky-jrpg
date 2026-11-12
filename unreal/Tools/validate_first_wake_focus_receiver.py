@@ -60,9 +60,9 @@ def validate(source: str, header: str, coord: str,
     require('FName(TEXT("FW03_Engine_Inspection"))' in source and
             'FName(TEXT("FW04_Engine_Awakening"))' in source,
             "only two engineering moments eligible")
-    require("World->WorldType != EWorldType::PIE" in source
+    require(source.count("World->WorldType != EWorldType::PIE") == 2
             and "#if WITH_EDITOR" in source,
-            "PIE-only native admission missing")
+            "both BeginPlay and lens-apply PIE admission checks required")
     require("bExplicitReviewOptIn" in source and
             "TSTSS_BOKEH_ENGINE_REVIEW_" in source and
             "TSTSS_VS_REVIEW_" in source,
