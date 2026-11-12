@@ -20,6 +20,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "CollisionQueryParams.h"
 #if WITH_EDITOR
+#include "Review/TSTSSPresentationCoordinatorSubsystem.h"
+#include "TSTSSAtmosphereDirector.h"
 #include "EngineUtils.h"
 #include "TSTSSReviewContinueManifest.h"
 #include "IO/IoHash.h"
@@ -362,6 +364,44 @@ void ATSTSSExplorerCharacter::Interact()
 #if WITH_EDITOR
                     if (GetWorld()->WorldType == EWorldType::PIE)
                     {
+                        // Optional visual-intent bridge AFTER the genuine
+                        // interaction accepted the milestone/inspection.
+                        // No input changes, camera cuts, audio playback or
+                        // world progression are caused by this adapter.
+                        if (UTSTSSPresentationCoordinatorSubsystem* Review =
+                                GetWorld()->GetSubsystem<
+                                    UTSTSSPresentationCoordinatorSubsystem>())
+                        {
+                            if (Review->IsReviewEnabled())
+                            {
+                                ETSTSSPresentationMoment Moment =
+                                    ETSTSSPresentationMoment::None;
+                                if (Milestone->bIsInspectionStation)
+                                {
+                                    Moment = ETSTSSPresentationMoment::EngineInspection;
+                                }
+                                else if (Milestone->Milestone ==
+                                         ETSTSSFirstWakeBeat::IoniaHired)
+                                {
+                                    Moment = ETSTSSPresentationMoment::IoniaConversation;
+                                }
+                                if (Moment != ETSTSSPresentationMoment::None)
+                                {
+                                    const ATSTSSAtmosphereDirector* Atmosphere =
+                                        Cast<ATSTSSAtmosphereDirector>(
+                                            UGameplayStatics::GetActorOfClass(
+                                                GetWorld(),
+                                                ATSTSSAtmosphereDirector::StaticClass()));
+                                    // No cinematic focus while the pawn retains
+                                    // gameplay control. Reduced-motion-safe
+                                    // until the real accessibility source binds.
+                                    Review->TryPublishMoment(
+                                        FirstWakeState, Atmosphere, Moment,
+                                        true, true);
+                                }
+                            }
+                        }
+
                         UE_LOG(LogTemp, Display,
                             TEXT("TSTSS_PIE_REVIEW_E_ACCEPT target=%s pawn_hit_cm=%.1f objective_after=%s"),
                             *Milestone->GetActorLabel(),
