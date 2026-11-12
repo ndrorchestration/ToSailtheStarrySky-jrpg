@@ -64,6 +64,13 @@ def plan() -> dict:
             "review camera names must be distinct")
     require(RECEIVER not in CAMERAS and
             "M_EnginePresentationReview" in DEST, "native review map mismatch")
+    require(SOURCE_FILE.is_file(), "committed VS02 native source package missing")
+    # This checks the serialized .umap name table, not instantiated actor
+    # existence or render quality; native readback must still verify actors.
+    package_bytes = SOURCE_FILE.read_bytes()
+    for actor_name in (SOURCE_CAMERA, GAUGE, ENGINE):
+        require(actor_name.encode("ascii") in package_bytes,
+                "required engine source actor name absent from native package: " + actor_name)
     return {
         "schema": "tstss.firstwake.engine_focus.staging.review.v1",
         "engine": "Unreal Engine 5.8.4",
