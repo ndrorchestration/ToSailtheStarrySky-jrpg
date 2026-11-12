@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1] / "Source/ToSailTheStarrySky"
@@ -119,7 +120,7 @@ def verify(rows: dict[str, str]) -> dict:
            and "ETSTSSPresentationMoment::EngineInspection" in ex[accept:publish]
            and "ETSTSSPresentationMoment::IoniaConversation" in ex[accept:publish],
            "opt-in interaction-to-presentation bridge missing")
-    demand("FirstWakeState, Atmosphere, Moment,\n                                            true, true" in ex,
+    demand(re.search(r"Review->TryPublishMoment\\(\\s*FirstWakeState,\\s*Atmosphere,\\s*Moment,\\s*true,\\s*true\\s*\\)", ex) is not None,
            "interactive pawn must request clarity-first and motion-safe intent")
     demand("WorldType == EWorldType::PIE" in ex[accept:publish],
            "no non-PIE player adapter")
