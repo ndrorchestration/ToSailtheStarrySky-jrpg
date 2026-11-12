@@ -42,6 +42,9 @@ bool FTSTSSAtmospherePresetsTest::RunTest(const FString& Parameters)
     {
         return false;
     }
+    int32 AcceptedSignals = 0;
+    const FDelegateHandle Observer = Story->OnAcceptedChange().AddLambda(
+        [&AcceptedSignals]() { ++AcceptedSignals; });
     using EPM = ETSTSSPresentationMoment;
     const auto Resolve = [Story](EPM Moment, const FString& Map,
                                 ETSTSSWeather Weather, bool bReduced = false,
@@ -57,6 +60,7 @@ bool FTSTSSAtmospherePresetsTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Flyer genuinely accepted"), Story->AdvanceTo(ETSTSSFirstWakeBeat::FlyerDiscovered));
     TestTrue(TEXT("Ionia genuinely hired"), Story->AdvanceTo(ETSTSSFirstWakeBeat::IoniaHired));
     TestTrue(TEXT("Ship genuinely boarded"), Story->AdvanceTo(ETSTSSFirstWakeBeat::BoardedAureateWake));
+    TestEqual(TEXT("Exactly three accepted story transitions notified"), AcceptedSignals, 3);
     const FTSTSSPresentationIntent Engine = Resolve(
         EPM::EngineInspection, TEXT("UEDPIE_0_VS02_AureateInteriors"),
         ETSTSSWeather::Clear);
@@ -76,6 +80,12 @@ bool FTSTSSAtmospherePresetsTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("Wrong native map denied"), Resolve(
         EPM::EngineInspection, TEXT("VS01_DenithHarbor"),
         ETSTSSWeather::Clear).bEligible);
+    TestFalse(TEXT("Spoofed map suffix cannot authorize presentation"), Resolve(
+        EPM::EngineInspection, TEXT("FakeVS02_AureateInteriors"),
+        ETSTSSWeather::Clear).bEligible);
+    TestFalse(TEXT("Malformed PIE map prefix cannot authorize presentation"), Resolve(
+        EPM::EngineInspection, TEXT("UEDPIE_abc_VS02_AureateInteriors"),
+        ETSTSSWeather::Clear).bEligible);
     TestFalse(TEXT("Blizzard cannot silently use unsupported engineering look"), Resolve(
         EPM::EngineInspection, TEXT("VS02_AureateInteriors"),
         ETSTSSWeather::Blizzard).bEligible);
@@ -85,6 +95,15 @@ bool FTSTSSAtmospherePresetsTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Actual lift inspection"), Story->InspectStation(ETSTSSInspectionStation::Lift));
     TestTrue(TEXT("Actual pressure inspection"), Story->InspectStation(ETSTSSInspectionStation::Pressure));
     TestTrue(TEXT("Actual reserve inspection"), Story->InspectStation(ETSTSSInspectionStation::Reserve));
+    TestEqual(TEXT("All three inspections each notify accepted visual observers"), AcceptedSignals, 6);
+    const uint64 ObservedGeneration = Story->GetRestoreGeneration();
+    TestTrue(TEXT("Current accepted source snapshot remains valid"),
+        UTSTSSPresentationCoordinatorSubsystem::MatchesStorySnapshot(
+            Story, ObservedGeneration, true,
+            ETSTSSFirstWakeBeat::BoardedAureateWake, 0x07));
+    TestFalse(TEXT("Rejected water milestone does not advance or notify"), Story->AdvanceTo(
+        ETSTSSFirstWakeBeat::SeaContact));
+    TestEqual(TEXT("Rejected milestone cannot emit false visual event"), AcceptedSignals, 6);
     TestTrue(TEXT("Engine response becomes a visual request only after inspections"), Resolve(
         EPM::EngineAwakening, TEXT("VS02_AureateInteriors"),
         ETSTSSWeather::Clear).bEligible);
@@ -104,9 +123,18 @@ bool FTSTSSAtmospherePresetsTest::RunTest(const FString& Parameters)
         EPM::NightSkyWonder, TEXT("VS06_SplashdownShore"),
         ETSTSSWeather::Clear).bEligible);
     Story->Reset();
+    TestEqual(TEXT("Reset invalidation reaches visual observer"), AcceptedSignals, 7);
+    TestFalse(TEXT("Reset invalidates previously observed story snapshot"),
+        UTSTSSPresentationCoordinatorSubsystem::MatchesStorySnapshot(
+            Story, ObservedGeneration, true,
+            ETSTSSFirstWakeBeat::BoardedAureateWake, 0x07));
     TestFalse(TEXT("Reset clears engine presentation eligibility"), Resolve(
         EPM::EngineInspection, TEXT("VS02_AureateInteriors"),
         ETSTSSWeather::Clear).bEligible);
+    TestTrue(TEXT("Valid restore of observed inspections accepted"), Story->Restore(
+        true, ETSTSSFirstWakeBeat::BoardedAureateWake, 0x07));
+    TestEqual(TEXT("Restore invalidates dependent presentation"), AcceptedSignals, 8);
+    Story->OnAcceptedChange().Remove(Observer);
 
     return true;
 }
