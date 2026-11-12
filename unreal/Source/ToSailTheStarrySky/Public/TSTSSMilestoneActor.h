@@ -40,6 +40,8 @@ protected:
 #if WITH_EDITORONLY_DATA
     UPROPERTY(VisibleAnywhere, Category="TSTSS|Review")
     TObjectPtr<class UTextRenderComponent> ReviewBeacon;
+    UPROPERTY(VisibleAnywhere, Category="TSTSS|Review")
+    TObjectPtr<class UStaticMeshComponent> ReviewBeaconBackdrop;
 #endif
 #if WITH_EDITOR
     bool bReviewBeaconInitialized = false;
