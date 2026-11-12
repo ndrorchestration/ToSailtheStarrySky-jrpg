@@ -89,14 +89,14 @@ def required_engine_version() -> None:
         raise RuntimeError("HOLD: wrong installed Unreal Engine version")
 
 def verified_native_receipt(expected_head: str) -> dict:
-    """Accept only a full same-head 35-test real native report + generated gate."""
+    """Accept only a full same-head 36-test real native report + generated gate."""
     evidence = PROJECT / "Saved/MigrationEvidence"
     required_source = (PROJECT / "Tools/Verify-Unreal.ps1").read_text(encoding="utf-8")
     required = re.findall(r"^\s*'(TSTSS\.[^']+)'", required_source, re.M)
-    if len(required) != 35 or len(set(required)) != 35:
+    if len(required) != 36 or len(set(required)) != 36:
         raise RuntimeError("HOLD: full native test inventory drift")
     if not evidence.is_dir():
-        raise RuntimeError("HOLD: no native UHT/Win64/35-test receipt at this head")
+        raise RuntimeError("HOLD: no native UHT/Win64/36-test receipt at this head")
     for folder in sorted(evidence.iterdir(), reverse=True):
         receipt_file = folder / "verified-native.json"
         report_file = folder / "AutomationReport/index.json"
@@ -111,17 +111,17 @@ def verified_native_receipt(expected_head: str) -> dict:
                     or head_file.read_text(encoding="utf-8-sig").strip().lower() != expected_head.lower()
                     or receipt.get("unreal_version") != "5.8.4"
                     or type(receipt.get("required_native_tests")) is not int
-                    or receipt["required_native_tests"] != 35
+                    or receipt["required_native_tests"] != 36
                     or receipt.get("pie_player_input") != "NOT_TESTED"
                     or receipt.get("visual_approval") != "NOT_TESTED"
                     or receipt.get("report_sha256") != checksum(report_file)):
                 continue
             if not all(type(report.get(field)) is int for field in ("succeeded", "failed", "notRun")):
                 continue
-            if report["failed"] != 0 or report["notRun"] != 0 or report["succeeded"] < 35:
+            if report["failed"] != 0 or report["notRun"] != 0 or report["succeeded"] < 36:
                 continue
             tests = report.get("tests")
-            if not isinstance(tests, list) or len(tests) < 35:
+            if not isinstance(tests, list) or len(tests) < 36:
                 continue
             # Keep this secondary consumer equivalent to the authoritative
             # PowerShell validator: EVERY per-test row must be a successful,
@@ -142,7 +142,7 @@ def verified_native_receipt(expected_head: str) -> dict:
             return {"receipt": str(receipt_file), "automation_report_sha256": checksum(report_file)}
         except (ValueError, KeyError, TypeError, OSError):
             continue
-    raise RuntimeError("HOLD: no accepted exact-head native 35-test evidence; do not stage UE visual actors")
+    raise RuntimeError("HOLD: no accepted exact-head native 36-test evidence; do not stage UE visual actors")
 
 def prerequisites(expected_head: str) -> dict:
     if sys.platform != "win32":

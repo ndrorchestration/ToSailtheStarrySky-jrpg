@@ -12,6 +12,8 @@ namespace TSTSSReviewGrounding
         return ShortName == TEXT("FirstWake_PreludeInteraction_V2") ||
                ShortName == TEXT("FirstWake_PreludeInteraction_V5_VisualReview") ||
                ShortName == TEXT("VS01_DenithHarbor") ||
+               ShortName == TEXT("VS02_AureateInteriors") ||
+               ShortName == TEXT("VS05_DenithFuelShanty") ||
                ShortName == TEXT("VS06_SplashdownShore") ||
                ShortName == TEXT("L_VS06_ShoreMagicEnemyGear_Review");
     }
