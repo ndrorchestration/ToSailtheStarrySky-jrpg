@@ -120,20 +120,24 @@ void ApplyV5HarborReviewLookdev(UWorld* World)
     {
         const TCHAR* Label;
         const TCHAR* Material;
+        const TCHAR* PBRFamily;
     };
     const FLook Palette[] =
     {
-        {TEXT("TSTSS_PRELUDE_REVIEW_Harbor_TraversalFloor"), TEXT("TSTSS_wood")},
-        {TEXT("TSTSS_PRELUDE_REVIEW_Ocean_VISUAL_ONLY_NO_BUOYANCY"), TEXT("TSTSS_teal_glass")},
-        {TEXT("TSTSS_PRELUDE_REVIEW_QuaysideWall"), TEXT("TSTSS_dark_iron")},
-        {TEXT("TSTSS_PRELUDE_REVIEW_GangwayVisualMarker"), TEXT("TSTSS_brass")},
-        {TEXT("TSTSS_PRELUDE_REVIEW_EngineBayVisualMarker"), TEXT("TSTSS_patina")},
-        {TEXT("TSTSS_PRELUDE_REVIEW_HarborStorehouseBlockout"), TEXT("TSTSS_wood")}
+        {TEXT("TSTSS_PRELUDE_REVIEW_Harbor_TraversalFloor"), TEXT("TSTSS_wood"), TEXT("timber")},
+        {TEXT("TSTSS_PRELUDE_REVIEW_Ocean_VISUAL_ONLY_NO_BUOYANCY"), TEXT("TSTSS_teal_glass"), TEXT("ocean")},
+        {TEXT("TSTSS_PRELUDE_REVIEW_QuaysideWall"), TEXT("TSTSS_dark_iron"), TEXT("stone")},
+        {TEXT("TSTSS_PRELUDE_REVIEW_GangwayVisualMarker"), TEXT("TSTSS_brass"), TEXT("brass")},
+        {TEXT("TSTSS_PRELUDE_REVIEW_EngineBayVisualMarker"), TEXT("TSTSS_patina"), TEXT("aether")},
+        {TEXT("TSTSS_PRELUDE_REVIEW_HarborStorehouseBlockout"), TEXT("TSTSS_wood"), TEXT("timber")}
     };
     const FString MaterialRoot =
         TEXT("/Game/TSTSS/Review/MultipathV1/ObjectImports/HarborLantern/HarborLantern/Materials/");
+    const FString PBRRoot = TEXT("/Game/TSTSS/Review/PreludePBRV1/");
     UMaterialInterface* Loaded[UE_ARRAY_COUNT(Palette)] = {};
+    UMaterialInterface* PBRLoaded[UE_ARRAY_COUNT(Palette)] = {};
     AStaticMeshActor* Found[UE_ARRAY_COUNT(Palette)] = {};
+    bool bCompletePBRPack = true;
     for (int32 Index = 0; Index < UE_ARRAY_COUNT(Palette); ++Index)
     {
         const FString Name = Palette[Index].Material;
@@ -145,6 +149,13 @@ void ApplyV5HarborReviewLookdev(UWorld* World)
                 TEXT("TSTSS_V5_LOOKDEV_HOLD missing material=%s"), *ObjectPath);
             return; // Never partially re-skin a failed asset inventory.
         }
+        // Optional 512px albedo/normal/ORM native imports. All-or-nothing:
+        // no mixed partially imported PBR palette may influence the review.
+        const FString Family = Palette[Index].PBRFamily;
+        const FString Package = PBRRoot + TEXT("M_FW_") + Family;
+        PBRLoaded[Index] = LoadObject<UMaterialInterface>(
+            nullptr, *(Package + TEXT(".M_FW_") + Family));
+        if (!IsValid(PBRLoaded[Index])) bCompletePBRPack = false;
     }
     for (TActorIterator<AStaticMeshActor> It(World); It; ++It)
     {
@@ -169,7 +180,8 @@ void ApplyV5HarborReviewLookdev(UWorld* World)
     for (int32 Index = 0; Index < UE_ARRAY_COUNT(Palette); ++Index)
     {
         // Material override affects visual slot 0, not collision or footing.
-        Found[Index]->GetStaticMeshComponent()->SetMaterial(0, Loaded[Index]);
+        Found[Index]->GetStaticMeshComponent()->SetMaterial(
+            0, bCompletePBRPack ? PBRLoaded[Index] : Loaded[Index]);
     }
 
     // V5 screenshot is severely overexposed; this scoped, unbound local
@@ -183,7 +195,8 @@ void ApplyV5HarborReviewLookdev(UWorld* World)
         Exposure->Settings.AutoExposureBias = -2.2f;
     }
     UE_LOG(LogTemp, Display,
-        TEXT("TSTSS_V5_LOOKDEV_APPLIED material_slots=6 exposure_bias=-2.2 source_map_unchanged=1"));
+        TEXT("TSTSS_V5_LOOKDEV_APPLIED material_slots=6 pbr=%d exposure_bias=-2.2 source_map_unchanged=1"),
+        bCompletePBRPack ? 1 : 0);
 }
 #endif
 
