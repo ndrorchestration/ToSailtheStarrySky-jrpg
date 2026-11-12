@@ -1,0 +1,60 @@
+name: Unreal experimental QA review (engine-free)
+on:
+  pull_request:
+    paths:
+      - 'unreal/Experiments/**'
+      - '.github/workflows/unreal-experimental-qa-review.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pilot-negative-controls:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Python version
+        run: python3 --version
+      - name: Public-safe canon positive/negative controls
+        run: python3 unreal/Experiments/CanonPilot/check_canon.py --self-test
+      - name: Visual receipt fail-closed controls (no renderer)
+        run: python3 unreal/Experiments/VisualQAPilot/check_capture.py --self-test
+      - name: Synthetic measured-to-canon ordinal adapter checks
+        run: python3 unreal/Experiments/CanonPilot/derive_observations.py --self-test
+      - name: PNG positive and adversarial container-integrity tests (synthetic, not native)
+        run: python3 -m unittest discover -s unreal/Experiments/VisualQAPilot -p 'test_*.py' -v
+      - name: Pinned PR 643 candidate manifest — source-bound read-only check
+        shell: bash
+        run: |
+          set -euo pipefail
+          SHA=d629faae0838fb1116c629bb8cec480899dfc9d9
+          git fetch --no-tags --depth=1 origin "$SHA"
+          test "$(git rev-parse FETCH_HEAD)" = "$SHA"
+          git show "FETCH_HEAD:unreal/ArtSource/Characters/Candidates/manifest.json" > "$RUNNER_TEMP/pr643-candidate-manifest.json"
+          python3 unreal/Experiments/CanonPilot/check_pinned_cast_manifest.py --self-test
+          python3 unreal/Experiments/CanonPilot/check_pinned_cast_manifest.py "$RUNNER_TEMP/pr643-candidate-manifest.json" > "$RUNNER_TEMP/pr643-observation.json"
+          python3 unreal/Experiments/CanonPilot/check_canon.py "$RUNNER_TEMP/pr643-observation.json" > "$RUNNER_TEMP/pr643-canon-outcome.json"
+          python3 -c 'import json,sys; r=json.load(open(sys.argv[1]))["results"]; assert r["height_order"] == "MATCHES_PINNED_LOOKDEV_MANIFEST_NOT_NATIVE_OR_CANON"; assert set(v for k,v in r.items() if k != "height_order") == {"UNKNOWN"}' "$RUNNER_TEMP/pr643-canon-outcome.json"
+      - name: Windows capture preflight synthetic safeguards (read-only)
+        run: python3 unreal/Experiments/VisualQAPilot/preflight_windows.py --self-test
+      - name: Render RAM headroom gate (synthetic, no Unreal launch)
+        run: python3 unreal/Experiments/VisualQAPilot/memory_gate.py --self-test
+      - name: Reconcile reported native build and D3D12 log semantics (synthetic)
+        run: python3 unreal/Experiments/VisualQAPilot/reconcile_native_attempt.py --self-test
+      - name: Pinned PR 656 source-only strut geometry audit (not a render)
+        shell: bash
+        run: |
+          set -euo pipefail
+          SHA=77ee249f8a0d734eab165dcafcd16870f12f07a7
+          git fetch --no-tags --depth=1 origin "$SHA"
+          test "$(git rev-parse FETCH_HEAD)" = "$SHA"
+          git show "FETCH_HEAD:unreal/Source/ToSailTheStarrySky/Private/AureateWakePreviewActor.cpp" > "$RUNNER_TEMP/pr656-aureate-actor.cpp"
+          python3 unreal/Experiments/VisualQAPilot/check_strut_source_geometry.py --self-test
+          python3 unreal/Experiments/VisualQAPilot/check_strut_source_geometry.py "$RUNNER_TEMP/pr656-aureate-actor.cpp" > "$RUNNER_TEMP/pr656-strut-geometry.json"
+          python3 -c 'import json,sys; x=json.load(open(sys.argv[1])); assert x["source_blob_sha1"] == "27733525db404b0458db53bd1f5af1b0edad7f2c"; assert x["hydrofoil_strut_count_declared_in_source"] == 2; assert len(x["seaborne"]) == 2; assert x["struts_visible_in_native_d3d12"] == "NOT_VERIFIED"; assert x["hydrofoil_strut_count_in_live_actor"] == "NOT_OBSERVED"' "$RUNNER_TEMP/pr656-strut-geometry.json"
+      - name: Native build RAM and commit-headroom gate (synthetic only)
+        run: python3 unreal/Experiments/VisualQAPilot/build_resources.py --self-test
+      - name: Assert native evidence remains UNKNOWN by default
+        run: |
+          python3 unreal/Experiments/CanonPilot/check_canon.py unreal/Experiments/CanonPilot/unknown_observations.json > /tmp/canon-review-results.json
+          python3 -c "import json; x=json.load(open('/tmp/canon-review-results.json')); assert set(x['results'].values()) == {'UNKNOWN'}"
