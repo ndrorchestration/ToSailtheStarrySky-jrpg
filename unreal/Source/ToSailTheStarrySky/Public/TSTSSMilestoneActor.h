@@ -18,6 +18,9 @@ public:
     bool IsReviewActionable(const UTSTSSFirstWakeState* State) const;
     FString GetReviewDisplayName() const;
     void UpdateReviewBeacon(const UTSTSSFirstWakeState* State);
+    // Optional V5-only replacement for anonymous E marker cube: imported,
+    // noninteractive set dressing over the unchanged authoritative E collider.
+    void EnsureV5ReviewObjectProxy();
 #endif
 #if WITH_EDITOR
     // Synchronize review-only marker rays/physical blocking after a successful
@@ -42,9 +45,13 @@ protected:
     TObjectPtr<class UTextRenderComponent> ReviewBeacon;
     UPROPERTY(VisibleAnywhere, Category="TSTSS|Review")
     TObjectPtr<class UStaticMeshComponent> ReviewBeaconBackdrop;
+    UPROPERTY(VisibleAnywhere, Category="TSTSS|Review")
+    TObjectPtr<class UStaticMeshComponent> ReviewObjectProxy;
 #endif
 #if WITH_EDITOR
     bool bReviewBeaconInitialized = false;
     bool bReviewBeaconAvailable = false;
+    bool bReviewProxyInitialized = false;
+    bool bReviewProxyReady = false;
 #endif
 };
