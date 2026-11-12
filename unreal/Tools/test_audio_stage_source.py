@@ -13,6 +13,7 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from build_audio_preview_samples import generate
+from build_audio_harbor_loops import generate as generate_harbor_loops, LOOPS
 import stage_first_wake_audio_qa as stage
 
 SHA = "b" * 40
@@ -29,6 +30,8 @@ class TestAudioStageSource(unittest.TestCase):
         (cls.project / "ToSailTheStarrySky.uproject").write_text("{}",encoding="utf-8")
         cls.wav = root / "scratch-wavs"
         generate(cls.wav)
+        cls.ambient = root / "scratch-ambience"
+        generate_harbor_loops(cls.ambient)
 
     @classmethod
     def tearDownClass(cls):
@@ -43,6 +46,7 @@ class TestAudioStageSource(unittest.TestCase):
             "TSTSS_AUDIO_REVIEW_OPT_IN": import_opt,
             "TSTSS_AUDIO_EXPECTED_SOURCE_SHA": sha,
             "TSTSS_AUDIO_REVIEW_SOURCE": str(self.wav),
+            "TSTSS_AUDIO_AMBIENCE_SOURCE": str(self.ambient),
         }
         def fake_git(_root, *parts):
             if parts == ("rev-parse", "HEAD"):
@@ -61,11 +65,13 @@ class TestAudioStageSource(unittest.TestCase):
             return stage.preflight(self.project)
 
     def test_positive_exact_head_detached_synthetic_only(self):
-        root, paths, sha = self.invoke()
+        root, paths, ambient_paths, sha = self.invoke()
         self.assertEqual(root, self.project.parent)
         self.assertEqual(sha, SHA)
         self.assertEqual(len(paths), 10)
         self.assertEqual({p.name for p in paths}, stage.EXPECTED)
+        self.assertEqual({p.name for p in ambient_paths}, set(LOOPS))
+        self.assertEqual(len(ambient_paths), 6)
 
     def test_no_implicit_staging_authorization(self):
         with self.assertRaisesRegex(RuntimeError, "staging opt-in"):
@@ -115,6 +121,12 @@ class TestAudioStageSource(unittest.TestCase):
                       "TSTSSHarborAudioZone", "TSTSSFootstepAudioDirector"):
             self.assertIn(actor, script)
         self.assertIn("STAGED_QA_UNAUDITIONED_NOT_RELEASE_AUTHORIZED", script)
+        self.assertIn("set_editor_property(\"looping\", True)", script)
+        self.assertIn("AMBIENCE_BINDINGS", script)
+        self.assertIn("TSTSS_AUDIO_AMBIENCE_SOURCE", script)
+        self.assertIn("verify_harbor_loops", script)
+        for prop in ("surf_loop","gull_loop","market_loop","wind_loop","rain_loop","storm_bed_loop"):
+            self.assertIn(prop, script)
         self.assertNotIn("delete_asset(", script)
         self.assertNotIn("replace_existing = True", script)
         self.assertNotIn("ship_allowed = True", script)
