@@ -76,15 +76,20 @@ bool FTSTSSFirstWakeReviewObjectiveTest::RunTest(const FString& Parameters)
         State->Restore(true, ETSTSSFirstWakeBeat::BoardedAureateWake, 0));
     TestFalse(TEXT("Pre-inspection launch is refused"),
         Route::IsEligible(State, Prelude));
-    TestFalse(TEXT("V5 cannot launch before inspections"),
+    TestFalse(TEXT("V5 cannot leave for ship before inspections"),
         Route::IsEligible(State, VisualPrelude));
+    TestFalse(TEXT("Boarded alone cannot leave ship"),
+        Route::IsEligible(State, TEXT("VS02_AureateInteriors")));
     TestTrue(TEXT("Fixture restores engineering signoff"),
         State->Restore(true, ETSTSSFirstWakeBeat::EngineeringChecked, 0x07));
     TestEqual(TEXT("Engineering opens only the sky review"),
         Route::NextReviewMap(State, Prelude),
         FString(TEXT("/Game/TSTSS/Review/VerticalSlice/VS03_FirstWakeSky")));
-    TestEqual(TEXT("V5 visual prelude opens the same gated sky destination"),
+    TestEqual(TEXT("V5 opens ship before a launch event"),
         Route::NextReviewMap(State, VisualPrelude),
+        FString(TEXT("/Game/TSTSS/Review/VerticalSlice/VS02_AureateInteriors")));
+    TestEqual(TEXT("Ship departure requires inspections and opens only the sky review"),
+        Route::NextReviewMap(State, TEXT("VS02_AureateInteriors")),
         FString(TEXT("/Game/TSTSS/Review/VerticalSlice/VS03_FirstWakeSky")));
     TestFalse(TEXT("Unapproved V3 has no launch authority"),
         Route::IsEligible(State, TEXT("FirstWake_PreludeInteraction_V3_VisualReview")));
