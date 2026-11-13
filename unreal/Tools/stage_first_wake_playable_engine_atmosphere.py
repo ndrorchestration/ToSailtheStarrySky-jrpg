@@ -208,7 +208,8 @@ def native_stage() -> dict:
 
 
 def self_test() -> dict:
-    p = plan()
+    # Can also be run after a separately verified native map stage.
+    p = plan(strict_source=False)
     require(len(p["remove_exactly"]) == 4, "expected exactly four redundant sky actors")
     require(len(p["proposed_practicals"]) == 2, "expected exactly two authored practicals")
     require(p["weather"] == "Clear" and p["initial_clock_hours"] == 17.1,
@@ -216,9 +217,9 @@ def self_test() -> dict:
     require(p["source_original_actor_count"] == 28,
             "native actor inventory unexpectedly changed")
     return {
-        "status": "GAMEPLAY_ENGINE_MAP_OFFLINE_SOURCE_PLAN_PASS",
+        "status": "GAMEPLAY_ENGINE_AUTHORING_RECIPE_CHECK_PASS",
         "checks": 4,
-        "native_scene_written": False,
+        "native_scene_written": "NOT_CHECKED",
         "native_camera_test": "NOT_RUN",
     }
 
