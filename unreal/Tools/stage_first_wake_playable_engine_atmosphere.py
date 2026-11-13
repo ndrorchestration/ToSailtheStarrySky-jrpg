@@ -58,7 +58,6 @@ def git(*args: str) -> str:
 
 
 def plan(strict_source: bool = True) -> dict:
-    require(ROOT.name == WORKTREE, "only the dedicated gameplay feature worktree")
     require(SCENE == "VS02_AureateInteriors"
             and surface.SCENE_LOOKS.get(SCENE) == ("Clear", 17.1, "engineering"),
             "existing authored atmospheric recipe drifted")
@@ -109,6 +108,7 @@ def plan(strict_source: bool = True) -> dict:
 
 def custody() -> dict:
     require(sys.platform == "win32", "native Windows editor required")
+    require(ROOT.name == WORKTREE, "only the dedicated gameplay feature worktree")
     require(os.environ.get("TSTSS_GAMEPLAY_ENGINE_STAGE_EXPLICIT") == "1",
             "explicit stage authorization is absent")
     head = os.environ.get("TSTSS_GAMEPLAY_ENGINE_EXPECTED_HEAD", "").strip().lower()
