@@ -488,8 +488,10 @@ void ATSTSSExplorerCharacter::RestoreEngineFocusPreview()
             }
         }
     }
-    else if (UWorld* World = GetWorld())
+    else if (bHadPreview)
     {
+        UWorld* World = GetWorld();
+        if (!World) return;
         if (UTSTSSPresentationCoordinatorSubsystem* Coordinator =
                 World->GetSubsystem<UTSTSSPresentationCoordinatorSubsystem>())
         {
