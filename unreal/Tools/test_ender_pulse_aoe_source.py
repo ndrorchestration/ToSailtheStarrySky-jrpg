@@ -121,7 +121,7 @@ def validate(sources: dict) -> list[str]:
         "Pulse hits multiple foes from full 3D distance",
         "two enemies within radius hit",
         "Ionia inside radius takes no damage",
-        "out-of-radius enemy unaffected",
+        "enemy just beyond 600cm 3D boundary unaffected",
         "missing enemy coordinate refuses entire cast",
         "no in-range enemies must not charge MP or skip a turn",
         "area spell insufficient MP fails atomically",
