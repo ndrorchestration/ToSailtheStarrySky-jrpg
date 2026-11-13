@@ -404,7 +404,8 @@ void ATSTSSExplorerCharacter::ToggleEngineFocusPreview()
     bEngineFocusPreviewOwnsCoordinatorEnable = !bWasEnabled;
     EngineFocusPreviewIgnoredMove = true;
     EngineFocusPreviewIgnoredLook = true;
-    EngineFocusPreviewDeadlineSeconds = FPlatformTime::Seconds() + 4.0;
+    EngineFocusPreviewStartedSeconds = FPlatformTime::Seconds();
+    EngineFocusPreviewDeadlineSeconds = EngineFocusPreviewStartedSeconds + 4.0;
     PC->SetIgnoreMoveInput(true);
     PC->SetIgnoreLookInput(true);
     PC->SetViewTargetWithBlend(Camera, 0.35f, VTBlend_EaseInOut, 2.f);
@@ -428,7 +429,10 @@ void ATSTSSExplorerCharacter::VerifyEngineFocusPreview()
         ? World->GetSubsystem<UTSTSSPresentationCoordinatorSubsystem>() : nullptr;
     if (!World || World->WorldType != EWorldType::PIE
         || !IsValid(PC) || !IsValid(Camera)
-        || PC->GetViewTarget() != Camera
+        // A blend can still report the pawn as view target momentarily.
+        // Do not destroy the camera midway through its entry transition.
+        || (FPlatformTime::Seconds() - EngineFocusPreviewStartedSeconds > 0.75
+            && PC->GetViewTarget() != Camera)
         || FPlatformTime::Seconds() >= EngineFocusPreviewDeadlineSeconds
         || !IsValid(Coordinator)
         || !Coordinator->GetCurrentIntent().bEligible
@@ -442,6 +446,8 @@ void ATSTSSExplorerCharacter::VerifyEngineFocusPreview()
 
 void ATSTSSExplorerCharacter::RestoreEngineFocusPreview()
 {
+    const bool bHadPreview = EngineFocusPreviewCamera.IsValid()
+        || bEngineFocusPreviewIgnoredMove || bEngineFocusPreviewIgnoredLook;
     if (UWorld* World = GetWorld())
     {
         World->GetTimerManager().ClearTimer(EngineFocusPreviewGuardTimer);
@@ -470,7 +476,29 @@ void ATSTSSExplorerCharacter::RestoreEngineFocusPreview()
             if (UTSTSSPresentationCoordinatorSubsystem* Coordinator =
                     World->GetSubsystem<UTSTSSPresentationCoordinatorSubsystem>())
             {
-                Coordinator->SetReviewEnabled(false);
+                // Never shut off another presentation source's eligible
+                // shot if it superseded our inspection while the preview ran.
+                const FTSTSSPresentationIntent Current =
+                    Coordinator->GetCurrentIntent();
+                if (!Current.bEligible
+                    || Current.ShotId == FName(TEXT("FW03_Engine_Inspection")))
+                {
+                    Coordinator->SetReviewEnabled(false);
+                }
+            }
+        }
+    }
+    else if (UWorld* World = GetWorld())
+    {
+        if (UTSTSSPresentationCoordinatorSubsystem* Coordinator =
+                World->GetSubsystem<UTSTSSPresentationCoordinatorSubsystem>())
+        {
+            if (Coordinator->GetCurrentIntent().ShotId ==
+                    FName(TEXT("FW03_Engine_Inspection")))
+            {
+                // A pre-enabled coordinator remains enabled but the expired
+                // inspection must not leak after the player returns.
+                Coordinator->ResetReviewIntent();
             }
         }
     }
@@ -479,8 +507,12 @@ void ATSTSSExplorerCharacter::RestoreEngineFocusPreview()
     bEngineFocusPreviewOwnsCoordinatorEnable = false;
     bEngineFocusPreviewIgnoredMove = false;
     bEngineFocusPreviewIgnoredLook = false;
+    EngineFocusPreviewStartedSeconds = 0.;
     EngineFocusPreviewDeadlineSeconds = 0.;
-    UE_LOG(LogTemp, Display, TEXT("TSTSS_PIE_GAMEPLAY_ENGINE_FOCUS_RESTORE"));
+    if (bHadPreview)
+    {
+        UE_LOG(LogTemp, Display, TEXT("TSTSS_PIE_GAMEPLAY_ENGINE_FOCUS_RESTORE"));
+    }
 }
 #endif // WITH_EDITOR
 
@@ -635,6 +667,16 @@ void ATSTSSExplorerCharacter::Interact()
                     }
 #endif
                     ShowFirstWakeReviewObjective(FirstWakeState);
+#if WITH_EDITOR
+                    if (GetWorld()->WorldType == EWorldType::PIE
+                        && Milestone->bIsInspectionStation && GEngine)
+                    {
+                        // A discoverable OPTIONAL view, never an automatic
+                        // camera cut during the normal E inspection.
+                        GEngine->AddOnScreenDebugMessage(-1, 6.f, FColor::Cyan,
+                            TEXT("Engine inspection: press C near the LIFT instrument for a 4s focus view"));
+                    }
+#endif
                 }
                 else
                 {
