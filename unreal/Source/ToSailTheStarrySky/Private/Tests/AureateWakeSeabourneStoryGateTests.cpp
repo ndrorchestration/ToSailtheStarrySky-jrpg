@@ -43,6 +43,19 @@ bool FTSTSSAureateSeabourneStoryGate::RunTest(const FString& Parameters)
     }
     const FVector SkyWingRoot = FirstWing->GetRelativeLocation();
     TestFalse(TEXT("Skybourne hydrofoil initially stowed"), FirstFoil->IsVisible());
+    // Editor presentation may start folded for a disposable coastal review
+    // but does not grant any runtime configuration authorization.
+    Ship->EditorReviewPose = EAureateWakeForm::Seaborne;
+    Ship->OnConstruction(FTransform::Identity);
+    TestEqual(TEXT("Editor can preview folded Seabourne geometry"),
+        Ship->GetCurrentForm(), EAureateWakeForm::Seaborne);
+    TestFalse(TEXT("Runtime world cannot invoke authoring pose"), Ship->ApplyEditorReviewPose());
+    TestFalse(TEXT("Unbound editor pose grants no flight"),
+        Ship->RequestForm(EAureateWakeForm::Skyborne));
+    Ship->EditorReviewPose = EAureateWakeForm::Skyborne;
+    Ship->OnConstruction(FTransform::Identity);
+    TestEqual(TEXT("Preview pose restored before story binding"),
+        Ship->GetCurrentForm(), EAureateWakeForm::Skyborne);
 
     TestEqual(TEXT("Exactly four persistent wings"), Ship->GetWingCount(), 4);
     TestEqual(TEXT("Two hydrofoils available"), Ship->GetHydrofoilCount(), 2);

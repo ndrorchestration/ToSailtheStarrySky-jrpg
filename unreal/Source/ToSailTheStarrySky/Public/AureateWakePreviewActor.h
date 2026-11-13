@@ -33,6 +33,7 @@ public:
     AAureateWakePreviewActor();
     virtual void Tick(float DeltaSeconds) override;
     virtual void BeginPlay() override;
+    virtual void OnConstruction(const FTransform& Transform) override;
 
     UFUNCTION(BlueprintCallable, Category="Aureate Wake|Preview")
     bool RequestForm(EAureateWakeForm RequestedForm);
@@ -57,6 +58,14 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Preview", meta=(ClampMin="0.1"))
     float TransitionSeconds = 2.5f;
+    // Authoring-only pose for an isolated preview map. Only Skybourne and
+    // Seabourne may be visually selected; this does not grant mode access.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Preview|Review")
+    EAureateWakeForm EditorReviewPose = EAureateWakeForm::Skyborne;
+    // Explicit editor-Python entrypoint: Unreal Python does not expose
+    // RerunConstructionScripts on this actor. Does not unlock gameplay.
+    UFUNCTION(BlueprintCallable, Category="Aureate Wake|Preview|Review")
+    bool ApplyEditorReviewPose();
 
     /** Optional creator-authored translucent/iridescent wing material; no material asset is included yet. */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Visuals")

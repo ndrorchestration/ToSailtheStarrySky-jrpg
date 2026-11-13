@@ -82,6 +82,36 @@ AAureateWakePreviewActor::AAureateWakePreviewActor()
     SnapToForm(EAureateWakeForm::Skyborne);
 }
 
+void AAureateWakePreviewActor::OnConstruction(const FTransform& Transform)
+{
+    Super::OnConstruction(Transform);
+#if WITH_EDITOR
+    if (!IsValid(BoundReviewStory.Get()))
+    {
+        // Review scene authoring must never expose Submersible/Starbourne
+        // through a property override, nor advance a story beat.
+        SnapToForm(EditorReviewPose == EAureateWakeForm::Seaborne
+            ? EAureateWakeForm::Seaborne : EAureateWakeForm::Skyborne);
+    }
+#endif
+}
+bool AAureateWakePreviewActor::ApplyEditorReviewPose()
+{
+#if WITH_EDITOR
+    const UWorld* World = GetWorld();
+    if (!World || World->WorldType != EWorldType::Editor ||
+        IsValid(BoundReviewStory.Get()) || bTransitioning)
+    {
+        return false;
+    }
+    // Cosmetic scene authoring only; all mode-change APIs still fail closed.
+    SnapToForm(EditorReviewPose == EAureateWakeForm::Seaborne
+        ? EAureateWakeForm::Seaborne : EAureateWakeForm::Skyborne);
+    return true;
+#else
+    return false;
+#endif
+}
 void AAureateWakePreviewActor::BeginPlay()
 {
     Super::BeginPlay();
