@@ -184,7 +184,7 @@
         "owning_spell_rows": "unreal/DataSource/Magic/EnderResonator.vertical_slice.review.json",
         "creator_pulse_target": "POINT_BLANK_SPHERICAL_AOE_ENEMIES_ONLY",
         "observed_pulse_target": "Enemy",
-        "observed_pulse_action_model": "SINGLE_TARGET",
+        "observed_pulse_action_model": "SOURCE_ATOMIC_AOE_CANDIDATE",
         "source_compatible_with_creator_pulse": false,
         "pulse_full_aoe_runtime_verified": false,
         "pulse_3d_spherical_vfx_approved": false,
@@ -192,7 +192,11 @@
         "centering_defense_buff_percent": 15,
         "centering_rounds": 3,
         "correspondence_spells_status": "DESIGN_ONLY_ON_HOLD",
-        "pending": "ATOMIC_ONCE_PER_CAST_ENEMY_ONLY_RADIUS_DAMAGE_AND_EXPANDING_SPHERICAL_VFX_TESTS"
+        "pending": "NATIVE_COMPILATION_AND_MULTI_ENEMY_TESTS; PROVE_REAL_ACTOR_WORLD_POSITIONS; CREATOR_APPROVE_3D_SPHERICAL_VISUAL",
+        "pulse_area_source_candidate": true,
+        "pulse_radius_cm": 600,
+        "pulse_source_head_native_verified": false,
+        "pulse_spatial_positions_verified_in_game": false
       }
     },
     "disposition": "KEEP_BRANCHES_AND_HISTORICAL_EVIDENCE_UNMERGED; NO_DUPLICATE_AUDIO_DIRECTOR; NO_AUTO_LYRA; NO_PULSE_AOE_CLAIM"
