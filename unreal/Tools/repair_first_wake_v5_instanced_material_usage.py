@@ -72,8 +72,17 @@ def main() -> None:
     parser.add_argument("--apply", action="store_true")
     parser.add_argument("--verify", action="store_true")
     args, _ = parser.parse_known_args()
+    # -run=pythonscript -script=<path> often does not forward CLI flags.
+    # Require an additional explicit mode variable for headless commandlets.
+    mode = os.environ.get("TSTSS_V5_INSTANCING_MODE", "")
+    if mode not in ("", "APPLY", "VERIFY"):
+        raise RuntimeError("HOLD: unknown native material command mode")
+    apply = args.apply or mode == "APPLY"
+    verify = args.verify or mode == "VERIFY"
+    if apply and verify:
+        raise RuntimeError("HOLD: conflicting repair/readback modes")
     baseline = inventory()
-    if args.plan or (not args.apply and not args.verify):
+    if args.plan or (not apply and not verify):
         print(json.dumps(baseline, sort_keys=True, indent=2))
         return
 
@@ -87,7 +96,7 @@ def main() -> None:
         for family in FAMILIES
     }
     before_paths = status_paths()
-    if (args.apply and before_paths) or (args.verify and not before_paths.issubset(allowed)):
+    if (apply and before_paths) or (verify and not before_paths.issubset(allowed)):
         raise RuntimeError("HOLD: unapproved dirty source paths: " + str(before_paths))
 
     import unreal as u
@@ -110,7 +119,7 @@ def main() -> None:
         if material is None or not isinstance(material, u.Material):
             raise RuntimeError("HOLD: missing native UMaterial " + path)
         was_enabled = bool(edit.has_material_usage(material, usage))
-        if args.apply and not was_enabled:
+        if apply and not was_enabled:
             # Use the UE5.8-supported material-editor API; the reflected
             # Material property is read-only in current Python bindings.
             edit.set_base_material_usage(material, usage, True)
@@ -133,7 +142,7 @@ def main() -> None:
     if not after_paths.issubset(allowed):
         raise RuntimeError("HOLD: unexpected tracked/untracked content " + str(after_paths))
     result = {
-        "status": "V5_INSTANCED_PBR_MATERIAL_USAGE_ENABLED" if args.apply
+        "status": "V5_INSTANCED_PBR_MATERIAL_USAGE_ENABLED" if apply
                   else "V5_INSTANCED_PBR_MATERIAL_USAGE_READBACK_PASS",
         "source_head": expected,
         "ue_version": "5.8.4",
