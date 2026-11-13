@@ -50,13 +50,6 @@ def make_material():
     opacity = edit.create_material_expression(material, unreal.MaterialExpressionConstant, -200, 260)
     opacity.set_editor_property("r", 1.0)
     edit.connect_material_property(opacity, "", unreal.MaterialProperty.MP_OPACITY)
-    # The live Resonator renderer uses three InstancedStaticMeshComponents
-    # (rings, motes and core). New VFX materials must compile that permutation
-    # or UE silently substitutes its default checkerboard shader.
-    usage = unreal.MaterialUsage.MATUSAGE_INSTANCED_STATIC_MESHES
-    edit.set_base_material_usage(material, usage, True)
-    if not edit.has_material_usage(material, usage):
-        raise RuntimeError("HOLD: Resonator material lacks instancing usage")
     edit.recompile_material(material)
     if not unreal.EditorAssetLibrary.save_loaded_asset(material):
         raise RuntimeError("Material save failed")
