@@ -253,8 +253,20 @@ void ATSTSSResonatorVfxActor::Tick(float DeltaSeconds)
                             It->SetActorHiddenInGame(It->PreviewCueId != ReviewCues[ReviewSweepIndex]);
                         }
                     }
-                    const FVector Aim = Selected->GetActorLocation() + FVector(0.f, 0.f, 95.f);
-                    const FVector Location = Selected->GetActorLocation() + FVector(0.f, -610.f, 270.f);
+                    // Center targeted/traveling visuals at their effect position,
+                    // not the caster. Pulse and Focus Harmonic stay caster-centered.
+                    const float CueT = FMath::Clamp(Selected->Age /
+                        FMath::Max(Selected->Duration, 0.1f), 0.f, 1.f);
+                    const bool bAtTarget = Selected->Style == 2 ||
+                        Selected->Style == 4 || Selected->Style == 5;
+                    const bool bAtCaster = Selected->Style == 0 || Selected->Style == 6;
+                    const float TravelT = FMath::Clamp(CueT * 1.45f, 0.f, 1.f);
+                    const FVector Offset = bAtCaster ? FVector::ZeroVector :
+                        bAtTarget ? Selected->TargetOffset :
+                        FMath::Lerp(FVector::ZeroVector, Selected->TargetOffset, TravelT);
+                    const FVector Aim = Selected->GetActorLocation() + Offset +
+                        FVector(0.f, 0.f, 95.f);
+                    const FVector Location = Aim + FVector(0.f, -610.f, 175.f);
                     Camera->SetActorLocationAndRotation(Location, (Aim - Location).Rotation());
                     Controller->SetViewTarget(Camera);
                     bReviewSweepCameraMoved = true;
