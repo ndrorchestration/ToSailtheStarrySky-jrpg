@@ -23,6 +23,14 @@ are already castable in the current First Wake playable map.
 
 This is the actual 960x540 native GPU frame from implementation commit `6e20b044d9174fc6fe4f4b829fabd59b19665719`, image SHA-256 `45124e25a8444ac267a12ea5c2386df7aeae3a3b51b32897db65b0b6a46e8c39`. It is a review-only close-up of the sphere visual, not a playable spell, time-series proof, or creator art approval.
 
+## New native three-phase Pulse GPU evidence (November 13, 2026)
+
+- A real UE 5.8.4 C++/UHT Win64 compile (four actions) and strict clean-source **30/30 native Unreal automation tests passed** at implementation commit 84112d34d1ce6a11adbaffd79cb6a3b1187a8b45. Unique local receipt: Saved/MigrationEvidence/84112d34d1ce-20261113T232612289Z-4f921f3d/. Original config contents and file attributes were protected by the read-only config guard.
+- The review-only opt-in time-series run preserved real native D3D12 960x540 screenshots in Saved/MigrationEvidence/ResonatorPulseSequence-20261113T232742Z/. Copied (without replacing originals) to Evidence/EnderResonator/ as ResonantPulse_Sequence_Early_84112d3.png, ResonantPulse_Sequence_Middle_84112d3.png, ResonantPulse_Sequence_Late_84112d3.png.
+- Captures occurred at logged cue ages **0.647 s / 1.183 s / 1.741 s** (three unique SHA-256 files); cyan-candidate radial p90 in the review frame increased **100.18 / 157.47 / 221.20 pixels**, using a bounded and documented pixel threshold in ResonantPulse_Sequence_Metrics_84112d3.json. Stage logs are in ResonantPulse_Sequence_StageLog_84112d3.txt. This verifies visible spatial expansion over time **in an isolated noninteractive review scene**.
+- Important unresolved gameplay/visual mismatch: this PR #797 review renderer currently uses 35?275 cm sphere radius, while the separate draft #826 gameplay AoE specifies **600 cm**. Do **not** infer range parity from these images; the final shared source-of-truth for area radius, gameplay center, caster transforms and visual extent needs reconciliation in a dedicated integration PR.
+- No full nine-cue per-style GPU review, dynamic weather/lighting/contrast or photosensitivity approval, player-driven casting, equipment/staff/audio synchronization, save/loading proof, final cinematic acceptance, unlearned spell grant or production promotion is implied.
+
 ## Next isolated visual QA lane (November 13, 2026)
 
 - PR #797 owns the nine-cue isolated review catalog and renderer, not the game's final battle executor. The native asset stage, 30/30 exact-head automations, and repeat non-black D3D12 screenshot were verified at 07b737b7d99e27a65f77d5da25d93ba3fe654c0e with local evidence; they are not creator/cinematic approval.
