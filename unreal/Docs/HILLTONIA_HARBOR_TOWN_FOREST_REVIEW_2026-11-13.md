@@ -22,6 +22,8 @@ The adjoining forest should eventually support **oak, maple, beech and birch** w
 4. **Deciduous forest road:** an approximately 3.6 m-wide lane branches at X=-7350 cm and continues toward negative Y; tree trunks leave a clearing around the path. Its far endpoint is an unfinished wooded edge, not a quest zone or authored world transition.
 5. **Beyond the forest:** hills and deciduous canopy silhouettes hint at the adjoining biome. No usable cross-map road, adjacent world-cell streaming or navmesh is established in v0.1.
 
+**Terrain correction from first live render:** The initial native screenshot showed houses appearing suspended above the original ocean plane. The revised candidate adds two contiguous, WorldStatic prototype land/soil shelves under the village, both at Z=-10 cm above the old water plane and below the road top. These mask water under the houses, preserve a seaward shore edge, support the woodland junction, and remain review-only blockout terrain rather than a true Unreal Landscape. Recheck by GPU screenshot and physical walking before visual or traversal approval.
+
 **Physics/authority:** The existing dock remains the source of seven ordered E interactions. The new town road/woodland lane and exterior house/trunk collision are tagged WorldStatic; remaining architecture, ridges and leaf crowns are decorative. The original docking, ship-form, water-observer, flotation, save and Starbourne gates are not changed. Town extension is spawned **only at runtime** in the exact standalone Unreal V5 review package, using native material assets already in the project; no .umap or .uasset is saved or overwritten.
 
 ## Required acceptance and design gaps

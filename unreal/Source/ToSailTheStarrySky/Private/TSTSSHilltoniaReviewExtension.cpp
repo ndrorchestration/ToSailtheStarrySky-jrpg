@@ -123,6 +123,8 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
     Root->SetMobility(EComponentMobility::Movable);
     Root->RegisterComponent();
 
+    auto* Ground = Make(Owner, Root, TEXT("HilltoniaLandwardGround"),
+                        Cube, Canopy, true);
     auto* Road = Make(Owner, Root, TEXT("HilltoniaWorldStaticFootpath"),
                       Cube, Stone, true);
     auto* Buildings = Make(Owner, Root, TEXT("HilltoniaSolidTimberHouses"),
@@ -137,6 +139,16 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
                             Sphere, Canopy, false);
     auto* RollingHills = Make(Owner, Root, TEXT("HilltoniaWoodedSlopeBackdrop"),
                               Sphere, Canopy, false);
+
+    // Actual land mass, not houses hovering over the original ocean plane.
+    // Grass/soil surface is Z=-10cm, ten centimeters below the road top.
+    // The first 250cm meets the old dock edge without overlapping any
+    // First Wake E marker. The water remains exposed to the seaward (+Y)
+    // side. This is flat, playable prototype ground, NOT a final Landscape.
+    Place(Ground, -7000.f, -1300.f, -90.f, 70.f, 58.f, 1.6f);
+    // A second contiguous forest foothill shelf extends the landward
+    // ground beneath the tree line, without making scenic ridges solid.
+    Place(Ground, -7350.f, -4950.f, -140.f, 63.f, 20.f, 2.6f);
 
     // Dock-to-town road: 10 overlapping 620-cm ground sections, full top
     // surface at Z=0. Its first 310 cm overlap the original dock floor,
@@ -218,7 +230,7 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
     TownSign(Owner, Root);
 
     UE_LOG(LogTemp, Display,
-        TEXT("TSTSS_HILLTONIA_REVIEW_APPLIED road_segments=%d homes=%d hall=1 deciduous_trees=%d town=Hilltonia forest=temperate world_north_latitude_provisional=1 road_collision=WorldStatic seven_firstwake_markers_unchanged=1 saved_map_unchanged=1"),
+        TEXT("TSTSS_HILLTONIA_REVIEW_APPLIED land_ground_sections=2 road_segments=%d homes=%d hall=1 deciduous_trees=%d town=Hilltonia forest=temperate world_north_latitude_provisional=1 road_collision=WorldStatic seven_firstwake_markers_unchanged=1 saved_map_unchanged=1"),
         RoadSegments, Homes, Trees);
     return true;
 }

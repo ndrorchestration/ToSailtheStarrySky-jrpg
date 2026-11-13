@@ -78,6 +78,25 @@ class HilltoniaReviewContract(unittest.TestCase):
         self.assertIn("TreeCrowns", CPP)
         self.assertIn("RollingHills", CPP)
 
+    def test_town_is_on_connected_land_not_floating_over_harbor_ocean(self):
+        self.assertIn('HilltoniaLandwardGround', CPP)
+        self.assertIn('land_ground_sections=2', CPP)
+        self.assertIn('Cube, Canopy, true', CPP)
+        self.assertIn('Place(Ground, -7000.f, -1300.f, -90.f, 70.f, 58.f, 1.6f)', CPP)
+        self.assertIn('Place(Ground, -7350.f, -4950.f, -140.f, 63.f, 20.f, 2.6f)', CPP)
+        # Ground upper surfaces meet at -10 cm, 10 cm below the road top.
+        for z, scale_z in ((-90, 1.6), (-140, 2.6)):
+            self.assertAlmostEqual(z + scale_z * 50, -10)
+        main_x_min, main_x_max = -7000 - 3500, -7000 + 3500
+        main_y_min, main_y_max = -1300 - 2900, -1300 + 2900
+        self.assertLess(main_x_min, const("RoadLastX") - 310)
+        self.assertGreater(main_x_max, -3750)  # overlaps the original quay
+        self.assertGreater(main_y_max, 900 + 270)  # houses on seaward side
+        self.assertLess(main_y_min, -3120 - 260)  # covers woodland spur
+        ridge_y_min, ridge_y_max = -4950 - 1000, -4950 + 1000
+        self.assertLess(ridge_y_min, main_y_min)
+        self.assertGreater(ridge_y_max, main_y_min)  # continuous ground
+
     def test_existing_seven_milestones_are_untouched(self):
         self.assertIn("ReviewStop(\"FlyerDiscovery\", -2200, 0", PRELUDE)
         self.assertIn("ReviewStop(\"EngineeringApproval\", 1175, 0", PRELUDE)
