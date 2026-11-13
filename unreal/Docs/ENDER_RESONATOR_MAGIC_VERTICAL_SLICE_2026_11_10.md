@@ -23,6 +23,14 @@ are already castable in the current First Wake playable map.
 
 This is the actual 960x540 native GPU frame from implementation commit `6e20b044d9174fc6fe4f4b829fabd59b19665719`, image SHA-256 `45124e25a8444ac267a12ea5c2386df7aeae3a3b51b32897db65b0b6a46e8c39`. It is a review-only close-up of the sphere visual, not a playable spell, time-series proof, or creator art approval.
 
+## Next isolated visual QA lane (November 13, 2026)
+
+- PR #797 owns the nine-cue isolated review catalog and renderer, not the game's final battle executor. The native asset stage, 30/30 exact-head automations, and repeat non-black D3D12 screenshot were verified at 07b737b7d99e27a65f77d5da25d93ba3fe654c0e with local evidence; they are not creator/cinematic approval.
+- This branch adds a review-only opt-in command line flag -TSTSSResonatorCaptureSequence. On the existing isolated L_EnderResonatorCueReview map, and only for the placed Pulse actor in Editor builds, it queues three screenshots after approximately 2.8, 3.35, and 3.9 seconds of game-world playback, tracking actual cue age. This is independent of the previous -TSTSSResonatorCapture single-frame diagnostic.
+- Copy these screenshots from Saved/Screenshots into a unique timestamped evidence directory. Review each frame's sphere radius and luminance; do not claim time-separated visual quality PASS until all three distinct, nonblack, framed native captures and their time logs are preserved. This is not player-driven PIE, performance validation or nine-cue acceptance.
+- Do not duplicate gameplay authority: draft PR #810 (review/ender-centering-pulse-focus-20261111) already implements separate isolated Centering three-round 15% physical-defense buff with explicit knowledge gates; draft PR #826 (review/ue58-resonant-pulse-enemy-aoe-20261113) implements an independent isolated 600 cm enemy-only spherical point-blank AoE candidate. These PRs have different ancestry; neither is merged into PR #797 or playable First Wake. Reconcile their test/authority conflicts on a dedicated integration handoff instead of repeating combat implementation here.
+- Review-only boundaries: no Correspondence promotion, unlearned mastery, Reson/Aepex early party admission, Starbourne unlock, or production map/asset changes.
+
 ## Creator identity and admission gates
 
 Ender's permanent profession is **Harmonic Resonance Engineer**. His selected

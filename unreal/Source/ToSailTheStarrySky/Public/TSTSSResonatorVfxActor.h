@@ -57,6 +57,8 @@ private:
 #if WITH_EDITOR
     float ReviewCaptureElapsed = 0.f;
     bool bReviewCaptureRequested = false;
+    float ReviewSequenceElapsed = 0.f;
+    int32 ReviewSequenceStage = 0;
 #endif
 
     bool StartCue(FName CueId, const FVector& RelativeTarget, bool bReview);

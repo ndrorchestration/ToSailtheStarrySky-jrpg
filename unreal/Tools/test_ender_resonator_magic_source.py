@@ -83,6 +83,17 @@ class ResonatorReviewTests(unittest.TestCase):
         self.assertIn("#if WITH_EDITOR", self.cpp)
         self.assertIn("bReviewCaptureRequested = false;", self.header)
 
+    def test_explicit_review_only_three_phase_gpu_capture(self):
+        self.assertIn('TSTSSResonatorCaptureSequence', self.cpp)
+        self.assertIn('bReviewInstance && PreviewCueId', self.cpp)
+        self.assertIn('ReviewSequenceStage < 3', self.cpp)
+        self.assertIn('2.8f, 3.35f, 3.9f', self.cpp)
+        self.assertIn('!FScreenshotRequest::IsScreenshotRequested()', self.cpp)
+        self.assertIn('TSTSS_RESONATOR_SEQUENCE_CAPTURE', self.cpp)
+        self.assertIn('ReviewSequenceStage = 0;', self.header)
+        self.assertIn('ReviewSequenceElapsed = 0.f;', self.header)
+        self.assertIn('#if WITH_EDITOR', self.cpp)
+
     def test_pulse_is_one_expanding_spherical_shell_not_latitude_stacks(self):
         self.assertIn("const float Phase = (Style == 0) ? T :", self.cpp)
         self.assertIn("FVector(CosA, SinA, 0.f)", self.cpp)

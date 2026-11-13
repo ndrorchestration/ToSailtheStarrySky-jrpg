@@ -192,6 +192,23 @@ void ATSTSSResonatorVfxActor::Tick(float DeltaSeconds)
                 FScreenshotRequest::IsScreenshotRequested() ? 1 : 0);
         }
     }
+    // Explicit opt-in time-series proof; no ordinary combat or non-Editor effect.
+    if (bReviewInstance && PreviewCueId == FName(TEXT("VFX.Ender.ResonantPulse")) &&
+        FParse::Param(FCommandLine::Get(), TEXT("TSTSSResonatorCaptureSequence")) &&
+        ReviewSequenceStage < 3)
+    {
+        ReviewSequenceElapsed += FMath::Max(0.f, DeltaSeconds);
+        static constexpr float ReviewSampleSeconds[3] = {2.8f, 3.35f, 3.9f};
+        if (ReviewSequenceElapsed >= ReviewSampleSeconds[ReviewSequenceStage] &&
+            !FScreenshotRequest::IsScreenshotRequested())
+        {
+            UE_LOG(LogTemp, Display,
+                TEXT("TSTSS_RESONATOR_SEQUENCE_CAPTURE stage=%d elapsed=%.3f cue_age=%.3f duration=%.3f"),
+                ReviewSequenceStage, ReviewSequenceElapsed, Age, Duration);
+            FScreenshotRequest::RequestScreenshot(false, true);
+            ++ReviewSequenceStage;
+        }
+    }
 #endif
     Age += FMath::Max(0.f, DeltaSeconds);
     if (Age >= Duration)
