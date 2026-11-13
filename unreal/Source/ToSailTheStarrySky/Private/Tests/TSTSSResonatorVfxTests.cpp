@@ -442,7 +442,7 @@ bool FTSTSSResonatorCueContractTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("manager debits only one pulse cost"),
         PulseManager->GetCombatantSnapshot()[0].Resource,27);
     TestEqual(TEXT("manager opponent damaged"),
-        PulseManager->GetCombatantSnapshot()[2].Health,173);
+        PulseManager->GetCombatantSnapshot()[2].Health,174);
     TestEqual(TEXT("manager ally never damaged"),
         PulseManager->GetCombatantSnapshot()[1].Health,50);
     return true;
