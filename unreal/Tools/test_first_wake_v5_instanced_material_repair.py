@@ -40,7 +40,7 @@ class V5InstancedMaterialSafety(unittest.TestCase):
             "get_dirty_content_packages()",
             "sha256(SOURCE_MAP)",
             "before_paths",
-            "after_paths.issubset(allowed)",
+            "(after_paths - {editor_config}).issubset(allowed)",
             'result["status"]' if False else '"source_maps_edited": False',
             '"creator_approved": False',
         ):
