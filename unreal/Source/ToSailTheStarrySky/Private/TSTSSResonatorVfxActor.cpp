@@ -243,9 +243,20 @@ void ATSTSSResonatorVfxActor::Tick(float DeltaSeconds)
             {
                 if (!bReviewSweepCameraMoved)
                 {
+                    // During opt-in capture, show only the selected review actor
+                    // so distant grid neighbors cannot masquerade as its particles.
+                    // HiddenInGame is transient, never saved to a map or asset.
+                    for (TActorIterator<ATSTSSResonatorVfxActor> It(GetWorld()); It; ++It)
+                    {
+                        if (It->bReviewInstance)
+                        {
+                            It->SetActorHiddenInGame(It->PreviewCueId != ReviewCues[ReviewSweepIndex]);
+                        }
+                    }
                     const FVector Aim = Selected->GetActorLocation() + FVector(0.f, 0.f, 95.f);
-                    const FVector Location = Selected->GetActorLocation() + FVector(0.f, -750.f, 330.f);
+                    const FVector Location = Selected->GetActorLocation() + FVector(0.f, -610.f, 270.f);
                     Camera->SetActorLocationAndRotation(Location, (Aim - Location).Rotation());
+                    Controller->SetViewTarget(Camera);
                     bReviewSweepCameraMoved = true;
                     ReviewSweepCameraMovedAt = ReviewSweepElapsed;
                     UE_LOG(LogTemp, Display, TEXT("TSTSS_RESONATOR_SWEEP_FOCUS stage=%d cue=%s"),
