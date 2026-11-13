@@ -1,4 +1,5 @@
 #include "TSTSSBattleSkillSystem.h"
+#include "Combat/TSTSSPulseAreaMath.h"
 
 namespace
 {
@@ -308,18 +309,13 @@ bool FTSTSSBattleSkillSystem::TryUseResonantPulseArea(
     if (!Center || !CasterSide || *CasterSide != PartyFaction)
         return false;
 
+    // Reuse precisely the portable comparator tested by the engine-free
+    // C++ executable. Faction and learned-skill authority stay in Unreal.
     const auto ValidPoint = [](const FVector& P) -> bool
     {
-        constexpr double MaxCm = 100000000.0;
-        return FMath::IsFinite(P.X) && FMath::IsFinite(P.Y) &&
-            FMath::IsFinite(P.Z) &&
-            FMath::Abs(P.X) <= MaxCm && FMath::Abs(P.Y) <= MaxCm &&
-            FMath::Abs(P.Z) <= MaxCm;
+        return TSTSSPulseAreaMath::IsValidWorldPosition(P.X, P.Y, P.Z);
     };
     if (!ValidPoint(*Center)) return false;
-
-    const double RadiusSquared =
-        ResonantPulseRadiusCm * ResonantPulseRadiusCm;
     TArray<FName> Affected;
     TSet<FName> Seen;
     for (const FTSTSSCombatant& Unit : State.Combat.Roster)
@@ -332,7 +328,10 @@ bool FTSTSSBattleSkillSystem::TryUseResonantPulseArea(
             return false;
         Seen.Add(Unit.CharacterId);
         if (*Side == OpponentFaction && Unit.Health > 0 &&
-            FVector::DistSquared(*Center, *Point) <= RadiusSquared)
+            TSTSSPulseAreaMath::WithinSphere(
+                Center->X, Center->Y, Center->Z,
+                Point->X, Point->Y, Point->Z,
+                ResonantPulseRadiusCm))
         {
             Affected.Add(Unit.CharacterId);
         }
