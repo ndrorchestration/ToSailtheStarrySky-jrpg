@@ -231,14 +231,29 @@ bool FTSTSSResonatorCueContractTest::RunTest(const FString& Parameters)
 
     FTSTSSBattleSkillState AfterPulse;
     FTSTSSBattleSkillCue PulseCue;
-    if (!TestTrue(TEXT("Resonant Pulse admitted via actual spell executor"),
+    TMap<FName,FVector> Positions;
+    Positions.Add(TEXT("Ender"),FVector(0.f,0.f,0.f));
+    Positions.Add(TEXT("Ionia"),FVector(0.f,150.f,0.f)); // Ally inside sphere.
+    Positions.Add(TEXT("Foe"),FVector(450.f,0.f,0.f));
+    TArray<FName> PulseTargets;
+    TestFalse(TEXT("legacy single-target Pulse MUST NOT execute"),
         FTSTSSBattleSkillSystem::TryUseRow(
             AfterIonia,Learned,Sides,TEXT("Party"),TEXT("Opponents"),
             TEXT("Ender"),TEXT("Foe"),Pulse.SkillId,Pulse,
-            AfterPulse,PulseCue))) return false;
-    TestEqual(TEXT("Pulse spend 3 MP"),AfterPulse.Combat.Roster[0].Resource,22);
-    TestEqual(TEXT("Pulse damage after base enemy defense"),
+            AfterPulse,PulseCue));
+    if (!TestTrue(TEXT("Resonant Pulse admitted as caster-centered enemy PBAoE"),
+        FTSTSSBattleSkillSystem::TryUseResonantPulseArea(
+            AfterIonia,Learned,Sides,TEXT("Party"),TEXT("Opponents"),
+            TEXT("Ender"),Pulse,Positions,AfterPulse,PulseCue,PulseTargets)))
+        return false;
+    TestEqual(TEXT("Pulse spend exactly 3 MP"),AfterPulse.Combat.Roster[0].Resource,22);
+    TestEqual(TEXT("Pulse advances exactly one accepted turn"),
+        AfterPulse.Combat.AcceptedActions,AfterIonia.Combat.AcceptedActions+1);
+    TestEqual(TEXT("Pulse damages only in-radius enemy"),
         AfterPulse.Combat.Roster[1].Health,173);
+    TestEqual(TEXT("Pulse does not hurt Ionia inside sphere"),
+        AfterPulse.Combat.Roster[2].Health,AfterIonia.Combat.Roster[2].Health);
+    TestEqual(TEXT("one enemy hit in three-combatant review"),PulseTargets.Num(),1);
     TestEqual(TEXT("Pulse exact accepted VFX"),
         PulseCue.VfxCueId,FName(TEXT("VFX.Ender.ResonantPulse")));
     TestTrue(TEXT("Pulse VFX allowed by accepted-cue contract"),
@@ -266,8 +281,13 @@ bool FTSTSSResonatorCueContractTest::RunTest(const FString& Parameters)
             Cast(Temporary,TEXT("Ionia"),TEXT("Foe"),IoniaTap,Next))) return false;
         if (I==0)
         {
-            if (!TestTrue(TEXT("Ender can attack on next round"),
-                Cast(Next,TEXT("Ender"),TEXT("Foe"),Pulse,Temporary))) return false;
+            FTSTSSBattleSkillCue NextPulseCue;
+            TArray<FName> NextPulseTargets;
+            if (!TestTrue(TEXT("Ender can recast area Pulse next round"),
+                FTSTSSBattleSkillSystem::TryUseResonantPulseArea(
+                    Next,Learned,Sides,TEXT("Party"),TEXT("Opponents"),
+                    TEXT("Ender"),Pulse,Positions,Temporary,
+                    NextPulseCue,NextPulseTargets))) return false;
             Next=MoveTemp(Temporary);
         }
     }
@@ -277,6 +297,92 @@ bool FTSTSSResonatorCueContractTest::RunTest(const FString& Parameters)
         Next.ActivePhysicalDefenseBuffs.Contains(TEXT("Ionia")));
     TestFalse(TEXT("Ender has no lingering Centering"),
         Next.ActivePhysicalDefenseBuffs.Contains(TEXT("Ender")));
+
+    // Multi-enemy spatial controls: one cost, one turn, never harm allies,
+    // never hit out-of-range enemies and reject missing/worldless geometry.
+    FTSTSSCombatant Near=Enemy;
+    Near.CharacterId=TEXT("FoeNear"); Near.Health=90; Near.MaxHealth=90;
+    Near.Defense=1;
+    FTSTSSCombatant Far=Near;
+    Far.CharacterId=TEXT("FoeFar");
+    FTSTSSBattleSkillState WideStart;
+    if (!TestTrue(TEXT("wide encounter initialized"),
+        FTSTSSCombatTurns::TryBegin(
+            {Ender,Ionia,Enemy,Near,Far},
+            {TEXT("Ender"),TEXT("Ionia"),TEXT("Foe"),
+             TEXT("FoeNear"),TEXT("FoeFar")},WideStart.Combat))) return false;
+    TMap<FName,FName> WideFactions=Sides;
+    WideFactions.Add(TEXT("FoeNear"),TEXT("Opponents"));
+    WideFactions.Add(TEXT("FoeFar"),TEXT("Opponents"));
+    TMap<FName,FVector> WidePositions=Positions;
+    WidePositions.Add(TEXT("FoeNear"),FVector(0.f,0.f,500.f));
+    WidePositions.Add(TEXT("FoeFar"),FVector(601.f,0.f,0.f));
+    FTSTSSBattleSkillState WideAfter;
+    FTSTSSBattleSkillCue WideCue;
+    TArray<FName> WideTargets;
+    if (!TestTrue(TEXT("Pulse hits multiple foes from full 3D distance"),
+        FTSTSSBattleSkillSystem::TryUseResonantPulseArea(
+            WideStart,Learned,WideFactions,TEXT("Party"),TEXT("Opponents"),
+            TEXT("Ender"),Pulse,WidePositions,WideAfter,WideCue,WideTargets)))
+        return false;
+    TestEqual(TEXT("two enemies within radius hit"),WideTargets.Num(),2);
+    TestEqual(TEXT("stable first target by name"),WideTargets[0],FName(TEXT("Foe")));
+    TestEqual(TEXT("Ender MP cost not multiplied by number of foes"),
+        WideAfter.Combat.Roster[0].Resource,27);
+    TestEqual(TEXT("Pulse accepts one turn with two enemies"),
+        WideAfter.Combat.AcceptedActions,1);
+    TestEqual(TEXT("Ender own HP unchanged"),WideAfter.Combat.Roster[0].Health,50);
+    TestEqual(TEXT("Ionia inside radius takes no damage"),
+        WideAfter.Combat.Roster[1].Health,50);
+    TestEqual(TEXT("first enemy takes nonphysical 6+2-2 damage"),
+        WideAfter.Combat.Roster[2].Health,174);
+    TestEqual(TEXT("second in-radius enemy takes full spell damage"),
+        WideAfter.Combat.Roster[3].Health,83);
+    TestEqual(TEXT("out-of-radius enemy unaffected"),
+        WideAfter.Combat.Roster[4].Health,90);
+
+    TMap<FName,FVector> MissingPosition=WidePositions;
+    MissingPosition.Remove(TEXT("FoeNear"));
+    FTSTSSBattleSkillState Preserved=WideAfter;
+    FTSTSSBattleSkillCue PreservedCue;
+    PreservedCue.VfxCueId=TEXT("PreservedCue");
+    TArray<FName> PreservedTargets{TEXT("Sentinel")};
+    TestFalse(TEXT("missing enemy coordinate refuses entire cast"),
+        FTSTSSBattleSkillSystem::TryUseResonantPulseArea(
+            WideStart,Learned,WideFactions,TEXT("Party"),TEXT("Opponents"),
+            TEXT("Ender"),Pulse,MissingPosition,Preserved,
+            PreservedCue,PreservedTargets));
+    TestEqual(TEXT("failed area cast preserves MP ledger"),
+        Preserved.Combat.Roster[0].Resource,27);
+    TestEqual(TEXT("failed area cast preserves cue"),
+        PreservedCue.VfxCueId,FName(TEXT("PreservedCue")));
+    TestEqual(TEXT("failed area cast preserves targets"),
+        PreservedTargets[0],FName(TEXT("Sentinel")));
+
+    TMap<FName,FVector> OutOfReach=WidePositions;
+    OutOfReach.Add(TEXT("Foe"),FVector(601.f,0.f,0.f));
+    OutOfReach.Add(TEXT("FoeNear"),FVector(0.f,0.f,601.f));
+    TestFalse(TEXT("no in-range enemies must not charge MP or skip a turn"),
+        FTSTSSBattleSkillSystem::TryUseResonantPulseArea(
+            WideStart,Learned,WideFactions,TEXT("Party"),TEXT("Opponents"),
+            TEXT("Ender"),Pulse,OutOfReach,Preserved,
+            PreservedCue,PreservedTargets));
+
+    FTSTSSBattleSkillKnowledge Unlearned=Learned;
+    Unlearned.LearnedByActor.FindOrAdd(TEXT("Ender")).Remove(Pulse.SkillId);
+    TestFalse(TEXT("area shape cannot bypass learned skill authorization"),
+        FTSTSSBattleSkillSystem::TryUseResonantPulseArea(
+            WideStart,Unlearned,WideFactions,TEXT("Party"),TEXT("Opponents"),
+            TEXT("Ender"),Pulse,WidePositions,Preserved,
+            PreservedCue,PreservedTargets));
+
+    FTSTSSBattleSkillState LowMP=WideStart;
+    LowMP.Combat.Roster[0].Resource=2;
+    TestFalse(TEXT("area spell insufficient MP fails atomically"),
+        FTSTSSBattleSkillSystem::TryUseResonantPulseArea(
+            LowMP,Learned,WideFactions,TEXT("Party"),TEXT("Opponents"),
+            TEXT("Ender"),Pulse,WidePositions,Preserved,
+            PreservedCue,PreservedTargets));
 
     // The public combat-manager component is the production-facing authority.
     // It must report effective defense without forging persistent stats.
@@ -309,6 +415,11 @@ bool FTSTSSResonatorCueContractTest::RunTest(const FString& Parameters)
     Cmd.SourceParticipantId=TEXT("Ender");
     Cmd.TargetParticipantId=TEXT("Ender");
     Cmd.SkillId=Centering.SkillId;
+    FTSS_CombatCommand LegacyPulse=Cmd;
+    LegacyPulse.SkillId=Pulse.SkillId;
+    LegacyPulse.TargetParticipantId=TEXT("Foe");
+    TestFalse(TEXT("combat manager disallows legacy targeted Pulse"),
+        Manager->SubmitCommand(LegacyPulse));
     if (!TestTrue(TEXT("manager admits Centering on actual turn"),
         Manager->SubmitCommand(Cmd))) return false;
     TestEqual(TEXT("manager reports Ionia's three-round status"),
@@ -317,6 +428,23 @@ bool FTSTSSResonatorCueContractTest::RunTest(const FString& Parameters)
         Manager->GetCenteringEffectiveDefense(TEXT("Ionia")),7);
     TestEqual(TEXT("manager never buffs an absent Lyra"),
         Manager->GetCenteringRoundsRemaining(TEXT("Lyra")),0);
+
+    UTSS_CombatTurnManager* PulseManager=NewObject<UTSS_CombatTurnManager>(
+        GetTransientPackage());
+    PulseManager->SkillTable=ReviewSkills;
+    if (!TestTrue(TEXT("separate pulse area manager initialized"),
+        PulseManager->InitializeEncounter({PartyEnder,PartyIonia},
+            {TEXT("Ender"),TEXT("Ionia")},{BattleFoe}))) return false;
+    FTSS_CombatCommand SpatialPulse=LegacyPulse;
+    SpatialPulse.TargetParticipantId=TEXT("Ender"); // caster-centered
+    if (!TestTrue(TEXT("manager routes admitted caster-centered Pulse area"),
+        PulseManager->SubmitResonantPulseArea(SpatialPulse,Positions))) return false;
+    TestEqual(TEXT("manager debits only one pulse cost"),
+        PulseManager->GetCombatantSnapshot()[0].Resource,27);
+    TestEqual(TEXT("manager opponent damaged"),
+        PulseManager->GetCombatantSnapshot()[2].Health,173);
+    TestEqual(TEXT("manager ally never damaged"),
+        PulseManager->GetCombatantSnapshot()[1].Health,50);
     return true;
 }
 
