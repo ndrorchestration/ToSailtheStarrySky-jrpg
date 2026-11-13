@@ -112,6 +112,35 @@ def make_level():
         # Dedicated review camera is the view target in isolated standalone play;
         # without auto-activation the nine-effect stage may not be framed.
         camera.set_editor_property("auto_activate_for_player", unreal.AutoReceiveInput.PLAYER0)
+    # Neutral, non-canonical contrast/scale calibration stage for screenshots.
+    # No First Wake gameplay, collisions, NPCs, or ship assets are added.
+    mesh = unreal.EditorAssetLibrary.load_asset("/Engine/BasicShapes/Cube.Cube")
+    if not mesh:
+        raise RuntimeError("Missing engine cube calibration mesh")
+    floor = subsystem.spawn_actor_from_class(unreal.StaticMeshActor,
+        unreal.Vector(0, 0, -95), unreal.Rotator(0, 0, 0))
+    if not floor:
+        raise RuntimeError("Could not create calibration floor")
+    floor.set_actor_label("REVIEW CALIBRATION - floor")
+    floor.get_editor_property("static_mesh_component").set_static_mesh(mesh)
+    floor.set_actor_scale3d(unreal.Vector(44, 44, 0.3))
+    floor.get_editor_property("static_mesh_component").set_collision_enabled(
+        unreal.CollisionEnabled.NO_COLLISION)
+    key = subsystem.spawn_actor_from_class(unreal.DirectionalLight,
+        unreal.Vector(0, 0, 750), unreal.Rotator(-45, 25, 0))
+    if not key:
+        raise RuntimeError("Could not create calibration key light")
+    key.set_actor_label("REVIEW CALIBRATION - key light")
+    key.get_component_by_class(unreal.DirectionalLightComponent).set_editor_property(
+        "intensity", 30000.0)
+    fill = subsystem.spawn_actor_from_class(unreal.PointLight,
+        unreal.Vector(0, -300, 550), unreal.Rotator(0, 0, 0))
+    if not fill:
+        raise RuntimeError("Could not create calibration fill light")
+    fill.set_actor_label("REVIEW CALIBRATION - fill light")
+    fill_component = fill.get_component_by_class(unreal.PointLightComponent)
+    fill_component.set_editor_property("intensity", 60000.0)
+    fill_component.set_editor_property("attenuation_radius", 4500.0)
     if not unreal.EditorLevelLibrary.save_current_level():
         raise RuntimeError("Review map save failed")
     unreal.log("Created isolated cue preview map: " + MAP_PATH)

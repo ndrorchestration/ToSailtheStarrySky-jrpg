@@ -63,6 +63,15 @@ class ResonatorReviewTests(unittest.TestCase):
         cls.header = HEADER.read_text(encoding="utf-8")
         cls.executor = SKILLS.read_text(encoding="utf-8")
 
+    def test_review_stage_is_isolated_noncolliding_and_reproducible(self):
+        builder = (UE / "Tools/build_ender_resonator_preview.py").read_text(encoding="utf-8")
+        for label in ("REVIEW CALIBRATION - floor",
+                      "REVIEW CALIBRATION - key light",
+                      "REVIEW CALIBRATION - fill light"):
+            self.assertIn(label, builder)
+        self.assertIn("unreal.CollisionEnabled.NO_COLLISION", builder)
+        self.assertIn('"/Engine/BasicShapes/Cube.Cube"', builder)
+
     def test_delayed_capture_is_editor_only_and_review_opt_in(self):
         self.assertIn("TSTSSResonatorCapture", self.cpp)
         self.assertIn("bReviewInstance && !bReviewCaptureRequested", self.cpp)
