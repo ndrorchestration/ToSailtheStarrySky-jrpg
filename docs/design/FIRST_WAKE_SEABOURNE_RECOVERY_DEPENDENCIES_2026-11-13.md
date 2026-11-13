@@ -39,3 +39,20 @@ Documentation only. No runtime state machine, map asset, native test, save forma
 - Native automation TSTSS.FirstWake: 8/8 PASS, 0 failures, editor exit 0 (local log unreal/Saved/SeabourneRecoveryFirstWakeNative_20261113.log; not committed).
 - UNVERIFIED: physical ship configuration switch, rendered transformation, actual sailing gameplay, PIE walkthrough, map asset renaming, or creator visual approval. Ship-controller code is not present in this checkout; the gate is available to future Blueprint/controllers but cannot yet block unknown external switching code.
 - Test runner changes to DefaultEngine.ini and DefaultInput.ini were reverted as editor side effects.
+
+## 2026-11-13 ship preview actor integration — isolated follow-on
+
+Reused the established AAureateWakePreviewActor implementation from the local historical ship-art review checkout (historical source head e336a7759f751cfdabf0cc0444e0817eaf6ae2f9) instead of creating a competing geometry/transition controller. Its four wing components, two hydrofoils, stable legacy C++ enum IDs, approved display spellings and optional artist-supplied review mesh hooks are preserved. The default BasicShapes remain noncanonical geometric proxies. No approved art asset was promoted or imported.
+
+- Added BindReviewStory(UTSTSSFirstWakeState*) to the existing preview actor with fail-closed RequestForm: unbound/unstated, pre-splashdown Seabourne, post-splashdown Skybourne, Submersible and Starbourne requests are rejected. The old bAllowOrbiterPreview debug flag cannot bypass the story gate.
+- Upon story binding following save/travel, the ship snaps to the authorized geometry; if story advances during an active preview it can articulate the wings and deploy hydrofoils into Seabourne; a revoked in-progress transition is cancelled.
+- ATSTSSExplorerCharacter::BeginPlay now binds any already placed Aureate preview actor found in a scoped local standalone TSTSS review scene to the same First Wake state that was restored through the existing shoreline route. This does NOT spawn an actor, add or change any UMAP, or grant a ship movement mode.
+- After a current review actor is placed, the scene can exercise the real four-wing/two-hydrofoil component transitions while the story remains authoritative.
+- The legacy VS05_DenithFuelShanty review map has a runtime-only in-world sign substitution targeting the existing FuelShop actor label: 'COASTAL RECOVERY | Survey the ship'. This substitution has compiled but remains unverified by a rendered/PIE scene inspection. Existing saved maps and asset labels remain unchanged.
+
+Native exact-source verification on this follow-on working tree:
+- Unreal Engine 5.8 Editor build: PASS, log unreal/Saved/AureateDockReviewSignageBuild_20261113.log (local, ignored).
+- Native automation TSTSS.AureateWake: 2/2 PASS, zero failure markers, editor exit 0; log unreal/Saved/SeabourneFinal_TSTSS_AureateWake_20261113.log (local, ignored). Includes form-name, geometry, wing articulation, hydrofoil deployment, denied mode, restored state and transition-revocation checks.
+- Native automation TSTSS.FirstWake: 8/8 PASS, zero failure markers, editor exit 0; log unreal/Saved/SeabourneFinal_TSTSS_FirstWake_20261113.log (local, ignored).
+
+Still blocked: no Aureate preview actor is placed in the shipped/review maps in this integration checkout, so no native PIE or render proof of its visual presence. Authentic approved visual geometry, boat locomotion/buoyancy, player helm, ocean navigation, ship menu interaction, coastal story content, audio/animation review and final art approval remain distinct pending work. Do not describe this as a finished ship, playable sailing, or cinematic acceptance.
