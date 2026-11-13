@@ -63,6 +63,10 @@ class ResonatorReviewTests(unittest.TestCase):
         cls.header = HEADER.read_text(encoding="utf-8")
         cls.executor = SKILLS.read_text(encoding="utf-8")
 
+    def test_review_material_supports_instanced_static_meshes(self):
+        builder = (UE / "Tools/build_ender_resonator_preview.py").read_text(encoding="utf-8")
+        self.assertIn("set_base_material_usage(material, unreal.MaterialUsage.MATUSAGE_INSTANCED_STATIC_MESHES, True)", builder)
+
     def test_isolated_review_camera_auto_activates_without_gameplay_changes(self):
         builder = (UE / "Tools/build_ender_resonator_preview.py").read_text(encoding="utf-8")
         self.assertIn('camera.set_editor_property("auto_activate_for_player", unreal.AutoReceiveInput.PLAYER0)', builder)

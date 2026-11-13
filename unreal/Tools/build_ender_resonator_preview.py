@@ -50,6 +50,8 @@ def make_material():
     opacity = edit.create_material_expression(material, unreal.MaterialExpressionConstant, -200, 260)
     opacity.set_editor_property("r", 1.0)
     edit.connect_material_property(opacity, "", unreal.MaterialProperty.MP_OPACITY)
+    # Required by UInstancedStaticMeshComponent renderer; without this, runtime falls back to DefaultMaterial.
+    edit.set_base_material_usage(material, unreal.MaterialUsage.MATUSAGE_INSTANCED_STATIC_MESHES, True)
     edit.recompile_material(material)
     if not unreal.EditorAssetLibrary.save_loaded_asset(material):
         raise RuntimeError("Material save failed")
