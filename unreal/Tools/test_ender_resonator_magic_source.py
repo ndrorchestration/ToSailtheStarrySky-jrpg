@@ -63,6 +63,11 @@ class ResonatorReviewTests(unittest.TestCase):
         cls.header = HEADER.read_text(encoding="utf-8")
         cls.executor = SKILLS.read_text(encoding="utf-8")
 
+    def test_isolated_review_camera_auto_activates_without_gameplay_changes(self):
+        builder = (UE / "Tools/build_ender_resonator_preview.py").read_text(encoding="utf-8")
+        self.assertIn('camera.set_editor_property("auto_activate_for_player", unreal.AutoReceiveInput.PLAYER0)', builder)
+        self.assertIn("Review overview - not a gameplay camera", builder)
+
     def test_unreal_datatable_import_has_explicit_optional_fields(self):
         # Missing JSON fields generate Unreal CSVImportFactory warnings even when native C++ defaults exist.
         for row in self.rows:

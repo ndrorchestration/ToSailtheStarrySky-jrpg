@@ -107,6 +107,9 @@ def make_level():
         unreal.Vector(0, -2200, 1050), unreal.Rotator(-25, 90, 0))
     if camera:
         camera.set_actor_label("Review overview - not a gameplay camera")
+        # Dedicated review camera is the view target in isolated standalone play;
+        # without auto-activation the nine-effect stage may not be framed.
+        camera.set_editor_property("auto_activate_for_player", unreal.AutoReceiveInput.PLAYER0)
     if not unreal.EditorLevelLibrary.save_current_level():
         raise RuntimeError("Review map save failed")
     unreal.log("Created isolated cue preview map: " + MAP_PATH)
