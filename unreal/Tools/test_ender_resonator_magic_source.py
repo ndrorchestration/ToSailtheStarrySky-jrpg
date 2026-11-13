@@ -87,6 +87,22 @@ class ResonatorReviewTests(unittest.TestCase):
         builder = (UE / "Tools/build_ender_resonator_preview.py").read_text(encoding="utf-8")
         self.assertIn("set_base_material_usage(material, unreal.MaterialUsage.MATUSAGE_INSTANCED_STATIC_MESHES, True)", builder)
 
+    def test_resonant_pulse_closeup_is_separate_and_lit_for_review(self):
+        builder = (UE / "Tools/build_ender_resonator_preview.py").read_text(encoding="utf-8")
+        for token in (
+            "REVIEW CLOSEUP - Resonant Pulse",
+            "closeup_location = unreal.Vector(-880, -1500, 430)",
+            "closeup_target = unreal.Vector(-880, -820, 125)",
+            'camera.set_editor_property("auto_activate_for_player", unreal.AutoReceiveInput.DISABLED)',
+            'closeup.set_editor_property("auto_activate_for_player", unreal.AutoReceiveInput.PLAYER0)',
+            '"field_of_view", 70.0',
+            '"intensity", 1500.0',
+            '"intensity", 1200.0',
+        ):
+            self.assertIn(token, builder)
+        self.assertNotIn('"intensity", 30000.0', builder)
+        self.assertNotIn('"intensity", 60000.0', builder)
+
     def test_review_camera_looks_at_stage_not_upward(self):
         builder = (UE / "Tools/build_ender_resonator_preview.py").read_text(encoding="utf-8")
         self.assertIn("review_camera_location = unreal.Vector(0, -2200, 1050)", builder)
@@ -98,7 +114,7 @@ class ResonatorReviewTests(unittest.TestCase):
 
     def test_isolated_review_camera_auto_activates_without_gameplay_changes(self):
         builder = (UE / "Tools/build_ender_resonator_preview.py").read_text(encoding="utf-8")
-        self.assertIn('camera.set_editor_property("auto_activate_for_player", unreal.AutoReceiveInput.PLAYER0)', builder)
+        self.assertIn('closeup.set_editor_property("auto_activate_for_player", unreal.AutoReceiveInput.PLAYER0)', builder)
         self.assertIn("Review overview - not a gameplay camera", builder)
 
     def test_unreal_datatable_import_has_explicit_optional_fields(self):

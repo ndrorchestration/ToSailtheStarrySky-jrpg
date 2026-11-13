@@ -116,7 +116,19 @@ def make_level():
         camera.set_actor_label("Review overview - not a gameplay camera")
         # Dedicated review camera is the view target in isolated standalone play;
         # without auto-activation the nine-effect stage may not be framed.
-        camera.set_editor_property("auto_activate_for_player", unreal.AutoReceiveInput.PLAYER0)
+        camera.set_editor_property("auto_activate_for_player", unreal.AutoReceiveInput.DISABLED)
+    # Keep the wide 3 x 3 camera available; default to an opt-in close-up of
+    # Resonant Pulse so its small spatial meshes can be visually judged.
+    closeup_location = unreal.Vector(-880, -1500, 430)
+    closeup_target = unreal.Vector(-880, -820, 125)
+    closeup = subsystem.spawn_actor_from_class(camera_cls, closeup_location,
+        unreal.MathLibrary.find_look_at_rotation(closeup_location, closeup_target))
+    if not closeup:
+        raise RuntimeError("Could not create isolated Resonant Pulse close-up camera")
+    closeup.set_actor_label("REVIEW CLOSEUP - Resonant Pulse")
+    closeup.get_editor_property("camera_component").set_editor_property(
+        "field_of_view", 70.0)
+    closeup.set_editor_property("auto_activate_for_player", unreal.AutoReceiveInput.PLAYER0)
     # Neutral, non-canonical contrast/scale calibration stage for screenshots.
     # No First Wake gameplay, collisions, NPCs, or ship assets are added.
     mesh = unreal.EditorAssetLibrary.load_asset("/Engine/BasicShapes/Cube.Cube")
@@ -140,14 +152,14 @@ def make_level():
         raise RuntimeError("Could not create calibration key light")
     key.set_actor_label("REVIEW CALIBRATION - key light")
     key.get_component_by_class(unreal.DirectionalLightComponent).set_editor_property(
-        "intensity", 30000.0)
+        "intensity", 1500.0)
     fill = subsystem.spawn_actor_from_class(unreal.PointLight,
         unreal.Vector(0, -300, 550), unreal.Rotator(0, 0, 0))
     if not fill:
         raise RuntimeError("Could not create calibration fill light")
     fill.set_actor_label("REVIEW CALIBRATION - fill light")
     fill_component = fill.get_component_by_class(unreal.PointLightComponent)
-    fill_component.set_editor_property("intensity", 60000.0)
+    fill_component.set_editor_property("intensity", 1200.0)
     fill_component.set_editor_property("attenuation_radius", 4500.0)
     if not unreal.EditorLevelLibrary.save_current_level():
         raise RuntimeError("Review map save failed")
