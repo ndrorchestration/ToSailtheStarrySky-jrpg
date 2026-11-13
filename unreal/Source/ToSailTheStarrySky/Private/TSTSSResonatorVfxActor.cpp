@@ -177,6 +177,9 @@ bool ATSTSSResonatorVfxActor::StartCue(FName CueId, const FVector& RelativeTarge
         Dynamic->SetScalarParameterValue(TEXT("Glow"), 14.f);
     }
     CastLight->SetLightColor(CueTint);
+    CastLight->SetAttenuationRadius(Style == 0
+        ? static_cast<float>(FTSTSSBattleSkillSystem::ResonantPulseRadiusCm)
+        : 540.f);
     UpdateVisuals(0.f);
     return true;
 }
@@ -236,6 +239,55 @@ void ATSTSSResonatorVfxActor::UpdateVisuals(float TimeSeconds)
         bAtTarget ? TargetOffset : FMath::Lerp(FVector::ZeroVector, TargetOffset, TravelT);
     const FVector CenterRaised = Center + FVector(0.f, 0.f, 95.f);
     const float Pulse = 0.5f + 0.5f * FMath::Sin(TimeSeconds * 16.f);
+
+    if (Style == 0)
+    {
+        // Resonant Pulse is a TRUE 3D spherical expanding shockwave, never
+        // three flat concentric rings. Distribute visible points across a
+        // Fibonacci sphere; the mesh points are cosmetic and collision-free.
+        // Mechanical target admission is separately owned by
+        // FTSTSSBattleSkillSystem::TryUseResonantPulseArea.
+        const float WaveT = FMath::Clamp(T * 1.28f, 0.f, 1.f);
+        const float EaseOut = 1.f - FMath::Pow(1.f - WaveT, 3.f);
+        const float RadiusCm = FMath::Lerp(25.f,
+            static_cast<float>(FTSTSSBattleSkillSystem::ResonantPulseRadiusCm),
+            EaseOut);
+        constexpr float GoldenAngle = 2.3999632297286533f;
+        for (int32 Index = 0; Index < 72; ++Index)
+        {
+            const float H = 1.f - 2.f * (static_cast<float>(Index) + .5f) / 72.f;
+            const float Azimuth = GoldenAngle * static_cast<float>(Index);
+            const float Planar = FMath::Sqrt(FMath::Max(0.f, 1.f - H * H));
+            const FVector Unit(Planar * FMath::Cos(Azimuth),
+                Planar * FMath::Sin(Azimuth), H);
+            const FVector Point = Unit * RadiusCm;
+            const float Size = (0.045f + 0.030f * Pulse) * Visibility;
+            RingMeshes->UpdateInstanceTransform(Index,
+                FTransform(FRotator::ZeroRotator, Point, FVector(Size)),
+                false, Index == 71, true);
+        }
+        for (int32 Index = 0; Index < 32; ++Index)
+        {
+            const float H = 1.f - 2.f * (static_cast<float>(Index) + .5f) / 32.f;
+            const float Azimuth = GoldenAngle * (static_cast<float>(Index) + 0.5f)
+                + TimeSeconds * 1.4f;
+            const float Planar = FMath::Sqrt(FMath::Max(0.f, 1.f - H * H));
+            const FVector Unit(Planar * FMath::Cos(Azimuth),
+                Planar * FMath::Sin(Azimuth), H);
+            const FVector Trail = Unit * RadiusCm * (0.85f + .08f * Pulse);
+            const float Size = (0.024f + .025f * Pulse) * Visibility;
+            MoteMeshes->UpdateInstanceTransform(Index,
+                FTransform(FRotator::ZeroRotator, Trail, FVector(Size)),
+                false, Index == 31, true);
+        }
+        CoreMesh->UpdateInstanceTransform(0,
+            FTransform(FRotator::ZeroRotator, FVector::ZeroVector,
+                FVector((.10f + .06f * Pulse) * Visibility)),
+            false, true, true);
+        CastLight->SetRelativeLocation(FVector::ZeroVector);
+        CastLight->SetIntensity(2500.f * Visibility * (1.f - .45f * WaveT));
+        return;
+    }
 
     for (int32 Ring = 0; Ring < 3; ++Ring)
     {

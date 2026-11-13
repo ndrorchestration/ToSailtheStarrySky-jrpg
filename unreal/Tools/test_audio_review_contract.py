@@ -45,7 +45,7 @@ class TestAudioSourceContract(unittest.TestCase):
         with tempfile.TemporaryDirectory() as left, tempfile.TemporaryDirectory() as right:
             a, b = generate(left), generate(right)
             self.assertEqual(a, b)
-            self.assertEqual(len(a["files"]), 6)
+            self.assertEqual(len(a["files"]), 10)
             for item in a["files"]:
                 name = item["filename"]
                 path = Path(left) / name

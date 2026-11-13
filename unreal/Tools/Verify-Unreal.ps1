@@ -4,6 +4,30 @@ param(
     [string]$ExpectedHead = ''
 )
 $ErrorActionPreference = 'Stop'
+
+# The Neontic PowerShell host exposes .NET SHA-256 but may not register the
+# Get-FileHash cmdlet. Use the same cryptographic algorithm without relying on
+# shell module discovery. Failure to open/read the exact path must fail closed.
+function Get-TSTSSSha256([string]$LiteralPath) {
+    $Resolved = (Resolve-Path -LiteralPath $LiteralPath -ErrorAction Stop).Path
+    $Stream = [System.IO.File]::Open($Resolved,
+        [System.IO.FileMode]::Open,
+        [System.IO.FileAccess]::Read,
+        [System.IO.FileShare]::Read)
+    $Hasher = $null
+    try {
+        $Hasher = [System.Security.Cryptography.SHA256]::Create()
+        if ($null -eq $Hasher) { throw 'SHA-256 provider unavailable' }
+        $Digest = $Hasher.ComputeHash($Stream)
+        if ($null -eq $Digest -or $Digest.Length -ne 32) {
+            throw 'Invalid SHA-256 digest length'
+        }
+        return [System.BitConverter]::ToString($Digest).Replace('-', '')
+    } finally {
+        if ($null -ne $Hasher) { $Hasher.Dispose() }
+        $Stream.Dispose()
+    }
+}
 $Project = (Resolve-Path (Join-Path $PSScriptRoot '../ToSailTheStarrySky.uproject')).Path
 $BuildTool = Join-Path $EngineRoot 'Engine/Build/BatchFiles/Build.bat'
 $EditorCmd = Join-Path $EngineRoot 'Engine/Binaries/Win64/UnrealEditor-Cmd.exe'
@@ -157,7 +181,7 @@ foreach ($Path in $ProtectedConfigPaths) {
     $ConfigGuards += [pscustomobject]@{
         Path = $Path
         OldReadOnly = $File.IsReadOnly
-        BeforeSha256 = (Get-FileHash -LiteralPath $Path -Algorithm SHA256 -ErrorAction Stop).Hash
+        BeforeSha256 = (Get-TSTSSSha256 -LiteralPath $Path)
     }
 }
 $EditorExitCode = $null
@@ -178,7 +202,7 @@ if ($null -eq $EditorExitCode -or $EditorExitCode -ne 0) {
     throw "Unreal automation command failed ($EditorExitCode)"
 }
 foreach ($Guard in $ConfigGuards) {
-    $After = (Get-FileHash -LiteralPath $Guard.Path -Algorithm SHA256 -ErrorAction Stop).Hash
+    $After = (Get-TSTSSSha256 -LiteralPath $Guard.Path)
     if ($After -ne $Guard.BeforeSha256) {
         throw "Tracked Unreal source config changed during native automation: $($Guard.Path)"
     }
@@ -252,7 +276,7 @@ $NativeAcceptance = [ordered]@{
     source_sha = $GitHead
     unreal_version = '5.8.4'
     required_native_tests = $RequiredTests.Count
-    report_sha256 = (Get-FileHash -LiteralPath $ReportPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    report_sha256 = (Get-TSTSSSha256 -LiteralPath $ReportPath).ToLowerInvariant()
     pie_player_input = 'NOT_TESTED'
     visual_approval = 'NOT_TESTED'
 }

@@ -142,7 +142,15 @@ class CrossPathReviewContract(unittest.TestCase):
         self.assertIn("Config/DefaultInput.ini", verifier)
         self.assertIn("$ConfigGuards = @()", verifier)
         self.assertIn("OldReadOnly = $File.IsReadOnly", verifier)
-        self.assertIn("BeforeSha256 = (Get-FileHash", verifier)
+        self.assertIn("BeforeSha256 = (Get-TSTSSSha256 -LiteralPath $Path)", verifier)
+        self.assertIn("$After = (Get-TSTSSSha256 -LiteralPath $Guard.Path)", verifier)
+        self.assertIn("report_sha256 = (Get-TSTSSSha256 -LiteralPath $ReportPath)", verifier)
+        # Neontic can omit the PowerShell Get-FileHash cmdlet. This real
+        # cryptographic stream implementation retains fail-closed byte checks.
+        self.assertIn("function Get-TSTSSSha256(", verifier)
+        self.assertIn("[System.Security.Cryptography.SHA256]::Create()", verifier)
+        self.assertIn("[System.IO.File]::Open(", verifier)
+        self.assertIn("$Stream.Dispose()", verifier)
         self.assertIn(".IsReadOnly = $true", verifier)
         self.assertIn(".IsReadOnly = $Guard.OldReadOnly", verifier)
         self.assertIn("finally {", verifier)

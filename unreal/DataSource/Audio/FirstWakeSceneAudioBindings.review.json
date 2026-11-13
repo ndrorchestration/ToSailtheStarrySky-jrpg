@@ -1,0 +1,134 @@
+{
+  "schema_version": "0.1",
+  "status": "EDITOR_REVIEW_PROPOSAL_NO_ACTORS_PLACED",
+  "source_branch_parent_sha": "bb91ebbdae0cf39eaf8351923abbe103a5cdc6b8",
+  "strict_notes": "Map assets exist as review maps in stacked First Wake branch. This document does not prove any actor is instantiated, WAV imported, soundtrack licensed or PIE audible. Lyra and Starbourne gates are not altered.",
+  "scenes": [
+    {
+      "map_package": "/Game/TSTSS/Review/VerticalSlice/VS01_DenithHarbor",
+      "map_source": "unreal/Content/TSTSS/Review/VerticalSlice/VS01_DenithHarbor.umap",
+      "desired_review_actors": [
+        "ATSTSSAudioCueBankActor",
+        "ATSTSSAudioEnvironmentDirector",
+        "ATSTSSHarborAudioZone",
+        "ATSTSSFootstepAudioDirector"
+      ],
+      "desired_event_ids": [
+        "harbor.surf",
+        "harbor.gulls",
+        "harbor.market",
+        "weather.wind.gust",
+        "weather.rain.light",
+        "foley.footstep.wood",
+        "foley.footstep.stone",
+        "ui.confirm"
+      ],
+      "notes": "Prelaunch harbor; if returning later, preserve actual progression",
+      "actors_placed": false,
+      "native_playback_verified": false,
+      "mix_approved": false
+    },
+    {
+      "map_package": "/Game/TSTSS/Review/VerticalSlice/VS02_AureateInteriors",
+      "map_source": "unreal/Content/TSTSS/Review/VerticalSlice/VS02_AureateInteriors.umap",
+      "desired_review_actors": [
+        "ATSTSSAudioCueBankActor",
+        "ATSTSSFootstepAudioDirector"
+      ],
+      "desired_event_ids": [
+        "ship.engine.idle",
+        "ship.engine.unstable",
+        "ship.engine.tuned",
+        "repair.station_inspect.success",
+        "foley.footstep.metal",
+        "story.first_wake.milestone"
+      ],
+      "notes": "Engine tuning follows accepted station interactions, no false repair claim",
+      "actors_placed": false,
+      "native_playback_verified": false,
+      "mix_approved": false
+    },
+    {
+      "map_package": "/Game/TSTSS/Review/VerticalSlice/VS03_FirstWakeSky",
+      "map_source": "unreal/Content/TSTSS/Review/VerticalSlice/VS03_FirstWakeSky.umap",
+      "desired_review_actors": [
+        "ATSTSSAudioCueBankActor"
+      ],
+      "desired_event_ids": [
+        "ship.launch",
+        "ship.wings.deploy",
+        "weather.wind.gust",
+        "weather.rain.heavy",
+        "weather.storm.begin",
+        "ship.engine.unstable"
+      ],
+      "notes": "Sky launch and storm transitions; audio cannot affirm launch physics",
+      "actors_placed": false,
+      "native_playback_verified": false,
+      "mix_approved": false
+    },
+    {
+      "map_package": "/Game/TSTSS/Review/VerticalSlice/VS04_SplashdownSea",
+      "map_source": "unreal/Content/TSTSS/Review/VerticalSlice/VS04_SplashdownSea.umap",
+      "desired_review_actors": [
+        "ATSTSSAudioCueBankActor"
+      ],
+      "desired_event_ids": [
+        "water.splashdown",
+        "water.lap.hull",
+        "water.foam",
+        "weather.rain.heavy",
+        "ship.seaborne.foils"
+      ],
+      "notes": "Splashdown cue must follow physical sea-contact gate",
+      "actors_placed": false,
+      "native_playback_verified": false,
+      "mix_approved": false
+    },
+    {
+      "map_package": "/Game/TSTSS/Review/VerticalSlice/VS05_DenithFuelShanty",
+      "map_source": "unreal/Content/TSTSS/Review/VerticalSlice/VS05_DenithFuelShanty.umap",
+      "desired_review_actors": [
+        "ATSTSSAudioCueBankActor",
+        "ATSTSSAudioEnvironmentDirector",
+        "ATSTSSFootstepAudioDirector"
+      ],
+      "desired_event_ids": [
+        "harbor.market",
+        "music.shanty.clue",
+        "story.lyra.recruited",
+        "foley.footstep.wood",
+        "ui.objective"
+      ],
+      "notes": "Original shanty rights and musical-clue captions; Lyra only after explicit recruitment",
+      "actors_placed": false,
+      "native_playback_verified": false,
+      "mix_approved": false
+    },
+    {
+      "map_package": "/Game/TSTSS/Review/VerticalSlice/VS06_SplashdownShore",
+      "map_source": "unreal/Content/TSTSS/Review/VerticalSlice/VS06_SplashdownShore.umap",
+      "desired_review_actors": [
+        "ATSTSSAudioCueBankActor",
+        "ATSTSSFootstepAudioDirector"
+      ],
+      "desired_event_ids": [
+        "harbor.surf",
+        "nature.coastal.birds",
+        "foley.footstep.sand",
+        "foley.footstep.stone",
+        "water.foam"
+      ],
+      "notes": "Safe grounded shoreline Foley; no extra party availability",
+      "actors_placed": false,
+      "native_playback_verified": false,
+      "mix_approved": false
+    }
+  ],
+  "asset_bindings": {
+    "source": "UNRESOLVED",
+    "rights": "NOT_RELEASE_APPROVED",
+    "review_sounds": "10 original QA WAVs generated separately",
+    "binding_state": "UNPLACED"
+  }
+}
