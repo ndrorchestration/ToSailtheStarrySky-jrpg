@@ -37,6 +37,8 @@ RULES = {
     "only_cleanup_when_opened": 'else if (bHadPreview)',
     "discoverable_prompt": 'Engine inspection: press C near the LIFT instrument for a 4s focus view',
     "visual_return": 'PC->SetViewTargetWithBlend(this, 0.3f,',
+    "own_move_lock": 'bEngineFocusPreviewIgnoredMove = true;',
+    "own_look_lock": 'bEngineFocusPreviewIgnoredLook = true;',
     "input_restore_move": 'PC->SetIgnoreMoveInput(false);',
     "input_restore_look": 'PC->SetIgnoreLookInput(false);',
     "camera_cleanup": 'Camera->SetLifeSpan(0.6f);',
@@ -136,6 +138,15 @@ class FirstWakePlayerFocusPreviewSourceTests(unittest.TestCase):
             check_contract(self.cpp.replace("Cine->SetCurrentFocalLength(65.f);",
                                             "Cine->SetCurrentFocalLength(135.f);"),
                            self.header, self.config)
+
+    def test_unowned_input_lock_is_rejected(self):
+        for flag, rule in (("Move", "own_move_lock"), ("Look", "own_look_lock")):
+            with self.subTest(flag=flag):
+                assignment = f"bEngineFocusPreviewIgnored{flag} = true;"
+                self.assertIn(assignment, self.cpp)
+                edited = self.cpp.replace(assignment, f"/* {flag} lock ownership missing */")
+                with self.assertRaisesRegex(ValueError, rule):
+                    check_contract(edited, self.header, self.config)
 
     def test_missing_restoration_fails(self):
         with self.assertRaisesRegex(ValueError, "input_restore_move"):

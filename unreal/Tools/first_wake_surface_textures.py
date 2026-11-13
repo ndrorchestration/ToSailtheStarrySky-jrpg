@@ -312,7 +312,7 @@ def native_preflight(u):
     return sha.lower(), report, originals, cls, cloud, native_proof
 
 def weather_enum_value(u, name: str):
-    enum = getattr(u, "ETSTSSWeather", None)
+    enum = getattr(u, "TSTSSWeather", None)
     if enum is None:
         raise RuntimeError("HOLD: Unreal weather UENUM not reflected")
     spaced = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", name).upper()
@@ -326,6 +326,8 @@ def stage_scene_atmosphere(u, actor_sys, scene: str, atmosphere_class, cloud):
     """Replace ONLY the known duplicated review-level sky actor inventory."""
     if scene not in SCENE_LOOKS:
         raise RuntimeError("HOLD: missing explicit scene atmospheric recipe")
+    weather, hour, _lighting_reference = SCENE_LOOKS[scene]
+    weather_value = weather_enum_value(u, weather)
     required = set(OLD_SKY_LABELS)
     if scene == "VS01_DenithHarbor":
         required.update(HARBOR_INHERITED_LIGHTS)
@@ -343,7 +345,6 @@ def stage_scene_atmosphere(u, actor_sys, scene: str, atmosphere_class, cloud):
     for name in sorted(required):
         if not actor_sys.destroy_actor(candidates[name]):
             raise RuntimeError("HOLD: failed to remove duplicated-only sky: " + name)
-    weather, hour, _lighting_reference = SCENE_LOOKS[scene]
     actor = actor_sys.spawn_actor_from_class(
         atmosphere_class, u.Vector(0, 0, 0), u.Rotator(0, 0, 0))
     if actor is None:
@@ -351,7 +352,7 @@ def stage_scene_atmosphere(u, actor_sys, scene: str, atmosphere_class, cloud):
     actor.set_actor_label("TSTSS_SURFACE_REVIEW_" + scene + "_SingleAtmosphere")
     actor.set_editor_property("volumetric_cloud_material", cloud)
     actor.set_editor_property("initial_clock_hours", float(hour))
-    actor.set_editor_property("initial_weather", weather_enum_value(u, weather))
+    actor.set_editor_property("initial_weather", weather_value)
     actor.set_editor_property("autoplay_review_cycle", False)
     actor.set_editor_property("reduced_motion", False)
     actor.set_editor_property("low_quality", False)
