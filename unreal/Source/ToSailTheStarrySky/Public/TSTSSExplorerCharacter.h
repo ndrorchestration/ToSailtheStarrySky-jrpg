@@ -48,6 +48,7 @@ private:
     TWeakObjectPtr<class ACineCameraActor> EngineFocusPreviewCamera;
     TWeakObjectPtr<class APlayerController> EngineFocusPreviewController;
     FTimerHandle EngineFocusPreviewGuardTimer;
+    double EngineFocusPreviewStartedSeconds = 0.0;
     double EngineFocusPreviewDeadlineSeconds = 0.0;
     bool bEngineFocusPreviewOwnsCoordinatorEnable = false;
     bool bEngineFocusPreviewIgnoredMove = false;
