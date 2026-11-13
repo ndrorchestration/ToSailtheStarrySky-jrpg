@@ -53,10 +53,10 @@ bool FTSTSSFirstWakeReviewObjectiveTest::RunTest(const FString& Parameters)
         FString(TEXT("Stabilize the water landing")));
     if (!TestTrue(TEXT("Restore genuine flotation state"), State->Restore(true, ETSTSSFirstWakeBeat::FlotationConfirmed, 0x07))) return false;
     TestEqual(TEXT("Reserve investigation next"), State->GetReviewObjectiveText(),
-        FString(TEXT("Investigate the empty reserves")));
+        FString(TEXT("Survey the hull and harmonic systems")));
     TestTrue(TEXT("Chapter 1 boundary still derived from state"), State->IsChapterOneActOne());
     if (!TestTrue(TEXT("Restore empty-reserve inspection"), State->Restore(true, ETSTSSFirstWakeBeat::EmptyReserveInspected, 0x07))) return false;
-    TestEqual(TEXT("Return objective"), State->GetReviewObjectiveText(), FString(TEXT("Return to berth")));
+    TestEqual(TEXT("Return objective"), State->GetReviewObjectiveText(), FString(TEXT("Continue to the coastal survey")));
     if (!TestTrue(TEXT("Restore last review beat"), State->Restore(true, ETSTSSFirstWakeBeat::ReturnedToBerth, 0x07))) return false;
     TestEqual(TEXT("Read-only terminal cue"), State->GetReviewObjectiveText(),
         FString(TEXT("First Wake review sequence complete")));

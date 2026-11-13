@@ -27,9 +27,9 @@ FString UTSTSSFirstWakeState::GetReviewObjectiveText() const
     case ETSTSSFirstWakeBeat::SeaContact:
         return TEXT("Stabilize the water landing");
     case ETSTSSFirstWakeBeat::FlotationConfirmed:
-        return TEXT("Investigate the empty reserves");
+        return TEXT("Survey the hull and harmonic systems");
     case ETSTSSFirstWakeBeat::EmptyReserveInspected:
-        return TEXT("Return to berth");
+        return TEXT("Continue to the coastal survey");
     case ETSTSSFirstWakeBeat::ReturnedToBerth:
         return TEXT("First Wake review sequence complete");
     default:

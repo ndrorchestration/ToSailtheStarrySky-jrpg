@@ -96,7 +96,11 @@ void ShowFirstWakeReviewObjective(const UTSTSSFirstWakeState* State)
     {
         GEngine->AddOnScreenDebugMessage(
             -1, 8.f, FColor::Cyan,
-            FString::Printf(TEXT("First Wake (review): %s  [J to recall]"), *State->GetReviewObjectiveText()));
+            FString::Printf(TEXT("First Wake (review): %s%s  [J to recall]"),
+                *State->GetReviewObjectiveText(),
+                State->IsSeabourneRecoveryLocked()
+                    ? TEXT(" | Aureate Wake: Seabourne only (flight locked)")
+                    : TEXT("")));
     }
 #else
     (void)State;
@@ -359,7 +363,7 @@ void ATSTSSExplorerCharacter::BeginPlay()
                             {
                                 Sign->SetActorLabel(TEXT("TSTSS_REVIEW_ReserveCheckNotice"));
                                 Sign->GetTextRender()->SetText(
-                                    FText::FromString(TEXT("EMPTY RESERVES  |  Inspect [E]")));
+                                    FText::FromString(TEXT("SHIP SYSTEMS  |  Inspect [E]")));
                             }
                         }
                         else if (IsValid(Reserve))

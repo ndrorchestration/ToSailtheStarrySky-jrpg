@@ -119,7 +119,7 @@ FString ATSTSSMilestoneActor::GetReviewDisplayName() const
     case ETSTSSFirstWakeBeat::IoniaHired: return TEXT("SPEAK TO IONIA");
     case ETSTSSFirstWakeBeat::BoardedAureateWake: return TEXT("BOARD AUREATE WAKE");
     case ETSTSSFirstWakeBeat::EngineeringChecked: return TEXT("ENGINEERING SIGNOFF");
-    case ETSTSSFirstWakeBeat::EmptyReserveInspected: return TEXT("CHECK EMPTY RESERVES");
+    case ETSTSSFirstWakeBeat::EmptyReserveInspected: return TEXT("SURVEY SHIP SYSTEMS");
     case ETSTSSFirstWakeBeat::ReturnedToBerth: return TEXT("RETURN TO BERTH");
     default: return TEXT("REVIEW INTERACTION");
     }

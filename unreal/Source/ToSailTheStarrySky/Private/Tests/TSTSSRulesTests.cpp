@@ -34,14 +34,24 @@ bool FTSTSSFirstWakeOrderTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("Generic progression cannot forge sea contact"),
         State->AdvanceTo(ETSTSSFirstWakeBeat::SeaContact));
     TestFalse(TEXT("Prelude stays active before splashdown"), State->IsChapterOneActOne());
+    TestTrue(TEXT("Prelude allows review Skybourne"), State->IsReviewShipModeAuthorized(FName(TEXT("Skybourne"))));
+    TestFalse(TEXT("Prelude does not grant Starbourne"), State->IsReviewShipModeAuthorized(FName(TEXT("Starbourne"))));
     TestTrue(TEXT("Restored splashdown marks Chapter 1 Act 1"),
         State->Restore(true, ETSTSSFirstWakeBeat::FlotationConfirmed, 0x07));
     TestTrue(TEXT("Chapter 1 boundary survives save restoration"), State->IsChapterOneActOne());
+    TestTrue(TEXT("Splashdown locks ship to Seabourne"), State->IsSeabourneRecoveryLocked());
+    TestEqual(TEXT("Restored recovery derives Seabourne"), State->GetReviewShipMode(), FName(TEXT("Seabourne")));
+    TestTrue(TEXT("Seabourne permitted after splashdown"), State->IsReviewShipModeAuthorized(FName(TEXT("Seabourne"))));
+    TestFalse(TEXT("Skybourne denied after splashdown"), State->IsReviewShipModeAuthorized(FName(TEXT("Skybourne"))));
+    TestFalse(TEXT("Submersible denied after splashdown"), State->IsReviewShipModeAuthorized(FName(TEXT("Submersible"))));
+    TestFalse(TEXT("Starbourne denied after splashdown"), State->IsReviewShipModeAuthorized(FName(TEXT("Starbourne"))));
+    TestFalse(TEXT("Unknown ship mode denied"), State->IsReviewShipModeAuthorized(FName(TEXT("Unknown"))));
     TestTrue(TEXT("Post-splashdown reserve inspection advances in Chapter 1"),
         State->AdvanceTo(ETSTSSFirstWakeBeat::EmptyReserveInspected));
     TestTrue(TEXT("Chapter 1 remains active during recovery"), State->IsChapterOneActOne());
     State->Reset();
     TestFalse(TEXT("New game returns to Prelude"), State->IsChapterOneActOne());
+    TestFalse(TEXT("Reset denies all ship modes before story starts"), State->IsReviewShipModeAuthorized(FName(TEXT("Seabourne"))));
     State->Reset();
     TestTrue(TEXT("Start flyer"), State->AdvanceTo(ETSTSSFirstWakeBeat::FlyerDiscovered));
     TestTrue(TEXT("Hire Ionia"), State->AdvanceTo(ETSTSSFirstWakeBeat::IoniaHired));
