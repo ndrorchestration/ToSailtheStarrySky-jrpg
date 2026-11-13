@@ -109,7 +109,13 @@ def is_generated_android_config_only() -> bool:
         extra.split("SecurityToken=", 1)[1].split("\n", 1)[0]
         if extra.count("SecurityToken=") == 1 else ""
     ))
-    return bool(found and extra == expected.format(token=found.group(0)))
+    # Unreal serializes a final optional blank line in this generated block.
+    # Permit no other keys, values, prefix edits, or trailing whitespace.
+    trailing = len(extra) - len(extra.rstrip("\n"))
+    return bool(
+        found and 1 <= trailing <= 2 and
+        extra.rstrip("\n") == expected.format(token=found.group(0)).rstrip("\n")
+    )
 
 
 def main() -> None:
