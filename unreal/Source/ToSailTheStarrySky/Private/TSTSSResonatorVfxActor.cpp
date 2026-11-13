@@ -8,6 +8,8 @@
 #if WITH_EDITOR
 #include "Engine/Engine.h"
 #include "GameFramework/PlayerController.h"
+#include "Camera/CameraActor.h"
+#include "EngineUtils.h"
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
 #include "UnrealClient.h"
@@ -207,6 +209,63 @@ void ATSTSSResonatorVfxActor::Tick(float DeltaSeconds)
                 ReviewSequenceStage, ReviewSequenceElapsed, Age, Duration);
             FScreenshotRequest::RequestScreenshot(false, true);
             ++ReviewSequenceStage;
+        }
+    }
+    // Editor-only screenshot review: nine deterministic known cue actors,
+    // no combat requests, saved map writes or skill/admission mutations.
+    if (bReviewInstance && PreviewCueId == FName(TEXT("VFX.Ender.ResonantPulse")) &&
+        FParse::Param(FCommandLine::Get(), TEXT("TSTSSResonatorCueSweep")) &&
+        ReviewSweepIndex < 9)
+    {
+        static const FName ReviewCues[9] = {
+            TEXT("VFX.Ender.ResonantPulse"), TEXT("VFX.Ender.TuningLance"),
+            TEXT("VFX.Ender.EchoMend"), TEXT("VFX.Ender.CorrespondenceThread"),
+            TEXT("VFX.Ender.LatticeBreak"), TEXT("VFX.Ender.MindRipple"),
+            TEXT("VFX.Ender.FocusHarmonic"), TEXT("VFX.Ender.ConcordanceBurst"),
+            TEXT("VFX.Ender.ThoughtChord")
+        };
+        ReviewSweepElapsed += FMath::Max(0.f, DeltaSeconds);
+        const float StageStart = 2.7f + ReviewSweepIndex * 1.0f;
+        if (ReviewSweepElapsed >= StageStart && !FScreenshotRequest::IsScreenshotRequested())
+        {
+            ATSTSSResonatorVfxActor* Selected = nullptr;
+            for (TActorIterator<ATSTSSResonatorVfxActor> It(GetWorld()); It; ++It)
+            {
+                if (It->bReviewInstance && It->PreviewCueId == ReviewCues[ReviewSweepIndex])
+                {
+                    Selected = *It;
+                    break;
+                }
+            }
+            APlayerController* Controller = GetWorld()->GetFirstPlayerController();
+            AActor* Camera = Controller ? Controller->GetViewTarget() : nullptr;
+            if (Selected && Camera && Camera->IsA<ACameraActor>())
+            {
+                if (!bReviewSweepCameraMoved)
+                {
+                    const FVector Aim = Selected->GetActorLocation() + FVector(0.f, 0.f, 95.f);
+                    const FVector Location = Selected->GetActorLocation() + FVector(0.f, -750.f, 330.f);
+                    Camera->SetActorLocationAndRotation(Location, (Aim - Location).Rotation());
+                    bReviewSweepCameraMoved = true;
+                    ReviewSweepCameraMovedAt = ReviewSweepElapsed;
+                    UE_LOG(LogTemp, Display, TEXT("TSTSS_RESONATOR_SWEEP_FOCUS stage=%d cue=%s"),
+                        ReviewSweepIndex, *ReviewCues[ReviewSweepIndex].ToString());
+                }
+                else if (ReviewSweepElapsed - ReviewSweepCameraMovedAt >= 0.24f)
+                {
+                    UE_LOG(LogTemp, Display, TEXT("TSTSS_RESONATOR_SWEEP_CAPTURE stage=%d cue=%s age=%.3f"),
+                        ReviewSweepIndex, *ReviewCues[ReviewSweepIndex].ToString(), Selected->Age);
+                    FScreenshotRequest::RequestScreenshot(false, true);
+                    ++ReviewSweepIndex;
+                    bReviewSweepCameraMoved = false;
+                }
+            }
+            else if (!bReviewSweepBlockedLogged)
+            {
+                bReviewSweepBlockedLogged = true;
+                UE_LOG(LogTemp, Error, TEXT("TSTSS_RESONATOR_SWEEP_BLOCKED missing cue or camera stage=%d"),
+                    ReviewSweepIndex);
+            }
         }
     }
 #endif

@@ -94,6 +94,19 @@ class ResonatorReviewTests(unittest.TestCase):
         self.assertIn('ReviewSequenceElapsed = 0.f;', self.header)
         self.assertIn('#if WITH_EDITOR', self.cpp)
 
+    def test_opt_in_nine_cue_camera_sweep_is_review_only(self):
+        self.assertIn('TSTSSResonatorCueSweep', self.cpp)
+        self.assertIn('bReviewInstance && PreviewCueId', self.cpp)
+        self.assertIn('ReviewSweepIndex < 9', self.cpp)
+        self.assertIn('GetViewTarget()', self.cpp)
+        self.assertIn('Camera->SetActorLocationAndRotation', self.cpp)
+        self.assertIn('TSTSS_RESONATOR_SWEEP_CAPTURE', self.cpp)
+        self.assertIn('TSTSS_RESONATOR_SWEEP_BLOCKED', self.cpp)
+        self.assertIn('ReviewSweepIndex = 0;', self.header)
+        self.assertIn('ReviewSweepCameraMovedAt = 0.f;', self.header)
+        self.assertIn('!FScreenshotRequest::IsScreenshotRequested()', self.cpp)
+        self.assertIn('TActorIterator<ATSTSSResonatorVfxActor>', self.cpp)
+
     def test_pulse_is_one_expanding_spherical_shell_not_latitude_stacks(self):
         self.assertIn("const float Phase = (Style == 0) ? T :", self.cpp)
         self.assertIn("FVector(CosA, SinA, 0.f)", self.cpp)

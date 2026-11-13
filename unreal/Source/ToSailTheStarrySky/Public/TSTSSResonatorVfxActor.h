@@ -59,6 +59,11 @@ private:
     bool bReviewCaptureRequested = false;
     float ReviewSequenceElapsed = 0.f;
     int32 ReviewSequenceStage = 0;
+    float ReviewSweepElapsed = 0.f;
+    float ReviewSweepCameraMovedAt = 0.f;
+    int32 ReviewSweepIndex = 0;
+    bool bReviewSweepCameraMoved = false;
+    bool bReviewSweepBlockedLogged = false;
 #endif
 
     bool StartCue(FName CueId, const FVector& RelativeTarget, bool bReview);
