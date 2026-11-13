@@ -105,8 +105,13 @@ def make_level():
         actor.set_editor_property("preview_target_offset", unreal.Vector(320, 0, 0))
         actor.set_editor_property("loop_review", True)
     camera_cls = unreal.load_class(None, "/Script/Engine.CameraActor")
+    # Unreal Python Rotator positional args are roll, pitch, yaw (not pitch, yaw, roll).
+    # Resolve orientation geometrically so the camera faces the effects, not the sky.
+    review_camera_location = unreal.Vector(0, -2200, 1050)
+    review_camera_look_at = unreal.Vector(0, 0, 90)
     camera = subsystem.spawn_actor_from_class(camera_cls,
-        unreal.Vector(0, -2200, 1050), unreal.Rotator(-25, 90, 0))
+        review_camera_location,
+        unreal.MathLibrary.find_look_at_rotation(review_camera_location, review_camera_look_at))
     if camera:
         camera.set_actor_label("Review overview - not a gameplay camera")
         # Dedicated review camera is the view target in isolated standalone play;
@@ -126,8 +131,11 @@ def make_level():
     floor.set_actor_scale3d(unreal.Vector(44, 44, 0.3))
     floor.get_editor_property("static_mesh_component").set_collision_enabled(
         unreal.CollisionEnabled.NO_COLLISION)
+    key_location = unreal.Vector(0, 0, 750)
+    key_target = unreal.Vector(700, 350, 0)
     key = subsystem.spawn_actor_from_class(unreal.DirectionalLight,
-        unreal.Vector(0, 0, 750), unreal.Rotator(-45, 25, 0))
+        key_location,
+        unreal.MathLibrary.find_look_at_rotation(key_location, key_target))
     if not key:
         raise RuntimeError("Could not create calibration key light")
     key.set_actor_label("REVIEW CALIBRATION - key light")

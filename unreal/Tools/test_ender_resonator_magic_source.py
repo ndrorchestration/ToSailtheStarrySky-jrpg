@@ -87,6 +87,15 @@ class ResonatorReviewTests(unittest.TestCase):
         builder = (UE / "Tools/build_ender_resonator_preview.py").read_text(encoding="utf-8")
         self.assertIn("set_base_material_usage(material, unreal.MaterialUsage.MATUSAGE_INSTANCED_STATIC_MESHES, True)", builder)
 
+    def test_review_camera_looks_at_stage_not_upward(self):
+        builder = (UE / "Tools/build_ender_resonator_preview.py").read_text(encoding="utf-8")
+        self.assertIn("review_camera_location = unreal.Vector(0, -2200, 1050)", builder)
+        self.assertIn("review_camera_look_at = unreal.Vector(0, 0, 90)", builder)
+        self.assertIn("find_look_at_rotation(review_camera_location, review_camera_look_at)", builder)
+        self.assertNotIn("unreal.Rotator(-25, 90, 0)", builder)
+        self.assertIn("find_look_at_rotation(key_location, key_target)", builder)
+        self.assertNotIn("unreal.Rotator(-45, 25, 0)", builder)
+
     def test_isolated_review_camera_auto_activates_without_gameplay_changes(self):
         builder = (UE / "Tools/build_ender_resonator_preview.py").read_text(encoding="utf-8")
         self.assertIn('camera.set_editor_property("auto_activate_for_player", unreal.AutoReceiveInput.PLAYER0)', builder)
