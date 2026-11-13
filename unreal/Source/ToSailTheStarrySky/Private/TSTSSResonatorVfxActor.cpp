@@ -241,7 +241,11 @@ void ATSTSSResonatorVfxActor::Tick(float DeltaSeconds)
             AActor* Camera = Controller ? Controller->GetViewTarget() : nullptr;
             if (Selected && Camera && Camera->IsA<ACameraActor>())
             {
-                if (!bReviewSweepCameraMoved)
+                const float CueT = FMath::Clamp(Selected->Age /
+                    FMath::Max(Selected->Duration, 0.1f), 0.f, 1.f);
+                // Focus at a comparable part of each looping effect; early,
+                // nearly invisible starts cannot be mistaken for cue QA.
+                if (!bReviewSweepCameraMoved && CueT >= 0.25f && CueT <= 0.45f)
                 {
                     // During opt-in capture, show only the selected review actor
                     // so distant grid neighbors cannot masquerade as its particles.
@@ -255,8 +259,6 @@ void ATSTSSResonatorVfxActor::Tick(float DeltaSeconds)
                     }
                     // Center targeted/traveling visuals at their effect position,
                     // not the caster. Pulse and Focus Harmonic stay caster-centered.
-                    const float CueT = FMath::Clamp(Selected->Age /
-                        FMath::Max(Selected->Duration, 0.1f), 0.f, 1.f);
                     const bool bAtTarget = Selected->Style == 2 ||
                         Selected->Style == 4 || Selected->Style == 5;
                     const bool bAtCaster = Selected->Style == 0 || Selected->Style == 6;
@@ -274,10 +276,12 @@ void ATSTSSResonatorVfxActor::Tick(float DeltaSeconds)
                     UE_LOG(LogTemp, Display, TEXT("TSTSS_RESONATOR_SWEEP_FOCUS stage=%d cue=%s"),
                         ReviewSweepIndex, *ReviewCues[ReviewSweepIndex].ToString());
                 }
-                else if (ReviewSweepElapsed - ReviewSweepCameraMovedAt >= 0.24f)
+                else if (bReviewSweepCameraMoved &&
+                         ReviewSweepElapsed - ReviewSweepCameraMovedAt >= 0.24f &&
+                         CueT >= 0.35f && CueT <= 0.70f)
                 {
-                    UE_LOG(LogTemp, Display, TEXT("TSTSS_RESONATOR_SWEEP_CAPTURE stage=%d cue=%s age=%.3f"),
-                        ReviewSweepIndex, *ReviewCues[ReviewSweepIndex].ToString(), Selected->Age);
+                    UE_LOG(LogTemp, Display, TEXT("TSTSS_RESONATOR_SWEEP_CAPTURE stage=%d cue=%s age=%.3f phase=%.3f"),
+                        ReviewSweepIndex, *ReviewCues[ReviewSweepIndex].ToString(), Selected->Age, CueT);
                     FScreenshotRequest::RequestScreenshot(false, true);
                     ++ReviewSweepIndex;
                     bReviewSweepCameraMoved = false;
