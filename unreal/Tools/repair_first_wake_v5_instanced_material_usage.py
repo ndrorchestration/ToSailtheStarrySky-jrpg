@@ -34,10 +34,13 @@ def sha256(path: Path) -> str:
 
 
 def git(*args: str) -> str:
-    return subprocess.run(
+    result = subprocess.run(
         ["git", "-C", str(REPO), *args],
         capture_output=True, text=True, check=True, timeout=30
-    ).stdout.strip()
+    ).stdout
+    # Porcelain status has significant leading XY columns. strip() drops
+    # its leading blank status char and corrupts path parsing.
+    return result.rstrip("\r\n") if args[:2] == ("status", "--porcelain") else result.strip()
 
 
 def status_paths() -> set[str]:
@@ -64,6 +67,49 @@ def inventory() -> dict:
         "source_map_modified": False,
         "creator_approved": False,
     }
+
+
+def is_generated_android_config_only() -> bool:
+    """Recognize exactly the automatic UE editor startup append, no more.
+
+    The AndroidFileServer plugin writes DefaultEngine.ini at launch even when
+    this task has nothing to do with Android. This one editor side-effect is
+    not a modification requested by the repair and must NOT be committed.
+    """
+    rel = "unreal/Config/DefaultEngine.ini"
+    path = REPO / rel
+    if not path.is_file():
+        return False
+    original = subprocess.run(
+        ["git", "-C", str(REPO), "show", "HEAD:" + rel],
+        capture_output=True, text=True, check=True, timeout=30
+    ).stdout.replace("\r\n", "\n")
+    current = path.read_text(encoding="utf-8-sig").replace("\r\n", "\n")
+    if current == original:
+        return True
+    if not current.startswith(original):
+        return False
+    extra = current[len(original):]
+    expected = (
+        "\n[/Script/AndroidFileServerEditor.AndroidFileServerRuntimeSettings]\n"
+        "bEnablePlugin=True\n"
+        "bAllowNetworkConnection=True\n"
+        "SecurityToken={token}\n"
+        "bIncludeInShipping=False\n"
+        "bAllowExternalStartInShipping=False\n"
+        "bCompileAFSProject=False\n"
+        "bUseCompression=False\n"
+        "bLogFiles=False\n"
+        "bReportStats=False\n"
+        "ConnectionType=USBOnly\n"
+        "bUseManualIPAddress=False\n"
+        "ManualIPAddress=\n"
+    )
+    found = re.fullmatch(r"[0-9A-Fa-f]{32}", (
+        extra.split("SecurityToken=", 1)[1].split("\n", 1)[0]
+        if extra.count("SecurityToken=") == 1 else ""
+    ))
+    return bool(found and extra == expected.format(token=found.group(0)))
 
 
 def main() -> None:
@@ -96,8 +142,12 @@ def main() -> None:
         for family in FAMILIES
     }
     before_paths = status_paths()
-    if (apply and before_paths) or (verify and not before_paths.issubset(allowed)):
-        raise RuntimeError("HOLD: unapproved dirty source paths: " + str(before_paths))
+    editor_config = "unreal/Config/DefaultEngine.ini"
+    if editor_config in before_paths and not is_generated_android_config_only():
+        raise RuntimeError("HOLD: non-engine DefaultEngine.ini modifications")
+    unexpected_before = before_paths - {editor_config}
+    if (apply and unexpected_before) or (verify and not unexpected_before.issubset(allowed)):
+        raise RuntimeError("HOLD: unapproved dirty source paths: " + str(unexpected_before))
 
     import unreal as u
 
@@ -139,7 +189,9 @@ def main() -> None:
     if git("rev-parse", "HEAD") != expected:
         raise RuntimeError("HOLD: source SHA drift during Unreal repair")
     after_paths = status_paths()
-    if not after_paths.issubset(allowed):
+    if editor_config in after_paths and not is_generated_android_config_only():
+        raise RuntimeError("HOLD: DefaultEngine.ini was edited beyond known auto-config")
+    if not (after_paths - {editor_config}).issubset(allowed):
         raise RuntimeError("HOLD: unexpected tracked/untracked content " + str(after_paths))
     result = {
         "status": "V5_INSTANCED_PBR_MATERIAL_USAGE_ENABLED" if apply
@@ -151,7 +203,8 @@ def main() -> None:
         "usage": "MATUSAGE_INSTANCED_STATIC_MESHES",
         "source_map_sha256_unchanged": baseline["source_map_sha256"],
         "materials_after": {key: sha256(path) for key, path in MATERIALS.items()},
-        "changed_repo_paths": sorted(after_paths),
+        "changed_repo_paths": sorted(after_paths - {editor_config}),
+        "editor_startup_config_generated_not_for_commit": editor_config in after_paths,
         "source_maps_edited": False,
         "story_authority_changed": False,
         "creator_approved": False,
