@@ -67,6 +67,10 @@ struct FMath {
     static bool IsFinite(float value) { return std::isfinite(value); }
     static float Abs(float value) { return std::abs(value); }
 };
+// Portable compile-only stand-in for a native Unreal observer signal.
+// Broadcast has no gameplay authority; state and water logic stay real C++.
+struct FPortableFirstWakeStateChanged { void Broadcast() const {} };
+#define DECLARE_MULTICAST_DELEGATE(Name) using Name = FPortableFirstWakeStateChanged
 std::vector<std::unique_ptr<UObject>> Objects;
 template <typename T> T* NewObject() {
     auto object = std::make_unique<T>();
