@@ -39,6 +39,19 @@ This is the actual 960x540 native GPU frame from implementation commit `6e20b044
 - Do not duplicate gameplay authority: draft PR #810 (review/ender-centering-pulse-focus-20261111) already implements separate isolated Centering three-round 15% physical-defense buff with explicit knowledge gates; draft PR #826 (review/ue58-resonant-pulse-enemy-aoe-20261113) implements an independent isolated 600 cm enemy-only spherical point-blank AoE candidate. These PRs have different ancestry; neither is merged into PR #797 or playable First Wake. Reconcile their test/authority conflicts on a dedicated integration handoff instead of repeating combat implementation here.
 - Review-only boundaries: no Correspondence promotion, unlearned mastery, Reson/Aepex early party admission, Starbourne unlock, or production map/asset changes.
 
+## Nine-cue normalized native GPU review packet (November 13, 2026)
+
+**REVIEW ONLY, NOT CREATOR APPROVED OR GAMEPLAY VERIFIED.** The isolated Unreal 5.8.4 native review sweep now demonstrates each of the nine proposed cue styles in a distinct, source-locked 960x540 D3D12 screenshot. This extends the earlier three-frame Resonant Pulse animation evidence, but does not promote the whole catalog.
+
+![Nine proposed spell cues in an isolated 3x3 comparison contact sheet](Evidence/EnderResonator/NineCueNormalized_b0b0a95/ContactSheet.png)
+
+- Exact **renderer commit**: b0b0a95eec5cba5da9ff6c685be3bc1e53603e99; source suite **381/381 PASS**; protected UE **5.8.4** Win64 C++/UHT compilation performed **four real actions** and named native automation **30/30 PASS**. Local exact-head receipt: unreal/Saved/MigrationEvidence/b0b0a95eec5c-20261113T235505970Z-9abd1703/.
+- Final isolated screenshot run: unreal/Saved/MigrationEvidence/ResonatorNineCueGPUNormalized-20261113T235604Z/; one screenshot for each name: Resonant Pulse, Tuning Lance, Echo Mend, Correspondence Thread, Lattice Break, Mind Ripple, Focus Harmonic, Concordance Burst and Thought Chord. All **nine files have distinct SHA256 hashes**; the log binds index, exact cue name, age, and normalized phase.
+- Fair phase sampling: **0.351-0.542** of each looping effect, rather than a misleading early near-black frame. Under the bounded saturated-pixel classifier in FrameMetrics.json, **95.9%-100%** of each captured effect's saturated pixels appear in the central 480x360 frame region. This establishes readable isolated framing for technical review; subjective artistic clarity is still pending.
+- The camera first hides other stage VFX actors transiently and aims at the true effect center for traveling/targeted spells, preserving caster-centered framing for Pulse and Focus Harmonic. The saved review map, shipping maps, mastery/learned lists, and combat rules remain unchanged.
+- **Visual QA holds:** Most non-Pulse spells still use a sparse moving-ring/particle grammar and need stronger silhouette differentiation, proper contextual backgrounds/lighting, exposure and photosensitivity review, camera movement, sound/staff-cast synchronization, and GPU/frame-time testing. A bright white calibration artifact is visible in some frames. These still captures are **not player-controlled PIE casts** and do not establish animation quality throughout the entire duration.
+- **Gameplay discrepancy / separate owners:** The #797 visual Pulse sphere spans approximately 35-275 cm, while draft #826's gameplay targeting candidate uses a 600 cm radius. Do not claim correspondence or attack gameplay readiness until reconciled and tested at the same integration head. Centering's 5 MP/15% physical-DEF/three-round design is separately held by draft #810. Correspondence remains deferred, Reson/Aepex unavailable, and Starbourne fail-closed.
+
 ## Creator identity and admission gates
 
 Ender's permanent profession is **Harmonic Resonance Engineer**. His selected
