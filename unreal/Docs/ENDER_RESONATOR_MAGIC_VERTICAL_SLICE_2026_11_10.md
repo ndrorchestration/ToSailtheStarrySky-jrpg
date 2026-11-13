@@ -1,8 +1,8 @@
 # TSTSS — Ender Resonator magic: vertical-slice source implementation
 
-**2026-11-10 | ISOLATED DEVELOPMENT CANDIDATE | NO MAIN MERGE | NO ART OR SHIPPING APPROVAL**
+**Updated 2026-11-13 | DRAFT / UNMERGED / NATIVE AUTOMATION VERIFIED / VISUAL GATE FAILED | NO ART OR SHIPPING APPROVAL**
 
-Authoring checkout: `feat/ue58-ender-magic-slice-20261110`.
+Authoring checkout: `C:\TSTSS_EnderMagic_20261110` on `feat/ue58-ender-resonator-on-convergence-20261110`.
 Primary implementation: Unreal Engine **5.8.4**, not historical Godot.
 This document must be read as an evidence boundary, not a claim that the spells
 are already castable in the current First Wake playable map.
@@ -31,7 +31,7 @@ not arbitrarily invented buffs, teleports, statuses, fields or world interaction
 
 | Spell | Family | Review action | 3D visual silhouette | Gate |
 |---|---|---|---|---|
-| Resonant Pulse | Resonance | enemy damage | expanding blue concentric harmonic rings | Resonance 1 |
+| Resonant Pulse | Resonance | **enemy-target review damage only; area/point mechanic NOT integrated** | expanding caster-centered blue spherical pulse VFX | Resonance 1 |
 | Tuning Lance | Resonance | enemy damage | traveling cyan spear core and harmonic rings | Resonance 2 |
 | Echo Mend | Resonance | living ally heal | green restoring concentric pulse | Resonance 1 |
 | Correspondence Thread | Correspondence | enemy damage | violet threaded orbit and target linkage | Correspondence 1 |
@@ -89,6 +89,20 @@ ship unlock, Starbourne mechanic, or Wise Woman/Rift Scholar magic is implied.
    learnt and mastered starting loadout, actor caster/target transforms, staff
    cast animation montages and sound; prove active-party continuity and save/load.
 
+## 2026-11-13 native and GPU evidence addendum (supersedes historical source-only claims)
+
+- Governance: draft PR #797 remains **open, unmerged, review-only and non-shipping**; no content is integrated into the playable First Wake scene. Starbourne remains gated. No unearned abilities were learned or granted.
+- The isolated Unreal preview material `M_ResonatorGlow.uasset`, nine-row `DT_EnderResonatorReview.uasset` and nine-cue `L_EnderResonatorCueReview.umap` were created and committed on the review branch. The DataTable importer reported **0 problems** after explicitly writing the optional default fields.
+- UE Editor Python asset readback confirmed nine exact DataTable names, nine placed preview VFX actors with nine exact cue IDs, an accessible material, and nine loop-enabled review actors.
+- `M_ResonatorGlow` was recompiled and saved with the Instanced Static Mesh material usage bit enabled. Unreal logged `RESONATOR_REVIEW_MATERIAL_USAGE_PASS before=False after=True shader_errors=0`.
+- A neutral, noncanonical calibration floor and two lights were added **only** to the isolated review level. Review camera Player 0 activation was verified. No gameplay/world maps or production content were changed.
+- Native UE **5.8.4** C++/UHT build performed actual compile/link actions at `1bf6d39fc50d20fe5787b181231bad0535896121` and succeeded; exact-head 30/30 named Unreal automation results were accepted with a clean-worktree receipt at `unreal/Saved/MigrationEvidence/1bf6d39fc50d-20261113T200911365Z-ba2accf6/`. These results precede the calibration-only review-map commit `684c82801d4d868ab26f28672c5ecd6418c8b178` and this documentation update.
+- Full Python source suite at calibration-map commit: **375/375 PASS**. Source and tests are necessary but never sufficient for rendered visual approval.
+- **VISUAL_GATE_FAIL_BLACK_CAPTURE:** the first GPU capture displayed the unrelated First Wake prelude HUD on black; explicit GameModeBase removed the HUD, but all four later 960x540 D3D12 GPU captures were **exactly RGB (0,0,0) in every pixel** (one unique color), including delayed on-screen and offscreen captures and the calibration stage. Formal pixel report: `unreal/Saved/MigrationEvidence/ResonatorGPU-visual-gate-20261113.json`. Latest screenshot: `unreal/Saved/MigrationEvidence/ResonatorCalibratedGPU-20261113T151445/ScreenShot00002.png`. **Do not promote visual state, approve the cue, or claim cinematic appearance** from these outputs.
+- Runtime diagnostic did prove the correct review CameraActor view target, 72 ring mesh instances, 32 motes, and `MID_M_ResonatorGlow_0` on Resonant Pulse. These facts **do not establish that any pixels of the effect are drawn**. The next focused QA must inspect game viewport rendering/show flags, active camera transform and projection, scene primitive visibility, and the actual render target before changing art.
+- Gameplay reconciliation remains **BLOCKED / NOT IMPLEMENTED**: the Resonant Pulse visual expands spherically but the combat row still uses single `Target=Enemy` rather than authorized point/area gameplay targeting. The requested `Centering` party physical-defense buff (3 rounds / approximately 10-12 seconds) is not in this nine-cue catalog or current combat executor. Correspondence spells remain deferred from priority completion. Implement buff and point-area contracts separately with authorization, no auto-unlock, explicit tests and native evidence.
+- Outstanding art gates: nonblack runtime GPU capture, nine-cue visual readout, daylight/night/atmosphere/contrast/photosensitivity review, staff montage and sound, interactive authorized casting, performance evidence, and creator approval. Never conflate a passing native automation test with a passed rendered scene.
+
 ## Validation and remaining blockers
 
 Run engine-free tests:
@@ -100,13 +114,9 @@ python unreal/Tools/check_automation_registry.py
 python -m py_compile unreal/Tools/build_ender_resonator_preview.py
 ```
 
-All nine targeted source-contract tests passed, as did the full 335-test
-engine-free Python suite after updating the exact-count First Wake admission
-regression from 29 to 30 named tests. Both source registry scripts passed. These are
-**source-only** results. Native Editor compile, imported material and DataTable
-assets, material shader validity, actual Niagara, montages, impact SFX, rendered
-preview screenshots, interactive casting, multiplayer/save consistency, cinematic
-acceptance and merged gameplay **are not yet established**. The renderer uses
-native instanced geometry, not Niagara; a later Niagara replacement can preserve
-the VFX cue IDs without re-authorizing spells. No claims of AAA visual approval
-should be made before native review.
+The test counts and original source-only claims above were historical. The
+2026-11-13 addendum is authoritative for subsequent native/asset evidence and
+the still-failing rendered visual gate. The renderer is native instanced geometry,
+not Niagara. Its cue IDs can be preserved if a future replacement is approved.
+No interactive casting, sound, performance, gameplay integration, production art,
+or cinematic approval has been established.
