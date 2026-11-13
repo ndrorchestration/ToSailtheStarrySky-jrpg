@@ -47,7 +47,7 @@ ATSTSSMilestoneActor::ATSTSSMilestoneActor()
     // Cosmetic local review beacon. No collision or shipping UI authority.
     ReviewBeacon = CreateDefaultSubobject<UTextRenderComponent>(TEXT("ReviewBeacon"));
     ReviewBeacon->SetupAttachment(InteractionMesh);
-    ReviewBeacon->SetRelativeLocation(FVector(0.f, 0.f, 55.f));
+    ReviewBeacon->SetRelativeLocation(FVector(0.f, 0.f, 120.f));
     ReviewBeacon->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
     ReviewBeacon->SetHorizontalAlignment(EHTA_Center);
     ReviewBeacon->SetWorldSize(40.f);
@@ -64,13 +64,23 @@ ATSTSSMilestoneActor::ATSTSSMilestoneActor()
     {
         ReviewBeaconBackdrop->SetStaticMesh(PanelMesh.Object);
     }
-    ReviewBeaconBackdrop->SetRelativeLocation(FVector(8.f, 0.f, 55.f));
+    ReviewBeaconBackdrop->SetRelativeLocation(FVector(8.f, 0.f, 120.f));
     ReviewBeaconBackdrop->SetRelativeScale3D(FVector(.09f, 6.2f, .68f));
     ReviewBeaconBackdrop->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     ReviewBeaconBackdrop->SetCollisionResponseToAllChannels(ECR_Ignore);
     ReviewBeaconBackdrop->SetGenerateOverlapEvents(false);
     ReviewBeaconBackdrop->SetCastShadow(false);
     ReviewBeaconBackdrop->SetVisibility(false);
+
+    // Distinct authored review props are noncolliding visuals. The original
+    // InteractionMesh remains the *only* E trace target and story authority.
+    ReviewObjectProxy = CreateDefaultSubobject<UStaticMeshComponent>(
+        TEXT("ReviewObjectProxy"));
+    ReviewObjectProxy->SetupAttachment(InteractionMesh);
+    ReviewObjectProxy->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    ReviewObjectProxy->SetCollisionResponseToAllChannels(ECR_Ignore);
+    ReviewObjectProxy->SetGenerateOverlapEvents(false);
+    ReviewObjectProxy->SetVisibility(false);
 #endif
 }
 
@@ -86,6 +96,7 @@ void ATSTSSMilestoneActor::BeginPlay()
 #if WITH_EDITOR
     if (ReviewBeacon) ReviewBeacon->SetVisibility(false);
     if (ReviewBeaconBackdrop) ReviewBeaconBackdrop->SetVisibility(false);
+    if (ReviewObjectProxy) ReviewObjectProxy->SetVisibility(false);
 #endif
 }
 
@@ -147,6 +158,95 @@ bool ATSTSSMilestoneActor::IsReviewActionable(const UTSTSSFirstWakeState* State)
     return true;
 }
 
+void ATSTSSMilestoneActor::EnsureV5ReviewObjectProxy()
+{
+    const UWorld* World = GetWorld();
+    if (bReviewProxyInitialized || !IsValid(ReviewObjectProxy) ||
+        !IsAuthorizedReviewMilestoneWorld(World, GetActorLabel()) ||
+        UGameplayStatics::GetCurrentLevelName(World, true) !=
+            TEXT("FirstWake_PreludeInteraction_V5_VisualReview"))
+    {
+        return;
+    }
+    bReviewProxyInitialized = true;
+
+    // Canon: review props, not representations of approved cast or ship art.
+    // Every named source asset already exists in the integrated MultipathV1
+    // object kit. A missing asset leaves the existing old cube untouched.
+    const TCHAR* AssetName = nullptr;
+    if (bIsInspectionStation)
+    {
+        switch (InspectionStation)
+        {
+        case ETSTSSInspectionStation::Lift: AssetName = TEXT("LiftResonator"); break;
+        case ETSTSSInspectionStation::Pressure: AssetName = TEXT("PressureRegulator"); break;
+        case ETSTSSInspectionStation::Reserve: AssetName = TEXT("ReserveTank"); break;
+        default: return;
+        }
+    }
+    else
+    {
+        switch (Milestone)
+        {
+        case ETSTSSFirstWakeBeat::FlyerDiscovered: AssetName = TEXT("FlyerPodium"); break;
+        case ETSTSSFirstWakeBeat::IoniaHired: AssetName = TEXT("CaptainDesk"); break;
+        case ETSTSSFirstWakeBeat::BoardedAureateWake: AssetName = TEXT("GangwayAnchor"); break;
+        case ETSTSSFirstWakeBeat::EngineeringChecked: AssetName = TEXT("SignoffPlinth"); break;
+        default: return;
+        }
+    }
+    const FString Name(AssetName);
+    const FString Path = FString::Printf(
+        TEXT("/Game/TSTSS/Review/MultipathV1/ObjectImports/%s/%s/StaticMeshes/%s.%s"),
+        *Name, *Name, *Name, *Name);
+    UStaticMesh* Asset = LoadObject<UStaticMesh>(nullptr, *Path);
+    if (!IsValid(Asset))
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_V5_OBJECT_PROXY_HOLD missing=%s"), *Path);
+        return;
+    }
+    const FBoxSphereBounds Bounds = Asset->GetBounds();
+    const FVector Extents = Bounds.BoxExtent;
+    if (Extents.ContainsNaN() || Extents.GetMax() <= KINDA_SMALL_NUMBER)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_V5_OBJECT_PROXY_HOLD invalid_bounds=%s"), *Path);
+        return;
+    }
+    // Scale each real import to a plausible marker footprint, avoiding
+    // overlarge mesh collision/visibility changes in the playable corridor.
+    constexpr float MaxHalfXY = 80.f;
+    constexpr float MaxHalfZ = 108.f;
+    const double XY = FMath::Max(Extents.X, Extents.Y);
+    const double TargetScale = FMath::Clamp(
+        FMath::Min(MaxHalfXY / FMath::Max(XY, 0.01),
+                   MaxHalfZ / FMath::Max(Extents.Z, 0.01)), 0.002, 20.);
+    if (!FMath::IsFinite(TargetScale)) return;
+    ReviewObjectProxy->SetStaticMesh(Asset);
+    // Face the more planar flyer/desk set pieces toward the incoming dock
+    // player; use true local bounds and rotate the pivot offset as well.
+    const bool bFrontFacingReviewProp = !bIsInspectionStation &&
+        (Milestone == ETSTSSFirstWakeBeat::FlyerDiscovered ||
+         Milestone == ETSTSSFirstWakeBeat::IoniaHired);
+    const FQuat ProxyRotation = bFrontFacingReviewProp
+        ? FRotator(0.f, 90.f, 0.f).Quaternion()
+        : FQuat::Identity;
+    ReviewObjectProxy->SetWorldRotation(ProxyRotation);
+    ReviewObjectProxy->SetWorldScale3D(FVector(TargetScale));
+    const FVector TargetCenter = GetActorLocation() +
+        FVector(0.f, 0.f, -65.f + Extents.Z * TargetScale);
+    ReviewObjectProxy->SetWorldLocation(
+        TargetCenter - ProxyRotation.RotateVector(Bounds.Origin * TargetScale));
+    ReviewObjectProxy->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    ReviewObjectProxy->SetCollisionResponseToAllChannels(ECR_Ignore);
+    ReviewObjectProxy->SetGenerateOverlapEvents(false);
+    bReviewProxyReady = true;
+    UE_LOG(LogTemp, Display,
+        TEXT("TSTSS_V5_OBJECT_PROXY_APPLIED asset=%s collision=disabled original_E_trace_preserved=1"),
+        *Name);
+}
+
 void ATSTSSMilestoneActor::UpdateReviewBeacon(const UTSTSSFirstWakeState* State)
 {
     if (!IsValid(ReviewBeacon) ||
@@ -155,6 +255,7 @@ void ATSTSSMilestoneActor::UpdateReviewBeacon(const UTSTSSFirstWakeState* State)
         return;
     }
     const bool bAvailable = IsReviewActionable(State);
+    EnsureV5ReviewObjectProxy();
     if (bReviewBeaconInitialized && bReviewBeaconAvailable == bAvailable)
     {
         return;
@@ -172,7 +273,11 @@ void ATSTSSMilestoneActor::UpdateReviewBeacon(const UTSTSSFirstWakeState* State)
            static_cast<uint8>(Milestone));
     if (IsValid(InteractionMesh))
     {
-        InteractionMesh->SetVisibility(!bConsumed, false);
+        InteractionMesh->SetVisibility(!bConsumed && !bReviewProxyReady, false);
+    }
+    if (bReviewProxyReady && IsValid(ReviewObjectProxy))
+    {
+        ReviewObjectProxy->SetVisibility(!bConsumed, false);
     }
     // Only the currently permitted E marker advertises an E prompt.
     ReviewBeacon->SetVisibility(bAvailable);

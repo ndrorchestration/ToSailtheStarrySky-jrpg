@@ -5,6 +5,7 @@
 #include "Components/SceneComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
+#include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Materials/MaterialInterface.h"
 #include "UObject/ConstructorHelpers.h"
@@ -92,8 +93,50 @@ bool ATSTSSResonatorVfxActor::IsAcceptedEnderCue(const FTSTSSBattleSkillCue& Acc
 void ATSTSSResonatorVfxActor::BeginPlay()
 {
     Super::BeginPlay();
-    UMaterialInterface* Material = LoadObject<UMaterialInterface>(
-        nullptr, TEXT("/Game/TSTSS/Magic/M_ResonatorGlow.M_ResonatorGlow"));
+    UMaterialInterface* Material = nullptr;
+#if WITH_EDITOR
+    // Presentation-only A/B override in two precisely named standalone
+    // research scenes. Never promote the preview copy to a production
+    // effect, mutate the immutable historical material, or grant a skill.
+    const UWorld* ReviewWorld = GetWorld();
+    if (ReviewWorld &&
+        (ReviewWorld->WorldType == EWorldType::PIE ||
+         ReviewWorld->WorldType == EWorldType::Game) &&
+        ReviewWorld->GetNetMode() == NM_Standalone &&
+        ReviewWorld->GetOutermost() &&
+        ReviewWorld->GetOutermost()->GetName().StartsWith(
+            TEXT("/Game/TSTSS/Review/")))
+    {
+        const FString Scene = UGameplayStatics::GetCurrentLevelName(
+            ReviewWorld, true);
+        if (Scene == TEXT("L_VS06_ShoreMagicEnemyGear_Review") ||
+            Scene == TEXT("L_EnderResonatorFocusReview_V2"))
+        {
+            Material = LoadObject<UMaterialInterface>(
+                nullptr,
+                TEXT("/Game/TSTSS/Review/ResonatorMaterialV1/"
+                     "M_ResonatorGlow_InstancedReview."
+                     "M_ResonatorGlow_InstancedReview"));
+            if (Material)
+            {
+                UE_LOG(LogTemp, Display,
+                    TEXT("TSTSS_RESONATOR_REVIEW_INSTANCED_MATERIAL_APPLIED scene=%s story_unchanged=1"),
+                    *Scene);
+            }
+            else
+            {
+                UE_LOG(LogTemp, Warning,
+                    TEXT("TSTSS_RESONATOR_REVIEW_INSTANCED_MATERIAL_HOLD missing_copy scene=%s"),
+                    *Scene);
+            }
+        }
+    }
+#endif
+    if (!Material)
+    {
+        Material = LoadObject<UMaterialInterface>(
+            nullptr, TEXT("/Game/TSTSS/Magic/M_ResonatorGlow.M_ResonatorGlow"));
+    }
     if (!Material)
     {
         Material = LoadObject<UMaterialInterface>(
