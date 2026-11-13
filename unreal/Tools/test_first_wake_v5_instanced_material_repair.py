@@ -54,7 +54,8 @@ class V5InstancedMaterialSafety(unittest.TestCase):
             self.assertNotIn(forbidden, REPAIR)
 
     def test_future_asset_staging_creates_materials_with_instanced_usage(self):
-        self.assertIn("set_base_material_usage(material", STAGING)
+        self.assertIn("editor.set_base_material_usage(", STAGING)
+        self.assertIn("material, u.MaterialUsage.MATUSAGE_INSTANCED_STATIC_MESHES, True", STAGING)
         self.assertIn("MATUSAGE_INSTANCED_STATIC_MESHES", STAGING)
         self.assertIn('if family != "ocean":', STAGING)
 
