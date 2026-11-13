@@ -10,6 +10,7 @@
 #include "GameFramework/PlayerController.h"
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
+#include "UnrealClient.h"
 #endif
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Materials/MaterialInterface.h"
@@ -183,10 +184,12 @@ void ATSTSSResonatorVfxActor::Tick(float DeltaSeconds)
                 RingMeshes->GetInstanceCount(), MoteMeshes->GetInstanceCount(),
                 RingMeshes->GetMaterial(0) ? *RingMeshes->GetMaterial(0)->GetName() : TEXT("None"),
                 *GetActorLocation().ToString());
-            if (GEngine && GetWorld())
-            {
-                GEngine->Exec(GetWorld(), TEXT("HighResShot 960x540"));
-            }
+            // FScreenshotRequest is queued for the next viewport frame; the
+            // engine Exec console command did not create a delayed capture in
+            // unattended standalone review. Never request in shipping builds.
+            FScreenshotRequest::RequestScreenshot(false, true);
+            UE_LOG(LogTemp, Display, TEXT("TSTSS_RESONATOR_SCREENSHOT_PENDING=%d"),
+                FScreenshotRequest::IsScreenshotRequested() ? 1 : 0);
         }
     }
 #endif

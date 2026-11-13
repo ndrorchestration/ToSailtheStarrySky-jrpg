@@ -69,7 +69,8 @@ class ResonatorReviewTests(unittest.TestCase):
         self.assertIn('PreviewCueId == FName(TEXT("VFX.Ender.ResonantPulse"))', self.cpp)
         self.assertIn("ReviewCaptureElapsed >= 3.f", self.cpp)
         self.assertIn("TSTSS_RESONATOR_REVIEW_CAPTURE", self.cpp)
-        self.assertIn("HighResShot 960x540", self.cpp)
+        self.assertIn("FScreenshotRequest::RequestScreenshot(false, true)", self.cpp)
+        self.assertIn("TSTSS_RESONATOR_SCREENSHOT_PENDING", self.cpp)
         self.assertIn("#if WITH_EDITOR", self.cpp)
         self.assertIn("bReviewCaptureRequested = false;", self.header)
 
