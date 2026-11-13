@@ -670,16 +670,15 @@ void ATSTSSExplorerCharacter::Interact()
                     }
 #endif
                     ShowFirstWakeReviewObjective(FirstWakeState);
-#if WITH_EDITOR
                     if (GetWorld()->WorldType == EWorldType::PIE
                         && Milestone->bIsInspectionStation && GEngine)
                     {
                         // A discoverable OPTIONAL view, never an automatic
-                        // camera cut during the normal E inspection.
+                        // camera cut during the normal E inspection. The
+                        // PIE-only world gate also avoids shipping UI writes.
                         GEngine->AddOnScreenDebugMessage(-1, 6.f, FColor::Cyan,
                             TEXT("Engine inspection: press C near the LIFT instrument for a 4s focus view"));
                     }
-#endif
                 }
                 else
                 {
