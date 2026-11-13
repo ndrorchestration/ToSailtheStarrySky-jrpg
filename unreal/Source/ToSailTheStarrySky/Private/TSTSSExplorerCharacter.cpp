@@ -136,6 +136,32 @@ void ApplyCoastalRecoveryReviewSignage(UWorld* World)
         }
     }
 }
+void ApplySeabourneReviewExposure(UWorld* World)
+{
+    if (!World || (World->WorldType != EWorldType::PIE &&
+                   World->WorldType != EWorldType::Game) ||
+        World->GetNetMode() != NM_Standalone ||
+        !World->GetOutermost() ||
+        !World->GetOutermost()->GetName().Contains(TEXT("/TSTSS/Review/")) ||
+        UGameplayStatics::GetCurrentLevelName(World, true) !=
+            TEXT("L_CoastalShip_SeabourneReview"))
+    {
+        return;
+    }
+
+    // An unsaved, review-only postprocess balances the default sky's extreme
+    // brightness. It is not a cinematic art approval or global exposure change.
+    if (APostProcessVolume* Volume =
+        World->SpawnActor<APostProcessVolume>(FVector::ZeroVector, FRotator::ZeroRotator))
+    {
+        Volume->bUnbound = true;
+        Volume->Priority = 105.f;
+        Volume->Settings.bOverride_AutoExposureBias = true;
+        Volume->Settings.AutoExposureBias = -2.2f;
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_SEABOURNE_REVIEW_EXPOSURE_APPLIED bias=-2.2 map_asset_unchanged=1"));
+    }
+}
 void ApplyV5HarborReviewLookdev(UWorld* World)
 {
     if (!World || (World->WorldType != EWorldType::PIE &&
@@ -334,6 +360,7 @@ void ATSTSSExplorerCharacter::BeginPlay()
 #if WITH_EDITOR
     ApplyV5HarborReviewLookdev(GetWorld());
     ApplyCoastalRecoveryReviewSignage(GetWorld());
+    ApplySeabourneReviewExposure(GetWorld());
     if (UWorld* World = GetWorld())
     {
         if (UGameInstance* GameInstance = World->GetGameInstance())
