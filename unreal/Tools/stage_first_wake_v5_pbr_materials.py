@@ -218,6 +218,18 @@ def stage() -> dict:
             for output, prop in targets:
                 if not editor.connect_material_property(sample, output, prop):
                     raise RuntimeError("HOLD: PBR graph connection failed " + family)
+        # The timber/stone/brass/aether materials also dress hundreds of
+        # InstancedStaticMeshComponents in V5. Without the explicit usage
+        # permutation, Unreal substitutes the default checkerboard material.
+        # Ocean uses a single StaticMesh and does not need this permutation.
+        if family != "ocean":
+            editor.set_base_material_usage(
+                material, u.MaterialUsage.MATUSAGE_INSTANCED_STATIC_MESHES, True
+            )
+            if not editor.has_material_usage(
+                material, u.MaterialUsage.MATUSAGE_INSTANCED_STATIC_MESHES
+            ):
+                raise RuntimeError("HOLD: instanced usage missing " + family)
         errors = editor.recompile_material(material)
         if errors is not None and len(errors):
             raise RuntimeError("HOLD: PBR material compilation failed " + family)
