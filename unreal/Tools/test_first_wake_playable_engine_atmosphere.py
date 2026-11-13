@@ -13,6 +13,15 @@ import stage_first_wake_playable_engine_atmosphere as stage
 
 class PlayableEngineAtmosphereAuthoringTests(unittest.TestCase):
 
+    def test_host_admits_repaired_checkout_but_rejects_unrelated_worktree(self):
+        good = {"platform": "win32", "worktree": "TSTSS_EngineFocusFix_20261112",
+                "head_matches": True, "source_changes": [], "engine_correct": True,
+                "map_sha_matches": True, "compiled_dll_exists": True,
+                "receipt_exists": False, "unreal_processes": [],
+                "free_ram_gib": 7.0, "free_disk_gib": 16.0}
+        self.assertNotIn("WRONG_WORKTREE", host.classify(good))
+        self.assertIn("WRONG_WORKTREE", host.classify({**good, "worktree": "Production"}))
+
     def test_source_authoring_reuses_existing_recipe(self):
         p = stage.plan(strict_source=False)
         self.assertEqual(p["weather"], "Clear")

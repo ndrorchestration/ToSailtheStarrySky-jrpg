@@ -26,6 +26,8 @@ import first_wake_surface_textures as surface  # noqa: E402
 ROOT = HERE.parents[1]
 PROJECT = ROOT / "unreal"
 WORKTREE = "TSTSS_EngineGameplayFocus_20261112"
+REPAIR_WORKTREE = "TSTSS_EngineFocusFix_20261112"
+REVIEW_WORKTREES = frozenset((WORKTREE, REPAIR_WORKTREE))
 SCENE = "VS02_AureateInteriors"
 MAP_ASSET = "/Game/TSTSS/Review/VerticalSlice/VS02_AureateInteriors"
 MAP_FILE = PROJECT / "Content/TSTSS/Review/VerticalSlice/VS02_AureateInteriors.umap"
@@ -111,7 +113,7 @@ def plan(strict_source: bool = True) -> dict:
 
 def custody() -> dict:
     require(sys.platform == "win32", "native Windows editor required")
-    require(ROOT.name == WORKTREE, "only the dedicated gameplay feature worktree")
+    require(ROOT.name in REVIEW_WORKTREES, "only dedicated gameplay review worktrees")
     require(os.environ.get("TSTSS_GAMEPLAY_ENGINE_STAGE_EXPLICIT") == "1",
             "explicit stage authorization is absent")
     head = os.environ.get("TSTSS_GAMEPLAY_ENGINE_EXPECTED_HEAD", "").strip().lower()

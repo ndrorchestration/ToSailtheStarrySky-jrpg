@@ -25,7 +25,7 @@ def classify(s: dict) -> list[str]:
     reasons = []
     checks = (
         ("WINDOWS_REQUIRED", s.get("platform") == "win32"),
-        ("WRONG_WORKTREE", s.get("worktree") == stage.WORKTREE),
+        ("WRONG_WORKTREE", s.get("worktree") in stage.REVIEW_WORKTREES),
         ("EXACT_HEAD_MISMATCH", s.get("head_matches") is True),
         ("SOURCE_DIRTY", not s.get("source_changes")),
         ("ENGINE_VERSION_MISMATCH", s.get("engine_correct") is True),
