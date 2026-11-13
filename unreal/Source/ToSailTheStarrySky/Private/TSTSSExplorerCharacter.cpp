@@ -490,17 +490,18 @@ void ATSTSSExplorerCharacter::RestoreEngineFocusPreview()
     }
     else if (bHadPreview)
     {
-        UWorld* World = GetWorld();
-        if (!World) return;
-        if (UTSTSSPresentationCoordinatorSubsystem* Coordinator =
-                World->GetSubsystem<UTSTSSPresentationCoordinatorSubsystem>())
+        if (UWorld* World = GetWorld())
         {
-            if (Coordinator->GetCurrentIntent().ShotId ==
-                    FName(TEXT("FW03_Engine_Inspection")))
+            if (UTSTSSPresentationCoordinatorSubsystem* Coordinator =
+                    World->GetSubsystem<UTSTSSPresentationCoordinatorSubsystem>())
             {
-                // A pre-enabled coordinator remains enabled but the expired
-                // inspection must not leak after the player returns.
-                Coordinator->ResetReviewIntent();
+                if (Coordinator->GetCurrentIntent().ShotId ==
+                        FName(TEXT("FW03_Engine_Inspection")))
+                {
+                    // A pre-enabled coordinator remains enabled but the expired
+                    // inspection must not leak after the player returns.
+                    Coordinator->ResetReviewIntent();
+                }
             }
         }
     }
