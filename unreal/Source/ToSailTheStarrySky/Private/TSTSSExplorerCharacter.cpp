@@ -8,6 +8,7 @@
 #include "Engine/GameInstance.h"
 #if WITH_EDITOR
 #include "TSTSSV5HarborReviewDressing.h"
+#include "TSTSSHilltoniaReviewExtension.h"
 #include "AureateWakePreviewActor.h"
 #include "Engine/StaticMeshActor.h"
 #include "Engine/PostProcessVolume.h"
@@ -258,8 +259,26 @@ void ApplyV5HarborReviewLookdev(UWorld* World)
     // A partial or missing PBR asset set must never create mismatched props.
     if (bCompletePBRPack)
     {
-        TSTSSV5HarborReviewDressing::Apply(
+        const bool bDockReady = TSTSSV5HarborReviewDressing::Apply(
             World, PBRLoaded[0], PBRLoaded[2], PBRLoaded[3], PBRLoaded[4]);
+        // Town/woodland review extension is opt-in behind the same scoped
+        // V5 harbor gate, but has its own WorldStatic walking route.
+        // It cannot instantiate when the base harbor dressing failed.
+        if (bDockReady)
+        {
+            UMaterialInterface* Canopy = LoadObject<UMaterialInterface>(
+                nullptr, TEXT("/Game/TSTSS/Review/VerticalSlice/M_VS_Green.M_VS_Green"));
+            if (IsValid(Canopy))
+            {
+                TSTSSHilltoniaReviewExtension::Apply(
+                    World, PBRLoaded[0], PBRLoaded[2], PBRLoaded[3], Canopy);
+            }
+            else
+            {
+                UE_LOG(LogTemp, Warning,
+                    TEXT("TSTSS_HILLTONIA_HOLD missing forest material; town not spawned"));
+            }
+        }
     }
     UE_LOG(LogTemp, Display,
         TEXT("TSTSS_V5_LOOKDEV_APPLIED material_slots=6 pbr=%d exposure_bias=-2.2 source_map_unchanged=1"),
