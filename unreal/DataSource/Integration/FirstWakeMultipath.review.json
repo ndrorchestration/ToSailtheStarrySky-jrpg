@@ -14,7 +14,10 @@
     "Ionia"
   ],
   "post_splashdown_first_recruit": "Lyra",
-  "post_splashdown_before_recruitment_party": ["Ender", "Ionia"],
+  "post_splashdown_before_recruitment_party": [
+    "Ender",
+    "Ionia"
+  ],
   "lyra_equipment_gate": {
     "after_sea_contact_stage": "AfterSplashdown",
     "requires_distinct_recruitment": true,
@@ -123,5 +126,79 @@
     "independent asset/map readback",
     "player-controlled Prelude to sea landing with save/continue checks",
     "paired Lit GPU screenshots and creator acceptance"
-  ]
+  ],
+  "source_ownership_audit_2026_11_13": {
+    "audit_type": "SOURCE_CONTRACT_RECONCILIATION_NON_AUTHORIZING",
+    "base_pr": 823,
+    "base_source_sha": "6fa183fbb51210a197c64ea93dc6bf3d352be2f6",
+    "combined_head_native_test_status": "NOT_TESTED",
+    "audited_scope": "First Wake V5 source join, compared with distinct open review PRs; no protected-main merge",
+    "single_owner_lanes": {
+      "interactive_story_travel": {
+        "owning_runtime": "unreal/Source/ToSailTheStarrySky/Private/TSTSSExplorerCharacter.cpp",
+        "player_interact_action": "Interact",
+        "debug_scene_travel_action": "ReviewShoreTravel",
+        "debug_scene_travel_key": "K",
+        "authorizing_story_event": "E_PLAYER_ACCEPTED_MILESTONE",
+        "observed_complete_route": false,
+        "k_only_travel_is_gameplay_acceptance": false,
+        "pending": "ONE_AUTHORITATIVE_PLAYER_DRIVEN_ROUTE_WITH_2S_PHYSICAL_FLOTATION_AND_SAVE_CONTINUITY"
+      },
+      "audio": {
+        "reviewed_join_pr": 823,
+        "source_donor_pr": 804,
+        "parallel_convergence_pr": 813,
+        "owning_event_register": "unreal/DataSource/Audio/FirstWakeAudioEvents.review.json",
+        "owning_scene_bindings": "unreal/DataSource/Audio/FirstWakeSceneAudioBindings.review.json",
+        "v5_audio_actors_placed": false,
+        "v5_audio_audible_in_pie": false,
+        "historical_music_cleared": false,
+        "pending": "SINGLE_RUNTIME_EVENT_OWNER_PLUS_REAL_IMPORT_TRIGGER_LISTENING_RIGHTS"
+      },
+      "party_equipment": {
+        "owning_fixture": "unreal/Source/ToSailTheStarrySky/Private/TSTSSPartySliceReviewEquipment.cpp",
+        "first_wake": [
+          "Ender",
+          "Ionia"
+        ],
+        "after_splashdown_before_recruitment": [
+          "Ender",
+          "Ionia"
+        ],
+        "after_explicit_recruitment": [
+          "Ender",
+          "Ionia",
+          "Lyra"
+        ],
+        "unavailable": [
+          "Reson",
+          "Aepex"
+        ],
+        "lyra_runtime_recruitment_verified": false,
+        "pending": "PLAYER_DIALOGUE_RECRUITMENT_AND_PERSISTED_ACTUAL_PARTY_MEMBERSHIP"
+      },
+      "resonator": {
+        "owner_focus_review_pr": 810,
+        "convergence_candidate_pr": 813,
+        "other_vfx_catalog_candidate_pr": 797,
+        "owning_spell_rows": "unreal/DataSource/Magic/EnderResonator.vertical_slice.review.json",
+        "creator_pulse_target": "POINT_BLANK_SPHERICAL_AOE_ENEMIES_ONLY",
+        "observed_pulse_target": "Enemy",
+        "observed_pulse_action_model": "SOURCE_ATOMIC_AOE_CANDIDATE",
+        "source_compatible_with_creator_pulse": false,
+        "pulse_full_aoe_runtime_verified": false,
+        "pulse_3d_spherical_vfx_approved": false,
+        "centering_resource_cost": 5,
+        "centering_defense_buff_percent": 15,
+        "centering_rounds": 3,
+        "correspondence_spells_status": "DESIGN_ONLY_ON_HOLD",
+        "pending": "NATIVE_COMPILATION_AND_MULTI_ENEMY_TESTS; PROVE_REAL_ACTOR_WORLD_POSITIONS; CREATOR_APPROVE_3D_SPHERICAL_VISUAL",
+        "pulse_area_source_candidate": true,
+        "pulse_radius_cm": 600,
+        "pulse_source_head_native_verified": false,
+        "pulse_spatial_positions_verified_in_game": false
+      }
+    },
+    "disposition": "KEEP_BRANCHES_AND_HISTORICAL_EVIDENCE_UNMERGED; NO_DUPLICATE_AUDIO_DIRECTOR; NO_AUTO_LYRA; NO_PULSE_AOE_CLAIM"
+  }
 }

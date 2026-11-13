@@ -55,8 +55,8 @@
       "trigger": "physical.step.wood",
       "priority": "P0",
       "scope": "SLICE",
-      "preview_file": null,
-      "source_status": "NOT_SOURCE_CLEARED",
+      "preview_file": "footstep_wood.wav",
+      "source_status": "ORIGINAL_QA_GENERATABLE",
       "runtime_status": "NOT_NATIVE_VERIFIED",
       "requires_authoritative_gate": false
     },
@@ -66,8 +66,8 @@
       "trigger": "physical.step.sand",
       "priority": "P0",
       "scope": "SLICE",
-      "preview_file": null,
-      "source_status": "NOT_SOURCE_CLEARED",
+      "preview_file": "footstep_sand.wav",
+      "source_status": "ORIGINAL_QA_GENERATABLE",
       "runtime_status": "NOT_NATIVE_VERIFIED",
       "requires_authoritative_gate": false
     },
@@ -77,8 +77,8 @@
       "trigger": "physical.step.stone",
       "priority": "P1",
       "scope": "SLICE",
-      "preview_file": null,
-      "source_status": "NOT_SOURCE_CLEARED",
+      "preview_file": "footstep_stone.wav",
+      "source_status": "ORIGINAL_QA_GENERATABLE",
       "runtime_status": "NOT_NATIVE_VERIFIED",
       "requires_authoritative_gate": false
     },
@@ -88,8 +88,8 @@
       "trigger": "physical.step.metal",
       "priority": "P1",
       "scope": "SLICE",
-      "preview_file": null,
-      "source_status": "NOT_SOURCE_CLEARED",
+      "preview_file": "footstep_metal.wav",
+      "source_status": "ORIGINAL_QA_GENERATABLE",
       "runtime_status": "NOT_NATIVE_VERIFIED",
       "requires_authoritative_gate": false
     },

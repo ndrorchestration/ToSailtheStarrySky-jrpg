@@ -1,4 +1,5 @@
 #include "TSTSSBattleSkillSystem.h"
+#include "Combat/TSTSSPulseAreaMath.h"
 
 namespace
 {
@@ -28,6 +29,41 @@ bool FTSTSSBattleSkillSystem::TryUseRow(
     FTSTSSBattleSkillState& OutState,
     FTSTSSBattleSkillCue& OutCue)
 {
+    // A single-target call must NEVER silently execute the creator's
+    // point-blank, enemy-only spherical Resonant Pulse as one-enemy damage.
+    return TryUseValidatedRow(
+        State, Knowledge, Factions, PartyFaction, OpponentFaction,
+        ActorId, TargetId, SkillId, Row, false, OutState, OutCue);
+}
+
+bool FTSTSSBattleSkillSystem::TryUseValidatedRow(
+    const FTSTSSBattleSkillState& State,
+    const FTSTSSBattleSkillKnowledge& Knowledge,
+    const TMap<FName, FName>& Factions,
+    FName PartyFaction, FName OpponentFaction,
+    FName ActorId, FName TargetId, FName SkillId,
+    const FTSTSSBattleSkillRow& Row, bool bAuthorizedAreaPulse,
+    FTSTSSBattleSkillState& OutState,
+    FTSTSSBattleSkillCue& OutCue)
+{
+    if (SkillId == TEXT("Ender_ResonantPulse"))
+    {
+        if (!bAuthorizedAreaPulse || ActorId != TEXT("Ender") ||
+            Row.Kind != ETSTSSBattleSkillKind::Spell ||
+            Row.Target != ETSTSSBattleSkillTarget::Enemy ||
+            Row.Power != 6 || Row.ResourceCost != 3 ||
+            Row.bHealing || Row.bPartyPhysicalDefenseBuff ||
+            Row.RequiredSchool != TEXT("ResonanceHarmonic") ||
+            Row.RequiredMasteryRank != 1 ||
+            Row.VfxCueId != TEXT("VFX.Ender.ResonantPulse"))
+        {
+            return false;
+        }
+    }
+    else if (bAuthorizedAreaPulse)
+    {
+        return false;
+    }
     if (SkillId.IsNone() || Row.SkillId != SkillId ||
         Row.Admission != ETSTSSBattleSkillAdmission::ReviewExecutable ||
         Row.Power < 0 || Row.ResourceCost < 0 || Row.CooldownActorTurns < 0 ||
@@ -239,6 +275,107 @@ bool FTSTSSBattleSkillSystem::TryUseRow(
     CandidateCue.AnimationCueId = Row.AnimationCueId;
     OutState = MoveTemp(Candidate);
     OutCue = CandidateCue;
+    return true;
+}
+
+bool FTSTSSBattleSkillSystem::TryUseResonantPulseArea(
+    const FTSTSSBattleSkillState& State,
+    const FTSTSSBattleSkillKnowledge& Knowledge,
+    const TMap<FName, FName>& Factions,
+    FName PartyFaction, FName OpponentFaction,
+    FName ActorId, const FTSTSSBattleSkillRow& Row,
+    const TMap<FName, FVector>& ParticipantWorldPositions,
+    FTSTSSBattleSkillState& OutState,
+    FTSTSSBattleSkillCue& OutCue,
+    TArray<FName>& OutAffectedEnemyIds)
+{
+    // The single-target resolver below owns MP, mastery, turn, cooldown
+    // and all original action validations. Spatial selection only narrows
+    // *existing, living, faction-authorized roster enemies*. No entry in a
+    // caller's position map can create a combatant or unlock a spell.
+    if (ActorId != TEXT("Ender") ||
+        Row.SkillId != TEXT("Ender_ResonantPulse") ||
+        PartyFaction.IsNone() || OpponentFaction.IsNone() ||
+        PartyFaction == OpponentFaction ||
+        State.Combat.Roster.Num() < 2 ||
+        State.Combat.Roster.Num() > 35 ||
+        ParticipantWorldPositions.Num() != State.Combat.Roster.Num())
+    {
+        return false;
+    }
+
+    const FVector* Center = ParticipantWorldPositions.Find(ActorId);
+    const FName* CasterSide = Factions.Find(ActorId);
+    if (!Center || !CasterSide || *CasterSide != PartyFaction)
+        return false;
+
+    // Reuse precisely the portable comparator tested by the engine-free
+    // C++ executable. Faction and learned-skill authority stay in Unreal.
+    const auto ValidPoint = [](const FVector& P) -> bool
+    {
+        return TSTSSPulseAreaMath::IsValidWorldPosition(P.X, P.Y, P.Z);
+    };
+    if (!ValidPoint(*Center)) return false;
+    TArray<FName> Affected;
+    TSet<FName> Seen;
+    for (const FTSTSSCombatant& Unit : State.Combat.Roster)
+    {
+        const FVector* Point = ParticipantWorldPositions.Find(Unit.CharacterId);
+        const FName* Side = Factions.Find(Unit.CharacterId);
+        if (Unit.CharacterId.IsNone() || Seen.Contains(Unit.CharacterId) ||
+            !Point || !ValidPoint(*Point) ||
+            !Side || (*Side != PartyFaction && *Side != OpponentFaction))
+            return false;
+        Seen.Add(Unit.CharacterId);
+        if (*Side == OpponentFaction && Unit.Health > 0 &&
+            TSTSSPulseAreaMath::WithinSphere(
+                Center->X, Center->Y, Center->Z,
+                Point->X, Point->Y, Point->Z,
+                ResonantPulseRadiusCm))
+        {
+            Affected.Add(Unit.CharacterId);
+        }
+    }
+    if (Affected.IsEmpty()) return false;
+
+    // Sorting independent of roster order makes the cue/first target stable,
+    // and prevents callers from deciding who receives the paid first hit.
+    Affected.Sort([](const FName& A, const FName& B)
+    {
+        return A.ToString().Compare(B.ToString(), ESearchCase::CaseSensitive) < 0;
+    });
+
+    FTSTSSBattleSkillState Candidate;
+    FTSTSSBattleSkillCue CandidateCue;
+    if (!TryUseValidatedRow(
+        State, Knowledge, Factions, PartyFaction, OpponentFaction,
+        ActorId, Affected[0], Row.SkillId, Row, true,
+        Candidate, CandidateCue))
+        return false;
+
+    // Apply remaining radial enemy hits to a local copy, WITHOUT additional
+    // turns, cooldown increments, MP consumption, or event notifications.
+    // Any rejection discards the whole local transaction.
+    for (int32 Index = 1; Index < Affected.Num(); ++Index)
+    {
+        FTSTSSCombatAction Extra;
+        Extra.ActorId = ActorId;
+        Extra.TargetId = Affected[Index];
+        Extra.Power = Row.Power;
+        Extra.ResourceCost = 0;
+        Extra.bHealing = false;
+        Extra.bPhysicalDamage = false;
+        Extra.bSupportOnly = false;
+        TArray<FTSTSSCombatant> NextRoster;
+        if (!UTSTSSCombatRules::TryApplyAction(
+            Candidate.Combat.Roster, Extra, NextRoster))
+            return false;
+        Candidate.Combat.Roster = MoveTemp(NextRoster);
+    }
+
+    OutState = MoveTemp(Candidate);
+    OutCue = CandidateCue;
+    OutAffectedEnemyIds = MoveTemp(Affected);
     return true;
 }
 
