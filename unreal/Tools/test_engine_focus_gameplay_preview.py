@@ -31,7 +31,11 @@ RULES = {
     "lens": 'Cine->SetCurrentFocalLength(65.f);',
     "aperture": 'Cine->SetCurrentAperture(2.8f);',
     "manual_focus": 'Settings.FocusMethod = ECameraFocusMethod::Manual;',
-    "limited_duration": 'FPlatformTime::Seconds() + 4.0',
+    "limited_duration": 'EngineFocusPreviewStartedSeconds + 4.0',
+    "blend_entry_grace": 'FPlatformTime::Seconds() - EngineFocusPreviewStartedSeconds > 0.75',
+    "no_owner_disable": 'if (!Current.bEligible',
+    "only_cleanup_when_opened": 'else if (bHadPreview)',
+    "discoverable_prompt": 'Engine inspection: press C near the LIFT instrument for a 4s focus view',
     "visual_return": 'PC->SetViewTargetWithBlend(this, 0.3f,',
     "input_restore_move": 'PC->SetIgnoreMoveInput(false);',
     "input_restore_look": 'PC->SetIgnoreLookInput(false);',
@@ -143,6 +147,19 @@ class FirstWakePlayerFocusPreviewSourceTests(unittest.TestCase):
             check_contract(self.cpp.replace("Camera->SetLifeSpan(0.6f);",
                                             "/* preview camera left live */"),
                            self.header, self.config)
+
+    def test_entry_blend_grace_cannot_be_removed(self):
+        edited = self.cpp.replace(
+            'FPlatformTime::Seconds() - EngineFocusPreviewStartedSeconds > 0.75',
+            'false /* ignores camera switch while blending */')
+        with self.assertRaisesRegex(ValueError, "blend_entry_grace"):
+            check_contract(edited, self.header, self.config)
+
+    def test_exit_must_not_revoke_unowned_coordinator_state(self):
+        edited = self.cpp.replace('else if (bHadPreview)',
+                                  'else /* invalidates even without camera */')
+        with self.assertRaisesRegex(ValueError, "only_cleanup_when_opened"):
+            check_contract(edited, self.header, self.config)
 
     def test_persistent_gameplay_mutation_fails(self):
         insertion = "    SaveFirstWake(TEXT(\"unsafe_auto_save\"));\n"
