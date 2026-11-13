@@ -17,6 +17,12 @@ are already castable in the current First Wake playable map.
 - **Remaining visual holds:** repeated time-separated captures / visual animation review, all nine effects in context, controlled exposure and framing, daylight/night/weather/biome readability, sound, actor/weapon animation, performance, gameplay PIE and creator approval. The visible current effect is review-only prototype art, not AAA cinematic approval.
 - **Gameplay holds:** Resonant Pulse still has an enemy-actor-only combat row and has **not** gained point/area mechanic permissions; Centering's full-party physical-defense buff (~3 rounds or 10-12 seconds) is **not implemented** in the battle system. Both require distinct authorization-preserving runtime contracts and native tests. No default learned skills, hidden ship forms or production claims were promoted.
 
+### Reviewable native screenshot (not approved)
+
+![Ender Resonant Pulse spherical review effect from UE5.8.4 D3D12 ? not creator-approved](Evidence/EnderResonator/ResonantPulse_D3D12_6e20b04_20261113.png)
+
+This is the actual 960x540 native GPU frame from implementation commit `6e20b044d9174fc6fe4f4b829fabd59b19665719`, image SHA-256 `45124e25a8444ac267a12ea5c2386df7aeae3a3b51b32897db65b0b6a46e8c39`. It is a review-only close-up of the sphere visual, not a playable spell, time-series proof, or creator art approval.
+
 ## Creator identity and admission gates
 
 Ender's permanent profession is **Harmonic Resonance Engineer**. His selected
