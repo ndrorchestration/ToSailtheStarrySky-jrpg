@@ -5,6 +5,30 @@ param(
 )
 # Review-only, non-destructive. Never merge, rewrite maps, save data or project defaults.
 $ErrorActionPreference = 'Stop'
+# Fail-closed receipt hashing without relying on Get-FileHash command registration.
+# Some authenticated Neontic PowerShell hosts omit that otherwise standard cmdlet.
+function Get-TSTSSReviewSHA256([string]$LiteralPath) {
+    $Resolved = (Resolve-Path -LiteralPath $LiteralPath -ErrorAction Stop).Path
+    $Stream = [System.IO.File]::Open($Resolved,
+        [System.IO.FileMode]::Open,
+        [System.IO.FileAccess]::Read,
+        [System.IO.FileShare]::Read)
+    try {
+        $Hasher = [System.Security.Cryptography.SHA256]::Create()
+        if ($null -eq $Hasher) { throw 'HOLD: SHA-256 provider unavailable' }
+        try {
+            $Digest = $Hasher.ComputeHash($Stream)
+        } finally {
+            $Hasher.Dispose()
+        }
+        if ($null -eq $Digest -or $Digest.Length -ne 32) {
+            throw 'HOLD: invalid native report SHA-256'
+        }
+        return [System.BitConverter]::ToString($Digest).Replace('-', '').ToLowerInvariant()
+    } finally {
+        $Stream.Dispose()
+    }
+}
 $Repo = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $Project = Join-Path $Repo 'unreal\ToSailTheStarrySky.uproject'
 $Editor = Join-Path $EngineRoot 'Engine\Binaries\Win64\UnrealEditor.exe'
@@ -93,7 +117,7 @@ foreach ($File in @(Get-ChildItem -LiteralPath $Evidence -Filter 'verified-nativ
             -not (Test-Path -LiteralPath $HeadPath -PathType Leaf) -or
             -not (Test-Path -LiteralPath $ReportPath -PathType Leaf) -or
             (Get-Content -LiteralPath $HeadPath -Raw).Trim() -ine $Head -or
-            (Get-FileHash -LiteralPath $ReportPath -Algorithm SHA256).Hash.ToLowerInvariant() -ne $Receipt.report_sha256) {
+            (Get-TSTSSReviewSHA256 -LiteralPath $ReportPath) -ne $Receipt.report_sha256) {
             continue
         }
         $Check = Assert-TSTSSNativeAutomationReport -ReportPath $ReportPath -RequiredTests $Names

@@ -3,9 +3,11 @@
 Do not infer a UE build, audio playback, runtime traversal or visual approval.
 """
 from pathlib import Path
+import hashlib
 import re
 import shutil
 import subprocess
+import tempfile
 import unittest
 
 UNREAL = Path(__file__).resolve().parents[1]
@@ -90,12 +92,48 @@ class FirstWakeV5TitleLauncherSource(unittest.TestCase):
         self.assertIn("$Receipt.required_native_tests -ne 38", s)
         self.assertIn("$Receipt.source_sha -ine $Head", s)
         self.assertIn("(Get-Content -LiteralPath $HeadPath -Raw).Trim() -ine $Head", s)
-        self.assertIn("Get-FileHash -LiteralPath $ReportPath -Algorithm SHA256", s)
+        self.assertIn("(Get-TSTSSReviewSHA256 -LiteralPath $ReportPath)", s)
+        self.assertIn("[System.Security.Cryptography.SHA256]::Create()", s)
+        self.assertIn("[System.IO.File]::Open($Resolved", s)
+        self.assertNotIn("Get-FileHash -LiteralPath $ReportPath", s)
         self.assertIn("$Receipt.visual_approval -ne 'NOT_TESTED'", s)
         self.assertIn("HOLD: no matching full 38-test native receipt at this source HEAD", s)
         self.assertNotIn("SkipTests", s)
         self.assertNotIn("Override", s)
         self.assertNotIn("Force", s)
+
+    def test_receipt_hash_independent_of_cmdlet_and_rejects_tampering(self):
+        shell = shutil.which("pwsh") or shutil.which("powershell")
+        if not shell:
+            self.skipTest("PowerShell unavailable for SHA-256 executable fixture")
+        match = re.search(
+            r"(?s)(function Get-TSTSSReviewSHA256\(\[string\]\$LiteralPath\) \{.*?\n\})\s*\$Repo =",
+            self.script,
+        )
+        self.assertIsNotNone(match, "Real launcher hash helper not found")
+        with tempfile.TemporaryDirectory() as temp:
+            sample = Path(temp) / "synthetic-report.json"
+            sample.write_bytes(b'{"tests":[],"synthetic":true}')
+            expected = hashlib.sha256(sample.read_bytes()).hexdigest()
+            quoted = str(sample).replace("'", "''")
+            fixture = Path(temp) / "verify-hash.ps1"
+            fixture.write_text(
+                "$ErrorActionPreference = 'Stop'\n"
+                + match.group(1) + "\n"
+                + "$original = Get-TSTSSReviewSHA256 -LiteralPath '" + quoted + "'\n"
+                + "if ($original -cne '" + expected + "') { exit 11 }\n"
+                + "[System.IO.File]::AppendAllText('" + quoted + "', 'TAMPER')\n"
+                + "$modified = Get-TSTSSReviewSHA256 -LiteralPath '" + quoted + "'\n"
+                + "if ($modified -ceq '" + expected + "') { exit 12 }\n"
+                + "Write-Output 'HASH_FIXTURE_PASS'\n",
+                encoding="utf-8",
+            )
+            result = subprocess.run(
+                [shell, "-NoProfile", "-NonInteractive", "-File", str(fixture)],
+                capture_output=True, text=True, timeout=30, check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("HASH_FIXTURE_PASS", result.stdout)
 
     def test_launcher_does_not_write_save_or_stage_assets(self):
         s = self.script
