@@ -1,0 +1,46 @@
+{
+  "commit": "84112d34d1ce6a11adbaffd79cb6a3b1187a8b45",
+  "scope": "isolated_review_only",
+  "capture_log_ages": [
+    0.647,
+    1.183,
+    1.741
+  ],
+  "frames": [
+    {
+      "file": "ScreenShot00008.png",
+      "sha256": "03fa991b76e1bdfbda91dd3736604567a8550e1daeecf7880de332250bdf5765",
+      "bytes": 82449,
+      "cue_age_seconds": 0.647,
+      "cyan_candidate_pixels": 1164,
+      "radial_p75_px": 97.05,
+      "radial_p90_px": 100.18,
+      "unique_colors": 3237
+    },
+    {
+      "file": "ScreenShot00009.png",
+      "sha256": "233c4db0fdfd204debf5559f1120821248688609fc92de306744e17307656b11",
+      "bytes": 141530,
+      "cue_age_seconds": 1.183,
+      "cyan_candidate_pixels": 1831,
+      "radial_p75_px": 152.07,
+      "radial_p90_px": 157.47,
+      "unique_colors": 4581
+    },
+    {
+      "file": "ScreenShot00010.png",
+      "sha256": "5a11de7b010bd1bc8ee21350c589ebcd187a40cd9e7f5f4c4c5a7a9d10ee5c78",
+      "bytes": 145287,
+      "cue_age_seconds": 1.741,
+      "cyan_candidate_pixels": 1742,
+      "radial_p75_px": 215.67,
+      "radial_p90_px": 221.2,
+      "unique_colors": 5632
+    }
+  ],
+  "distinct_hashes": true,
+  "radial_p90_increases": true,
+  "rendering_verified": true,
+  "cinematic_approved": false,
+  "gameplay_verified": false
+}

@@ -1,0 +1,18 @@
+﻿[2026.11.13-23.56.16:920][117]LogTemp: Display: TSTSS_RESONATOR_SWEEP_FOCUS stage=0 cue=VFX.Ender.ResonantPulse
+[2026.11.13-23.56.17:162][128]LogTemp: Display: TSTSS_RESONATOR_SWEEP_CAPTURE stage=0 cue=VFX.Ender.ResonantPulse age=0.781 phase=0.363
+[2026.11.13-23.56.19:807][231]LogTemp: Display: TSTSS_RESONATOR_SWEEP_FOCUS stage=1 cue=VFX.Ender.TuningLance
+[2026.11.13-23.56.20:048][242]LogTemp: Display: TSTSS_RESONATOR_SWEEP_CAPTURE stage=1 cue=VFX.Ender.TuningLance age=0.860 phase=0.351
+[2026.11.13-23.56.21:291][298]LogTemp: Display: TSTSS_RESONATOR_SWEEP_FOCUS stage=2 cue=VFX.Ender.EchoMend
+[2026.11.13-23.56.21:549][310]LogTemp: Display: TSTSS_RESONATOR_SWEEP_CAPTURE stage=2 cue=VFX.Ender.EchoMend age=0.813 phase=0.378
+[2026.11.13-23.56.21:647][311]LogTemp: Display: TSTSS_RESONATOR_SWEEP_FOCUS stage=3 cue=VFX.Ender.CorrespondenceThread
+[2026.11.13-23.56.21:894][325]LogTemp: Display: TSTSS_RESONATOR_SWEEP_CAPTURE stage=3 cue=VFX.Ender.CorrespondenceThread age=1.158 phase=0.538
+[2026.11.13-23.56.23:440][396]LogTemp: Display: TSTSS_RESONATOR_SWEEP_FOCUS stage=4 cue=VFX.Ender.LatticeBreak
+[2026.11.13-23.56.23:702][408]LogTemp: Display: TSTSS_RESONATOR_SWEEP_CAPTURE stage=4 cue=VFX.Ender.LatticeBreak age=0.814 phase=0.379
+[2026.11.13-23.56.23:807][409]LogTemp: Display: TSTSS_RESONATOR_SWEEP_FOCUS stage=5 cue=VFX.Ender.MindRipple
+[2026.11.13-23.56.24:050][423]LogTemp: Display: TSTSS_RESONATOR_SWEEP_CAPTURE stage=5 cue=VFX.Ender.MindRipple age=1.164 phase=0.542
+[2026.11.13-23.56.25:587][495]LogTemp: Display: TSTSS_RESONATOR_SWEEP_FOCUS stage=6 cue=VFX.Ender.FocusHarmonic
+[2026.11.13-23.56.25:839][507]LogTemp: Display: TSTSS_RESONATOR_SWEEP_CAPTURE stage=6 cue=VFX.Ender.FocusHarmonic age=0.802 phase=0.373
+[2026.11.13-23.56.27:154][569]LogTemp: Display: TSTSS_RESONATOR_SWEEP_FOCUS stage=7 cue=VFX.Ender.ConcordanceBurst
+[2026.11.13-23.56.27:411][581]LogTemp: Display: TSTSS_RESONATOR_SWEEP_CAPTURE stage=7 cue=VFX.Ender.ConcordanceBurst age=0.876 phase=0.358
+[2026.11.13-23.56.27:515][582]LogTemp: Display: TSTSS_RESONATOR_SWEEP_FOCUS stage=8 cue=VFX.Ender.ThoughtChord
+[2026.11.13-23.56.27:759][596]LogTemp: Display: TSTSS_RESONATOR_SWEEP_CAPTURE stage=8 cue=VFX.Ender.ThoughtChord age=1.220 phase=0.498

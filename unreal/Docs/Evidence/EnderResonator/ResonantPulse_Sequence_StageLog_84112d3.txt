@@ -1,0 +1,3 @@
+﻿[2026.11.13-23.27.54:942][119]LogTemp: Display: TSTSS_RESONATOR_SEQUENCE_CAPTURE stage=0 elapsed=2.821 cue_age=0.647 duration=2.150
+[2026.11.13-23.27.55:634][128]LogTemp: Display: TSTSS_RESONATOR_SEQUENCE_CAPTURE stage=1 elapsed=3.356 cue_age=1.183 duration=2.150
+[2026.11.13-23.27.56:196][151]LogTemp: Display: TSTSS_RESONATOR_SEQUENCE_CAPTURE stage=2 elapsed=3.918 cue_age=1.741 duration=2.150

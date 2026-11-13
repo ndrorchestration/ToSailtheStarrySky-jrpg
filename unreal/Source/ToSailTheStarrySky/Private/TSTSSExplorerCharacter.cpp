@@ -566,7 +566,7 @@ void ATSTSSExplorerCharacter::ReviewContinue()
         FirstWakeState->GetRestoreGeneration() ==
             PendingReviewContinueRestoreGeneration &&
         FirstWakeState->HasStarted() == bPendingReviewContinueStarted &&
-        FirstWakeState->GetCurrentBeat() == bPendingReviewContinueBeat &&
+        FirstWakeState->GetCurrentBeat() == PendingReviewContinueBeat &&
         FirstWakeState->GetInspectionMask() ==
             PendingReviewContinueInspectionMask;
 

@@ -6,6 +6,7 @@ on:
   pull_request:
     paths:
       - 'unreal/Source/**'
+      - 'unreal/DataSource/Magic/**'
       - 'unreal/Config/**'
       - 'unreal/Tools/**'
       - 'unreal/Docs/**'
@@ -38,6 +39,10 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+      - name: Validate Ender Resonator review magic contract (source-only)
+        run: |
+          python3 -m unittest discover -s unreal/Tools -p 'test_ender_resonator_magic_source.py' -v
+          python3 -m py_compile unreal/Tools/build_ender_resonator_preview.py
       - name: Verify checker self-tests
         run: python3 unreal/Tools/test_automation_registry.py
       - name: Compare expected and registered Unreal tests
