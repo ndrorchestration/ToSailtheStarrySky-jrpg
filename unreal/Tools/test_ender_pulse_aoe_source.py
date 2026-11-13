@@ -57,8 +57,9 @@ def validate(sources: dict) -> list[str]:
         and "TryUseResonantPulseArea(" in header
         and "TryUseValidatedRow(" in header
         and "bool FTSTSSBattleSkillSystem::TryUseResonantPulseArea(" in executor
-        and "ResonantPulseRadiusCm * ResonantPulseRadiusCm" in executor
-        and "FVector::DistSquared(*Center, *Point) <= RadiusSquared" in executor
+        and "Combat/TSTSSPulseAreaMath.h" in executor
+        and "TSTSSPulseAreaMath::WithinSphere(" in executor
+        and "ResonantPulseRadiusCm))" in executor
         and "*Side == OpponentFaction && Unit.Health > 0" in executor
         and "ParticipantWorldPositions.Num() != State.Combat.Roster.Num()" in executor
         and "Affected.IsEmpty()" in executor
@@ -181,8 +182,8 @@ class PulseSpatialSourceTests(unittest.TestCase):
                            "*Side == PartyFaction && Unit.Health > 0", "spatial")
 
     def test_2d_radius_rejected(self):
-        self.fail_mutation("executor", "FVector::DistSquared(*Center, *Point) <= RadiusSquared",
-                           "FVector::DistSquared2D(*Center, *Point) <= RadiusSquared", "spatial")
+        self.fail_mutation("executor", "TSTSSPulseAreaMath::WithinSphere(",
+                           "TSTSSPulseAreaMath::WithinCylinder(", "spatial")
 
     def test_renderer_flattening_rejected(self):
         self.fail_mutation("vfx", "const FVector Point = Unit * RadiusCm",
