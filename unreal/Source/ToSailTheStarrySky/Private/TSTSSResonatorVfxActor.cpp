@@ -5,6 +5,12 @@
 #include "Components/SceneComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
+#if WITH_EDITOR
+#include "Engine/Engine.h"
+#include "GameFramework/PlayerController.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
+#endif
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Materials/MaterialInterface.h"
 #include "UObject/ConstructorHelpers.h"
@@ -158,6 +164,32 @@ void ATSTSSResonatorVfxActor::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
     if (!bPlaying) return;
+#if WITH_EDITOR
+    // Explicit opt-in diagnostic: never run in shipped builds or from combat casts.
+    // Delaying the screenshot avoids startup-frame captures before renderer readiness.
+    if (bReviewInstance && !bReviewCaptureRequested &&
+        PreviewCueId == FName(TEXT("VFX.Ender.ResonantPulse")) &&
+        FParse::Param(FCommandLine::Get(), TEXT("TSTSSResonatorCapture")))
+    {
+        ReviewCaptureElapsed += FMath::Max(0.f, DeltaSeconds);
+        if (ReviewCaptureElapsed >= 3.f)
+        {
+            bReviewCaptureRequested = true;
+            APlayerController* Controller = GetWorld() ? GetWorld()->GetFirstPlayerController() : nullptr;
+            const AActor* View = Controller ? Controller->GetViewTarget() : nullptr;
+            UE_LOG(LogTemp, Display,
+                TEXT("TSTSS_RESONATOR_REVIEW_CAPTURE camera=%s rings=%d motes=%d material=%s center=%s"),
+                View ? *View->GetName() : TEXT("None"),
+                RingMeshes->GetInstanceCount(), MoteMeshes->GetInstanceCount(),
+                RingMeshes->GetMaterial(0) ? *RingMeshes->GetMaterial(0)->GetName() : TEXT("None"),
+                *GetActorLocation().ToString());
+            if (GEngine && GetWorld())
+            {
+                GEngine->Exec(GetWorld(), TEXT("HighResShot 960x540"));
+            }
+        }
+    }
+#endif
     Age += FMath::Max(0.f, DeltaSeconds);
     if (Age >= Duration)
     {

@@ -54,6 +54,10 @@ private:
     int32 Style = 0;
     bool bPlaying = false;
     bool bReviewInstance = false;
+#if WITH_EDITOR
+    float ReviewCaptureElapsed = 0.f;
+    bool bReviewCaptureRequested = false;
+#endif
 
     bool StartCue(FName CueId, const FVector& RelativeTarget, bool bReview);
     void UpdateVisuals(float TimeSeconds);

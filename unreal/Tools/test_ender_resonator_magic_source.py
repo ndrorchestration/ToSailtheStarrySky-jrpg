@@ -63,6 +63,16 @@ class ResonatorReviewTests(unittest.TestCase):
         cls.header = HEADER.read_text(encoding="utf-8")
         cls.executor = SKILLS.read_text(encoding="utf-8")
 
+    def test_delayed_capture_is_editor_only_and_review_opt_in(self):
+        self.assertIn("TSTSSResonatorCapture", self.cpp)
+        self.assertIn("bReviewInstance && !bReviewCaptureRequested", self.cpp)
+        self.assertIn('PreviewCueId == FName(TEXT("VFX.Ender.ResonantPulse"))', self.cpp)
+        self.assertIn("ReviewCaptureElapsed >= 3.f", self.cpp)
+        self.assertIn("TSTSS_RESONATOR_REVIEW_CAPTURE", self.cpp)
+        self.assertIn("HighResShot 960x540", self.cpp)
+        self.assertIn("#if WITH_EDITOR", self.cpp)
+        self.assertIn("bReviewCaptureRequested = false;", self.header)
+
     def test_review_material_supports_instanced_static_meshes(self):
         builder = (UE / "Tools/build_ender_resonator_preview.py").read_text(encoding="utf-8")
         self.assertIn("set_base_material_usage(material, unreal.MaterialUsage.MATUSAGE_INSTANCED_STATIC_MESHES, True)", builder)
