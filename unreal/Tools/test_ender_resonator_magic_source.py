@@ -87,6 +87,11 @@ class ResonatorReviewTests(unittest.TestCase):
         builder = (UE / "Tools/build_ender_resonator_preview.py").read_text(encoding="utf-8")
         self.assertIn("set_base_material_usage(material, unreal.MaterialUsage.MATUSAGE_INSTANCED_STATIC_MESHES, True)", builder)
 
+    def test_scale_floor_does_not_obscure_in_game_cue_capture(self):
+        builder = (UE / "Tools/build_ender_resonator_preview.py").read_text(encoding="utf-8")
+        self.assertIn("floor.set_actor_hidden_in_game(True)", builder)
+        self.assertIn("unreal.CollisionEnabled.NO_COLLISION", builder)
+
     def test_resonant_pulse_closeup_is_separate_and_lit_for_review(self):
         builder = (UE / "Tools/build_ender_resonator_preview.py").read_text(encoding="utf-8")
         for token in (

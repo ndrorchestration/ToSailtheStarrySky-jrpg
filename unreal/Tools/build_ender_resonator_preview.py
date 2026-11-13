@@ -141,6 +141,9 @@ def make_level():
     floor.set_actor_label("REVIEW CALIBRATION - floor")
     floor.get_editor_property("static_mesh_component").set_static_mesh(mesh)
     floor.set_actor_scale3d(unreal.Vector(44, 44, 0.3))
+    # Keep the scale floor in the Editor but hide it in gameplay review:
+    # its bright surface occludes the tiny additive spherical cue meshes.
+    floor.set_actor_hidden_in_game(True)
     floor.get_editor_property("static_mesh_component").set_collision_enabled(
         unreal.CollisionEnabled.NO_COLLISION)
     key_location = unreal.Vector(0, 0, 750)
