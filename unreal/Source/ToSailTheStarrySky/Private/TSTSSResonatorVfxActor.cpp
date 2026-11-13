@@ -230,22 +230,27 @@ void ATSTSSResonatorVfxActor::UpdateVisuals(float TimeSeconds)
     for (int32 Ring = 0; Ring < 3; ++Ring)
     {
         const float Delay = static_cast<float>(Ring) * 0.16f;
-        const float Phase = FMath::Clamp((T - Delay) / (1.f - Delay), 0.f, 1.f);
+        // A sphere needs the same expanding radius on all three orthogonal great circles.
+        // Other cue styles retain their existing staggered ring timing.
+        const float Phase = (Style == 0) ? T :
+            FMath::Clamp((T - Delay) / (1.f - Delay), 0.f, 1.f);
         const float Radius = (Style == 0 || Style == 7 || Style == 8)
             ? 35.f + 240.f * Phase : 40.f + 70.f * Phase;
         const float Tilt = (Style == 3 || Style == 4) ? 0.6f * Ring : 0.0f;
-        // Resonant Pulse is a caster-centered expanding SPHERE, not a flat ring.
-        const float Latitude = (Ring - 1) * (PI / 4.f);
+        // Resonant Pulse: XY equator + XZ and YZ meridians, all on one
+        // caster-centered expanding spherical shell (not stacked latitude hoops).
         for (int32 Segment = 0; Segment < 24; ++Segment)
         {
             const float A = 2.f * PI * static_cast<float>(Segment) / 24.f +
                             2.5f * TimeSeconds * ((Ring % 2) ? -1.f : 1.f);
+            const float CosA = FMath::Cos(A);
+            const float SinA = FMath::Sin(A);
+            const FVector SphereUnit = Ring == 0 ? FVector(CosA, SinA, 0.f) :
+                Ring == 1 ? FVector(CosA, 0.f, SinA) : FVector(0.f, CosA, SinA);
             const FVector Point = (Style == 0)
-                ? CenterRaised + FVector(Radius * FMath::Cos(Latitude) * FMath::Cos(A),
-                    Radius * FMath::Cos(Latitude) * FMath::Sin(A),
-                    Radius * FMath::Sin(Latitude))
-                : CenterRaised + Right * (Radius * FMath::Cos(A)) +
-                    Up * (Radius * FMath::Sin(A)) + Direction * (Tilt * Radius * FMath::Sin(A));
+                ? CenterRaised + Radius * SphereUnit
+                : CenterRaised + Right * (Radius * CosA) +
+                    Up * (Radius * SinA) + Direction * (Tilt * Radius * SinA);
             const float Size = (0.045f + 0.035f * Pulse) * Visibility;
             RingMeshes->UpdateInstanceTransform(Ring * 24 + Segment,
                 FTransform(FRotator::ZeroRotator, Point, FVector(Size)),

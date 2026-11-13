@@ -83,6 +83,20 @@ class ResonatorReviewTests(unittest.TestCase):
         self.assertIn("#if WITH_EDITOR", self.cpp)
         self.assertIn("bReviewCaptureRequested = false;", self.header)
 
+    def test_pulse_is_one_expanding_spherical_shell_not_latitude_stacks(self):
+        self.assertIn("const float Phase = (Style == 0) ? T :", self.cpp)
+        self.assertIn("FVector(CosA, SinA, 0.f)", self.cpp)
+        self.assertIn("FVector(CosA, 0.f, SinA)", self.cpp)
+        self.assertIn("FVector(0.f, CosA, SinA)", self.cpp)
+        self.assertIn("CenterRaised + Radius * SphereUnit", self.cpp)
+        self.assertNotIn("const float Latitude =", self.cpp)
+        # Geometric invariant of each Cartesian great circle: unit radius.
+        import math
+        for angle in (0., .37, math.pi / 2, math.pi, 4.1):
+            c, s = math.cos(angle), math.sin(angle)
+            for x, y, z in ((c, s, 0.), (c, 0., s), (0., c, s)):
+                self.assertAlmostEqual(1., math.sqrt(x*x+y*y+z*z),places=10)
+
     def test_review_material_supports_instanced_static_meshes(self):
         builder = (UE / "Tools/build_ender_resonator_preview.py").read_text(encoding="utf-8")
         self.assertIn("set_base_material_usage(material, unreal.MaterialUsage.MATUSAGE_INSTANCED_STATIC_MESHES, True)", builder)
