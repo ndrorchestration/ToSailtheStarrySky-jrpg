@@ -265,6 +265,23 @@ void ATSTSSExplorerCharacter::BeginPlay()
     ShowObjectiveReview();
 }
 
+// Present the discoverable optical action without adding a sixth editor-only
+// diagnostic branch to the existing first-wake E interaction path.
+static void ShowOptionalEngineFocusHint(const UWorld* World, bool bInspection)
+{
+#if WITH_EDITOR
+    if (World && World->WorldType == EWorldType::PIE
+        && bInspection && GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 6.f, FColor::Cyan,
+            TEXT("Engine inspection: press C near the LIFT instrument for a 4s focus view"));
+    }
+#else
+    (void)World;
+    (void)bInspection;
+#endif
+}
+
 void ATSTSSExplorerCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 #if WITH_EDITOR
@@ -670,15 +687,8 @@ void ATSTSSExplorerCharacter::Interact()
                     }
 #endif
                     ShowFirstWakeReviewObjective(FirstWakeState);
-                    if (GetWorld()->WorldType == EWorldType::PIE
-                        && Milestone->bIsInspectionStation && GEngine)
-                    {
-                        // A discoverable OPTIONAL view, never an automatic
-                        // camera cut during the normal E inspection. The
-                        // PIE-only world gate also avoids shipping UI writes.
-                        GEngine->AddOnScreenDebugMessage(-1, 6.f, FColor::Cyan,
-                            TEXT("Engine inspection: press C near the LIFT instrument for a 4s focus view"));
-                    }
+                    ShowOptionalEngineFocusHint(GetWorld(),
+                        Milestone->bIsInspectionStation);
                 }
                 else
                 {
