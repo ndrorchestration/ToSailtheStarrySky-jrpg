@@ -196,7 +196,8 @@ bool UTSS_CombatTurnManager::SubmitCommand(const FTSS_CombatCommand& Command)
     if (CurrentPhase != ETSS_CombatPhase::TurnSelection ||
         Command.SourceParticipantId.IsNone() ||
         Command.TargetParticipantId.IsNone() || Command.SkillId.IsNone() ||
-        Command.SourceParticipantId != GetActiveParticipantId())
+        Command.SourceParticipantId != GetActiveParticipantId() ||
+        Command.SkillId == TEXT("Ender_ResonantPulse"))
     {
         return false;
     }
@@ -211,7 +212,46 @@ bool UTSS_CombatTurnManager::SubmitCommand(const FTSS_CombatCommand& Command)
         return false;
     }
 
-    // Synchronous mechanics: no pretend async action queue or untracked damage.
+    return CommitAcceptedAction(MoveTemp(Candidate), CandidateCue);
+}
+
+bool UTSS_CombatTurnManager::SubmitResonantPulseArea(
+    const FTSS_CombatCommand& Command,
+    const TMap<FName, FVector>& ParticipantWorldPositions)
+{
+    // No arbitrary single-enemy target choice: caster is the center.
+    if (CurrentPhase != ETSS_CombatPhase::TurnSelection ||
+        Command.SourceParticipantId != TEXT("Ender") ||
+        Command.SkillId != TEXT("Ender_ResonantPulse") ||
+        Command.TargetParticipantId != Command.SourceParticipantId ||
+        Command.SourceParticipantId != GetActiveParticipantId() ||
+        !IsValid(SkillTable.Get()) ||
+        SkillTable->GetRowStruct() != FTSTSSBattleSkillRow::StaticStruct())
+        return false;
+
+    const FTSTSSBattleSkillRow* Pulse =
+        SkillTable->FindRow<FTSTSSBattleSkillRow>(
+            Command.SkillId, TEXT("Ender spatial Pulse"), false);
+    if (!Pulse) return false;
+
+    FTSTSSBattleSkillState Candidate;
+    FTSTSSBattleSkillCue CandidateCue;
+    TArray<FName> AffectedEnemyIds;
+    if (!FTSTSSBattleSkillSystem::TryUseResonantPulseArea(
+        BattleState, Knowledge, Factions, CrewFaction, EnemyFaction,
+        Command.SourceParticipantId, *Pulse, ParticipantWorldPositions,
+        Candidate, CandidateCue, AffectedEnemyIds))
+        return false;
+
+    // Only the area executor is allowed to generate an accepted Pulse cue.
+    // This broadcasts ONCE regardless of the number of enemies struck.
+    return CommitAcceptedAction(MoveTemp(Candidate), CandidateCue);
+}
+
+bool UTSS_CombatTurnManager::CommitAcceptedAction(
+    FTSTSSBattleSkillState&& Candidate,
+    const FTSTSSBattleSkillCue& CandidateCue)
+{
     CurrentPhase = ETSS_CombatPhase::ResolvingAction;
     OnPhaseChanged.Broadcast(CurrentPhase);
     BattleState = MoveTemp(Candidate);

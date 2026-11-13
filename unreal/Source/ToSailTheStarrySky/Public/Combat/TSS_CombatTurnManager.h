@@ -93,6 +93,14 @@ public:
     UFUNCTION(BlueprintCallable, Category="TSTSS|Combat")
     bool SubmitCommand(const FTSS_CombatCommand& Command);
 
+    // Review-only: area damage is resolved against the complete present
+    // combat roster using real actor positions supplied by the encounter
+    // owner. TargetParticipantId MUST equal the caster, not a chosen foe.
+    // Exactly one MP charge, turn and accepted-cue broadcast per cast.
+    bool SubmitResonantPulseArea(
+        const FTSS_CombatCommand& Command,
+        const TMap<FName, FVector>& ParticipantWorldPositions);
+
     UFUNCTION(BlueprintPure, Category="TSTSS|Combat")
     ETSS_CombatPhase GetCurrentPhase() const { return CurrentPhase; }
 
@@ -125,6 +133,10 @@ public:
     FTSSOnSkillAccepted OnSkillAccepted;
 
 private:
+    bool CommitAcceptedAction(
+        FTSTSSBattleSkillState&& Candidate,
+        const FTSTSSBattleSkillCue& CandidateCue);
+
     static bool ValidateParticipant(const FTSS_CombatParticipant& Participant,
                                     bool bExpectedPlayer);
     static bool IsCanonicalPlayer(FName ParticipantId);

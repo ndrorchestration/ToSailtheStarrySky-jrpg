@@ -82,10 +82,14 @@ def validate(manifest, spells, audio, input_text, party_cpp, combat_cpp):
         magic.get("observed_pulse_target") != "Enemy" or
         "case ETSTSSBattleSkillTarget::Enemy:" not in combat_cpp or
         "case ETSTSSBattleSkillTarget::EnemyArea:" in combat_cpp):
-        errors.append("old single-target Pulse witness changed; re-audit before any promotion")
+        errors.append("Pulse hostile-faction targeting witness changed; re-audit")
     if (magic.get("creator_pulse_target") !=
             "POINT_BLANK_SPHERICAL_AOE_ENEMIES_ONLY" or
-        magic.get("observed_pulse_action_model") != "SINGLE_TARGET" or
+        magic.get("observed_pulse_action_model") != "SOURCE_ATOMIC_AOE_CANDIDATE" or
+        magic.get("pulse_area_source_candidate") is not True or
+        magic.get("pulse_radius_cm") != 600 or
+        magic.get("pulse_source_head_native_verified") is not False or
+        magic.get("pulse_spatial_positions_verified_in_game") is not False or
         magic.get("source_compatible_with_creator_pulse") is not False or
         magic.get("pulse_full_aoe_runtime_verified") is not False or
         magic.get("pulse_3d_spherical_vfx_approved") is not False):
@@ -182,7 +186,19 @@ class FirstWakeOwnerReconciliationTests(unittest.TestCase):
     def test_pulse_data_change_requires_new_head_source_audit(self):
         rows = copy.deepcopy(self.source[1])
         next(r for r in rows if r["SkillId"] == "Ender_ResonantPulse")["Target"] = "EnemyArea"
-        self.assertTrue(any("single-target" in x for x in self.errors(1, rows)))
+        self.assertTrue(any("hostile-faction" in x for x in self.errors(1, rows)))
+
+    def test_pulse_candidate_cannot_claim_native_radius_witness(self):
+        doc = copy.deepcopy(self.source[0])
+        doc["source_ownership_audit_2026_11_13"]["single_owner_lanes"][
+            "resonator"]["pulse_source_head_native_verified"] = True
+        self.assertTrue(any("PBAoE" in x for x in self.errors(0, doc)))
+
+    def test_pulse_candidate_radius_drift_refused(self):
+        doc = copy.deepcopy(self.source[0])
+        doc["source_ownership_audit_2026_11_13"]["single_owner_lanes"][
+            "resonator"]["pulse_radius_cm"] = 1200
+        self.assertTrue(any("PBAoE" in x for x in self.errors(0, doc)))
 
     def test_centering_balance_cannot_change_in_status_only(self):
         doc = copy.deepcopy(self.source[0])

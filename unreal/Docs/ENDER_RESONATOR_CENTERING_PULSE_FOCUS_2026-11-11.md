@@ -1,5 +1,22 @@
 # TSTSS — Ender Resonator: Centering + Resonant Pulse focus
 
+## November 13, 2026 — #826 spherical Pulse source supersession (draft, review only)
+
+**Source of authority:** [draft PR #826](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/826), stacked on [review ownership PR #825](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/825). The November 11 text below describes the **historical #810 one-enemy prototype**. Its phrases "Target: one living enemy" and "cyan expanding ring" are **SUPERSEDED ONLY IN THIS #826 SOURCE CANDIDATE**, not in protected main, shipped content or native-verified gameplay.
+
+- **Creator mechanic:** Centered on Ender, a **point-blank, expanding 3D spherical area effect** that damages **living enemy-faction actors only**, including enemies above/below the caster; allies are never hurt even when inside. Radius is **provisional 600 cm** (design/balance not approved). Ender must explicitly know ResonanceHarmonic rank 1 and the spell; 3 MP, Power 6, exactly one accepted turn/cooldown/cue per cast.
+- **Combat source:** `FTSTSSBattleSkillSystem::TryUseResonantPulseArea` filters an authoritative review roster against the complete position map. It validates factions, alive actors, bounded finite coordinates and 3D radius, selects deterministic enemy IDs, commits once to the existing combat/MP authority and adds extra enemy HP hits in the same local transaction with zero extra MP/turn. The old `TryUseRow` and generic `SubmitCommand` single-target Pulse pathways now reject that spell; the explicit `SubmitResonantPulseArea` is the review-only adapter.
+- **One shared spatial calculation:** `unreal/Source/ToSailTheStarrySky/Public/Combat/TSTSSPulseAreaMath.h` owns a standard C++17 sphere predicate used by the UE executor. An independent portable `g++`/ `clang++` build/run of this **same C++ predicate**, exercised by `test_ender_pulse_cpp_geometry.py`, tests 28 cases (600 cm inclusive/601 cm excluded, Z-plane, XYZ translation, invalid/overflow coordinates). It does NOT prove the other UE combat semantics compile or work in PIE.
+- **Visual source:** the Pulse style uses 72 points on a deterministic expanding Fibonacci sphere + 32 motes and a caster-centered core/light; gameplay radius and visual maximum reuse the same 600 cm constant. This is **source-authored 3D geometry, not an Unreal GPU screenshot**.
+- **Focused review only:** key 2 reads actor positions from review cube components in the isolated focus encounter. Production gameplay position provenance, campaign spell menu/cast UI, First Wake map, save, physical splashdown and full route still require integration and native proof. Neither party unlocks nor Starbourne access change.
+- **Centering unchanged:** 5 MP, +15% physical DEF for living active allies, 3 rounds, refresh without stacking. Correspondence and all other unselected spells stay DesignOnly.
+- **Source verification:** `unreal/Tools/test_ender_pulse_aoe_source.py` contains 12 bounded mutation controls; existing `TSTSS.Magic.ResonatorCueContract` native test has stronger enemy/ally/radius/MP/turn negatives and the explicit 600/601 cm vertical edge, **but new-head Unreal native tests are NOT EXECUTED**. The precise source CI result must be bound to the exact final PR head. Do **not** borrow #810's historical 35-test native receipt or any 36-test V5 parent proof.
+- **Neontic native gate:** available disk was approximately 14.11–14.18 GiB, too close to the existing 14 GiB minimum for a new isolated UE worktree/build. No new build was started, no preexisting worktree/evidence modified or deleted. Await safe capacity, clean exact-head checkout and independent UE5.8.4 UHT/Win64 Editor/native/PIE + audible/GPU proof.
+
+**Disposition:** `SOURCE_IMPL_CANDIDATE; EXACT_HEAD_PORTABLE_CXX_VERIFIABLE; NATIVE_NOT_TESTED; PIE_NOT_TESTED; VISUAL_NOT_APPROVED; MAIN_UNMERGED; VS-C03/VS-D05_OPEN`. The older sections below remain intact for historical evidence, not present-tense targeting.
+
+---
+
 **November 11, 2026. Draft research/review only. No main merge, canon spell grant or release.**
 
 ## Creator direction and holding rule

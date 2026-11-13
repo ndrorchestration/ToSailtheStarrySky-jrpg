@@ -98,6 +98,25 @@ struct FTSTSSBattleSkillCue
 class TOSAILTHESTARRYSKY_API FTSTSSBattleSkillSystem
 {
 public:
+    // Source-authored First Wake review radius: 600 cm, centered on Ender.
+    // Only an accepted, spatially resolved action may spend the MP/turn.
+    static constexpr double ResonantPulseRadiusCm = 600.0;
+
+    // The only admitted gameplay path for Ender_ResonantPulse. Participant
+    // positions MUST originate from real world actors at the point of cast;
+    // a client-supplied coordinate map is NOT authorization for production.
+    // On any failure ALL three outputs remain unchanged.
+    static bool TryUseResonantPulseArea(
+        const FTSTSSBattleSkillState& State,
+        const FTSTSSBattleSkillKnowledge& Knowledge,
+        const TMap<FName, FName>& Factions,
+        FName PartyFaction, FName OpponentFaction,
+        FName ActorId, const FTSTSSBattleSkillRow& Row,
+        const TMap<FName, FVector>& ParticipantWorldPositions,
+        FTSTSSBattleSkillState& OutState,
+        FTSTSSBattleSkillCue& OutCue,
+        TArray<FName>& OutAffectedEnemyIds);
+
     // Fails closed and preserves both outputs on every failed request.
     static bool TryUseRow(
         const FTSTSSBattleSkillState& State,
@@ -117,6 +136,20 @@ public:
         FName PartyFaction, FName OpponentFaction,
         FName ActorId, FName TargetId, FName SkillId,
         const UDataTable* Skills,
+        FTSTSSBattleSkillState& OutState,
+        FTSTSSBattleSkillCue& OutCue);
+
+private:
+    // Shared legacy authorization/MP/cooldown path: the specialized area
+    // entry point is the only caller permitted to resolve Pulse damage.
+    static bool TryUseValidatedRow(
+        const FTSTSSBattleSkillState& State,
+        const FTSTSSBattleSkillKnowledge& Knowledge,
+        const TMap<FName, FName>& Factions,
+        FName PartyFaction, FName OpponentFaction,
+        FName ActorId, FName TargetId, FName SkillId,
+        const FTSTSSBattleSkillRow& Row,
+        bool bAuthorizedAreaPulse,
         FTSTSSBattleSkillState& OutState,
         FTSTSSBattleSkillCue& OutCue);
 };

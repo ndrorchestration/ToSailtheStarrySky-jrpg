@@ -11,7 +11,11 @@
     "bHealing": false,
     "RequiredSchool": "ResonanceHarmonic",
     "RequiredMasteryRank": 1,
-    "VfxCueId": "VFX.Ender.ResonantPulse"
+    "VfxCueId": "VFX.Ender.ResonantPulse",
+    "TargetShape": "CasterCenteredSphere",
+    "AreaRadiusCm": 600,
+    "AffectedFaction": "OpponentsOnly",
+    "CastResolution": "OneTransactionOneCostOneTurn"
   },
   {
     "Name": "Ender_Centering",
