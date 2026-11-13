@@ -6,3 +6,6 @@ Saved/
 *.sln
 *.VC.db
 *.VC.opendb
+
+# Generated synthetic review-only audio/map packages. Never commit or ship.
+/Content/TSTSS/Audio/QAReview/
