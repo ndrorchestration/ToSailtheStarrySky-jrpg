@@ -73,18 +73,21 @@ def plan(strict_source: bool = True) -> dict:
     if strict_source:
         require(hashlib.sha256(raw).hexdigest() == EXPECTED_ORIGINAL_SHA,
                 "gameplay VS02 original source map changed")
-    for label in (*ORIGINAL_LIGHTS,
-                  "TSTSS_VS_REVIEW_InstrumentCore_LIFT",
+    for label in ("TSTSS_VS_REVIEW_InstrumentCore_LIFT",
                   "TSTSS_VS_REVIEW_MainHarmonicLevitationEngine_Proxy"):
-        require(label.encode("ascii") in raw, "original map actor absent: " + label)
+        require(label.encode("ascii") in raw, "real engine focus anchor absent: " + label)
     if strict_source:
+        for label in ORIGINAL_LIGHTS:
+            require(label.encode("ascii") in raw,
+                    "original sky actor to reconcile absent: " + label)
         require(b"TSTSSAtmosphereDirector" not in raw,
                 "pre-existing world atmosphere director; do not duplicate")
         require(LABEL.encode("ascii") not in raw,
                 "previously staged gameplay director cannot be overwritten")
     return {
         "schema": "tstss.firstwake.playable_engine_map_authoring.v1",
-        "status": "SOURCE_VERIFIED_NATIVE_STAGE_NOT_EXECUTED",
+        "status": ("SOURCE_VERIFIED_NATIVE_STAGE_NOT_EXECUTED" if strict_source
+                   else "RECIPE_VALIDATED_WITHOUT_NATIVE_STAGE"),
         "scope": "isolated feature-branch gameplay map ONLY",
         "source_map": MAP_ASSET,
         "expected_original_map_sha256": EXPECTED_ORIGINAL_SHA,
