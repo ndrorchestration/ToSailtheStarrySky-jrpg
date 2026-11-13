@@ -101,7 +101,7 @@ def make_level():
         actor.set_actor_label("REVIEW ONLY - " + row["SkillId"])
         actor.set_editor_property("preview_cue_id", row["VfxCueId"])
         actor.set_editor_property("preview_target_offset", unreal.Vector(320, 0, 0))
-        actor.set_editor_property("b_loop_review", True)
+        actor.set_editor_property("loop_review", True)
     camera_cls = unreal.load_class(None, "/Script/Engine.CameraActor")
     camera = subsystem.spawn_actor_from_class(camera_cls,
         unreal.Vector(0, -2200, 1050), unreal.Rotator(-25, 90, 0))
