@@ -7,6 +7,7 @@ from pathlib import Path
 import subprocess
 import sys
 import unittest
+from types import SimpleNamespace
 
 SRC = Path(__file__).with_name("first_wake_surface_textures.py")
 SPEC = importlib.util.spec_from_file_location("surfacepass", SRC)
@@ -110,8 +111,7 @@ class SurfacePassQA(unittest.TestCase):
                                  surface.HARBOR_INHERITED_LIGHTS)), 6)
 
     def test_weather_enum_resolution_refuses_missing_member(self):
-        from types import SimpleNamespace
-        u = SimpleNamespace(ETSTSSWeather=SimpleNamespace(
+        u = SimpleNamespace(TSTSSWeather=SimpleNamespace(
             CLEAR=12, COASTAL_MIST=13, STORM=14, RAIN=15))
         self.assertEqual(surface.weather_enum_value(u, "CoastalMist"), 13)
         self.assertEqual(surface.weather_enum_value(u, "Clear"), 12)
@@ -124,8 +124,9 @@ class SurfacePassQA(unittest.TestCase):
             def destroy_actor(self, _actor):
                 raise AssertionError("Must not mutate map")
         with self.assertRaisesRegex(RuntimeError, "inventory drift"):
-            surface.stage_scene_atmosphere(None, FakeWorld(),
-                                            "VS06_SplashdownShore", None, None)
+            surface.stage_scene_atmosphere(
+                SimpleNamespace(TSTSSWeather=SimpleNamespace(COASTAL_MIST=13)), FakeWorld(),
+                "VS06_SplashdownShore", None, None)
 
     def test_native_staging_refuses_unowned_extra_sky(self):
         class FakeClass:
@@ -144,8 +145,9 @@ class SurfacePassQA(unittest.TestCase):
             def destroy_actor(self, _actor):
                 raise AssertionError("Must not mutate map")
         with self.assertRaisesRegex(RuntimeError, "duplicate illumination"):
-            surface.stage_scene_atmosphere(None, FakeWorld(),
-                                            "VS06_SplashdownShore", None, None)
+            surface.stage_scene_atmosphere(
+                SimpleNamespace(TSTSSWeather=SimpleNamespace(COASTAL_MIST=13)), FakeWorld(),
+                "VS06_SplashdownShore", None, None)
 
     def test_guarded_scene_source_map_receipts_are_present(self):
         proof = surface.PROJECT / "Docs/Evidence/vertical_slice_map_readback_20261110.json"

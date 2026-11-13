@@ -4,7 +4,8 @@ No Unreal Editor import, map writes, live GPU use or project mutation.
 """
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from unittest.mock import patch
+from types import SimpleNamespace
+from unittest.mock import Mock, patch
 import unittest
 
 import check_first_wake_playable_engine_host as host
@@ -38,6 +39,25 @@ class PlayableEngineAtmosphereAuthoringTests(unittest.TestCase):
         s = stage.self_test()
         self.assertEqual(s["status"], "GAMEPLAY_ENGINE_AUTHORING_RECIPE_CHECK_PASS")
         self.assertEqual(s["native_scene_written"], "NOT_CHECKED")
+
+    def test_weather_uses_native_unreal_python_enum_name(self):
+        clear = object()
+        mist = object()
+        native = SimpleNamespace(TSTSSWeather=SimpleNamespace(CLEAR=clear, COASTAL_MIST=mist))
+        self.assertIs(stage.surface.weather_enum_value(native, "Clear"), clear)
+        self.assertIs(stage.surface.weather_enum_value(native, "CoastalMist"), mist)
+        with self.assertRaisesRegex(RuntimeError, "unsupported native weather"):
+            stage.surface.weather_enum_value(native, "Unknown")
+
+    def test_missing_weather_enum_does_not_touch_scene(self):
+        actors = Mock()
+        with self.assertRaisesRegex(RuntimeError, "weather UENUM not reflected"):
+            stage.surface.stage_scene_atmosphere(SimpleNamespace(), actors,
+                                                 stage.SCENE, object(), object())
+        actors.assert_not_called()
+        actors.get_all_level_actors.assert_not_called()
+        actors.destroy_actor.assert_not_called()
+        actors.spawn_actor_from_class.assert_not_called()
 
     def test_drifting_authored_weather_fails_closed(self):
         data = dict(stage.surface.SCENE_LOOKS)
