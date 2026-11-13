@@ -170,7 +170,7 @@ class FirstWakeOwnerReconciliationTests(unittest.TestCase):
     def test_party_source_missing_recruit_gate_is_rejected(self):
         source = self.source[4].replace(
             "Stage == ETSTSSPartySliceReviewStage::LyraRecruited",
-            "Stage == ETSTSSPartySliceReviewStage::AfterSplashdown", 1)
+            "Stage == ETSTSSPartySliceReviewStage::AfterSplashdown")
         self.assertTrue(any("three-stage" in x for x in self.errors(4, source)))
 
     def test_pulse_single_target_cannot_be_claimed_area_damage(self):
