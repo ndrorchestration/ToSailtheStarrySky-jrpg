@@ -95,8 +95,8 @@ def validate(sources: dict) -> list[str]:
     if not (
         "bool ATSTSSResonatorFocusReviewActor::TryCastResonantPulse()" in review
         and "GetCombatantSnapshot()" in review
-        and "EnderProxy->GetComponentLocation()" in review
-        and "FoeProxy->GetComponentLocation()" in review
+        and "Positions.Add(Unit.CharacterId, EnderProxy->GetComponentLocation())" in review
+        and "Positions.Add(Unit.CharacterId, FoeProxy->GetComponentLocation())" in review
         and "Command.TargetParticipantId = TEXT(\"Ender\")" in review
         and "SubmitResonantPulseArea(Command, Positions)" in review
     ):
