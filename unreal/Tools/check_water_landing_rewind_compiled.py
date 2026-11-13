@@ -61,6 +61,16 @@ using uint8 = std::uint8_t;
 using int32 = std::int32_t;
 using uint64 = std::uint64_t;
 using FString = std::string;
+// Portable stand-in for UE FName: only the methods used by actual
+// story-derived ship-mode gate are implemented, never simulated gameplay.
+struct FName {
+    std::string value;
+    FName() = default;
+    explicit FName(const char* raw) : value(raw ? raw : "") {}
+    bool IsNone() const { return value.empty(); }
+    bool operator==(const FName& other) const { return value == other.value; }
+};
+const FName NAME_None{};
 struct UObject { virtual ~UObject() = default; };
 template <typename T> bool IsValid(const T* value) { return value != nullptr; }
 struct FMath {
@@ -100,6 +110,27 @@ struct FPortableAutomationTest {
 """
 
 SUFFIX = r"""
+void CheckPostSplashdownSeabourneGate() {
+    UTSTSSFirstWakeState story;
+    Check(!story.IsReviewShipModeAuthorized(FName("Seabourne")) &&
+          !story.IsReviewShipModeAuthorized(FName("Skybourne")),
+          "unstarted review story cannot grant a ship mode");
+    Check(story.Restore(true, ETSTSSFirstWakeBeat::Launched, 0x07),
+          "preflight story fixture missing");
+    Check(story.IsReviewShipModeAuthorized(FName("Skybourne")) &&
+          !story.IsReviewShipModeAuthorized(FName("Seabourne")),
+          "initial flight review must not accidentally grant sailing");
+    Check(story.Restore(true, ETSTSSFirstWakeBeat::FlotationConfirmed, 0x07),
+          "postfloat story fixture missing");
+    Check(story.IsReviewShipModeAuthorized(FName("Seabourne")) &&
+          !story.IsReviewShipModeAuthorized(FName("Skybourne")) &&
+          !story.IsReviewShipModeAuthorized(FName("Submersible")) &&
+          !story.IsReviewShipModeAuthorized(FName("Starbourne")),
+          "postfloat review state must only authorize Seabourne");
+    Check(story.GetCurrentBeat() == ETSTSSFirstWakeBeat::FlotationConfirmed,
+          "ship-mode queries cannot advance the story");
+}
+
 void CheckRestoredSeaContact() {
     UTSTSSFirstWakeState story;
     UTSTSSWaterLandingGate gate;
@@ -190,6 +221,7 @@ int main() {
         Check(restore.RunTest(""), "WaterLandingRestore returned false");
         Check(negative.RunTest(""), "WaterLandingNegativePaths returned false");
         CheckRestoredSeaContact();
+        CheckPostSplashdownSeabourneGate();
         const unsigned interrupted = CheckInterruptedRewinds();
         std::cout << "PASS: 2 repository water test bodies, restored SeaContact and "
                   << interrupted << " interrupted-rewind scenarios ("
