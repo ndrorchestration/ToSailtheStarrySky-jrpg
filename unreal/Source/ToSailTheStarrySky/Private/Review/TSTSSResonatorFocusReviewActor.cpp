@@ -321,7 +321,39 @@ bool ATSTSSResonatorFocusReviewActor::TryCast(FName Skill,FName Target)
 bool ATSTSSResonatorFocusReviewActor::TryCastCentering()
 {return TryCast(FocusCenteringSkill,TEXT("Ender"));}
 bool ATSTSSResonatorFocusReviewActor::TryCastResonantPulse()
-{return TryCast(FocusPulseSkill,FocusOpponentId);}
+{
+#if UE_BUILD_SHIPPING
+    return false;
+#else
+    if (!bReviewReady || !IsValid(CombatManager.Get()) ||
+        !IsValid(EnderProxy.Get()) || !IsValid(FoeProxy.Get()) ||
+        CombatManager->GetCurrentPhase() != ETSS_CombatPhase::TurnSelection ||
+        CombatManager->GetActiveParticipantId() != TEXT("Ender"))
+        return false;
+
+    // Actual PIE component world positions, not an enemy selected by a
+    // UI or a forged narrative trigger. Every active combatant must have
+    // an owned proxy; otherwise the spatial cast is denied before MP spend.
+    TMap<FName, FVector> Positions;
+    for (const FTSTSSCombatant& Unit : CombatManager->GetCombatantSnapshot())
+    {
+        if (Unit.CharacterId == TEXT("Ender"))
+            Positions.Add(Unit.CharacterId, EnderProxy->GetComponentLocation());
+        else if (Unit.CharacterId == TEXT("Ionia") &&
+                 bIoniaRecruitedForReview && IsValid(IoniaProxy.Get()))
+            Positions.Add(Unit.CharacterId, IoniaProxy->GetComponentLocation());
+        else if (Unit.CharacterId == FocusOpponentId)
+            Positions.Add(Unit.CharacterId, FoeProxy->GetComponentLocation());
+        else
+            return false;
+    }
+    FTSS_CombatCommand Command;
+    Command.SourceParticipantId = TEXT("Ender");
+    Command.TargetParticipantId = TEXT("Ender");  // caster-centered sphere
+    Command.SkillId = FocusPulseSkill;
+    return CombatManager->SubmitResonantPulseArea(Command, Positions);
+#endif
+}
 void ATSTSSResonatorFocusReviewActor::CastCenteringKey()
 {
     if(!TryCastCentering())
@@ -361,8 +393,9 @@ void ATSTSSResonatorFocusReviewActor::OnAcceptedSkill(
     Accepted.VfxCueId=VfxCueId;
     Accepted.AnimationCueId=AnimationCueId;
     const FVector Origin=EnderProxy->GetComponentLocation();
-    const FVector Target=SkillId==FocusCenteringSkill
-        ? Origin : FoeProxy->GetComponentLocation();
+    // Both accepted effects originate at Ender: Pulse now expands in
+    // full 3D around the caster and never chases a chosen enemy.
+    const FVector Target = Origin;
     if(ATSTSSResonatorVfxActor::IsAcceptedEnderCue(Accepted))
         ATSTSSResonatorVfxActor::SpawnFromAcceptedCue(
             GetWorld(),Accepted,Origin,Target);
