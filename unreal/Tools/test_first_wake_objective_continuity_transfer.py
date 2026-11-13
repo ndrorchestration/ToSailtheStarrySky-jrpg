@@ -13,7 +13,8 @@ ROOT = TOOLS.parent
 NATIVE_TEST = ROOT / "Source/ToSailTheStarrySky/Private/Tests/TSTSSFirstWakeInteractionIntegrationTests.cpp"
 STATE = ROOT / "Source/ToSailTheStarrySky/Private/TSTSSFirstWakeState.cpp"
 
-# Exact checkpoint order and creator-facing text from #734, no rewrites.
+# Maintain all 16 #734 ordered checkpoints; update only the two creator-revised
+# post-splashdown objective labels and their expected copy.
 CHECKPOINTS = (
     ("Opening objective prompts Ender toward flyer", "Find Ionia's flyer", "Story"),
     ("Flyer changes objective to Captain Ionia", "Speak with Captain Ionia", "Story"),
@@ -27,8 +28,8 @@ CHECKPOINTS = (
     ("Engineering signoff prompts launch", "Prepare for the First Wake launch", "Story"),
     ("Launch objective remains in Prelude flight", "Navigate the First Wake flight", "Story"),
     ("Sea contact prompts landing stabilization", "Stabilize the water landing", "Story"),
-    ("Splashdown objective prompts empty reserve investigation", "Investigate the empty reserves", "Story"),
-    ("Reserve inspection prompts berth recovery", "Return to berth", "Story"),
+    ("Splashdown objective prompts hull and harmonic survey", "Survey the hull and harmonic systems", "Story"),
+    ("Recovery inspection prompts coastal survey", "Continue to the coastal survey", "Story"),
     ("Recovered story has final review objective", "First Wake review sequence complete", "Story"),
     ("Reset restores first objective", "Find Ionia's flyer", "Restored"),
 )
@@ -92,7 +93,7 @@ class FirstWakeObjectiveTransferSafety(unittest.TestCase):
         self.assertTrue(failures(source, self.state))
 
     def test_changed_authoritative_string_fails_closed(self):
-        state = self.state.replace('return TEXT("Return to berth");',
+        state = self.state.replace('return TEXT("Continue to the coastal survey");',
                                    'return TEXT("Navigate anywhere");', 1)
         self.assertTrue(failures(self.src, state))
 

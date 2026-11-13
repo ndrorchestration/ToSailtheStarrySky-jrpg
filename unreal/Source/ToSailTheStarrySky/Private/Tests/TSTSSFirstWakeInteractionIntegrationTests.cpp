@@ -152,13 +152,13 @@ bool FTSTSSFirstWakeInteractionSplashdownTest::RunTest(const FString& Parameters
     TestTrue(TEXT("Chapter 1 Act 1 begins ONLY at sustained flotation"),
         Story->IsChapterOneActOne());
 
-    TestEqual(TEXT("Splashdown objective prompts empty reserve investigation"), Story->GetReviewObjectiveText(),
+    TestEqual(TEXT("Splashdown objective prompts hull and harmonic survey"), Story->GetReviewObjectiveText(),
         FString(TEXT("Survey the hull and harmonic systems")));
     // No Lyra recruitment is synthesized here. Existing recovery milestones
     // take place only after the physical boundary.
     TestTrue(TEXT("Inspect empty reserve after Splashdown"),
         ActivateBeat(ETSTSSFirstWakeBeat::EmptyReserveInspected));
-    TestEqual(TEXT("Reserve inspection prompts berth recovery"), Story->GetReviewObjectiveText(),
+    TestEqual(TEXT("Recovery inspection prompts coastal survey"), Story->GetReviewObjectiveText(),
         FString(TEXT("Continue to the coastal survey")));
     TestTrue(TEXT("Return to berth is post-Splashdown"),
         ActivateBeat(ETSTSSFirstWakeBeat::ReturnedToBerth));
