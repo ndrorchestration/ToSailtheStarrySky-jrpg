@@ -315,8 +315,8 @@ bool FTSTSSResonatorCueContractTest::RunTest(const FString& Parameters)
     WideFactions.Add(TEXT("FoeNear"),TEXT("Opponents"));
     WideFactions.Add(TEXT("FoeFar"),TEXT("Opponents"));
     TMap<FName,FVector> WidePositions=Positions;
-    WidePositions.Add(TEXT("FoeNear"),FVector(0.f,0.f,500.f));
-    WidePositions.Add(TEXT("FoeFar"),FVector(601.f,0.f,0.f));
+    WidePositions.Add(TEXT("FoeNear"),FVector(0.f,0.f,600.f)); // Exact 3D boundary is inclusive.
+    WidePositions.Add(TEXT("FoeFar"),FVector(0.f,0.f,601.f)); // One cm beyond boundary.
     FTSTSSBattleSkillState WideAfter;
     FTSTSSBattleSkillCue WideCue;
     TArray<FName> WideTargets;
@@ -325,7 +325,7 @@ bool FTSTSSResonatorCueContractTest::RunTest(const FString& Parameters)
             WideStart,Learned,WideFactions,TEXT("Party"),TEXT("Opponents"),
             TEXT("Ender"),Pulse,WidePositions,WideAfter,WideCue,WideTargets)))
         return false;
-    TestEqual(TEXT("two enemies within radius hit"),WideTargets.Num(),2);
+    TestEqual(TEXT("two enemies within radius hit, including 600cm Z edge"),WideTargets.Num(),2);
     TestEqual(TEXT("stable first target by name"),WideTargets[0],FName(TEXT("Foe")));
     TestEqual(TEXT("Ender MP cost not multiplied by number of foes"),
         WideAfter.Combat.Roster[0].Resource,27);
@@ -338,7 +338,7 @@ bool FTSTSSResonatorCueContractTest::RunTest(const FString& Parameters)
         WideAfter.Combat.Roster[2].Health,174);
     TestEqual(TEXT("second in-radius enemy takes full spell damage"),
         WideAfter.Combat.Roster[3].Health,83);
-    TestEqual(TEXT("out-of-radius enemy unaffected"),
+    TestEqual(TEXT("enemy just beyond 600cm 3D boundary unaffected"),
         WideAfter.Combat.Roster[4].Health,90);
 
     TMap<FName,FVector> MissingPosition=WidePositions;
