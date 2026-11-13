@@ -57,12 +57,12 @@ class FirstWakeV5PBRImport(unittest.TestCase):
             "TSTSS_V5_PBR_EXPECTED_HEAD",
             'git("status", "--porcelain", "-uall")',
             "exact_native_receipt(expected)",
-            "len(names) != 36",
+            "len(names) != 38",
             "result.get(\"report_sha256\") != sha256(report)",
             "result.get(\"source_sha\") != expected",
             "actual[\"failed\"] != 0",
             "actual[\"notRun\"] != 0",
-            "actual[\"succeeded\"] != 36",
+            "actual[\"succeeded\"] != 38",
             "Map", # source is retained at same sha
             "source_V5_map_sha256",
         ):

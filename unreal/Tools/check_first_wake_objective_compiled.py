@@ -58,8 +58,8 @@ int main() {
         {true, ETSTSSFirstWakeBeat::EngineeringChecked, 7, "Prepare for the First Wake launch"},
         {true, ETSTSSFirstWakeBeat::Launched, 7, "Navigate the First Wake flight"},
         {true, ETSTSSFirstWakeBeat::SeaContact, 7, "Stabilize the water landing"},
-        {true, ETSTSSFirstWakeBeat::FlotationConfirmed, 7, "Investigate the empty reserves"},
-        {true, ETSTSSFirstWakeBeat::EmptyReserveInspected, 7, "Return to berth"},
+        {true, ETSTSSFirstWakeBeat::FlotationConfirmed, 7, "Survey the hull and harmonic systems"},
+        {true, ETSTSSFirstWakeBeat::EmptyReserveInspected, 7, "Continue to the coastal survey"},
         {true, ETSTSSFirstWakeBeat::ReturnedToBerth, 7, "First Wake review sequence complete"},
         {true, static_cast<ETSTSSFirstWakeBeat>(255), 7, "Review objective unavailable"},
         {false, ETSTSSFirstWakeBeat::ReturnedToBerth, 7, "Find Ionia's flyer"}
@@ -154,6 +154,18 @@ def main() -> int:
         if "Mismatch at case" not in negative.stderr:
             raise RuntimeError("Negative control did not fail for expected reason")
         print("PASS: semantic mutation control rejected wrong objective")
+        # Protect the creator-revised post-splashdown objective separately.
+        coastal = 'return TEXT("Continue to the coastal survey");'
+        if method.count(coastal) != 1:
+            raise RuntimeError("Negative coastal survey control target missing")
+        mutated_coastal = method.replace(
+            coastal, 'return TEXT("WRONG_COASTAL_RECOVERY_OBJECTIVE");', 1)
+        coastal_failure = compile_and_run(compiler, mutated_coastal)
+        if (coastal_failure.returncode == 0 or
+                "Mismatch at case 12" not in coastal_failure.stderr):
+            raise RuntimeError("Coastal-survey objective mutation was not caught")
+        print("PASS: creator-revised coastal objective mutation rejected")
+
     print("Source-extracted portable C++ only; Unreal native/editor verification remains pending.")
     return 0
 

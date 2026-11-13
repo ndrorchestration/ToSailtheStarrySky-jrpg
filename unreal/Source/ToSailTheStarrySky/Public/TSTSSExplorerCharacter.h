@@ -19,6 +19,19 @@ public:
 #endif
     UFUNCTION(BlueprintCallable, Category="TSTSS|First Wake")
     UTSTSSFirstWakeState* GetFirstWakeState() const { return FirstWakeState; }
+    // Runtime review adapter for ship UI/Blueprint requests. Reports
+    // authorization only; does not alter geometry or unlock modes.
+    UFUNCTION(BlueprintPure, Category="TSTSS|Ship|Review")
+    FName GetActiveReviewShipMode() const
+    {
+        return IsValid(FirstWakeState) ? FirstWakeState->GetReviewShipMode() : NAME_None;
+    }
+    UFUNCTION(BlueprintPure, Category="TSTSS|Ship|Review")
+    bool CanUseReviewShipMode(FName RequestedMode) const
+    {
+        return IsValid(FirstWakeState) &&
+            FirstWakeState->IsReviewShipModeAuthorized(RequestedMode);
+    }
     UFUNCTION(BlueprintCallable, Category="TSTSS|Interaction")
     void Interact();
     UFUNCTION(BlueprintCallable, Category="TSTSS|Save")

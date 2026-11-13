@@ -40,6 +40,16 @@ struct FLinearColor {
 };
 const FLinearColor FLinearColor::White(1.f, 1.f, 1.f, 1.f);
 struct UCanvas { float ClipX = 1280.f; float ClipY = 720.f; };
+// Minimal package API for the actual map-scoped Seabourne review HUD.
+// This API double does not create a real World, route or gameplay authority.
+struct UPackage {
+    FString Name;
+    const FString& GetName() const { return Name; }
+};
+struct UWorld {
+    const UPackage* Package = nullptr;
+    const UPackage* GetOutermost() const { return Package; }
+};
 struct UTSTSSFirstWakeState {
     FString Objective = "Find Ionia's flyer";
     unsigned Mask = 0;
@@ -81,6 +91,8 @@ struct RectDraw {
 struct AHUD {
     UCanvas* Canvas = nullptr;
     APlayerController* PlayerOwner = nullptr;
+    UWorld* World = nullptr;
+    const UWorld* GetWorld() const { return World; }
     std::vector<TextDraw> text;
     std::vector<RectDraw> rects;
     virtual ~AHUD() = default;
@@ -219,6 +231,29 @@ int main() {
         hud.DrawHUD();
         expect(hud.text.size() == beforeChapter,
                "Prelude review HUD must disappear after real Chapter 1 boundary");
+        UPackage seabournePackage;
+        seabournePackage.Name =
+            "/Game/TSTSS/Review/SeabourneRecovery/L_CoastalShip_SeabourneReview";
+        UWorld seabourneWorld;
+        seabourneWorld.Package = &seabournePackage;
+        hud.World = &seabourneWorld;
+        const auto priorText = hud.text.size();
+        const auto priorRects = hud.rects.size();
+        hud.DrawHUD();
+        expect(hud.text.size() == priorText + 3 &&
+               hud.rects.size() == priorRects + 1,
+               "isolated Seabourne review must render 3 status lines and one panel");
+        expect(hud.text[priorText].value.find("SEABOURNE VISUAL REVIEW") !=
+                   FString::npos &&
+               hud.text[priorText+2].value.find("No ship sailing") !=
+                   FString::npos,
+               "review-only HUD cannot claim ship traversal or Prelude objectives");
+        seabournePackage.Name = "/Game/TSTSS/Review/UnknownTest";
+        const auto priorUnknown = hud.text.size();
+        hud.DrawHUD();
+        expect(hud.text.size() == priorUnknown,
+               "unrelated map cannot inherit Seabourne HUD");
+        hud.World = nullptr;
 #endif
         std::cout << "PASS: " << checks <<
             " portable C++ real DrawHUD behavior checks (UE/PIE NOT TESTED)\n";

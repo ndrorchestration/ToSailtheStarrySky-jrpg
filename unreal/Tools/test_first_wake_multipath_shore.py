@@ -241,7 +241,7 @@ class FirstWakeMultiPathShoreSourceTests(unittest.TestCase):
             r"^\s*'(TSTSS\.[^']+)'",
             (stage.PROJECT / "Tools/Verify-Unreal.ps1").read_text(encoding="utf-8"),
             re.M)
-        self.assertEqual(36, len(required))
+        self.assertEqual(38, len(required))
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             (root / "Tools").mkdir()
@@ -256,14 +256,14 @@ class FirstWakeMultiPathShoreSourceTests(unittest.TestCase):
             (evidence / "automation.log").write_text("synthetic - not real UE")
             report = evidence / "AutomationReport/index.json"
             report.write_text(json.dumps({
-                "succeeded": 36, "failed": 0, "notRun": 0,
+                "succeeded": 38, "failed": 0, "notRun": 0,
                 "tests": [{"fullTestPath": name, "state": "Success"} for name in required],
             }), encoding="utf-8")
             receipt = evidence / "verified-native.json"
             metadata = {
                 "status": "WIN64_EDITOR_BUILD_AND_NATIVE_AUTOMATIONS_PASS_CLEAN_SOURCE",
                 "source_sha": stale_head, "unreal_version": "5.8.4",
-                "required_native_tests": 36,
+                "required_native_tests": 38,
                 "report_sha256": hashlib.sha256(report.read_bytes()).hexdigest(),
                 "pie_player_input": "NOT_TESTED", "visual_approval": "NOT_TESTED",
             }
@@ -299,7 +299,7 @@ class FirstWakeMultiPathShoreSourceTests(unittest.TestCase):
         expected = "a" * 40
         required_source = (stage.PROJECT / "Tools/Verify-Unreal.ps1").read_text(encoding="utf-8")
         required = re.findall(r"^\s*'(TSTSS\.[^']+)'", required_source, re.M)
-        self.assertEqual(36, len(required))
+        self.assertEqual(38, len(required))
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             (root / "Tools").mkdir()
@@ -312,13 +312,13 @@ class FirstWakeMultiPathShoreSourceTests(unittest.TestCase):
             report_file = folder / "AutomationReport/index.json"
             receipt_file = folder / "verified-native.json"
             data = {
-                "succeeded": 36, "failed": 0, "notRun": 0,
+                "succeeded": 38, "failed": 0, "notRun": 0,
                 "tests": [{"fullTestPath": name, "state": "Success"} for name in required],
             }
             receipt = {
                 "status": "WIN64_EDITOR_BUILD_AND_NATIVE_AUTOMATIONS_PASS_CLEAN_SOURCE",
                 "source_sha": expected, "unreal_version": "5.8.4",
-                "required_native_tests": 36, "report_sha256": "",
+                "required_native_tests": 38, "report_sha256": "",
                 "pie_player_input": "NOT_TESTED", "visual_approval": "NOT_TESTED",
             }
 

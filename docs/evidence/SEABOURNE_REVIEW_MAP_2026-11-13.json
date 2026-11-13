@@ -1,0 +1,26 @@
+{
+  "status": "NONCANON_UNAPPROVED_GEOMETRY_REVIEW",
+  "review_map_package": "/Game/TSTSS/Review/SeabourneRecovery/L_CoastalShip_SeabourneReview",
+  "review_map_sha256": "b468eb6c1038caa0f57aa6d444208a4c93f93885ab641d5a62c87473b7022610",
+  "protected_source_map_package": "/Game/TSTSS/Review/VerticalSlice/VS05_DenithFuelShanty",
+  "protected_source_map_sha256": "5c83e7125eb97aa42d951e89ff1b530600bcc1738287b441f681d44bfaf963bd",
+  "ship_class": "AureateWakePreviewActor",
+  "editor_pose": "Seabourne",
+  "wing_count": 4,
+  "hydrofoil_count": 2,
+  "actor_count": 14,
+  "ship_location_cm": [580, 1100, -35],
+  "requires_actor_labels": [
+    "TSTSS_SEABOURNE_REVIEW_AureateWakeVisualProxy",
+    "TSTSS_SEABOURNE_REVIEW_WalkablePier",
+    "TSTSS_SEABOURNE_REVIEW_ReviewPlayerStart",
+    "TSTSS_SEABOURNE_REVIEW_ReviewSkyAtmosphere",
+    "TSTSS_SEABOURNE_REVIEW_ReviewDistanceFog"
+  ],
+  "native_source_verification": "Unreal Engine 5.8 Editor build passed",
+  "native_tests": "TSTSS.AureateWake 2/2 and TSTSS.FirstWake 8/8 passed at working source",
+  "gpu_smoke": "D3D12 game mode loaded; native ship story bind logged; screenshot captured but visual art NOT approved",
+  "runtime_ship_navigation": false,
+  "creator_visual_approval": false,
+  "production_asset": false
+}

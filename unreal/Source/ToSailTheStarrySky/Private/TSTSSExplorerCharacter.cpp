@@ -8,6 +8,7 @@
 #include "Engine/GameInstance.h"
 #if WITH_EDITOR
 #include "TSTSSV5HarborReviewDressing.h"
+#include "AureateWakePreviewActor.h"
 #include "Engine/StaticMeshActor.h"
 #include "Engine/PostProcessVolume.h"
 #include "Materials/MaterialInterface.h"
@@ -96,7 +97,11 @@ void ShowFirstWakeReviewObjective(const UTSTSSFirstWakeState* State)
     {
         GEngine->AddOnScreenDebugMessage(
             -1, 8.f, FColor::Cyan,
-            FString::Printf(TEXT("First Wake (review): %s  [J to recall]"), *State->GetReviewObjectiveText()));
+            FString::Printf(TEXT("First Wake (review): %s%s  [J to recall]"),
+                *State->GetReviewObjectiveText(),
+                State->IsSeabourneRecoveryLocked()
+                    ? TEXT(" | Aureate Wake: Seabourne only (flight locked)")
+                    : TEXT("")));
     }
 #else
     (void)State;
@@ -104,6 +109,59 @@ void ShowFirstWakeReviewObjective(const UTSTSSFirstWakeState* State)
 }
 
 #if WITH_EDITOR
+void ApplyCoastalRecoveryReviewSignage(UWorld* World)
+{
+    if (!World || (World->WorldType != EWorldType::PIE &&
+                   World->WorldType != EWorldType::Game) ||
+        World->GetNetMode() != NM_Standalone ||
+        !World->GetOutermost() ||
+        !World->GetOutermost()->GetName().Contains(TEXT("/TSTSS/Review/")) ||
+        UGameplayStatics::GetCurrentLevelName(World, true) != TEXT("VS05_DenithFuelShanty"))
+    {
+        return;
+    }
+    // The existing .umap retains its legacy save-compatible identifier.
+    // Replace its rejected in-world fuel-cache signage at runtime only.
+    // This is NOT approval of a new location name or ship art.
+    for (TActorIterator<ATextRenderActor> Sign(World); Sign; ++Sign)
+    {
+        if (IsValid(*Sign) &&
+            Sign->GetActorLabel() == TEXT("TSTSS_VS_REVIEW_FuelShop") &&
+            IsValid(Sign->GetTextRender()))
+        {
+            Sign->GetTextRender()->SetText(
+                FText::FromString(TEXT("COASTAL RECOVERY  |  Survey the ship")));
+            UE_LOG(LogTemp, Display,
+                TEXT("TSTSS_REVIEW_COASTAL_REFIT legacy_map=VS05 sign_replaced=1 saved_assets_unchanged=1"));
+        }
+    }
+}
+void ApplySeabourneReviewExposure(UWorld* World)
+{
+    if (!World || (World->WorldType != EWorldType::PIE &&
+                   World->WorldType != EWorldType::Game) ||
+        World->GetNetMode() != NM_Standalone ||
+        !World->GetOutermost() ||
+        !World->GetOutermost()->GetName().Contains(TEXT("/TSTSS/Review/")) ||
+        UGameplayStatics::GetCurrentLevelName(World, true) !=
+            TEXT("L_CoastalShip_SeabourneReview"))
+    {
+        return;
+    }
+
+    // An unsaved, review-only postprocess balances the default sky's extreme
+    // brightness. It is not a cinematic art approval or global exposure change.
+    if (APostProcessVolume* Volume =
+        World->SpawnActor<APostProcessVolume>(FVector::ZeroVector, FRotator::ZeroRotator))
+    {
+        Volume->bUnbound = true;
+        Volume->Priority = 105.f;
+        Volume->Settings.bOverride_AutoExposureBias = true;
+        Volume->Settings.AutoExposureBias = -2.2f;
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_SEABOURNE_REVIEW_EXPOSURE_APPLIED bias=-2.2 map_asset_unchanged=1"));
+    }
+}
 void ApplyV5HarborReviewLookdev(UWorld* World)
 {
     if (!World || (World->WorldType != EWorldType::PIE &&
@@ -301,6 +359,8 @@ void ATSTSSExplorerCharacter::BeginPlay()
     FirstWakeState = NewObject<UTSTSSFirstWakeState>(this);
 #if WITH_EDITOR
     ApplyV5HarborReviewLookdev(GetWorld());
+    ApplyCoastalRecoveryReviewSignage(GetWorld());
+    ApplySeabourneReviewExposure(GetWorld());
     if (UWorld* World = GetWorld())
     {
         if (UGameInstance* GameInstance = World->GetGameInstance())
@@ -359,7 +419,7 @@ void ATSTSSExplorerCharacter::BeginPlay()
                             {
                                 Sign->SetActorLabel(TEXT("TSTSS_REVIEW_ReserveCheckNotice"));
                                 Sign->GetTextRender()->SetText(
-                                    FText::FromString(TEXT("EMPTY RESERVES  |  Inspect [E]")));
+                                    FText::FromString(TEXT("SHIP SYSTEMS  |  Inspect [E]")));
                             }
                         }
                         else if (IsValid(Reserve))
@@ -372,7 +432,31 @@ void ATSTSSExplorerCharacter::BeginPlay()
         }
     }
 #endif
-    bPIEReviewQuickSlotOwned = false;
+#if WITH_EDITOR
+    // Bind any scene-authored Aureate Wake preview actor to the SAME story
+    // instance restored through review shoreline travel. No new ship spawn,
+    // asset promotion or synthetic water-contact event is introduced.
+    if (UWorld* ReviewWorld = GetWorld())
+    {
+        if ((ReviewWorld->WorldType == EWorldType::PIE ||
+             ReviewWorld->WorldType == EWorldType::Game) &&
+            ReviewWorld->GetNetMode() == NM_Standalone &&
+            ReviewWorld->GetOutermost() &&
+            ReviewWorld->GetOutermost()->GetName().Contains(TEXT("/TSTSS/Review/")))
+        {
+            for (TActorIterator<AAureateWakePreviewActor> Ship(ReviewWorld); Ship; ++Ship)
+            {
+                if (IsValid(*Ship) && Ship->BindReviewStory(FirstWakeState))
+                {
+                    UE_LOG(LogTemp, Display,
+                        TEXT("TSTSS_AUREATE_REVIEW_STORY_BIND form=%d beat=%d"),
+                        static_cast<int32>(Ship->GetCurrentForm()),
+                        static_cast<int32>(FirstWakeState->GetCurrentBeat()));
+                }
+            }
+        }
+    }
+#endif    bPIEReviewQuickSlotOwned = false;
 #if WITH_EDITOR
     bPendingReviewContinue = false;
 #endif

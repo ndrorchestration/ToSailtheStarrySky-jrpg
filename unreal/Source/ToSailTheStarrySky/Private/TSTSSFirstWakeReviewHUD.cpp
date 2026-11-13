@@ -21,6 +21,33 @@ void ATSTSSFirstWakeReviewHUD::DrawHUD()
     {
         return;
     }
+    // Isolated Seabourne visual-review map must not inherit the Prelude
+    // objective ("Find Ionia's flyer") or pretend sailing is playable.
+    const UWorld* World = GetWorld();
+    if (World && World->GetOutermost() &&
+        World->GetOutermost()->GetName() ==
+            TEXT("/Game/TSTSS/Review/SeabourneRecovery/L_CoastalShip_SeabourneReview"))
+    {
+        const float Margin = 24.f;
+        const float Width = FMath::Min(670.f, Canvas->ClipX - Margin * 2.f);
+        if (Width >= 440.f && Canvas->ClipY >= 170.f)
+        {
+            DrawRect(FLinearColor(0.012f, 0.024f, 0.035f, 0.87f),
+                     Margin, Margin, Width, 106.f);
+            DrawText(TEXT("AUREATE WAKE  |  SEABOURNE VISUAL REVIEW"),
+                     FLinearColor(0.35f, 0.90f, 0.93f, 1.f),
+                     Margin + 16.f, Margin + 12.f,
+                     GEngine->GetSmallFont(), 1.06f);
+            DrawText(TEXT("Noncanonical proxy  |  Wings folded; hydrofoils deployed"),
+                     FLinearColor::White, Margin + 16.f, Margin + 41.f,
+                     GEngine->GetSmallFont(), 0.90f);
+            DrawText(TEXT("WASD: explore pier  |  No ship sailing / story progression here"),
+                     FLinearColor(0.96f, 0.77f, 0.45f, 1.f),
+                     Margin + 16.f, Margin + 72.f,
+                     GEngine->GetSmallFont(), 0.83f);
+        }
+        return;
+    }
     const UTSTSSFirstWakeState* State = Explorer->GetFirstWakeState();
     if (!IsValid(State) || State->IsChapterOneActOne())
     {

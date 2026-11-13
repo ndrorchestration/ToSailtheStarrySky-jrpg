@@ -63,7 +63,7 @@ if (-not $Widget.Contains('/Game/TSTSS/Review/FirstWake_PreludeInteraction_V5_Vi
 if ($PrintOnly) {
     Write-Output "SOURCE PLAN: New Game -> V5 seven E markers -> K Aureate interior -> K sky -> K physical sea -> E fuel -> K shore"
     Write-Output "Review HEAD: $Branch / $Head; all seven review map assets present"
-    Write-Output 'No Unreal process started. Actual launch requires same-head full 36-native-test receipt and resource checks.'
+    Write-Output 'No Unreal process started. Actual launch requires same-head full 38-native-test receipt and resource checks.'
     exit 0
 }
 
@@ -71,8 +71,8 @@ if ($PrintOnly) {
 $Verifier = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'Verify-Unreal.ps1') -Raw
 $Names = @([regex]::Matches($Verifier, "(?m)^\s*'(TSTSS\.[^']+)'") |
     ForEach-Object { $_.Groups[1].Value })
-if ($Names.Count -ne 36 -or @($Names | Select-Object -Unique).Count -ne 36) {
-    throw 'HOLD: live verifier requires 36 distinct native tests'
+if ($Names.Count -ne 38 -or @($Names | Select-Object -Unique).Count -ne 38) {
+    throw 'HOLD: live verifier requires 38 distinct native tests'
 }
 $Evidence = Join-Path $Repo 'unreal\Saved\MigrationEvidence'
 if (-not (Test-Path -LiteralPath $Evidence -PathType Container)) {
@@ -87,7 +87,7 @@ foreach ($File in @(Get-ChildItem -LiteralPath $Evidence -Filter 'verified-nativ
         $HeadPath = Join-Path $File.DirectoryName 'head.txt'
         if ($Receipt.status -ne 'WIN64_EDITOR_BUILD_AND_NATIVE_AUTOMATIONS_PASS_CLEAN_SOURCE' -or
             $Receipt.source_sha -ine $Head -or $Receipt.unreal_version -ne '5.8.4' -or
-            $Receipt.required_native_tests -ne 36 -or
+            $Receipt.required_native_tests -ne 38 -or
             $Receipt.pie_player_input -ne 'NOT_TESTED' -or
             $Receipt.visual_approval -ne 'NOT_TESTED' -or
             -not (Test-Path -LiteralPath $HeadPath -PathType Leaf) -or
@@ -97,7 +97,7 @@ foreach ($File in @(Get-ChildItem -LiteralPath $Evidence -Filter 'verified-nativ
             continue
         }
         $Check = Assert-TSTSSNativeAutomationReport -ReportPath $ReportPath -RequiredTests $Names
-        if ($Check.Status -eq 'REPORTED_NATIVE_AUTOMATIONS_SUCCESS' -and $Check.RequiredTests -eq 36) {
+        if ($Check.Status -eq 'REPORTED_NATIVE_AUTOMATIONS_SUCCESS' -and $Check.RequiredTests -eq 38) {
             $NativeAccepted = $true
             break
         }
@@ -106,7 +106,7 @@ foreach ($File in @(Get-ChildItem -LiteralPath $Evidence -Filter 'verified-nativ
         continue
     }
 }
-if (-not $NativeAccepted) { throw 'HOLD: no matching full 36-test native receipt at this source HEAD' }
+if (-not $NativeAccepted) { throw 'HOLD: no matching full 38-test native receipt at this source HEAD' }
 
 # Do not interrupt simultaneous UE development work or bypass resource minimums.
 $OtherEditors = @(Get-Process -Name 'UnrealEditor','UnrealEditor-Cmd','LiveCodingConsole' -ErrorAction SilentlyContinue)

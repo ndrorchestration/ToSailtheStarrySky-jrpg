@@ -55,6 +55,28 @@ public:
             static_cast<uint8>(ETSTSSFirstWakeBeat::FlotationConfirmed);
     }
 
+    // Review-only, fail-closed ship-mode authorization derived from the saved
+    // story beat. This is NOT an unlock API and does not alter save format.
+    // A future recovery-state authority must explicitly authorize flight.
+    UFUNCTION(BlueprintPure, Category="TSTSS|Ship|Review")
+    bool IsSeabourneRecoveryLocked() const { return IsChapterOneActOne(); }
+
+    // Derived from the saved story beat: no separate mode save can drift
+    // across reload or travel. Review only; not a ship mesh switch.
+    UFUNCTION(BlueprintPure, Category="TSTSS|Ship|Review")
+    FName GetReviewShipMode() const
+    {
+        if (!bStarted) return NAME_None;
+        return IsSeabourneRecoveryLocked()
+            ? FName(TEXT("Seabourne")) : FName(TEXT("Skybourne"));
+    }
+
+    UFUNCTION(BlueprintPure, Category="TSTSS|Ship|Review")
+    bool IsReviewShipModeAuthorized(FName RequestedMode) const
+    {
+        const FName Active = GetReviewShipMode();
+        return !Active.IsNone() && RequestedMode == Active;
+    }
     UFUNCTION(BlueprintPure, Category="TSTSS|Story")
     bool IsPreludeComplete() const { return IsChapterOneActOne(); }
 
