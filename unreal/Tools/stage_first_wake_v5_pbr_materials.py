@@ -2,7 +2,7 @@
 """Import existing TSTSS-authored PBR PNGs for V5 harbor; no level/map mutation.
 
 Creates ONLY /Game/TSTSS/Review/PreludePBRV1/ material/texture assets in an
-isolated, pinned, clean Neontic review worktree after full 36-test native proof.
+isolated, pinned, clean Neontic review worktree after full 38-test native proof.
 No story changes, save slots, approval or production material replacement.
 """
 from __future__ import annotations
@@ -79,7 +79,7 @@ def exact_native_receipt(expected: str) -> str:
         r"^\s*'(TSTSS\.[^']+)'",
         verifier.read_text(encoding="utf-8"), flags=re.MULTILINE,
     )
-    if len(names) != 36 or len(set(names)) != 36:
+    if len(names) != 38 or len(set(names)) != 38:
         raise RuntimeError("HOLD: native test inventory drift")
     for folder in sorted(evidence_root.iterdir(), reverse=True):
         receipt = folder / "verified-native.json"
@@ -95,7 +95,7 @@ def exact_native_receipt(expected: str) -> str:
                 or result.get("source_sha") != expected
                 or result.get("unreal_version") != "5.8.4"
                 or type(result.get("required_native_tests")) is not int
-                or result["required_native_tests"] != 36
+                or result["required_native_tests"] != 38
                 or result.get("pie_player_input") != "NOT_TESTED"
                 or result.get("visual_approval") != "NOT_TESTED"
                 or result.get("report_sha256") != sha256(report)
@@ -103,22 +103,22 @@ def exact_native_receipt(expected: str) -> str:
                 or any(type(actual.get(k)) is not int for k in ("succeeded", "failed", "notRun"))
                 or actual["failed"] != 0
                 or actual["notRun"] != 0
-                or actual["succeeded"] != 36
+                or actual["succeeded"] != 38
             ):
                 continue
             tests = actual.get("tests", [])
-            if not isinstance(tests, list) or len(tests) != 36:
+            if not isinstance(tests, list) or len(tests) != 38:
                 continue
             status = {
                 test.get("fullTestPath"): test.get("state")
                 for test in tests if isinstance(test, dict)
             }
-            if len(status) != 36 or any(status.get(name) != "Success" for name in names):
+            if len(status) != 38 or any(status.get(name) != "Success" for name in names):
                 continue
             return str(receipt)
         except (OSError, TypeError, ValueError, KeyError):
             continue
-    raise RuntimeError("HOLD: full 36-native-test same-head receipt missing")
+    raise RuntimeError("HOLD: full 38-native-test same-head receipt missing")
 
 
 def stage() -> dict:

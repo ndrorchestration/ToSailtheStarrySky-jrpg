@@ -194,6 +194,8 @@ $RequiredTests = @(
     'TSTSS.Combat.AbilityAuthorization',
     'TSTSS.Combat.MagicAndWeaponTechniques',
     'TSTSS.Magic.ResonatorCueContract',
+    'TSTSS.AureateWake.Canon.FormDisplayNames',
+    'TSTSS.AureateWake.Review.SeabourneStoryGate',
     'TSTSS.Combat.InitiativeAndActiveParty',
     'TSTSS.Combat.TurnManagerTerminalOutcomes',
     'TSTSS.CombatData.ProtagonistContracts',

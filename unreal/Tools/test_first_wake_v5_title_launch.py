@@ -81,18 +81,18 @@ class FirstWakeV5TitleLauncherSource(unittest.TestCase):
         self.assertLess(s.index("if ($PrintOnly)"), s.index("$NativeAccepted = $false"))
         self.assertIn("if (-not $NativeAccepted)", s)
 
-    def test_full_same_head_native_36_receipt_required_without_weakening_gates(self):
+    def test_full_same_head_native_38_receipt_required_without_weakening_gates(self):
         s = self.script
         self.assertIn("verified-native.json", s)
         self.assertIn("Assert-TSTSSNativeAutomationReport", s)
         self.assertIn("Assert-NativeAutomationReport.ps1", s)
-        self.assertIn("$Names.Count -ne 36", s)
-        self.assertIn("$Receipt.required_native_tests -ne 36", s)
+        self.assertIn("$Names.Count -ne 38", s)
+        self.assertIn("$Receipt.required_native_tests -ne 38", s)
         self.assertIn("$Receipt.source_sha -ine $Head", s)
         self.assertIn("(Get-Content -LiteralPath $HeadPath -Raw).Trim() -ine $Head", s)
         self.assertIn("Get-FileHash -LiteralPath $ReportPath -Algorithm SHA256", s)
         self.assertIn("$Receipt.visual_approval -ne 'NOT_TESTED'", s)
-        self.assertIn("HOLD: no matching full 36-test native receipt at this source HEAD", s)
+        self.assertIn("HOLD: no matching full 38-test native receipt at this source HEAD", s)
         self.assertNotIn("SkipTests", s)
         self.assertNotIn("Override", s)
         self.assertNotIn("Force", s)
