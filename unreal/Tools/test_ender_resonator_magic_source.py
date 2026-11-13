@@ -63,6 +63,17 @@ class ResonatorReviewTests(unittest.TestCase):
         cls.header = HEADER.read_text(encoding="utf-8")
         cls.executor = SKILLS.read_text(encoding="utf-8")
 
+    def test_unreal_datatable_import_has_explicit_optional_fields(self):
+        # Missing JSON fields generate Unreal CSVImportFactory warnings even when native C++ defaults exist.
+        for row in self.rows:
+            for field in ("RequiredSecondarySchool", "RequiredSecondaryRank",
+                          "RequiredWeaponClass", "AnimationCueId"):
+                self.assertIn(field, row, row["SkillId"])
+            self.assertEqual("", row["RequiredWeaponClass"])
+            self.assertEqual("", row["AnimationCueId"])
+            if not row["RequiredSecondarySchool"]:
+                self.assertEqual(0, row["RequiredSecondaryRank"])
+
     def test_exact_review_catalog(self):
         self.assertEqual([], validate(self.rows))
 

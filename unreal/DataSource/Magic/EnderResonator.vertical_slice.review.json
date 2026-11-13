@@ -11,7 +11,11 @@
     "bHealing": false,
     "RequiredSchool": "ResonanceHarmonic",
     "RequiredMasteryRank": 1,
-    "VfxCueId": "VFX.Ender.ResonantPulse"
+    "VfxCueId": "VFX.Ender.ResonantPulse",
+    "RequiredSecondarySchool": "",
+    "RequiredSecondaryRank": 0,
+    "RequiredWeaponClass": "",
+    "AnimationCueId": ""
   },
   {
     "Name": "Ender_TuningLance",
@@ -25,7 +29,11 @@
     "bHealing": false,
     "RequiredSchool": "ResonanceHarmonic",
     "RequiredMasteryRank": 2,
-    "VfxCueId": "VFX.Ender.TuningLance"
+    "VfxCueId": "VFX.Ender.TuningLance",
+    "RequiredSecondarySchool": "",
+    "RequiredSecondaryRank": 0,
+    "RequiredWeaponClass": "",
+    "AnimationCueId": ""
   },
   {
     "Name": "Ender_EchoMend",
@@ -39,7 +47,11 @@
     "bHealing": true,
     "RequiredSchool": "ResonanceHarmonic",
     "RequiredMasteryRank": 1,
-    "VfxCueId": "VFX.Ender.EchoMend"
+    "VfxCueId": "VFX.Ender.EchoMend",
+    "RequiredSecondarySchool": "",
+    "RequiredSecondaryRank": 0,
+    "RequiredWeaponClass": "",
+    "AnimationCueId": ""
   },
   {
     "Name": "Ender_CorrespondenceThread",
@@ -53,7 +65,11 @@
     "bHealing": false,
     "RequiredSchool": "Correspondence",
     "RequiredMasteryRank": 1,
-    "VfxCueId": "VFX.Ender.CorrespondenceThread"
+    "VfxCueId": "VFX.Ender.CorrespondenceThread",
+    "RequiredSecondarySchool": "",
+    "RequiredSecondaryRank": 0,
+    "RequiredWeaponClass": "",
+    "AnimationCueId": ""
   },
   {
     "Name": "Ender_LatticeBreak",
@@ -67,7 +83,11 @@
     "bHealing": false,
     "RequiredSchool": "Correspondence",
     "RequiredMasteryRank": 2,
-    "VfxCueId": "VFX.Ender.LatticeBreak"
+    "VfxCueId": "VFX.Ender.LatticeBreak",
+    "RequiredSecondarySchool": "",
+    "RequiredSecondaryRank": 0,
+    "RequiredWeaponClass": "",
+    "AnimationCueId": ""
   },
   {
     "Name": "Ender_MindRipple",
@@ -81,7 +101,11 @@
     "bHealing": false,
     "RequiredSchool": "PsychicPsion",
     "RequiredMasteryRank": 1,
-    "VfxCueId": "VFX.Ender.MindRipple"
+    "VfxCueId": "VFX.Ender.MindRipple",
+    "RequiredSecondarySchool": "",
+    "RequiredSecondaryRank": 0,
+    "RequiredWeaponClass": "",
+    "AnimationCueId": ""
   },
   {
     "Name": "Ender_FocusHarmonic",
@@ -95,7 +119,11 @@
     "bHealing": true,
     "RequiredSchool": "PsychicPsion",
     "RequiredMasteryRank": 1,
-    "VfxCueId": "VFX.Ender.FocusHarmonic"
+    "VfxCueId": "VFX.Ender.FocusHarmonic",
+    "RequiredSecondarySchool": "",
+    "RequiredSecondaryRank": 0,
+    "RequiredWeaponClass": "",
+    "AnimationCueId": ""
   },
   {
     "Name": "Ender_ConcordanceBurst",
@@ -111,7 +139,9 @@
     "RequiredMasteryRank": 2,
     "RequiredSecondarySchool": "Correspondence",
     "RequiredSecondaryRank": 1,
-    "VfxCueId": "VFX.Ender.ConcordanceBurst"
+    "VfxCueId": "VFX.Ender.ConcordanceBurst",
+    "RequiredWeaponClass": "",
+    "AnimationCueId": ""
   },
   {
     "Name": "Ender_ThoughtChord",
@@ -127,6 +157,8 @@
     "RequiredMasteryRank": 2,
     "RequiredSecondarySchool": "PsychicPsion",
     "RequiredSecondaryRank": 1,
-    "VfxCueId": "VFX.Ender.ThoughtChord"
+    "VfxCueId": "VFX.Ender.ThoughtChord",
+    "RequiredWeaponClass": "",
+    "AnimationCueId": ""
   }
 ]
