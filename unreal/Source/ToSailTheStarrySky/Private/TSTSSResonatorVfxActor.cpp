@@ -199,12 +199,18 @@ void ATSTSSResonatorVfxActor::UpdateVisuals(float TimeSeconds)
         const float Radius = (Style == 0 || Style == 7 || Style == 8)
             ? 35.f + 240.f * Phase : 40.f + 70.f * Phase;
         const float Tilt = (Style == 3 || Style == 4) ? 0.6f * Ring : 0.0f;
+        // Resonant Pulse is a caster-centered expanding SPHERE, not a flat ring.
+        const float Latitude = (Ring - 1) * (PI / 4.f);
         for (int32 Segment = 0; Segment < 24; ++Segment)
         {
             const float A = 2.f * PI * static_cast<float>(Segment) / 24.f +
                             2.5f * TimeSeconds * ((Ring % 2) ? -1.f : 1.f);
-            const FVector Point = CenterRaised + Right * (Radius * FMath::Cos(A)) +
-                Up * (Radius * FMath::Sin(A)) + Direction * (Tilt * Radius * FMath::Sin(A));
+            const FVector Point = (Style == 0)
+                ? CenterRaised + FVector(Radius * FMath::Cos(Latitude) * FMath::Cos(A),
+                    Radius * FMath::Cos(Latitude) * FMath::Sin(A),
+                    Radius * FMath::Sin(Latitude))
+                : CenterRaised + Right * (Radius * FMath::Cos(A)) +
+                    Up * (Radius * FMath::Sin(A)) + Direction * (Tilt * Radius * FMath::Sin(A));
             const float Size = (0.045f + 0.035f * Pulse) * Visibility;
             RingMeshes->UpdateInstanceTransform(Ring * 24 + Segment,
                 FTransform(FRotator::ZeroRotator, Point, FVector(Size)),
@@ -216,8 +222,14 @@ void ATSTSSResonatorVfxActor::UpdateVisuals(float TimeSeconds)
         const float Seed = static_cast<float>(i) / 32.f;
         const float A = Seed * 2.f * PI + TimeSeconds * (2.8f + (Style % 3));
         const float Spiral = 65.f + Seed * 150.f + 22.f * FMath::Sin(12.f * T + Seed * 16.f);
-        const FVector Trail = CenterRaised + Right * (Spiral * FMath::Cos(A)) +
-            Up * (Spiral * FMath::Sin(A)) + Direction * ((Seed - 0.5f) * 150.f);
+        const float SphereZ = 1.f - 2.f * (Seed + 0.5f / 32.f);
+        const float SphereXY = FMath::Sqrt(FMath::Max(0.f, 1.f - SphereZ * SphereZ));
+        const float SphereRadius = 35.f + 240.f * T;
+        const FVector Trail = (Style == 0)
+            ? CenterRaised + SphereRadius * FVector(SphereXY * FMath::Cos(A),
+                SphereXY * FMath::Sin(A), SphereZ)
+            : CenterRaised + Right * (Spiral * FMath::Cos(A)) +
+                Up * (Spiral * FMath::Sin(A)) + Direction * ((Seed - 0.5f) * 150.f);
         const float Size = (0.025f + 0.035f * (0.5f + 0.5f * FMath::Sin(A * 2.f))) * Visibility;
         MoteMeshes->UpdateInstanceTransform(i, FTransform(
             FRotator::ZeroRotator, Trail, FVector(Size)), false, i == 31, true);
