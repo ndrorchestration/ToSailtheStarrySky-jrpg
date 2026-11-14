@@ -31,6 +31,10 @@ RULES = {
     "preview_camera_only": 'World->SpawnActor<ACineCameraActor>',
     "lens": 'Cine->SetCurrentFocalLength(65.f);',
     "aperture": 'Cine->SetCurrentAperture(2.8f);',
+    "review_reframing": 'FVector(-380.f, 650.f, 260.f)',
+    "exposure_override": 'Cine->PostProcessSettings.bOverride_AutoExposureBias = true;',
+    "provisional_exposure_bias": 'Cine->PostProcessSettings.AutoExposureBias = -6.f;',
+    "camera_postprocess_blend": 'Cine->PostProcessBlendWeight = 1.f;',
     "manual_focus": 'Settings.FocusMethod = ECameraFocusMethod::Manual;',
     "limited_duration": 'EngineFocusPreviewStartedSeconds + 4.0',
     "blend_entry_grace": 'FPlatformTime::Seconds() - EngineFocusPreviewStartedSeconds > 0.75',
@@ -141,6 +145,13 @@ class FirstWakePlayerFocusPreviewSourceTests(unittest.TestCase):
                 "    EngineFocusPreviewIgnored" + suffix + " = true;")
             with self.assertRaisesRegex(ValueError, "undeclared input lock field"):
                 check_contract(mutated, self.header, self.config)
+
+    def test_exposure_override_required_in_review_only_camera(self):
+        mutation=self.cpp.replace(
+            "Cine->PostProcessSettings.AutoExposureBias = -6.f;",
+            "Cine->PostProcessSettings.AutoExposureBias = 0.f;")
+        with self.assertRaisesRegex(ValueError, "provisional_exposure_bias"):
+            check_contract(mutation,self.header,self.config)
 
     def test_c_key_missing_fails(self):
         with self.assertRaisesRegex(ValueError, "explicit PIE C input"):

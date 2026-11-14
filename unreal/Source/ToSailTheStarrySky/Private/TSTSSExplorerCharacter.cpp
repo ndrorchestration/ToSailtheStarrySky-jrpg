@@ -773,7 +773,9 @@ void ATSTSSExplorerCharacter::ToggleEngineFocusPreview()
     // A nonfinite/off-scene anchor must never leave a borrowed coordinator
     // with an eligible cue when no camera can be created.
     const FVector Target = Instrument->GetActorLocation();
-    const FVector Location = Target + FVector(-350.f, -610.f, 265.f);
+    // Provisional optical camera framing from isolated VS02 lookdev; not approved art.
+    // Approach the LIFT from its clear rail-facing side.
+    const FVector Location = Target + FVector(-380.f, 650.f, 260.f);
     const float FocusCm = FVector::Dist(Location, Target);
     if (!FMath::IsFinite(FocusCm) || FocusCm < 65.f || FocusCm > 12000.f)
     {
@@ -838,6 +840,11 @@ void ATSTSSExplorerCharacter::ToggleEngineFocusPreview()
     Settings.bDrawDebugFocusPlane = false;
 #endif
     Cine->SetFocusSettings(Settings);
+    // Draft Neontic D3D12 fixed look; the 17h Lit review otherwise clips to white.
+    // Weather/time and accessibility acceptance are still NOT established.
+    Cine->PostProcessSettings.bOverride_AutoExposureBias = true;
+    Cine->PostProcessSettings.AutoExposureBias = -6.f;
+    Cine->PostProcessBlendWeight = 1.f;
 
     // Explicit, reversible 4 s preview. The player pawn stays at its
     // original location, and existing movement/look ignore values are
