@@ -35,9 +35,11 @@ class HilltoniaReviewWayfindingTests(unittest.TestCase):
     def test_legible_exploration_without_fake_e_target(self):
         for token in (
             "HILLTONIA  |  EXPLORATION ROUTE",
-            "HARBOR TO HILLTONIA  |  FOLLOW ROAD WEST",
-            "HILLTONIA SQUARE  |  FOREST PATH INLAND",
-            "WOODLAND TRACK  |  FOLLOW THE FOREST ROAD",
+            "ROAD  |  WEST: HILLTONIA / EAST: HARBOR",
+            "VILLAGE SQUARE  |  WEST END / INLAND FOREST",
+            "TOWN WEST END  |  EAST: SQUARE",
+            "FOREST PATH  |  INLAND: EDGE / BACK: TOWN",
+            "FOREST EDGE  |  BACK: VILLAGE SQUARE",
             "Scenery is NOT an [E] quest target",
             "WASD: walk",
             "FOLLOW THE GOLD MARKER",
@@ -45,7 +47,10 @@ class HilltoniaReviewWayfindingTests(unittest.TestCase):
         ):
             self.assertIn(token, HUD)
         self.assertIn("distinguish non-interactive roads from E markers", HARNESS)
-        self.assertIn("forest route must use actual pawn location", HARNESS)
+        self.assertIn("forest branch must explain how to return to town", HARNESS)
+        self.assertIn("west-end arrival must direct the return", HARNESS)
+        self.assertIn("forest edge must direct the return", HARNESS)
+        self.assertIn("wayfinding reads geography; it must never mutate story state", HARNESS)
 
     def test_position_guard_does_not_mutate_gameplay(self):
         for token in (
