@@ -37,6 +37,8 @@ RULES = {
     "only_cleanup_when_opened": 'else if (bHadPreview)',
     "discoverable_prompt": 'Engine inspection: press C near the LIFT instrument for a 4s focus view',
     "visual_return": 'PC->SetViewTargetWithBlend(this, 0.3f,',
+    "cancel_pending_entry_blend": 'PC->SetViewTargetWithBlend(this, 0.f);',
+    "do_not_steal_external_view": 'PC->GetViewTarget() == this',
     "input_restore_move": 'PC->SetIgnoreMoveInput(false);',
     "input_restore_look": 'PC->SetIgnoreLookInput(false);',
     "camera_cleanup": 'Camera->SetLifeSpan(0.6f);',
@@ -141,6 +143,22 @@ class FirstWakePlayerFocusPreviewSourceTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "input_restore_move"):
             check_contract(self.cpp.replace("PC->SetIgnoreMoveInput(false);",
                                             "/* movement remains blocked */"), self.header, self.config)
+
+    def test_manual_cancel_pending_blend_restores_pawn(self):
+        edited = self.cpp.replace(
+            'PC->SetViewTargetWithBlend(this, 0.f);',
+            '/* pending camera blend is never explicitly canceled */')
+        with self.assertRaisesRegex(ValueError, "cancel_pending_entry_blend"):
+            check_contract(edited, self.header, self.config)
+
+    def test_external_camera_owner_cannot_be_overwritten(self):
+        # Both valid cases are explicit: the preview owns the active camera,
+        # or the pawn is still active while its preview entry blend is pending.
+        restore = self.cpp.split(
+            "void ATSTSSExplorerCharacter::RestoreEngineFocusPreview()", 1)[1]
+        self.assertIn("PC->GetViewTarget() == Camera", restore)
+        self.assertIn("PC->GetViewTarget() == this", restore)
+        self.assertNotIn("PC->SetViewTargetWithBlend(this, 0.f);\n        }\n        else", restore)
 
     def test_lifespan_cleanup_fails(self):
         with self.assertRaisesRegex(ValueError, "camera_cleanup"):
