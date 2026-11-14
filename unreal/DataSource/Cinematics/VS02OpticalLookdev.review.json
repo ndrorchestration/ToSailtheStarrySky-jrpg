@@ -1,0 +1,42 @@
+{
+  "schema": "tstss.firstwake.vs02_optical_lookdev_review.v2",
+  "status": "DRAFT_NONSHIPPING_NATIVE_MAP_SAVED_READBACK_PASS_PIE_GATED",
+  "derives_from_review_head": "686935cb7c11960dab73ee5664d635eb6e19eb94",
+  "original_source_map": "/Game/TSTSS/Review/VerticalSlice/VS02_AureateInteriors",
+  "original_source_sha256": "a97fbb057cb87c0e35fe95195ca06c30de1a5cc60158bf31a657f738b22a9d69",
+  "current_review_map": "/Game/TSTSS/Review/EngineFocus_V1/M_EnginePresentationReview",
+  "historical_review_map_sha256": "bbff86677b71e73609f9bdb95559f3af9af9ab0032857c613e1b8d4d36a5d5a3",
+  "current_review_map_sha256": "06f006b42d54a990ffefa5903bda0d24e34259a424c1f6bee4a51a29f0766223",
+  "actor_count": 28,
+  "one_atmosphere_director": true,
+  "camera_count": 2,
+  "camera_target_actor": "TSTSS_VS_REVIEW_InstrumentCore_LIFT",
+  "camera_offset_cm": [
+    -380,
+    650,
+    260
+  ],
+  "camera_focus_cm": 796.555,
+  "camera_lens_mm": 65,
+  "camera_aperture_f": 2.8,
+  "camera_exposure_bias_ev": -6.0,
+  "camera_comparison": [
+    "ManualDepthOfField",
+    "DisabledDepthOfField"
+  ],
+  "receiver_enabled": false,
+  "source_map_mutated": false,
+  "protected_configs_mutated": false,
+  "in_memory_gpu_exposure_trials": {
+    "base_clipped_near_white_fraction": 0.95345,
+    "bias_minus_4_clipped": 0.16808,
+    "bias_minus_7_clipped": 0.00115,
+    "reframed_minus_6_clipped": 0.005
+  },
+  "local_evidence": "unreal/Saved/OpticalVS02Stage/ExposureV2Stage/readback.json",
+  "gpu_bokeh_quantitatively_established": false,
+  "verified_earned_story_pie_input": false,
+  "approved_assets": false,
+  "creator_visual_approved": false,
+  "merge_authorized": false
+}

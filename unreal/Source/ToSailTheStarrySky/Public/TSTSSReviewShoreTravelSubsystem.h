@@ -17,6 +17,7 @@ public:
     static FString NextReviewMap(const UTSTSSFirstWakeState* State, const FString& SourceMap);
     static bool IsEligible(const UTSTSSFirstWakeState* State, const FString& SourceMap);
     bool QueueShore(UWorld* World, UTSTSSFirstWakeState* State);
+    bool QueueOpticalInspection(UWorld* World, UTSTSSFirstWakeState* State);
     bool ConsumeShoreArrival(const UWorld* World, UTSTSSFirstWakeState* State);
     const FString& GetPendingMapPackage() const { return PendingMapPackage; }
 

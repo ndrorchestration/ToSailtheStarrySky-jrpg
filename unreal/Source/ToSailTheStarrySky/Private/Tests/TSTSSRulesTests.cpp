@@ -65,6 +65,33 @@ bool FTSTSSFirstWakeOrderTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Engineering signoff after all checks"), State->AdvanceTo(ETSTSSFirstWakeBeat::EngineeringChecked));
     TestFalse(TEXT("No late inspection"), State->InspectStation(ETSTSSInspectionStation::Reserve));
     TestFalse(TEXT("Reject missing inspection evidence on restore"), State->Restore(true, ETSTSSFirstWakeBeat::Launched, 0));
+
+    // Retain the existing native automation registry while proving the
+    // presentation invalidation delegate fires ONLY on accepted transitions.
+    UTSTSSFirstWakeState* OpticsState = NewObject<UTSTSSFirstWakeState>();
+    int32 AcceptedChanges = 0;
+    const FDelegateHandle AcceptanceHandle = OpticsState->OnAcceptedChange().AddLambda(
+        [&AcceptedChanges]() { ++AcceptedChanges; });
+    TestFalse(TEXT("Rejected boarding does not invalidate camera"),
+        OpticsState->AdvanceTo(ETSTSSFirstWakeBeat::BoardedAureateWake));
+    TestEqual(TEXT("Rejected transition emits no notification"), AcceptedChanges, 0);
+    TestTrue(TEXT("Flyer acceptance"), OpticsState->AdvanceTo(ETSTSSFirstWakeBeat::FlyerDiscovered));
+    TestEqual(TEXT("Flyer emits once"), AcceptedChanges, 1);
+    TestFalse(TEXT("Duplicate flyer rejected"), OpticsState->AdvanceTo(ETSTSSFirstWakeBeat::FlyerDiscovered));
+    TestEqual(TEXT("Duplicate emits nothing"), AcceptedChanges, 1);
+    TestTrue(TEXT("Hire acceptance"), OpticsState->AdvanceTo(ETSTSSFirstWakeBeat::IoniaHired));
+    TestTrue(TEXT("Board acceptance"), OpticsState->AdvanceTo(ETSTSSFirstWakeBeat::BoardedAureateWake));
+    TestTrue(TEXT("Lift accepted"), OpticsState->InspectStation(ETSTSSInspectionStation::Lift));
+    TestFalse(TEXT("Duplicate lift denied"), OpticsState->InspectStation(ETSTSSInspectionStation::Lift));
+    TestEqual(TEXT("Only accepted changes notify"), AcceptedChanges, 4);
+    OpticsState->Reset();
+    TestEqual(TEXT("Reset invalidates lens intent"), AcceptedChanges, 5);
+    TestFalse(TEXT("Rejected restore does not notify"),
+        OpticsState->Restore(false, ETSTSSFirstWakeBeat::Launched, 0x07));
+    TestEqual(TEXT("Rejected restore preserved delegate count"), AcceptedChanges, 5);
+    TestTrue(TEXT("Accepted restore"), OpticsState->Restore(true, ETSTSSFirstWakeBeat::EngineeringChecked, 0x07));
+    TestEqual(TEXT("Restore invalidates lens intent"), AcceptedChanges, 6);
+    OpticsState->OnAcceptedChange().Remove(AcceptanceHandle);
     return true;
 }
 

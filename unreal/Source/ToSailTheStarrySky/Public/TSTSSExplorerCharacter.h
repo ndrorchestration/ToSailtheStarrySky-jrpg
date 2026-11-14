@@ -2,6 +2,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "TSTSSFirstWakeState.h"
+#include "TimerManager.h"
 #include "TSTSSExplorerCharacter.generated.h"
 
 UCLASS()
@@ -12,6 +13,7 @@ public:
     ATSTSSExplorerCharacter();
     virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
     virtual void BeginPlay() override;
+    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
     virtual void Tick(float DeltaSeconds) override;
 #if !UE_BUILD_SHIPPING
     // Cosmetic aim prompt from the same camera trace and pawn reach as E.
@@ -68,6 +70,18 @@ private:
 #if WITH_EDITOR
     void ReviewContinue();
     void ReviewShoreTravel();
+    void ReviewOpticalInspectionTravel();
+    void ToggleEngineFocusPreview();
+    void VerifyEngineFocusPreview();
+    void RestoreEngineFocusPreview();
+    TWeakObjectPtr<class ACineCameraActor> EngineFocusPreviewCamera;
+    TWeakObjectPtr<class APlayerController> EngineFocusPreviewController;
+    FTimerHandle EngineFocusPreviewGuardTimer;
+    double EngineFocusPreviewStartedSeconds = 0.0;
+    double EngineFocusPreviewDeadlineSeconds = 0.0;
+    bool bEngineFocusPreviewOwnsCoordinatorEnable = false;
+    bool bEngineFocusPreviewIgnoredMove = false;
+    bool bEngineFocusPreviewIgnoredLook = false;
     bool SaveReviewContinueBinding(const FString& Slot);
     bool bPendingReviewContinue = false;
     FString PendingReviewContinueDigest;

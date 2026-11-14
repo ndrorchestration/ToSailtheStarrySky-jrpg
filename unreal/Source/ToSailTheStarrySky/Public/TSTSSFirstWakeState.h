@@ -27,6 +27,9 @@ enum class ETSTSSInspectionStation : uint8
     Reserve
 };
 
+// Runtime-only acceptance notification. No SaveGame field or extra story authority.
+DECLARE_MULTICAST_DELEGATE(FOnTSTSSFirstWakeAcceptedChange);
+
 UCLASS(BlueprintType)
 class TOSAILTHESTARRYSKY_API UTSTSSFirstWakeState : public UObject
 {
@@ -93,6 +96,9 @@ public:
     // Restore() and full Reset(). It is not part of the saved game schema.
     uint64 GetRestoreGeneration() const { return RestoreGeneration; }
 
+    // Read-only subscribers revoke presentation on genuinely accepted changes.
+    FOnTSTSSFirstWakeAcceptedChange& OnAcceptedChange() { return AcceptedChange; }
+
     UFUNCTION(BlueprintCallable, Category="TSTSS|First Wake")
     void Reset();
 
@@ -116,4 +122,7 @@ private:
 
     UPROPERTY(Transient)
     uint64 RestoreGeneration = 0;
+
+    // Never serialized; only successful story transitions broadcast.
+    FOnTSTSSFirstWakeAcceptedChange AcceptedChange;
 };

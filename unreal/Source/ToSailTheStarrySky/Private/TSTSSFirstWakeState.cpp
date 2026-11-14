@@ -56,6 +56,7 @@ bool UTSTSSFirstWakeState::AdvanceTo(const ETSTSSFirstWakeBeat RequestedBeat)
             return false;
         }
         bStarted = true;
+        AcceptedChange.Broadcast();
         return true;
     }
     if (Current >= Last || Requested != Current + 1)
@@ -67,6 +68,7 @@ bool UTSTSSFirstWakeState::AdvanceTo(const ETSTSSFirstWakeBeat RequestedBeat)
         return false;
     }
     CurrentBeat = RequestedBeat;
+    AcceptedChange.Broadcast();
     return true;
 }
 
@@ -77,12 +79,14 @@ bool UTSTSSFirstWakeState::AdvanceWaterBeat(ETSTSSFirstWakeBeat RequestedBeat)
         CurrentBeat == ETSTSSFirstWakeBeat::Launched)
     {
         CurrentBeat = RequestedBeat;
+        AcceptedChange.Broadcast();
         return true;
     }
     if (RequestedBeat == ETSTSSFirstWakeBeat::FlotationConfirmed &&
         CurrentBeat == ETSTSSFirstWakeBeat::SeaContact)
     {
         CurrentBeat = RequestedBeat;
+        AcceptedChange.Broadcast();
         return true;
     }
     return false;
@@ -99,6 +103,7 @@ bool UTSTSSFirstWakeState::InspectStation(ETSTSSInspectionStation Station)
     const uint8 Bit = static_cast<uint8>(1u << Index);
     if ((InspectionMask & Bit) != 0) return false;
     InspectionMask |= Bit;
+    AcceptedChange.Broadcast();
     return true;
 }
 
@@ -111,6 +116,7 @@ void UTSTSSFirstWakeState::Reset()
     // cached hull contact/settling evidence even if the same state and gate
     // instances survive the reset before the next adapter Tick.
     ++RestoreGeneration;
+    AcceptedChange.Broadcast();
 }
 
 bool UTSTSSFirstWakeState::Restore(bool bWasStarted, ETSTSSFirstWakeBeat SavedBeat, uint8 SavedInspectionMask)
@@ -127,5 +133,6 @@ bool UTSTSSFirstWakeState::Restore(bool bWasStarted, ETSTSSFirstWakeBeat SavedBe
     CurrentBeat = SavedBeat;
     InspectionMask = SavedInspectionMask;
     ++RestoreGeneration;
+    AcceptedChange.Broadcast();
     return true;
 }

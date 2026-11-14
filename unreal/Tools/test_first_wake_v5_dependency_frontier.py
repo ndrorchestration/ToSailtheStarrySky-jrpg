@@ -38,8 +38,12 @@ class V5DependencyFrontierTests(unittest.TestCase):
         self.assertEqual([x["Name"] for x in project["Plugins"] if x["Enabled"]],
                          baseline["enabled_plugins"])
         self.assertEqual(self.frontier["unchanged_baseline_plugins"], baseline["enabled_plugins"])
+        # Historical frontier identifies the original unadmitted proposal.
+        # This separate optical-graft review branch now declares the module
+        # explicitly, without changing the production admission/release gate.
         self.assertEqual(self.frontier["proposed_native_modules_not_yet_admitted"], ["CinematicCamera"])
-        self.assertNotIn('"CinematicCamera"', build)
+        self.assertEqual(baseline["native_module_dependencies"].count("CinematicCamera"), 1)
+        self.assertEqual(build.count('"CinematicCamera"'), 1)
         self.assertIn('"AudioMixer"', build)
         self.assertEqual(self.frontier["new_plugins_installed"], [])
 
