@@ -40,6 +40,14 @@ struct FLinearColor {
 };
 const FLinearColor FLinearColor::White(1.f, 1.f, 1.f, 1.f);
 struct UCanvas { float ClipX = 1280.f; float ClipY = 720.f; };
+struct FVector {
+    float X = 0.f, Y = 0.f, Z = 0.f;
+    bool ContainsNaN() const {
+        return !std::isfinite(X) || !std::isfinite(Y) || !std::isfinite(Z);
+    }
+};
+namespace EWorldType { enum Type { Game, PIE, Editor }; }
+enum ENetMode { NM_Standalone, NM_Client };
 // Minimal package API for the actual map-scoped Seabourne review HUD.
 // This API double does not create a real World, route or gameplay authority.
 struct UPackage {
@@ -48,6 +56,9 @@ struct UPackage {
 };
 struct UWorld {
     const UPackage* Package = nullptr;
+    EWorldType::Type WorldType = EWorldType::Game;
+    ENetMode Mode = NM_Standalone;
+    ENetMode GetNetMode() const { return Mode; }
     const UPackage* GetOutermost() const { return Package; }
 };
 struct UTSTSSFirstWakeState {
@@ -58,7 +69,11 @@ struct UTSTSSFirstWakeState {
     unsigned GetInspectionMask() const { return Mask; }
     bool IsChapterOneActOne() const { return ChapterOne; }
 };
-struct APawn { virtual ~APawn() = default; };
+struct APawn {
+    virtual ~APawn() = default;
+    FVector Location;
+    FVector GetActorLocation() const { return Location; }
+};
 struct ATSTSSExplorerCharacter : APawn {
     UTSTSSFirstWakeState* State = nullptr;
     FString Prompt;
@@ -79,6 +94,7 @@ template<class T> bool IsValid(const T* p) { return p != nullptr; }
 struct FMath {
     static float Max(float a, float b) { return std::max(a, b); }
     static float Min(float a, float b) { return std::min(a, b); }
+    static bool IsFinite(float value) { return std::isfinite(value); }
 };
 struct TextDraw {
     FString value;
@@ -253,6 +269,69 @@ int main() {
         hud.DrawHUD();
         expect(hud.text.size() == priorUnknown,
                "unrelated map cannot inherit Seabourne HUD");
+        hud.World = nullptr;
+        // Distinguish traversable Hilltonia review geography from legitimate
+        // E plot interactions; prove it is scoped to V5, standalone and finite.
+        UPackage hilltoniaPackage;
+        hilltoniaPackage.Name =
+            "/Game/TSTSS/Review/FirstWake_PreludeInteraction_V5_VisualReview";
+        UWorld hilltoniaWorld;
+        hilltoniaWorld.Package = &hilltoniaPackage;
+        hud.World = &hilltoniaWorld;
+        state.ChapterOne = false;
+        explorer.Location = {-3650.f, -150.f, 130.f};
+        const auto roadText = hud.text.size();
+        const auto roadRects = hud.rects.size();
+        hud.DrawHUD();
+        expect(hud.text.size() == roadText + 9 &&
+               hud.rects.size() == roadRects + 8,
+               "V5 road must draw normal 6-line HUD plus 3-line route guidance");
+        expect(hud.text[roadText+6].value.find("HILLTONIA") != FString::npos &&
+               hud.text[roadText+7].value.find("FOLLOW ROAD WEST") != FString::npos &&
+               hud.text[roadText+8].value.find("NOT an [E]") != FString::npos,
+               "wayfinding must distinguish non-interactive roads from E markers");
+        expect(hud.rects.back().x > 800.f && hud.rects.back().w == 386.f,
+               "route panel must sit beside rather than over Prelude objective");
+        explorer.Location = {-7350.f, -1700.f, 130.f};
+        const auto forestText = hud.text.size();
+        hud.DrawHUD();
+        expect(hud.text[forestText+7].value.find("WOODLAND TRACK") != FString::npos,
+               "forest route must use actual pawn location");
+        explorer.Location = {-1000.f, -150.f, 130.f};
+        const auto outsideText = hud.text.size();
+        hud.DrawHUD();
+        expect(hud.text.size() == outsideText + 6,
+               "ordinary harbor markers must not inherit Hilltonia route overlay");
+        explorer.Location = {-3650.f, -150.f, 130.f};
+        hilltoniaWorld.Mode = NM_Client;
+        const auto networkText = hud.text.size();
+        hud.DrawHUD();
+        expect(hud.text.size() == networkText + 6,
+               "network worlds must not show local review wayfinding");
+        hilltoniaWorld.Mode = NM_Standalone;
+        hilltoniaWorld.WorldType = EWorldType::Editor;
+        const auto editorText = hud.text.size();
+        hud.DrawHUD();
+        expect(hud.text.size() == editorText + 6,
+               "Editor world must not inherit live player route overlay");
+        hilltoniaWorld.WorldType = EWorldType::PIE;
+        explorer.Location = {NAN, -150.f, 130.f};
+        const auto nonfiniteText = hud.text.size();
+        hud.DrawHUD();
+        expect(hud.text.size() == nonfiniteText + 6,
+               "nonfinite pawn positions must not generate navigation labels");
+        explorer.Location = {-3650.f, -150.f, 130.f};
+        canvas.ClipX = 1000.f;
+        const auto narrowText = hud.text.size();
+        hud.DrawHUD();
+        expect(hud.text.size() == narrowText + 6,
+               "narrow view must not clip an overlapping Hilltonia side panel");
+        canvas.ClipX = 1280.f;
+        hilltoniaPackage.Name = "/Game/Unrelated/HilltoniaDebug";
+        const auto otherText = hud.text.size();
+        hud.DrawHUD();
+        expect(hud.text.size() == otherText + 6,
+               "unrelated world must not receive Hilltonia panel");
         hud.World = nullptr;
 #endif
         std::cout << "PASS: " << checks <<
