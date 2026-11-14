@@ -53,7 +53,7 @@ struct ATSTSSExplorerCharacter : TSTSSBaseCharacter {
     void SetupPlayerInputComponent(UInputComponent*);
     void MoveForward(float); void MoveRight(float);
     void Turn(float); void LookUp(float);
-    void Interact(); void QuickSave(); void QuickLoad(); void ReviewContinue(); void ShowObjectiveReview(); void ReviewShoreTravel();
+    void Interact(); void QuickSave(); void QuickLoad(); void ReviewContinue(); void ShowObjectiveReview(); void ReviewShoreTravel(); void ReviewOpticalInspectionTravel();
     // Stand-in only: actual C-key input method is declared in the production header.
     void ToggleEngineFocusPreview();
 };
@@ -69,6 +69,7 @@ void ATSTSSExplorerCharacter::QuickLoad() {}
 void ATSTSSExplorerCharacter::ReviewContinue() {}
 void ATSTSSExplorerCharacter::ShowObjectiveReview() {}
 void ATSTSSExplorerCharacter::ReviewShoreTravel() {}
+void ATSTSSExplorerCharacter::ReviewOpticalInspectionTravel() {}
 void ATSTSSExplorerCharacter::ToggleEngineFocusPreview() {}
 """
 SUFFIX = r"""
@@ -98,6 +99,8 @@ int main() {
             verify(hasExactly(input.actions, "ReviewObjective", 1), "Read-only objective unavailable");
             verify(hasExactly(input.actions, "ReviewShoreTravel", type == EWorldType::Editor ? 0 : 1),
                    "K review navigation incorrectly enabled or missing");
+            verify(hasExactly(input.actions, "ReviewOpticalInspectionTravel", type == EWorldType::PIE ? 1 : 0),
+                   "O optional engine review handoff must be PIE-only");
             if (type == EWorldType::PIE) {
                 verify(hasExactly(input.actions, "PIEReviewQuickSave", 1),
                        "PIE must bind exactly one F6 action");
@@ -126,7 +129,7 @@ int main() {
                 verify(hasExactly(input.actions, "EngineFocusPreview", 0),
                        "Editor world cannot bind PIE-only camera review");
             }
-            verify(input.actions.size() == (type == EWorldType::PIE ? 7u : (type == EWorldType::Game ? 5u : 3u)),
+            verify(input.actions.size() == (type == EWorldType::PIE ? 8u : (type == EWorldType::Game ? 5u : 3u)),
                    "Unexpected extra or duplicated action bindings");
         }
         ATSTSSExplorerCharacter missingWorld;
@@ -136,6 +139,7 @@ int main() {
                hasExactly(noWorldInput.actions, "PIEReviewQuickSave", 0) &&
                hasExactly(noWorldInput.actions, "ReviewContinue", 0) &&
                hasExactly(noWorldInput.actions, "EngineFocusPreview", 0) &&
+               hasExactly(noWorldInput.actions, "ReviewOpticalInspectionTravel", 0) &&
                hasExactly(noWorldInput.actions, "ReviewShoreTravel", 0),
                "Null world must fail closed for save and review navigation");
         std::cout << "PASS: " << cases
@@ -158,7 +162,8 @@ def method_from(source: str) -> str:
     for token in ("Super::SetupPlayerInputComponent", "EWorldType::PIE",
                   "EWorldType::Game", 'TEXT("PIEReviewQuickSave")',
                   'TEXT("QuickSave")', 'TEXT("QuickLoad")', 'TEXT("ReviewContinue")',
-                  'TEXT("ReviewShoreTravel")', 'TEXT("EngineFocusPreview")'):
+                  'TEXT("ReviewShoreTravel")', 'TEXT("EngineFocusPreview")',
+                  'TEXT("ReviewOpticalInspectionTravel")'):
         if token not in method:
             raise ValueError("Source method missing expected selection: " + token)
     return method
@@ -170,16 +175,19 @@ def config_guard(config: str) -> None:
     required = {("PIEReviewQuickSave", "F6"), ("QuickSave", "F5"),
                 ("QuickLoad", "F9"), ("ReviewContinue", "F7"),
                 ("Interact", "E"), ("ReviewObjective", "J"),
-                ("ReviewShoreTravel", "K"), ("EngineFocusPreview", "C")}
+                ("ReviewShoreTravel", "K"), ("EngineFocusPreview", "C"),
+                ("ReviewOpticalInspectionTravel", "O")}
     if len(mappings) != len(set(mappings)) or not required.issubset(mappings):
         raise ValueError("DefaultInput.ini lacks unique F6 PIE / F5 Game / F9 load")
-    if any(name in ("PIEReviewQuickSave", "QuickSave", "QuickLoad", "ReviewContinue", "ReviewShoreTravel", "EngineFocusPreview") and (name, key) not in required
+    if any(name in ("PIEReviewQuickSave", "QuickSave", "QuickLoad", "ReviewContinue", "ReviewShoreTravel", "EngineFocusPreview", "ReviewOpticalInspectionTravel") and (name, key) not in required
            for name, key in mappings):
         raise ValueError("Multiple or unsafe save/continue key declarations")
     if len({key for name, key in mappings if name in
             ("PIEReviewQuickSave", "QuickSave", "QuickLoad", "ReviewContinue",
-             "ReviewShoreTravel", "EngineFocusPreview")}) != 6 or any(
-                 key == "C" and name != "EngineFocusPreview" for name, key in mappings):
+             "ReviewShoreTravel", "EngineFocusPreview", "ReviewOpticalInspectionTravel")}) != 7 or any(
+                 (key == "C" and name != "EngineFocusPreview") or
+                 (key == "O" and name != "ReviewOpticalInspectionTravel")
+                 for name, key in mappings):
         raise ValueError("Save/load/Continue/scene-travel/camera keyboard collision")
 
 
@@ -217,7 +225,9 @@ def main() -> int:
     config_guard(CONFIG.read_text(encoding="utf-8"))
     character_source = CHARACTER.read_text(encoding="utf-8")
     if (CHARACTER_HEADER.read_text(encoding="utf-8").count("void ToggleEngineFocusPreview();") != 1
-            or character_source.count("void ATSTSSExplorerCharacter::ToggleEngineFocusPreview()") != 1):
+            or character_source.count("void ATSTSSExplorerCharacter::ToggleEngineFocusPreview()") != 1
+            or CHARACTER_HEADER.read_text(encoding="utf-8").count("void ReviewOpticalInspectionTravel();") != 1
+            or character_source.count("void ATSTSSExplorerCharacter::ReviewOpticalInspectionTravel()") != 1):
         raise ValueError("C inspection method must exist in production header and source")
     original = method_from(character_source)
     result = compile_and_run(compiler, original)
@@ -230,6 +240,7 @@ def main() -> int:
             ("PIE F5 shortcut collision", 'TEXT("PIEReviewQuickSave")', 'TEXT("QuickSave")'),
             ("Game mistakenly uses F6", 'TEXT("QuickSave")', 'TEXT("PIEReviewQuickSave")'),
             ("PIE C optic review action missing", 'TEXT("EngineFocusPreview")', 'TEXT("Interact")'),
+            ("PIE O optional review handoff missing", 'TEXT("ReviewOpticalInspectionTravel")', 'TEXT("ReviewShoreTravel")'),
         ):
             if original.count(old) != 1:
                 raise RuntimeError("Mutation anchor missing or ambiguous: " + name)
@@ -256,6 +267,15 @@ def main() -> int:
             print("PASS: rejected C-to-E camera/interaction collision")
         else:
             raise RuntimeError("Unsafe camera key collision accepted")
+        invalid_o = CONFIG.read_text(encoding="utf-8").replace(
+            'ActionName="ReviewOpticalInspectionTravel",Key=O',
+            'ActionName="ReviewOpticalInspectionTravel",Key=K', 1)
+        try:
+            config_guard(invalid_o)
+        except ValueError:
+            print("PASS: rejected O-to-K optical/travel collision")
+        else:
+            raise RuntimeError("Unsafe optical handoff key collision accepted")
     print("Source-extracted C++ API-double proof ONLY. Actual Unreal/PIE keyboard and saves untested.")
     return 0
 

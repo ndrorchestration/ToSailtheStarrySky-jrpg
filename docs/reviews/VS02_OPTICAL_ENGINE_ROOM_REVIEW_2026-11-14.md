@@ -13,3 +13,5 @@
 **OPEN:** Real Ender PIE and story-derived BoardedAureateWake state, C key event, proximity, camera return after four seconds, input movement/look recovery, physical splashdown, Lit GPU review/DOF, audio/accessibility/performance and creator visual approval. No SaveGame schema, story, Starbourne, party gates or production maps altered.
 
 **Merges:** KEEP DRAFT and UNMERGED. Historical #835/#836 receipts remain scoped.
+
+**Additional bounded path proposed in next review commit:** Once the V5 First Wake story has actually earned EngineeringChecked, the original VS02 ship scene offers an explicit PIE-only [O] trip to the camera-review copy via one-use in-memory GameInstance ticket (no story skip or SaveGame write). In the copy, approach LIFT and press [C] to opt in to camera focus; normal [K] still requires actual Launched progression before opening sky. No direct map loading grants story authorization, and these prompts/controls remain unverified by real keyboard PIE until tested.

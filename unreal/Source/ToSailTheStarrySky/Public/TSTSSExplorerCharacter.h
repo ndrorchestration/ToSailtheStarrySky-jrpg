@@ -70,6 +70,7 @@ private:
 #if WITH_EDITOR
     void ReviewContinue();
     void ReviewShoreTravel();
+    void ReviewOpticalInspectionTravel();
     void ToggleEngineFocusPreview();
     void VerifyEngineFocusPreview();
     void RestoreEngineFocusPreview();

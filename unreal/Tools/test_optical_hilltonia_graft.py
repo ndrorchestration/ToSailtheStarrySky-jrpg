@@ -20,6 +20,7 @@ class OpticalHilltoniaGraftTests(unittest.TestCase):
         body = CPP.read_text(encoding="utf-8")
         inp = INPUT.read_text(encoding="utf-8")
         for name, key in (("Interact", "E"), ("EngineFocusPreview", "C"),
+                          ("ReviewOpticalInspectionTravel", "O"),
                           ("PIEReviewQuickSave", "F6"), ("ReviewContinue", "F7"),
                           ("QuickLoad", "F9"), ("ReviewObjective", "J"),
                           ("ReviewShoreTravel", "K")):

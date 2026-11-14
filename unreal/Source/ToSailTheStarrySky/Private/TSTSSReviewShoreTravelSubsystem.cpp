@@ -12,6 +12,11 @@ inline bool IsPreludeScene(const FString& Name)
     return Name == PreludeName || Name == VisualReviewPreludeName;
 }
 constexpr const TCHAR* ShipName = TEXT("VS02_AureateInteriors");
+// A separately built nonshipping optical-review scene. Entry must be explicit
+// from the already-authorized ship interior; K launch still follows the sky.
+constexpr const TCHAR* OpticalName = TEXT("M_EnginePresentationReview");
+constexpr const TCHAR* OpticalPackage =
+    TEXT("/Game/TSTSS/Review/EngineFocus_V1/M_EnginePresentationReview");
 constexpr const TCHAR* SkyName = TEXT("VS03_FirstWakeSky");
 constexpr const TCHAR* SeaName = TEXT("VS04_SplashdownSea");
 constexpr const TCHAR* FuelName = TEXT("VS05_DenithFuelShanty");
@@ -42,6 +47,11 @@ FString UTSTSSReviewShoreTravelSubsystem::NextReviewMap(
     if (SourceMap == ShipName && Beat == ETSTSSFirstWakeBeat::EngineeringChecked)
     {
         // No sky/sea claim until the player explicitly requests departure.
+        return TEXT("/Game/TSTSS/Review/VerticalSlice/VS03_FirstWakeSky");
+    }
+    if (SourceMap == OpticalName && Beat == ETSTSSFirstWakeBeat::EngineeringChecked)
+    {
+        // An opt-in camera study is NOT a launch, splashdown or story advance.
         return TEXT("/Game/TSTSS/Review/VerticalSlice/VS03_FirstWakeSky");
     }
     if (SourceMap == SkyName && Beat == ETSTSSFirstWakeBeat::Launched)
@@ -92,7 +102,7 @@ bool UTSTSSReviewShoreTravelSubsystem::QueueShore(
     // occurs only from the ship interior (or from the legacy V2 test map).
     // No level travel may synthesize SeaContact or FlotationConfirmed.
     if (((IsPreludeScene(SourceMap) && SourceMap != VisualReviewPreludeName) ||
-         SourceMap == ShipName) &&
+         SourceMap == ShipName || SourceMap == OpticalName) &&
         !State->AdvanceTo(ETSTSSFirstWakeBeat::Launched))
     {
         return false;
@@ -100,6 +110,40 @@ bool UTSTSSReviewShoreTravelSubsystem::QueueShore(
     PendingBeat = State->GetCurrentBeat();
     PendingInspectionMask = State->GetInspectionMask();
     PendingMapPackage = Destination;
+    bPending = true;
+    return true;
+#else
+    (void)World;
+    (void)State;
+    return false;
+#endif
+}
+
+bool UTSTSSReviewShoreTravelSubsystem::QueueOpticalInspection(
+    UWorld* World, UTSTSSFirstWakeState* State)
+{
+#if WITH_EDITOR
+    // A distinct, explicit O-key review handoff. Does NOT replace the normal
+    // K route, alter story beats or load arbitrary maps. Exact PIE-only ship
+    // source and earned engineering signoff are both necessary.
+    if (!World || World->WorldType != EWorldType::PIE ||
+        World->GetNetMode() != NM_Standalone || bPending ||
+        !World->GetOutermost() ||
+        !World->GetOutermost()->GetName().StartsWith(TEXT("/Game/TSTSS/Review/")) ||
+        UGameplayStatics::GetCurrentLevelName(World, true) != ShipName ||
+        !IsValid(State) || !State->HasStarted() ||
+        State->GetCurrentBeat() != ETSTSSFirstWakeBeat::EngineeringChecked ||
+        !State->AreInspectionsComplete() ||
+        State->IsSeabourneRecoveryLocked() ||
+        !FPackageName::DoesPackageExist(OpticalPackage))
+    {
+        return false;
+    }
+    // Same one-use in-memory ticket that restores REAL earned story state on
+    // arrival. No synthetic progression and no save-slot write.
+    PendingBeat = State->GetCurrentBeat();
+    PendingInspectionMask = State->GetInspectionMask();
+    PendingMapPackage = OpticalPackage;
     bPending = true;
     return true;
 #else

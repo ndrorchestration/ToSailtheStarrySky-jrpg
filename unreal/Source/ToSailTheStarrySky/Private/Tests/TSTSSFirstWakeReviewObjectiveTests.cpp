@@ -91,6 +91,9 @@ bool FTSTSSFirstWakeReviewObjectiveTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Ship departure requires inspections and opens only the sky review"),
         Route::NextReviewMap(State, TEXT("VS02_AureateInteriors")),
         FString(TEXT("/Game/TSTSS/Review/VerticalSlice/VS03_FirstWakeSky")));
+    TestEqual(TEXT("Optional optical review exits to sky only from earned signoff"),
+        Route::NextReviewMap(State, TEXT("M_EnginePresentationReview")),
+        FString(TEXT("/Game/TSTSS/Review/VerticalSlice/VS03_FirstWakeSky")));
     TestFalse(TEXT("Unapproved V3 has no launch authority"),
         Route::IsEligible(State, TEXT("FirstWake_PreludeInteraction_V3_VisualReview")));
     TestFalse(TEXT("Unapproved V4 has no launch authority"),
@@ -101,6 +104,8 @@ bool FTSTSSFirstWakeReviewObjectiveTest::RunTest(const FString& Parameters)
         State->Restore(true, ETSTSSFirstWakeBeat::Launched, 0x07));
     TestTrue(TEXT("Launched sky proceeds to native sea scene"),
         Route::IsEligible(State, TEXT("VS03_FirstWakeSky")));
+    TestFalse(TEXT("Optical scene cannot bypass launched review state"),
+        Route::IsEligible(State, TEXT("M_EnginePresentationReview")));
     TestFalse(TEXT("Launch itself cannot grant flotation"),
         Route::IsEligible(State, TEXT("VS04_SplashdownSea")));
     TestTrue(TEXT("Fixture restores sea contact without flotation"),

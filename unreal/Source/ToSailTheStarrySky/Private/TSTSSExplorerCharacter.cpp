@@ -399,6 +399,22 @@ void ATSTSSExplorerCharacter::BeginPlay()
                         TEXT("TSTSS_FIRSTWAKE_REVIEW_SCENE_ARRIVAL_STORY_RESTORED_NO_RECRUITMENT beat=%d"),
                         static_cast<int32>(FirstWakeState->GetCurrentBeat()));
                     const FString Scene = UGameplayStatics::GetCurrentLevelName(World, true);
+                    // Only an earned in-memory arrival ticket reveals the
+                    // optional optical study; a direct level launch gets none.
+                    if (FirstWakeState->GetCurrentBeat() ==
+                            ETSTSSFirstWakeBeat::EngineeringChecked && GEngine)
+                    {
+                        if (Scene == TEXT("VS02_AureateInteriors"))
+                        {
+                            GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Cyan,
+                                TEXT("Optional engine optics [O] | [K] launches First Wake"));
+                        }
+                        else if (Scene == TEXT("M_EnginePresentationReview"))
+                        {
+                            GEngine->AddOnScreenDebugMessage(-1, 12.f, FColor::Cyan,
+                                TEXT("Engine optics: approach LIFT, press [C] for 4s | [K] launches"));
+                        }
+                    }
                     if (Scene == TEXT("VS03_FirstWakeSky") ||
                         Scene == TEXT("VS04_SplashdownSea"))
                     {
@@ -983,6 +999,9 @@ void ATSTSSExplorerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
         // Opt-in cinematography is separate from E, J, K, F6, F7 and F9.
         PlayerInputComponent->BindAction(TEXT("EngineFocusPreview"), IE_Pressed,
             this, &ATSTSSExplorerCharacter::ToggleEngineFocusPreview);
+        // Independent, opt-in route from earned engineering signoff.
+        PlayerInputComponent->BindAction(TEXT("ReviewOpticalInspectionTravel"), IE_Pressed,
+            this, &ATSTSSExplorerCharacter::ReviewOpticalInspectionTravel);
     }
 #endif
     PlayerInputComponent->BindAction(TEXT("ReviewObjective"), IE_Pressed, this, &ATSTSSExplorerCharacter::ShowObjectiveReview);
@@ -1226,6 +1245,29 @@ void ATSTSSExplorerCharacter::ReviewShoreTravel()
         *Destination);
     UGameplayStatics::OpenLevel(this, FName(*Destination));
 }
+
+void ATSTSSExplorerCharacter::ReviewOpticalInspectionTravel()
+{
+    UWorld* World = GetWorld();
+    UGameInstance* Instance = World ? World->GetGameInstance() : nullptr;
+    UTSTSSReviewShoreTravelSubsystem* Travel = Instance
+        ? Instance->GetSubsystem<UTSTSSReviewShoreTravelSubsystem>() : nullptr;
+    if (!Travel || !Travel->QueueOpticalInspection(World, FirstWakeState))
+    {
+        if (GEngine)
+        {
+            GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow,
+                TEXT("Optical review locked: complete engineering signoff in VS02 first"));
+        }
+        return;
+    }
+    const FString Destination = Travel->GetPendingMapPackage();
+    UE_LOG(LogTemp, Display,
+        TEXT("TSTSS_FIRSTWAKE_OPTICAL_REVIEW_QUEUED_NO_STORY_ADVANCE destination=%s"),
+        *Destination);
+    UGameplayStatics::OpenLevel(this, FName(*Destination));
+}
+
 #endif
 
 void ATSTSSExplorerCharacter::QuickSave()
