@@ -1,6 +1,6 @@
 # Hilltonia — Harbor, Town and Deciduous Woodland (Unreal review v0.1)
 
-**Authority:** New creator-selected place name *Hilltonia*, adjoining First Wake Harbor. This is an additive **geographic and gameplay review proposal**, not a promotion of final world geography, NPCs, mission content or AAA-quality visuals. Reference branch: \`review/ue58-hilltonia-harbor-forest-20261113\`.
+**Authority:** New creator-selected place name *Hilltonia*, adjoining First Wake Harbor. This is an additive **geographic and gameplay review proposal**, not a promotion of final world geography, NPCs, mission content or AAA-quality visuals. Reference branch: `review/ue58-hilltonia-harbor-forest-20261113`.
 
 ## Geography and scale
 
@@ -26,6 +26,13 @@ The adjoining forest should eventually support **oak, maple, beech and birch** w
 
 **Physics/authority:** The existing dock remains the source of seven ordered E interactions. The new town road/woodland lane and exterior house/trunk collision are tagged WorldStatic; remaining architecture, ridges and leaf crowns are decorative. The original docking, ship-form, water-observer, flotation, save and Starbourne gates are not changed. Town extension is spawned **only at runtime** in the exact standalone Unreal V5 review package, using native material assets already in the project; no .umap or .uasset is saved or overwritten.
 
+## Evidence ledger — November 13, 2026
+
+- **Native engine evidence for terrain+town commit `37c5335d`:** Unreal 5.8.4 Win64 Editor compiled, and 38/38 real native automation tests passed, with clean exact-head receipt retained on Neontic. The three native screenshots showing town street, ground and forest-edge proxies are **review only**, not creator-approved.
+- **Source-only follow-up `2b8cb26c`:** new `test_hilltonia_route_geometry.py` computes five-point 35-cm-footprint support every 20 cm along the planned harbor → village street → forest approach → harbor return, approximately 185 m and 929 sampled points. It also rejects missing main-road segments, missing forest segments, obstructing props, missing soil, wrong ground elevation, and weakened review-map authority. This is **planar source-geometry evidence only**, not a real Unreal walking/physics pass.
+- **Current exact-head acceptance:** new commits after the native receipt require their own source/CI verification; previous native results cannot be misrepresented as exact-head native verification of a later source or documentation commit. Neontic was offline during the source-only follow-up.
+- **Unresolved runtime coverage:** actual pawn location and collision traces at the dock/road seam, town turnaround, forest turnoff and return; marker/quest noninterference; screenshot matching and terrain grading; the separate VS02 interior camera/lighting issue.
+
 ## Required acceptance and design gaps
 
 - Engine-free spatial-contract checks and native 5.8.4 Win64 compilation, followed by exact-SHA native automation.
@@ -35,4 +42,4 @@ The adjoining forest should eventually support **oak, maple, beech and birch** w
 - Future actual Landscape heightfields, foliage asset selection, species palette, seasonal variants, named NPCs, harbor audio crossfade, navmesh, clock/weather coupling, LOD/HISM and biome streaming require separate implementation/evidence.
 - Do not claim Hilltonia is a production-approved open-world city or that the full First Wake flight-to-shoreline vertical slice is complete.
 
-**Current state at creation:** source-authored **review candidate**; native run, physics/collision experience and visual creator approval remain unknown until evidenced.
+**Status:** draft #829 is source-authored and has a verified earlier Unreal native build/test receipt. The full harbor-to-town-to-forest route remains a **source-geometry pass only** pending physical Unreal gameplay and visual approval.
