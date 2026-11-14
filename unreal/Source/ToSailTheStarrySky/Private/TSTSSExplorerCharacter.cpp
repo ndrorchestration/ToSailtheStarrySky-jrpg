@@ -377,8 +377,9 @@ void ATSTSSExplorerCharacter::ToggleEngineFocusPreview()
         return;
     }
 
-    // Same approved 65 mm f/2.8 optical recipe as the native A/B review.
-    // A higher camera elevation clears more of the foreground railing.
+    // Same technically validated 65 mm f/2.8 lens settings as the native
+    // D3D12 A/B study. The study is NOT creator-approved cinematic art;
+    // this higher camera elevation also requires separate native review.
     const FVector Target = Instrument->GetActorLocation();
     const FVector Location = Target + FVector(-350.f, -610.f, 265.f);
     const float FocusCm = FVector::Dist(Location, Target);
