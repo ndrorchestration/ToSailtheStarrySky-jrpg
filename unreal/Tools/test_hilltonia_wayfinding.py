@@ -14,8 +14,8 @@ CPP = (ROOT / "Source/ToSailTheStarrySky/Private/"
 PATTERN = re.compile(
     r'WayfindingSign\(Owner, Root, TEXT\("([^"]+)"\),\s*'
     r'TEXT\("([^"]+)"\),\s*'
-    r'FVector\((-?\d+(?:\.\d+)?)f,\s*(-?\d+(?:\.\d+)?)f,\s*'
-    r'(-?\d+(?:\.\d+)?)f\),\s*(-?\d+(?:\.\d+)?)f\);'
+    r'FVector\((-?\d+(?:\.\d*)?)f,\s*(-?\d+(?:\.\d*)?)f,\s*'
+    r'(-?\d+(?:\.\d*)?)f\),\s*(-?\d+(?:\.\d*)?)f\);'
 )
 
 
