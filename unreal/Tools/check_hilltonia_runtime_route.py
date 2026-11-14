@@ -64,7 +64,15 @@ class Record:
 
 def parse(text: str) -> list[Record]:
     records = []
-    for match in RECORD.finditer(text):
+    for line in text.splitlines():
+        if "TSTSS_HILLTONIA_ROUTE_" not in line:
+            continue
+        # A partial, corrupted or wrong-map route record must not simply be
+        # ignored while the remaining valid lines make a run appear complete.
+        match = RECORD.search(line)
+        if (match is None or line.count("TSTSS_HILLTONIA_ROUTE_") != 1
+                or line[match.end():].strip()):
+            raise RouteNotEstablished("Malformed or unscoped Hilltonia route record")
         kind, name, *fields = match.groups()
         time, x, y, z = map(float, fields[:4])
         grounded, footing = map(int, fields[4:])
@@ -95,32 +103,46 @@ def assess(text: str) -> dict:
     if fall_recovery or fall_denied:
         raise RouteNotEstablished("Fall/recovery event present; route requires separate review")
 
+    # Heartbeats are emitted on a real 2-second world-time cadence. A
+    # duplicated timestamp or burst of copied samples cannot prove a walk.
+    for previous, current in zip(samples, samples[1:]):
+        if current.time - previous.time < 1.0:
+            raise RouteNotEstablished("Repeated or too-fast route heartbeat")
+
     traveled_cm = 0.0
     for index, rec in enumerate(records):
         if rec.grounded != 1 or rec.footing != 1:
             raise RouteNotEstablished(
                 f"Unsupported or airborne player sample at record {index}"
             )
+        matching = next((
+            name for name, (x, y, radius) in WAYPOINTS.items()
+            if math.hypot(rec.x - x, rec.y - y) <= radius + 0.15
+        ), "UNMARKED")
         if rec.kind == "WAYPOINT":
-            x, y, radius = WAYPOINTS[rec.name]
-            if math.hypot(rec.x - x, rec.y - y) > radius + 0.15:
+            if rec.name != matching:
                 raise RouteNotEstablished(
                     f"Waypoint {rec.name} outside measured route radius"
                 )
-        if index == 0:
-            continue
-        prev = records[index - 1]
-        elapsed = rec.time - prev.time
-        distance = math.dist((rec.x, rec.y, rec.z), (prev.x, prev.y, prev.z))
-        if elapsed < 0:
-            raise RouteNotEstablished("Route timestamps are not increasing")
-        if (elapsed == 0 and distance > 1.0) or (
-            elapsed > 0 and distance / elapsed > MAX_SPEED_CM_PER_SECOND
-        ):
-            raise RouteNotEstablished(
-                f"Implausible movement or teleport between records {index-1} and {index}"
-            )
-        traveled_cm += distance
+        elif rec.name != matching:
+            raise RouteNotEstablished("Sample waypoint label disagrees with pawn position")
+        if index:
+            prev = records[index - 1]
+            elapsed = rec.time - prev.time
+            distance = math.dist((rec.x, rec.y, rec.z), (prev.x, prev.y, prev.z))
+            if elapsed < 0:
+                raise RouteNotEstablished("Route timestamps are not increasing")
+            if (elapsed == 0 and distance > 1.0) or (
+                elapsed > 0 and distance / elapsed > MAX_SPEED_CM_PER_SECOND
+            ):
+                raise RouteNotEstablished(
+                    f"Implausible movement or teleport between records {index-1} and {index}"
+                )
+            traveled_cm += distance
+        # Match the active Unreal pawn's bounded geographic instrumentation:
+        # records outside the scene region are not real V5 Hilltonia samples.
+        if not (-9650. <= rec.x <= -3400. and -3650. <= rec.y <= 1200.):
+            raise RouteNotEstablished("Pawn left bounded Hilltonia review region")
 
     if traveled_cm < 15000.:
         raise RouteNotEstablished("Too little measured travel for harbor–forest return")
