@@ -369,6 +369,17 @@ void ATSTSSExplorerCharacter::ToggleEngineFocusPreview()
         Warn(TEXT("Engine view held: another cinematic shot already owns presentation"));
         return;
     }
+    // Validate lens geometry BEFORE publishing presentation intent.
+    // A nonfinite/off-scene anchor must never leave a borrowed coordinator
+    // with an eligible cue when no camera can be created.
+    const FVector Target = Instrument->GetActorLocation();
+    const FVector Location = Target + FVector(-350.f, -610.f, 265.f);
+    const float FocusCm = FVector::Dist(Location, Target);
+    if (!FMath::IsFinite(FocusCm) || FocusCm < 65.f || FocusCm > 12000.f)
+    {
+        Warn(TEXT("Engine view held: invalid native instrument focus anchor"));
+        return;
+    }
     if (!bWasEnabled)
     {
         Coordinator->SetReviewEnabled(true);
@@ -385,17 +396,7 @@ void ATSTSSExplorerCharacter::ToggleEngineFocusPreview()
         return;
     }
 
-    // Same technically validated 65 mm f/2.8 lens settings as the native
-    // D3D12 A/B study. The study is NOT creator-approved cinematic art;
-    // this higher camera elevation also requires separate native review.
-    const FVector Target = Instrument->GetActorLocation();
-    const FVector Location = Target + FVector(-350.f, -610.f, 265.f);
-    const float FocusCm = FVector::Dist(Location, Target);
-    if (!FMath::IsFinite(FocusCm) || FocusCm < 65.f || FocusCm > 12000.f)
-    {
-        if (!bWasEnabled) Coordinator->SetReviewEnabled(false);
-        return;
-    }
+    // Technically verified 65 mm f/2.8 lens; native gameplay look still unapproved.
     FActorSpawnParameters Spawn;
     Spawn.SpawnCollisionHandlingOverride =
         ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -404,7 +405,23 @@ void ATSTSSExplorerCharacter::ToggleEngineFocusPreview()
     if (!IsValid(Camera) || !IsValid(Camera->GetCineCameraComponent()))
     {
         if (IsValid(Camera)) Camera->Destroy();
-        if (!bWasEnabled) Coordinator->SetReviewEnabled(false);
+        if (!bWasEnabled)
+        {
+            Coordinator->SetReviewEnabled(false);
+        }
+        else
+        {
+            // Borrowed coordinators must remain enabled, but our accepted
+            // engine shot cannot survive a failed native camera spawn.
+            // Do not reset a different shot if ownership changed meanwhile.
+            const FTSTSSPresentationIntent Current =
+                Coordinator->GetCurrentIntent();
+            if (Current.bEligible
+                && Current.ShotId == FName(TEXT("FW03_Engine_Inspection")))
+            {
+                Coordinator->ResetReviewIntent();
+            }
+        }
         Warn(TEXT("Engine view unavailable: no native Cine Camera"));
         return;
     }
