@@ -72,7 +72,8 @@ class V5HarborDressingContract(unittest.TestCase):
         self.assertIn("PracticalLights", CPP)
         self.assertIn("source_map_unchanged=1", CPP)
         self.assertIn("TSTSSV5HarborReviewDressing::Apply(", PAWN)
-        self.assertRegex(PAWN, r"if \(bCompletePBRPack\)\s*\{\s*TSTSSV5HarborReviewDressing::Apply")
+        self.assertRegex(PAWN, r"if \(bCompletePBRPack\)\s*\{\s*const bool bDockReady = TSTSSV5HarborReviewDressing::Apply")
+        self.assertRegex(PAWN, r"if \(bDockReady\)\s*\{\s*UMaterialInterface\* Canopy")
         self.assertIn("PBRLoaded[0], PBRLoaded[2], PBRLoaded[3], PBRLoaded[4]", PAWN)
 
     def test_has_storehouse_pier_cargo_and_lamp_silhouettes(self):
