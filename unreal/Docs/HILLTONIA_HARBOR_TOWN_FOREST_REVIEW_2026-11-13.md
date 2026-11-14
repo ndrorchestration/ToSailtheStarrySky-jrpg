@@ -33,6 +33,20 @@ The adjoining forest should eventually support **oak, maple, beech and birch** w
 - **Current exact-head acceptance:** new commits after the native receipt require their own source/CI verification; previous native results cannot be misrepresented as exact-head native verification of a later source or documentation commit. Neontic was offline during the source-only follow-up.
 - **Unresolved runtime coverage:** actual pawn location and collision traces at the dock/road seam, town turnaround, forest turnoff and return; marker/quest noninterference; screenshot matching and terrain grading; the separate VS02 interior camera/lighting issue.
 
+## Read-only live traversal telemetry — November 13, 2026
+
+**Source-only addition pending exact-head native recompilation:** the V5 standalone review pawn now emits bounded `TSTSS_HILLTONIA_ROUTE_WAYPOINT` events on entering named checkpoints and `TSTSS_HILLTONIA_ROUTE_SAMPLE` heartbeats every two seconds while in the Hilltonia landward region. Each logged value comes from the real pawn's `GetActorLocation()`, `UCharacterMovementComponent::IsMovingOnGround()` and pre-existing five-point downward `HasSupportedReviewFooting()` world-static line traces. The telemetry does **not** grant any First Wake beat, modify movement or save data, change levels, or run in shipping. The final waypoint order is harbor seam → town street → square → **far-west town end** → square → woodland approach → forest edge → woodland approach → square → town street → harbor seam.
+
+In a **new isolated review session**, first admit exact-head UE 5.8.4 Win64 build + required native automation with `Verify-Unreal.ps1` and its hash-bound receipt. Confirm the game starts in V5 Prelude, then physically walk the route in both directions. Evaluate a copied runtime log with:
+
+```powershell
+python unreal/Tools/check_hilltonia_runtime_route.py --log unreal/Saved/Logs/ToSailTheStarrySky.log
+```
+
+The evaluator requires correct checkpoint chronology, at least eight live location heartbeats, grounded and supported footprint at every logged sample, a plausible movement speed, at least 15,000 cm measured traversal, a minimum duration and no fall-return event. It rejects unsupported, out-of-order, insufficient or teleport-like records. **Even a positive report is only `REVIEW_ROUTE_LOG_CONSISTENT_NOT_NATIVE_ATTESTATION`**, never creator/cinematic approval or a substitute for an independently verified exact-SHA native receipt. Match in-game camera screenshots at the dock seam, town west end, forest edge and return; inspect the genuine quay-to-ground visual seam and collision.
+
+**GitHub source regression at instrumentation commit `b196070a1279fc0084a19e23814a263c4e508db6`:** 662 Python tests completed successfully under the hosted Linux preflight; all three CI workflows passed. Neontic was **offline** during this source-only implementation, so no UE C++ compile, actual native route log, screenshots or playthrough evidence exists yet for that commit. Do not propagate prior native 38/38 evidence from `37c5335d` to the new exact HEAD.
+
 ## Required acceptance and design gaps
 
 - Engine-free spatial-contract checks and native 5.8.4 Win64 compilation, followed by exact-SHA native automation.
