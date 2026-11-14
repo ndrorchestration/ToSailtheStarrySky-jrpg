@@ -6,6 +6,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "TSTSSReviewContinueManifest.h"
 #include "Engine/World.h"
+#include "UObject/Package.h"
 #include "Components/PrimitiveComponent.h"
 
 #if WITH_DEV_AUTOMATION_TESTS
@@ -385,6 +386,139 @@ bool FTSTSSFirstWakeInteractionSplashdownTest::RunTest(const FString& Parameters
                 LiftMesh->GetCollisionResponseToChannel(ECC_Visibility), ECR_Block);
         }
     }
+    // Positive native fixture for the same *exact* package/scene/label gate
+    // that must reject the unrelated transient PIE world above. These are
+    // isolated synthetic review worlds: do not load, save, or alter map assets.
+    UPackage* AllowedShantyPackage = CreatePackage(
+        TEXT("/Game/TSTSS/Review/VS05_DenithFuelShanty"));
+    UWorld* AllowedShantyWorld = UWorld::CreateWorld(
+        EWorldType::PIE, false, FName(TEXT("VS05_DenithFuelShanty")),
+        AllowedShantyPackage);
+    UPackage* AllowedPreludePackage = CreatePackage(
+        TEXT("/Game/TSTSS/Review/FirstWake_PreludeInteraction_V2"));
+    UWorld* AllowedPreludeWorld = UWorld::CreateWorld(
+        EWorldType::PIE, false, FName(TEXT("FirstWake_PreludeInteraction_V2")),
+        AllowedPreludePackage);
+    const bool bAllowedWorldsExist =
+        TestNotNull(TEXT("Package-scoped VS05 native review world"), AllowedShantyWorld) &&
+        TestNotNull(TEXT("Package-scoped Prelude native review world"), AllowedPreludeWorld);
+    if (bAllowedWorldsExist)
+    {
+        UTSTSSFirstWakeState* AllowedLaunchStory =
+            NewObject<UTSTSSFirstWakeState>(GetTransientPackage());
+        TestTrue(TEXT("Allowed-world launch preconditions restored"),
+            AllowedLaunchStory->Restore(true,
+                ETSTSSFirstWakeBeat::EngineeringChecked, 0x07));
+        ATSTSSMilestoneActor* AllowedLaunch =
+            AllowedShantyWorld->SpawnActor<ATSTSSMilestoneActor>();
+        if (TestNotNull(TEXT("Authorized VS05 launch marker exists"), AllowedLaunch))
+        {
+            AllowedLaunch->SetActorLabel(
+                TEXT("TSTSS_SPLASHDOWN_GREYBOX_LaunchMarker"));
+            AllowedLaunch->Milestone = ETSTSSFirstWakeBeat::Launched;
+            UPrimitiveComponent* AllowedLaunchMesh =
+                Cast<UPrimitiveComponent>(AllowedLaunch->GetRootComponent());
+            if (TestNotNull(TEXT("Authorized VS05 marker mesh exists"),
+                            AllowedLaunchMesh))
+            {
+                TestEqual(TEXT("Authorized launch initially blocks E ray"),
+                    AllowedLaunchMesh->GetCollisionResponseToChannel(ECC_Visibility),
+                    ECR_Block);
+                TestTrue(TEXT("Authorized VS05 launch consumes story beat"),
+                    AllowedLaunch->TryActivate(AllowedLaunchStory));
+                TestEqual(TEXT("Authorized VS05 accepted launch releases E ray"),
+                    AllowedLaunchMesh->GetCollisionResponseToChannel(ECC_Visibility),
+                    ECR_Ignore);
+                TestTrue(TEXT("Authorized VS05 restore reactivates launch"),
+                    AllowedLaunchStory->Restore(
+                        true, ETSTSSFirstWakeBeat::EngineeringChecked, 0x07));
+                AllowedLaunch->ReconcileReviewCollisionAfterRestore(AllowedLaunchStory);
+                TestEqual(TEXT("Authorized VS05 restored launch blocks E ray again"),
+                    AllowedLaunchMesh->GetCollisionResponseToChannel(ECC_Visibility),
+                    ECR_Block);
+                TestEqual(TEXT("Authorized VS05 restored marker never blocks pawn"),
+                    AllowedLaunchMesh->GetCollisionResponseToChannel(ECC_Pawn),
+                    ECR_Ignore);
+            }
+        }
+
+        UTSTSSFirstWakeState* AllowedPreludeStory =
+            NewObject<UTSTSSFirstWakeState>(GetTransientPackage());
+        TestTrue(TEXT("Authorized Prelude state restores hired Ionia"),
+            AllowedPreludeStory->Restore(true, ETSTSSFirstWakeBeat::IoniaHired, 0));
+        ATSTSSMilestoneActor* AllowedFlyer =
+            AllowedPreludeWorld->SpawnActor<ATSTSSMilestoneActor>();
+        if (TestNotNull(TEXT("Authorized Prelude flyer marker exists"), AllowedFlyer))
+        {
+            AllowedFlyer->SetActorLabel(TEXT("TSTSS_PRELUDE_REVIEW_FlyerDiscovery"));
+            AllowedFlyer->Milestone = ETSTSSFirstWakeBeat::FlyerDiscovered;
+            UPrimitiveComponent* AllowedFlyerMesh =
+                Cast<UPrimitiveComponent>(AllowedFlyer->GetRootComponent());
+            AllowedFlyer->ReconcileReviewCollisionAfterRestore(AllowedPreludeStory);
+            if (TestNotNull(TEXT("Authorized Prelude flyer mesh exists"), AllowedFlyerMesh))
+            {
+                TestEqual(TEXT("Authorized Prelude completed flyer releases E ray"),
+                    AllowedFlyerMesh->GetCollisionResponseToChannel(ECC_Visibility),
+                    ECR_Ignore);
+            }
+        }
+
+        UTSTSSFirstWakeState* AllowedInspectionStory =
+            NewObject<UTSTSSFirstWakeState>(GetTransientPackage());
+        TestTrue(TEXT("Authorized Prelude boarded state restores"),
+            AllowedInspectionStory->Restore(
+                true, ETSTSSFirstWakeBeat::BoardedAureateWake, 0));
+        ATSTSSMilestoneActor* AllowedLift =
+            AllowedPreludeWorld->SpawnActor<ATSTSSMilestoneActor>();
+        if (TestNotNull(TEXT("Authorized Prelude inspection exists"), AllowedLift))
+        {
+            AllowedLift->SetActorLabel(TEXT("TSTSS_PRELUDE_REVIEW_LiftStation"));
+            AllowedLift->bIsInspectionStation = true;
+            AllowedLift->InspectionStation = ETSTSSInspectionStation::Lift;
+            UPrimitiveComponent* AllowedLiftMesh =
+                Cast<UPrimitiveComponent>(AllowedLift->GetRootComponent());
+            AllowedLift->ReconcileReviewCollisionAfterRestore(AllowedInspectionStory);
+            if (TestNotNull(TEXT("Authorized Prelude inspection mesh exists"),
+                            AllowedLiftMesh))
+            {
+                TestEqual(TEXT("Uninspected authorized Lift blocks E ray"),
+                    AllowedLiftMesh->GetCollisionResponseToChannel(ECC_Visibility),
+                    ECR_Block);
+                TestTrue(TEXT("Authorized Lift inspection mask restored"),
+                    AllowedInspectionStory->Restore(
+                        true, ETSTSSFirstWakeBeat::BoardedAureateWake, 0x01));
+                AllowedLift->ReconcileReviewCollisionAfterRestore(AllowedInspectionStory);
+                TestEqual(TEXT("Inspected authorized Lift releases E ray"),
+                    AllowedLiftMesh->GetCollisionResponseToChannel(ECC_Visibility),
+                    ECR_Ignore);
+            }
+        }
+
+        ATSTSSMilestoneActor* UnrelatedInAllowedWorld =
+            AllowedPreludeWorld->SpawnActor<ATSTSSMilestoneActor>();
+        if (TestNotNull(TEXT("Allowed-world unrelated marker exists"),
+                        UnrelatedInAllowedWorld))
+        {
+            UnrelatedInAllowedWorld->SetActorLabel(
+                TEXT("TSTSS_PRODUCTION_ShipInteraction"));
+            UnrelatedInAllowedWorld->Milestone =
+                ETSTSSFirstWakeBeat::FlyerDiscovered;
+            UTSTSSFirstWakeState* UnrelatedStory =
+                NewObject<UTSTSSFirstWakeState>(GetTransientPackage());
+            TestTrue(TEXT("Unrelated marker can update story without review permission"),
+                UnrelatedInAllowedWorld->TryActivate(UnrelatedStory));
+            UPrimitiveComponent* UnrelatedMesh =
+                Cast<UPrimitiveComponent>(UnrelatedInAllowedWorld->GetRootComponent());
+            if (TestNotNull(TEXT("Unrelated marker collision mesh exists"), UnrelatedMesh))
+            {
+                TestEqual(TEXT("Unrelated label in review map stays ray blocking"),
+                    UnrelatedMesh->GetCollisionResponseToChannel(ECC_Visibility),
+                    ECR_Block);
+            }
+        }
+    }
+    if (AllowedPreludeWorld) AllowedPreludeWorld->DestroyWorld(false);
+    if (AllowedShantyWorld) AllowedShantyWorld->DestroyWorld(false);
     ReviewWorld->DestroyWorld(false);
 #endif
 
