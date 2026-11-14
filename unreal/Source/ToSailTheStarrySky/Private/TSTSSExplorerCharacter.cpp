@@ -361,6 +361,14 @@ void ATSTSSExplorerCharacter::ToggleEngineFocusPreview()
         return;
     }
     const bool bWasEnabled = Coordinator->IsReviewEnabled();
+    // This PIE-only preview may borrow an enabled-but-neutral coordinator.
+    // It must NEVER republish over a valid shot already owned by another
+    // cinematic consumer. No lease exists for forcefully taking that intent.
+    if (bWasEnabled && Coordinator->GetCurrentIntent().bEligible)
+    {
+        Warn(TEXT("Engine view held: another cinematic shot already owns presentation"));
+        return;
+    }
     if (!bWasEnabled)
     {
         Coordinator->SetReviewEnabled(true);
