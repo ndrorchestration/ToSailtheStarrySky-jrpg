@@ -52,6 +52,11 @@ private:
     bool HasSupportedReviewFooting(const UWorld* World, const FVector& PawnLocation) const;
     FVector LastSupportedReviewLocation = FVector::ZeroVector;
     bool bHasSupportedReviewLocation = false;
+#if WITH_EDITOR
+    // Local evidence probes only; never serialized, and never grant a beat.
+    FName LastHilltoniaProbeWaypoint = NAME_None;
+    float NextHilltoniaProbeTimeSeconds = 0.f;
+#endif
 #endif
     void MoveForward(float Value);
     void MoveRight(float Value);
