@@ -74,20 +74,41 @@ void Place(UInstancedStaticMeshComponent* Component,
         FVector(SX, SY, SZ)));
 }
 
-void TownSign(AActor* Owner, USceneComponent* Root)
+void WayfindingSign(AActor* Owner, USceneComponent* Root,
+                    const TCHAR* ComponentName, const TCHAR* Caption,
+                    const FVector& Location, float Yaw)
 {
-    auto* Text = NewObject<UTextRenderComponent>(
-        Owner, TEXT("HilltoniaLandwardEntrySign"));
+    // Fixed local-to-map sign, deliberately NO collision or interaction.
+    // Wayfinding must never become a gameplay/quest milestone.
+    auto* Text = NewObject<UTextRenderComponent>(Owner, ComponentName);
     Text->SetMobility(EComponentMobility::Movable);
     Text->SetupAttachment(Root);
-    Text->SetText(FText::FromString(TEXT("HILLTONIA  |  WOODLAND ROAD")));
+    Text->SetText(FText::FromString(Caption));
     Text->SetWorldSize(62.f);
     Text->SetTextRenderColor(FColor(233, 220, 172));
-    Text->SetRelativeLocation(FVector(-4290.f, -690.f, 340.f));
-    Text->SetRelativeRotation(FRotator(0.f, 0.f, 0.f));
+    Text->SetRelativeLocation(Location);
+    Text->SetRelativeRotation(FRotator(0.f, Yaw, 0.f));
     Text->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     Owner->AddInstanceComponent(Text);
     Text->RegisterComponent();
+}
+
+void TownSigns(AActor* Owner, USceneComponent* Root)
+{
+    // Main arrival is visible from the original dock end, off the walkable
+    // street. The three following signboards are on the verge, not on-road.
+    WayfindingSign(Owner, Root, TEXT("HilltoniaLandwardEntrySign"),
+        TEXT("HILLTONIA  |  WOODLAND ROAD"),
+        FVector(-4290.f, -690.f, 340.f), 0.f);
+    WayfindingSign(Owner, Root, TEXT("HilltoniaWoodlandTurnoffSign"),
+        TEXT("HILLTONIA  |  FOREST TRAIL"),
+        FVector(-7070.f, -690.f, 330.f), 0.f);
+    WayfindingSign(Owner, Root, TEXT("HilltoniaForestEdgeReturnSign"),
+        TEXT("FOREST EDGE  |  RETURN TO HILLTONIA"),
+        FVector(-7000.f, -2940.f, 325.f), 90.f);
+    WayfindingSign(Owner, Root, TEXT("HilltoniaTownWestReturnSign"),
+        TEXT("TOWN END  |  RETURN TO HARBOR"),
+        FVector(-8750.f, -680.f, 315.f), 0.f);
 }
 }
 
@@ -227,10 +248,10 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
     // not a travel teleport, prompt or interactive progression marker.
     Place(TreeTrunks, -4280.f, -600.f, 155.f, .55f, .55f, 3.1f);
     Place(Trim, -4280.f, -610.f, 322.f, 4.5f, .24f, 1.1f);
-    TownSign(Owner, Root);
+    TownSigns(Owner, Root);
 
     UE_LOG(LogTemp, Display,
-        TEXT("TSTSS_HILLTONIA_REVIEW_APPLIED land_ground_sections=2 road_segments=%d homes=%d hall=1 deciduous_trees=%d town=Hilltonia forest=temperate world_north_latitude_provisional=1 road_collision=WorldStatic seven_firstwake_markers_unchanged=1 saved_map_unchanged=1"),
+        TEXT("TSTSS_HILLTONIA_REVIEW_APPLIED land_ground_sections=2 road_segments=%d homes=%d hall=1 wayfinding_signs=4 deciduous_trees=%d town=Hilltonia forest=temperate world_north_latitude_provisional=1 road_collision=WorldStatic seven_firstwake_markers_unchanged=1 saved_map_unchanged=1"),
         RoadSegments, Homes, Trees);
     return true;
 }
