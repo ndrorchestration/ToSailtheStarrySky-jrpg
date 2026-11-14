@@ -46,6 +46,51 @@ class AudioSceneSourceTests(unittest.TestCase):
         self.assertIn("ATSTSSFootstepAudioDirector", harbor["desired_review_actors"])
         self.assertIn("ATSTSSHarborAudioZone", harbor["desired_review_actors"])
 
+    def test_postfloat_canon_overrides_legacy_audio_placeholders(self):
+        # The legacy package survives for old map/save/source dependencies,
+        # not because its original fuel-cache story is still accepted.
+        constraints = self.matrix["post_splashdown_canon_constraints"]
+        self.assertEqual(
+            constraints["authority"],
+            "CREATOR_DIRECTION_NOT_AUTOMATICALLY_IMPLEMENTED_BY_AUDIO")
+        self.assertEqual(constraints["crash_side_denith_fuel_cache"], "REJECTED")
+        self.assertEqual(
+            constraints["ship_travel_form"], "SEABORNE_ONLY_MULTIPLE_STORY_ACTS")
+        self.assertEqual(
+            constraints["skyborne_flight_restoration"],
+            "NOT_AUTHORIZED_BY_FUEL_OR_AUDIO")
+        self.assertEqual(
+            constraints["captain_denith"],
+            "IONIA_PREVIOUS_CAPTAIN_NOT_CRASH_SITE_FUEL_CACHE")
+        self.assertEqual(
+            constraints["lyra_recruitment"], "EXPLICIT_POST_SPLASHDOWN_ONLY")
+        self.assertFalse(constraints["reson_and_aepex_available"])
+        self.assertEqual(constraints["starbourne"], "FAIL_CLOSED")
+
+        legacy = [scene for scene in self.matrix["scenes"]
+                  if "VS05_DenithFuelShanty" in scene["map_package"]]
+        self.assertEqual(len(legacy), 1)
+        scene = legacy[0]
+        self.assertEqual(
+            constraints["legacy_review_map_package"], scene["map_package"])
+        self.assertEqual(
+            scene["legacy_location_status"], "LEGACY_MAP_PACKAGE_NOT_APPROVED_LOCATION")
+        self.assertEqual(
+            scene["event_authority_status"], "PROPOSED_UNPLACED_NOT_STORY_TRIGGER_AUTHORIZED")
+        self.assertEqual(
+            scene["story_resolution_status"],
+            "NO_CONVENIENT_FUEL_CACHE_NO_IMMEDIATE_FLIGHT_REPAIR")
+        for candidate in ("music.shanty.clue", "story.lyra.recruited"):
+            self.assertIn(candidate, scene["desired_event_ids"])
+            self.assertIn(candidate, scene["notes"])
+        self.assertFalse(scene["actors_placed"])
+        self.assertFalse(scene["native_playback_verified"])
+        self.assertFalse(scene["mix_approved"])
+        self.assertIn("NOT authorized scene beats", scene["notes"])
+        self.assertNotIn("fuel cache has been resolved", scene["notes"].lower())
+        self.assertEqual(self.matrix["asset_bindings"]["rights"], "NOT_RELEASE_APPROVED")
+        self.assertEqual(self.matrix["asset_bindings"]["binding_state"], "UNPLACED")
+
     def test_lyra_and_ship_gates_unmodified(self):
         for scene in self.matrix["scenes"]:
             self.assertNotIn("ship.starbourne.transition", scene["desired_event_ids"])
