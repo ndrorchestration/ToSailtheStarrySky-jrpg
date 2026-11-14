@@ -71,5 +71,26 @@ class FirstWakeReviewRestoreCollisionContract(unittest.TestCase):
         self.assertIn("World->GetOutermost()->GetName().StartsWith", MILESTONE)
         self.assertIn("VS05_DenithFuelShanty", MILESTONE)
 
+
+    def test_native_positive_review_world_fixture_is_exact_scoped(self):
+        # A denied transient world is necessary but cannot prove that
+        # actual allowlisted review maps release accepted or restored rays.
+        self.assertIn('#include "UObject/Package.h"', NATIVE)
+        self.assertIn('TEXT("/Game/TSTSS/Review/VS05_DenithFuelShanty")', NATIVE)
+        self.assertIn('TEXT("/Game/TSTSS/Review/FirstWake_PreludeInteraction_V2")', NATIVE)
+        self.assertIn('FName(TEXT("VS05_DenithFuelShanty"))', NATIVE)
+        self.assertIn('FName(TEXT("FirstWake_PreludeInteraction_V2"))', NATIVE)
+        self.assertIn("AllowedShantyWorld->SpawnActor<ATSTSSMilestoneActor>()", NATIVE)
+        self.assertIn("AllowedPreludeWorld->SpawnActor<ATSTSSMilestoneActor>()", NATIVE)
+        self.assertIn("Authorized VS05 accepted launch releases E ray", NATIVE)
+        self.assertIn("Authorized VS05 restored launch blocks E ray again", NATIVE)
+        self.assertIn("Authorized Prelude completed flyer releases E ray", NATIVE)
+        self.assertIn("Uninspected authorized Lift blocks E ray", NATIVE)
+        self.assertIn("Inspected authorized Lift releases E ray", NATIVE)
+        self.assertIn("Unrelated label in review map stays ray blocking", NATIVE)
+        self.assertIn("Accepted launch in unrelated transient PIE keeps visibility blocking", NATIVE)
+        self.assertIn("AllowedPreludeWorld->DestroyWorld(false)", NATIVE)
+        self.assertIn("AllowedShantyWorld->DestroyWorld(false)", NATIVE)
+
 if __name__=="__main__":
     unittest.main()
