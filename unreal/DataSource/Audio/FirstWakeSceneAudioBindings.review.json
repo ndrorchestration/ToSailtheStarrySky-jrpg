@@ -2,7 +2,7 @@
   "schema_version": "0.1",
   "status": "EDITOR_REVIEW_PROPOSAL_NO_ACTORS_PLACED",
   "source_branch_parent_sha": "bb91ebbdae0cf39eaf8351923abbe103a5cdc6b8",
-  "strict_notes": "Map assets exist as review maps in stacked First Wake branch. This document does not prove any actor is instantiated, WAV imported, soundtrack licensed or PIE audible. Lyra and Starbourne gates are not altered.",
+  "strict_notes": "All entries are review proposals, not verified actor placement, WAV playback, licensing, or canonical story authorization. VS05_DenithFuelShanty is a retained legacy Unreal package identifier only: Captain Denith is Ionia's previous captain, not the owner of a coincidental crash-near fuel cache. Post-splashdown Aureate Wake flight stays plot-locked to Seaborne travel for multiple story acts while the crew investigates repair needs. Lyra requires explicit post-splashdown recruitment; Reson and Aepex remain unavailable; Starbourne is fail-closed.",
   "scenes": [
     {
       "map_package": "/Game/TSTSS/Review/VerticalSlice/VS01_DenithHarbor",
@@ -100,10 +100,13 @@
         "foley.footstep.wood",
         "ui.objective"
       ],
-      "notes": "Original shanty rights and musical-clue captions; Lyra only after explicit recruitment",
+      "notes": "Legacy VS05 package reference, not a canonical Denith fuel-cache location. The music.shanty.clue and story.lyra.recruited IDs are retained for dependency compatibility but are NOT authorized scene beats, staged playback or proof of Lyra joining here. New post-splashdown recovery requires Seaborne sailing, investigation and rare components; creator must approve any replacement place, lyrics, rights and event timing.",
       "actors_placed": false,
       "native_playback_verified": false,
-      "mix_approved": false
+      "mix_approved": false,
+      "legacy_location_status": "LEGACY_MAP_PACKAGE_NOT_APPROVED_LOCATION",
+      "event_authority_status": "PROPOSED_UNPLACED_NOT_STORY_TRIGGER_AUTHORIZED",
+      "story_resolution_status": "NO_CONVENIENT_FUEL_CACHE_NO_IMMEDIATE_FLIGHT_REPAIR"
     },
     {
       "map_package": "/Game/TSTSS/Review/VerticalSlice/VS06_SplashdownShore",
@@ -130,5 +133,17 @@
     "rights": "NOT_RELEASE_APPROVED",
     "review_sounds": "10 original QA WAVs generated separately",
     "binding_state": "UNPLACED"
+  },
+  "post_splashdown_canon_constraints": {
+    "authority": "CREATOR_DIRECTION_NOT_AUTOMATICALLY_IMPLEMENTED_BY_AUDIO",
+    "crash_side_denith_fuel_cache": "REJECTED",
+    "ship_travel_form": "SEABORNE_ONLY_MULTIPLE_STORY_ACTS",
+    "skyborne_flight_restoration": "NOT_AUTHORIZED_BY_FUEL_OR_AUDIO",
+    "rare_repair_components": "UNKNOWN_REQUIRES_INVESTIGATION_AND_QUESTS",
+    "captain_denith": "IONIA_PREVIOUS_CAPTAIN_NOT_CRASH_SITE_FUEL_CACHE",
+    "lyra_recruitment": "EXPLICIT_POST_SPLASHDOWN_ONLY",
+    "reson_and_aepex_available": false,
+    "starbourne": "FAIL_CLOSED",
+    "legacy_review_map_package": "/Game/TSTSS/Review/VerticalSlice/VS05_DenithFuelShanty"
   }
 }
