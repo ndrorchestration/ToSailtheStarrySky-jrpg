@@ -57,6 +57,11 @@ PREFIX = r"""
 #define TEXT(value) value
 #define TOSAILTHESTARRYSKY_API
 #define WITH_DEV_AUTOMATION_TESTS 1
+// Story-state notifications are Unreal's non-persistent observer plumbing.
+// The portable water-physics harness has no event subscribers; preserve the
+// real notification calls, and provide only the narrow type/Broadcast shape.
+// Never modify the production story header to satisfy this compiler double.
+#define DECLARE_MULTICAST_DELEGATE(Name) struct Name { void Broadcast() {} };
 using uint8 = std::uint8_t;
 using int32 = std::int32_t;
 using uint64 = std::uint64_t;

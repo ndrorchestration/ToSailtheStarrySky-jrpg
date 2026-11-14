@@ -23,6 +23,9 @@
 #include "Review/TSTSSPresentationCoordinatorSubsystem.h"
 #include "TSTSSAtmosphereDirector.h"
 #include "EngineUtils.h"
+#include "CineCameraActor.h"
+#include "CineCameraComponent.h"
+#include "HAL/PlatformTime.h"
 #include "TSTSSReviewContinueManifest.h"
 #include "IO/IoHash.h"
 #include "Misc/Paths.h"
@@ -262,6 +265,310 @@ void ATSTSSExplorerCharacter::BeginPlay()
     ShowObjectiveReview();
 }
 
+// Present the discoverable optical action without adding a sixth editor-only
+// diagnostic branch to the existing first-wake E interaction path.
+static void ShowOptionalEngineFocusHint(const UWorld* World, bool bInspection)
+{
+#if WITH_EDITOR
+    if (World && World->WorldType == EWorldType::PIE
+        && bInspection && GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 6.f, FColor::Cyan,
+            TEXT("Engine inspection: press C near the LIFT instrument for a 4s focus view"));
+    }
+#else
+    (void)World;
+    (void)bInspection;
+#endif
+}
+
+void ATSTSSExplorerCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+#if WITH_EDITOR
+    RestoreEngineFocusPreview();
+#endif
+    Super::EndPlay(EndPlayReason);
+}
+
+#if WITH_EDITOR
+void ATSTSSExplorerCharacter::ToggleEngineFocusPreview()
+{
+    // Explicit review-only camera cut; never an E-interaction consequence.
+    // The production explorer and its camera are unchanged unless the player presses C.
+    UWorld* World = GetWorld();
+    if (!World || World->WorldType != EWorldType::PIE || !IsValid(FirstWakeState))
+    {
+        return;
+    }
+    if (EngineFocusPreviewCamera.IsValid())
+    {
+        RestoreEngineFocusPreview();
+        return;
+    }
+
+    const auto Warn = [](const TCHAR* Message)
+    {
+        if (GEngine)
+        {
+            GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Yellow, Message);
+        }
+    };
+
+    APlayerController* PC = Cast<APlayerController>(Controller);
+    if (!IsValid(PC) || PC != UGameplayStatics::GetPlayerController(World, 0)
+        || PC->GetViewTarget() != this || PC->IsMoveInputIgnored()
+        || PC->IsLookInputIgnored())
+    {
+        Warn(TEXT("Engine view unavailable: player camera is already owned"));
+        return;
+    }
+
+    // The actual VS02 gauge is the only acceptable focus target.
+    // No runtime duplication of story markers or fabrication of first-wake state.
+    AActor* Instrument = nullptr;
+    int32 InstrumentCount = 0;
+    ATSTSSAtmosphereDirector* Atmosphere = nullptr;
+    int32 AtmosphereCount = 0;
+    for (TActorIterator<AActor> It(World); It; ++It)
+    {
+        AActor* Actor = *It;
+        if (!IsValid(Actor)) continue;
+        if (Actor->GetActorLabel() ==
+            TEXT("TSTSS_VS_REVIEW_InstrumentCore_LIFT"))
+        {
+            Instrument = Actor;
+            ++InstrumentCount;
+        }
+        if (ATSTSSAtmosphereDirector* Director =
+                Cast<ATSTSSAtmosphereDirector>(Actor))
+        {
+            Atmosphere = Director;
+            ++AtmosphereCount;
+        }
+    }
+    if (InstrumentCount != 1 || AtmosphereCount != 1
+        || !IsValid(Instrument) || !IsValid(Atmosphere)
+        || FVector::Dist(GetActorLocation(), Instrument->GetActorLocation()) > 450.f)
+    {
+        Warn(TEXT("Engine view: stand near the LIFT instrument in the ship"));
+        return;
+    }
+    UTSTSSPresentationCoordinatorSubsystem* Coordinator =
+        World->GetSubsystem<UTSTSSPresentationCoordinatorSubsystem>();
+    if (!IsValid(Coordinator))
+    {
+        Warn(TEXT("Engine view unavailable: no presentation coordinator"));
+        return;
+    }
+    const bool bWasEnabled = Coordinator->IsReviewEnabled();
+    // This PIE-only preview may borrow an enabled-but-neutral coordinator.
+    // It must NEVER republish over a valid shot already owned by another
+    // cinematic consumer. No lease exists for forcefully taking that intent.
+    if (bWasEnabled && Coordinator->GetCurrentIntent().bEligible)
+    {
+        Warn(TEXT("Engine view held: another cinematic shot already owns presentation"));
+        return;
+    }
+    // Validate lens geometry BEFORE publishing presentation intent.
+    // A nonfinite/off-scene anchor must never leave a borrowed coordinator
+    // with an eligible cue when no camera can be created.
+    const FVector Target = Instrument->GetActorLocation();
+    const FVector Location = Target + FVector(-350.f, -610.f, 265.f);
+    const float FocusCm = FVector::Dist(Location, Target);
+    if (!FMath::IsFinite(FocusCm) || FocusCm < 65.f || FocusCm > 12000.f)
+    {
+        Warn(TEXT("Engine view held: invalid native instrument focus anchor"));
+        return;
+    }
+    if (!bWasEnabled)
+    {
+        Coordinator->SetReviewEnabled(true);
+    }
+    const FTSTSSPresentationIntent Intent = Coordinator->TryPublishMoment(
+        FirstWakeState, Atmosphere, ETSTSSPresentationMoment::EngineInspection,
+        /*bReducedMotion=*/false, /*bGameplayClarityOverride=*/false);
+    if (!Intent.bEligible || !Intent.bAllowCinematicFocus
+        || !Intent.bAllowFocusRack || Intent.bRequireDeepFocus
+        || Intent.ShotId != FName(TEXT("FW03_Engine_Inspection")))
+    {
+        if (!bWasEnabled) Coordinator->SetReviewEnabled(false);
+        Warn(TEXT("Engine view held: first-wake story/weather/access gate"));
+        return;
+    }
+
+    // Technically verified 65 mm f/2.8 lens; native gameplay look still unapproved.
+    FActorSpawnParameters Spawn;
+    Spawn.SpawnCollisionHandlingOverride =
+        ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+    ACineCameraActor* Camera = World->SpawnActor<ACineCameraActor>(
+        Location, (Target - Location).Rotation(), Spawn);
+    if (!IsValid(Camera) || !IsValid(Camera->GetCineCameraComponent()))
+    {
+        if (IsValid(Camera)) Camera->Destroy();
+        if (!bWasEnabled)
+        {
+            Coordinator->SetReviewEnabled(false);
+        }
+        else
+        {
+            // Borrowed coordinators must remain enabled, but our accepted
+            // engine shot cannot survive a failed native camera spawn.
+            // Do not reset a different shot if ownership changed meanwhile.
+            const FTSTSSPresentationIntent Current =
+                Coordinator->GetCurrentIntent();
+            if (Current.bEligible
+                && Current.ShotId == FName(TEXT("FW03_Engine_Inspection")))
+            {
+                Coordinator->ResetReviewIntent();
+            }
+        }
+        Warn(TEXT("Engine view unavailable: no native Cine Camera"));
+        return;
+    }
+    Camera->SetActorLabel(TEXT("TSTSS_GAMEPLAY_ENGINE_FOCUS_PREVIEW_ONLY"));
+    UCineCameraComponent* Cine = Camera->GetCineCameraComponent();
+    Cine->SetCurrentFocalLength(65.f);
+    Cine->SetCurrentAperture(2.8f);
+    FCameraFocusSettings Settings = Cine->FocusSettings;
+    Settings.FocusMethod = ECameraFocusMethod::Manual;
+    Settings.ManualFocusDistance = FocusCm;
+    Settings.bSmoothFocusChanges = true;
+    Settings.FocusSmoothingInterpSpeed = 2.f;
+#if WITH_EDITORONLY_DATA
+    Settings.bDrawDebugFocusPlane = false;
+#endif
+    Cine->SetFocusSettings(Settings);
+
+    // Explicit, reversible 4 s preview. The player pawn stays at its
+    // original location, and existing movement/look ignore values are
+    // refused above rather than overwritten.
+    EngineFocusPreviewCamera = Camera;
+    EngineFocusPreviewController = PC;
+    bEngineFocusPreviewOwnsCoordinatorEnable = !bWasEnabled;
+    EngineFocusPreviewIgnoredMove = true;
+    EngineFocusPreviewIgnoredLook = true;
+    EngineFocusPreviewStartedSeconds = FPlatformTime::Seconds();
+    EngineFocusPreviewDeadlineSeconds = EngineFocusPreviewStartedSeconds + 4.0;
+    PC->SetIgnoreMoveInput(true);
+    PC->SetIgnoreLookInput(true);
+    PC->SetViewTargetWithBlend(Camera, 0.35f, VTBlend_EaseInOut, 2.f);
+    GetWorldTimerManager().SetTimer(EngineFocusPreviewGuardTimer, this,
+        &ATSTSSExplorerCharacter::VerifyEngineFocusPreview, 0.2f, true);
+    if (GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Cyan,
+            TEXT("LIFT inspection view - press C to return (auto return 4s)"));
+    }
+    UE_LOG(LogTemp, Display, TEXT("TSTSS_PIE_GAMEPLAY_ENGINE_FOCUS_ENTER focus_cm=%.1f"),
+        FocusCm);
+}
+
+void ATSTSSExplorerCharacter::VerifyEngineFocusPreview()
+{
+    const UWorld* World = GetWorld();
+    APlayerController* PC = EngineFocusPreviewController.Get();
+    ACineCameraActor* Camera = EngineFocusPreviewCamera.Get();
+    UTSTSSPresentationCoordinatorSubsystem* Coordinator = World
+        ? World->GetSubsystem<UTSTSSPresentationCoordinatorSubsystem>() : nullptr;
+    if (!World || World->WorldType != EWorldType::PIE
+        || !IsValid(PC) || !IsValid(Camera)
+        // A blend can still report the pawn as view target momentarily.
+        // Do not destroy the camera midway through its entry transition.
+        || (FPlatformTime::Seconds() - EngineFocusPreviewStartedSeconds > 0.75
+            && PC->GetViewTarget() != Camera)
+        || FPlatformTime::Seconds() >= EngineFocusPreviewDeadlineSeconds
+        || !IsValid(Coordinator)
+        || !Coordinator->GetCurrentIntent().bEligible
+        || !Coordinator->GetCurrentIntent().bAllowCinematicFocus
+        || Coordinator->GetCurrentIntent().ShotId !=
+            FName(TEXT("FW03_Engine_Inspection")))
+    {
+        RestoreEngineFocusPreview();
+    }
+}
+
+void ATSTSSExplorerCharacter::RestoreEngineFocusPreview()
+{
+    const bool bHadPreview = EngineFocusPreviewCamera.IsValid()
+        || bEngineFocusPreviewIgnoredMove || bEngineFocusPreviewIgnoredLook;
+    if (UWorld* World = GetWorld())
+    {
+        World->GetTimerManager().ClearTimer(EngineFocusPreviewGuardTimer);
+    }
+    APlayerController* PC = EngineFocusPreviewController.Get();
+    ACineCameraActor* Camera = EngineFocusPreviewCamera.Get();
+    // If the transition is still entering, UE may report the pawn as
+    // CurrentViewTarget even though the review camera is still pending.
+    // Reasserting the pawn with a zero-duration blend cancels that pending
+    // transition. NEVER steal a view already owned by a third-party actor.
+    if (IsValid(PC))
+    {
+        if (IsValid(Camera) && PC->GetViewTarget() == Camera)
+        {
+            PC->SetViewTargetWithBlend(this, 0.3f, VTBlend_EaseInOut, 2.f);
+        }
+        else if (IsValid(Camera) && PC->GetViewTarget() == this)
+        {
+            PC->SetViewTargetWithBlend(this, 0.f);
+        }
+        if (bEngineFocusPreviewIgnoredMove) PC->SetIgnoreMoveInput(false);
+        if (bEngineFocusPreviewIgnoredLook) PC->SetIgnoreLookInput(false);
+    }
+    if (IsValid(Camera))
+    {
+        // Retain the temporary camera until the return blend finishes.
+        Camera->SetLifeSpan(0.6f);
+    }
+    if (bEngineFocusPreviewOwnsCoordinatorEnable)
+    {
+        if (UWorld* World = GetWorld())
+        {
+            if (UTSTSSPresentationCoordinatorSubsystem* Coordinator =
+                    World->GetSubsystem<UTSTSSPresentationCoordinatorSubsystem>())
+            {
+                // Never shut off another presentation source's eligible
+                // shot if it superseded our inspection while the preview ran.
+                const FTSTSSPresentationIntent Current =
+                    Coordinator->GetCurrentIntent();
+                if (!Current.bEligible
+                    || Current.ShotId == FName(TEXT("FW03_Engine_Inspection")))
+                {
+                    Coordinator->SetReviewEnabled(false);
+                }
+            }
+        }
+    }
+    else if (bHadPreview)
+    {
+        if (UWorld* World = GetWorld())
+        {
+            if (UTSTSSPresentationCoordinatorSubsystem* Coordinator =
+                    World->GetSubsystem<UTSTSSPresentationCoordinatorSubsystem>())
+            {
+                if (Coordinator->GetCurrentIntent().ShotId ==
+                        FName(TEXT("FW03_Engine_Inspection")))
+                {
+                    // A pre-enabled coordinator remains enabled but the expired
+                    // inspection must not leak after the player returns.
+                    Coordinator->ResetReviewIntent();
+                }
+            }
+        }
+    }
+    EngineFocusPreviewCamera.Reset();
+    EngineFocusPreviewController.Reset();
+    bEngineFocusPreviewOwnsCoordinatorEnable = false;
+    bEngineFocusPreviewIgnoredMove = false;
+    bEngineFocusPreviewIgnoredLook = false;
+    EngineFocusPreviewStartedSeconds = 0.;
+    EngineFocusPreviewDeadlineSeconds = 0.;
+    if (bHadPreview)
+    {
+        UE_LOG(LogTemp, Display, TEXT("TSTSS_PIE_GAMEPLAY_ENGINE_FOCUS_RESTORE"));
+    }
+}
+#endif // WITH_EDITOR
+
 void ATSTSSExplorerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -289,6 +596,9 @@ void ATSTSSExplorerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
     if (InputWorld && InputWorld->WorldType == EWorldType::PIE)
     {
         PlayerInputComponent->BindAction(TEXT("ReviewContinue"), IE_Pressed, this, &ATSTSSExplorerCharacter::ReviewContinue);
+        // Explicit C-only opt-in: never automatic on E inspection or ordinary exploration.
+        PlayerInputComponent->BindAction(TEXT("EngineFocusPreview"), IE_Pressed,
+            this, &ATSTSSExplorerCharacter::ToggleEngineFocusPreview);
     }
 #endif
     PlayerInputComponent->BindAction(TEXT("ReviewObjective"), IE_Pressed, this, &ATSTSSExplorerCharacter::ShowObjectiveReview);
@@ -410,6 +720,8 @@ void ATSTSSExplorerCharacter::Interact()
                     }
 #endif
                     ShowFirstWakeReviewObjective(FirstWakeState);
+                    ShowOptionalEngineFocusHint(GetWorld(),
+                        Milestone->bIsInspectionStation);
                 }
                 else
                 {
