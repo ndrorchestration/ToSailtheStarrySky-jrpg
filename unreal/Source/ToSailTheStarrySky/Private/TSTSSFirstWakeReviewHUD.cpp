@@ -3,6 +3,7 @@
 #include "TSTSSFirstWakeState.h"
 #include "Engine/Engine.h"
 #include "Engine/Canvas.h"
+#include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 
 // Draw only in non-shipping review builds. The story state remains the
@@ -119,6 +120,52 @@ void ATSTSSFirstWakeReviewHUD::DrawHUD()
         // A minimal reticle makes aiming at the true E visibility ray clear.
         DrawRect(Accent, Canvas->ClipX * .5f - 3.f,
                  Canvas->ClipY * .5f - 3.f, 6.f, 6.f);
+    }
+
+    // Hilltonia is a walkable, non-interactive review extension, NOT a new
+    // story marker. A geographically scoped wayfinding panel distinguishes
+    // the stone road and forest track from the gold [E] plot interactions.
+    // It is not a compass, pathfinder, quest authorization or saved state.
+    if (World && World->GetOutermost() &&
+        World->GetOutermost()->GetName() ==
+            TEXT("/Game/TSTSS/Review/FirstWake_PreludeInteraction_V5_VisualReview") &&
+        (World->WorldType == EWorldType::PIE ||
+         World->WorldType == EWorldType::Game) &&
+        World->GetNetMode() == NM_Standalone &&
+        Canvas->ClipX >= 1260.f && Canvas->ClipY >= 500.f)
+    {
+        const FVector Position = Explorer->GetActorLocation();
+        if (!Position.ContainsNaN() &&
+            FMath::IsFinite(Position.X) &&
+            FMath::IsFinite(Position.Y) &&
+            FMath::IsFinite(Position.Z) &&
+            Position.X <= -2800.f && Position.X >= -9700.f &&
+            Position.Y >= -3650.f && Position.Y <= 1200.f)
+        {
+            const bool bWoodland = Position.X < -6500.f &&
+                Position.X > -8100.f && Position.Y < -850.f;
+            const bool bVillage = Position.X <= -6800.f;
+            const TCHAR* Direction = bWoodland
+                ? TEXT("WOODLAND TRACK  |  FOLLOW THE FOREST ROAD")
+                : bVillage
+                    ? TEXT("HILLTONIA SQUARE  |  FOREST PATH INLAND")
+                    : TEXT("HARBOR TO HILLTONIA  |  FOLLOW ROAD WEST");
+            const float Left = Canvas->ClipX - 410.f;
+            const float Top = 24.f;
+            DrawRect(FLinearColor(0.012f, 0.036f, 0.026f, 0.91f),
+                     Left, Top, 386.f, 101.f);
+            DrawText(TEXT("HILLTONIA  |  EXPLORATION ROUTE"),
+                     FLinearColor(0.69f, 0.94f, 0.78f, 1.f),
+                     Left + 12.f, Top + 12.f,
+                     GEngine->GetSmallFont(), 0.94f);
+            DrawText(Direction, FLinearColor::White,
+                     Left + 12.f, Top + 43.f,
+                     GEngine->GetSmallFont(), 0.78f);
+            DrawText(TEXT("WASD: walk  |  Scenery is NOT an [E] quest target"),
+                     FLinearColor(0.96f, 0.81f, 0.48f, 1.f),
+                     Left + 12.f, Top + 72.f,
+                     GEngine->GetSmallFont(), 0.74f);
+        }
     }
 #endif
 }
