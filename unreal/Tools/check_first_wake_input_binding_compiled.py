@@ -15,6 +15,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CHARACTER = ROOT / "Source/ToSailTheStarrySky/Private/TSTSSExplorerCharacter.cpp"
+CHARACTER_HEADER = ROOT / "Source/ToSailTheStarrySky/Public/TSTSSExplorerCharacter.h"
 CONFIG = ROOT / "Config/DefaultInput.ini"
 START = "void ATSTSSExplorerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)"
 END = "\nvoid ATSTSSExplorerCharacter::MoveForward(float Value)"
@@ -177,8 +178,9 @@ def config_guard(config: str) -> None:
         raise ValueError("Multiple or unsafe save/continue key declarations")
     if len({key for name, key in mappings if name in
             ("PIEReviewQuickSave", "QuickSave", "QuickLoad", "ReviewContinue",
-             "ReviewShoreTravel", "EngineFocusPreview")}) != 6:
-        raise ValueError("Save/load/Continue/scene-travel keyboard collision")
+             "ReviewShoreTravel", "EngineFocusPreview")}) != 6 or any(
+                 key == "C" and name != "EngineFocusPreview" for name, key in mappings):
+        raise ValueError("Save/load/Continue/scene-travel/camera keyboard collision")
 
 
 def compile_and_run(compiler: str, body: str) -> subprocess.CompletedProcess[str]:
@@ -213,7 +215,11 @@ def main() -> int:
     if not compiler:
         raise RuntimeError("No C++17 compiler: refusing compiled behavior PASS")
     config_guard(CONFIG.read_text(encoding="utf-8"))
-    original = method_from(CHARACTER.read_text(encoding="utf-8"))
+    character_source = CHARACTER.read_text(encoding="utf-8")
+    if (CHARACTER_HEADER.read_text(encoding="utf-8").count("void ToggleEngineFocusPreview();") != 1
+            or character_source.count("void ATSTSSExplorerCharacter::ToggleEngineFocusPreview()") != 1):
+        raise ValueError("C inspection method must exist in production header and source")
+    original = method_from(character_source)
     result = compile_and_run(compiler, original)
     if result.returncode:
         raise RuntimeError("Original Unreal C++ input bindings failed: " +
@@ -241,6 +247,15 @@ def main() -> int:
             print("PASS: rejected F6-to-F5 config mutation")
         else:
             raise RuntimeError("Unsafe F6 mapping mutation accepted")
+        invalid_c = CONFIG.read_text(encoding="utf-8").replace(
+            'ActionName="EngineFocusPreview",Key=C',
+            'ActionName="EngineFocusPreview",Key=E', 1)
+        try:
+            config_guard(invalid_c)
+        except ValueError:
+            print("PASS: rejected C-to-E camera/interaction collision")
+        else:
+            raise RuntimeError("Unsafe camera key collision accepted")
     print("Source-extracted C++ API-double proof ONLY. Actual Unreal/PIE keyboard and saves untested.")
     return 0
 

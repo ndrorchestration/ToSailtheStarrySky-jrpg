@@ -445,8 +445,8 @@ void ATSTSSExplorerCharacter::ToggleEngineFocusPreview()
     EngineFocusPreviewCamera = Camera;
     EngineFocusPreviewController = PC;
     bEngineFocusPreviewOwnsCoordinatorEnable = !bWasEnabled;
-    EngineFocusPreviewIgnoredMove = true;
-    EngineFocusPreviewIgnoredLook = true;
+    bEngineFocusPreviewIgnoredMove = true;
+    bEngineFocusPreviewIgnoredLook = true;
     EngineFocusPreviewStartedSeconds = FPlatformTime::Seconds();
     EngineFocusPreviewDeadlineSeconds = EngineFocusPreviewStartedSeconds + 4.0;
     PC->SetIgnoreMoveInput(true);

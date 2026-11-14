@@ -66,6 +66,17 @@ def check_contract(cpp: str, header: str, config: str) -> None:
     pie_scope = cpp.rfind('if (InputWorld && InputWorld->WorldType == EWorldType::PIE)', 0, bind)
     if pie_scope < 0 or cpp.rfind('#endif', pie_scope, bind) > pie_scope:
         raise ValueError("C binding escaped explicit PIE-only block")
+    # The engine focus preview must use C++ members declared in the pawn
+    # header. Source-only policy tests previously missed the undeclared
+    # non-b-prefixed input locks that fail the native Win64 Editor build.
+    for suffix in ("Move", "Look"):
+        name = "bEngineFocusPreviewIgnored" + suffix
+        if "    EngineFocusPreviewIgnored" + suffix + " = true;" in cpp:
+            raise ValueError("undeclared input lock field: " + suffix)
+        if "bool " + name + " = false;" not in header:
+            raise ValueError("input lock field declaration missing: " + suffix)
+        if name + " = true;" not in cpp or name + " = false;" not in cpp:
+            raise ValueError("input lock field ownership drift: " + suffix)
     for label, token in RULES.items():
         if token not in cpp:
             raise ValueError("missing fail-closed source rule: " + label)
@@ -118,6 +129,18 @@ class FirstWakePlayerFocusPreviewSourceTests(unittest.TestCase):
 
     def test_source_authored_preview_policy(self):
         check_contract(self.cpp, self.header, self.config)
+
+    def test_camera_input_lock_names_match_compiled_members(self):
+        for suffix in ("Move", "Look"):
+            declared = "bEngineFocusPreviewIgnored" + suffix
+            self.assertIn("bool " + declared + " = false;", self.header)
+            self.assertIn(declared + " = true;", self.cpp)
+            self.assertIn(declared + " = false;", self.cpp)
+            mutated = self.cpp.replace(
+                "    " + declared + " = true;",
+                "    EngineFocusPreviewIgnored" + suffix + " = true;")
+            with self.assertRaisesRegex(ValueError, "undeclared input lock field"):
+                check_contract(mutated, self.header, self.config)
 
     def test_c_key_missing_fails(self):
         with self.assertRaisesRegex(ValueError, "explicit PIE C input"):
