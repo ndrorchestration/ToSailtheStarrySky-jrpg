@@ -47,6 +47,12 @@ The evaluator requires correct checkpoint chronology, at least eight live locati
 
 **GitHub source regression at instrumentation commit `b196070a1279fc0084a19e23814a263c4e508db6`:** 662 Python tests completed successfully under the hosted Linux preflight; all three CI workflows passed. Neontic was **offline** during this source-only implementation, so no UE C++ compile, actual native route log, screenshots or playthrough evidence exists yet for that commit. Do not propagate prior native 38/38 evidence from `37c5335d` to the new exact HEAD.
 
+## Player wayfinding — November 14, 2026 (source-only)
+
+Four fixed, noncolliding **review signboards** now identify the Hilltonia entrance, the deciduous woodland turnoff, the forest-to-town return, and the western town-to-harbor return. They are world-space text proxies with the current review palette, not final carved signage or a HUD quest system. Placement on the verge is checked by `test_hilltonia_wayfinding.py` using the actual source coordinates and a 35 cm pawn-footprint clearance; they cannot advance narrative milestones or block travel. Confirm actual reading direction, legibility, scale and environmental framing against native Unreal captures before accepting them.
+
+The wooded route remains a review-only spatial extension. No NPC interactions, forest zone transition, navmesh or canonical planet coordinates are established by these markers, and they must not substitute for testing physical walking to Hilltonia and back.
+
 ## Required acceptance and design gaps
 
 - Engine-free spatial-contract checks and native 5.8.4 Win64 compilation, followed by exact-SHA native automation.
