@@ -24,6 +24,7 @@ API = r"""
 #include <string>
 #include <vector>
 #define TEXT(x) x
+using TCHAR = char; // Portable API double for Unreal's platform-wide TCHAR.
 struct FString : std::string {
     using std::string::string;
     using std::string::operator=;
