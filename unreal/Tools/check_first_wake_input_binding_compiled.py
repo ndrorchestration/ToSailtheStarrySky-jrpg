@@ -53,6 +53,8 @@ struct ATSTSSExplorerCharacter : TSTSSBaseCharacter {
     void MoveForward(float); void MoveRight(float);
     void Turn(float); void LookUp(float);
     void Interact(); void QuickSave(); void QuickLoad(); void ReviewContinue(); void ShowObjectiveReview(); void ReviewShoreTravel();
+    // Stand-in only: actual C-key input method is declared in the production header.
+    void ToggleEngineFocusPreview();
 };
 // The binder receives real member-function pointers; provide no-op implementations
 // only so the standalone executable links. None of these methods are executed.
@@ -66,6 +68,7 @@ void ATSTSSExplorerCharacter::QuickLoad() {}
 void ATSTSSExplorerCharacter::ReviewContinue() {}
 void ATSTSSExplorerCharacter::ShowObjectiveReview() {}
 void ATSTSSExplorerCharacter::ReviewShoreTravel() {}
+void ATSTSSExplorerCharacter::ToggleEngineFocusPreview() {}
 """
 SUFFIX = r"""
 static unsigned cases = 0;
@@ -101,6 +104,8 @@ int main() {
                        "PIE illegally binds normal F5 QuickSave");
                 verify(hasExactly(input.actions, "ReviewContinue", 1),
                        "PIE must bind exactly one F7 Continue");
+                verify(hasExactly(input.actions, "EngineFocusPreview", 1),
+                       "PIE must bind exactly one explicitly opt-in C engine inspection");
             } else if (type == EWorldType::Game) {
                 verify(hasExactly(input.actions, "QuickSave", 1),
                        "Normal Game must bind F5 QuickSave");
@@ -108,6 +113,8 @@ int main() {
                        "Normal Game illegally binds PIE F6 review save");
                 verify(hasExactly(input.actions, "ReviewContinue", 0),
                        "Normal Game cannot bind review Continue");
+                verify(hasExactly(input.actions, "EngineFocusPreview", 0),
+                       "Normal Game cannot bind editor-only camera review");
             } else {
                 verify(hasExactly(input.actions, "QuickSave", 0),
                        "Editor world must never bind normal Game QuickSave");
@@ -115,8 +122,10 @@ int main() {
                        "Editor world must never bind review QuickSave");
                 verify(hasExactly(input.actions, "ReviewContinue", 0),
                        "Editor world must never bind review Continue");
+                verify(hasExactly(input.actions, "EngineFocusPreview", 0),
+                       "Editor world cannot bind PIE-only camera review");
             }
-            verify(input.actions.size() == (type == EWorldType::PIE ? 6u : (type == EWorldType::Game ? 5u : 3u)),
+            verify(input.actions.size() == (type == EWorldType::PIE ? 7u : (type == EWorldType::Game ? 5u : 3u)),
                    "Unexpected extra or duplicated action bindings");
         }
         ATSTSSExplorerCharacter missingWorld;
@@ -125,6 +134,7 @@ int main() {
         verify(hasExactly(noWorldInput.actions, "QuickSave", 0) &&
                hasExactly(noWorldInput.actions, "PIEReviewQuickSave", 0) &&
                hasExactly(noWorldInput.actions, "ReviewContinue", 0) &&
+               hasExactly(noWorldInput.actions, "EngineFocusPreview", 0) &&
                hasExactly(noWorldInput.actions, "ReviewShoreTravel", 0),
                "Null world must fail closed for save and review navigation");
         std::cout << "PASS: " << cases
@@ -147,7 +157,7 @@ def method_from(source: str) -> str:
     for token in ("Super::SetupPlayerInputComponent", "EWorldType::PIE",
                   "EWorldType::Game", 'TEXT("PIEReviewQuickSave")',
                   'TEXT("QuickSave")', 'TEXT("QuickLoad")', 'TEXT("ReviewContinue")',
-                  'TEXT("ReviewShoreTravel")'):
+                  'TEXT("ReviewShoreTravel")', 'TEXT("EngineFocusPreview")'):
         if token not in method:
             raise ValueError("Source method missing expected selection: " + token)
     return method
@@ -159,15 +169,15 @@ def config_guard(config: str) -> None:
     required = {("PIEReviewQuickSave", "F6"), ("QuickSave", "F5"),
                 ("QuickLoad", "F9"), ("ReviewContinue", "F7"),
                 ("Interact", "E"), ("ReviewObjective", "J"),
-                ("ReviewShoreTravel", "K")}
+                ("ReviewShoreTravel", "K"), ("EngineFocusPreview", "C")}
     if len(mappings) != len(set(mappings)) or not required.issubset(mappings):
         raise ValueError("DefaultInput.ini lacks unique F6 PIE / F5 Game / F9 load")
-    if any(name in ("PIEReviewQuickSave", "QuickSave", "QuickLoad", "ReviewContinue", "ReviewShoreTravel") and (name, key) not in required
+    if any(name in ("PIEReviewQuickSave", "QuickSave", "QuickLoad", "ReviewContinue", "ReviewShoreTravel", "EngineFocusPreview") and (name, key) not in required
            for name, key in mappings):
         raise ValueError("Multiple or unsafe save/continue key declarations")
     if len({key for name, key in mappings if name in
             ("PIEReviewQuickSave", "QuickSave", "QuickLoad", "ReviewContinue",
-             "ReviewShoreTravel")}) != 5:
+             "ReviewShoreTravel", "EngineFocusPreview")}) != 6:
         raise ValueError("Save/load/Continue/scene-travel keyboard collision")
 
 
@@ -213,6 +223,7 @@ def main() -> int:
         for name, old, new in (
             ("PIE F5 shortcut collision", 'TEXT("PIEReviewQuickSave")', 'TEXT("QuickSave")'),
             ("Game mistakenly uses F6", 'TEXT("QuickSave")', 'TEXT("PIEReviewQuickSave")'),
+            ("PIE C optic review action missing", 'TEXT("EngineFocusPreview")', 'TEXT("Interact")'),
         ):
             if original.count(old) != 1:
                 raise RuntimeError("Mutation anchor missing or ambiguous: " + name)
