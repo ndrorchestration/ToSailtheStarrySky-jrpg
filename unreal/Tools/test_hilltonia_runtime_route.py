@@ -4,6 +4,7 @@ No native Unreal execution is claimed: actual player movement is a separate
 Windows Editor/PIE review gate.
 """
 from pathlib import Path
+import math
 import re
 import unittest
 
@@ -43,9 +44,15 @@ def synthetic_round_trip():
         next_x, next_y, _ = WAYPOINTS[EXPECTED[index + 1]]
         for step in range(1, 6):
             f = step / 6.
-            result.append(record("SAMPLE", "UNMARKED", t + 2. * step,
-                                 x + (next_x - x) * f,
-                                 y + (next_y - y) * f))
+            sx = x + (next_x - x) * f
+            sy = y + (next_y - y) * f
+            # The production pawn emits its nearest recognized waypoint
+            # while inside the radius; only distant samples are UNMARKED.
+            label = next((
+                key for key, (wx, wy, radius) in WAYPOINTS.items()
+                if math.hypot(sx - wx, sy - wy) <= radius + 0.15
+            ), "UNMARKED")
+            result.append(record("SAMPLE", label, t + 2. * step, sx, sy))
         t += 12.
     return result
 
@@ -123,8 +130,42 @@ class HilltoniaRuntimeRouteFixtures(unittest.TestCase):
     def test_nonreview_map_not_substitutable(self):
         bogus = "\n".join(synthetic_round_trip()).replace(
             "map=V5", "map=Production")
-        with self.assertRaisesRegex(RouteNotEstablished, "No native Hilltonia"):
+        with self.assertRaisesRegex(RouteNotEstablished, "Malformed or unscoped"):
             assess(bogus)
+
+    def test_corrupt_v5_telemetry_cannot_be_silently_ignored(self):
+        lines = synthetic_round_trip()
+        lines.append(record("SAMPLE", "UNMARKED", 150., -5000., -150.).replace(
+            "grounded=1 footing=1", "grounded=1"))
+        with self.assertRaisesRegex(RouteNotEstablished, "Malformed or unscoped"):
+            assess("\n".join(lines))
+
+    def test_extra_route_fields_are_not_silently_accepted(self):
+        lines = synthetic_round_trip()
+        lines[3] += " bogus_authority=approved"
+        with self.assertRaisesRegex(RouteNotEstablished, "Malformed or unscoped"):
+            assess("\n".join(lines))
+
+    def test_heartbeat_duplicates_do_not_fake_observation(self):
+        lines = synthetic_round_trip()
+        lines[2] = lines[1]
+        with self.assertRaisesRegex(RouteNotEstablished, "Repeated or too-fast"):
+            assess("\n".join(lines))
+
+    def test_sample_waypoint_label_matches_real_position(self):
+        lines = synthetic_round_trip()
+        i = next(i for i, line in enumerate(lines)
+                 if "ROUTE_SAMPLE" in line and "name=UNMARKED" not in line)
+        lines[i] = re.sub(r"name=[A-Z_]+", "name=UNMARKED", lines[i], count=1)
+        with self.assertRaisesRegex(RouteNotEstablished, "Sample waypoint label disagrees"):
+            assess("\n".join(lines))
+
+    def test_unscoped_sample_not_substitutable_for_real_walk(self):
+        lines = synthetic_round_trip()
+        i = next(i for i, line in enumerate(lines) if "ROUTE_SAMPLE" in line)
+        lines[i] = lines[i].replace("map=V5", "map=Other")
+        with self.assertRaisesRegex(RouteNotEstablished, "Malformed or unscoped"):
+            assess("\n".join(lines))
 
     def test_runtime_source_reads_real_pawn_and_footing_without_mutation(self):
         for token in (
