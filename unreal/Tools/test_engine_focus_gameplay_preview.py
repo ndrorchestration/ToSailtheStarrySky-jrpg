@@ -91,7 +91,10 @@ def check_contract(cpp: str, header: str, config: str) -> None:
     publication = section.index('Coordinator->TryPublishMoment(')
     if guard >= publication:
         raise ValueError("existing coordinator shot guard occurs after publication")
-    geometry = section.index("const float FocusCm = FVector::Dist(Location, Target);")
+    geometry_marker = "const float FocusCm = FVector::Dist(Location, Target);"
+    if geometry_marker not in section:
+        raise ValueError("invalid focus geometry validation missing")
+    geometry = section.index(geometry_marker)
     if geometry >= publication:
         raise ValueError("invalid focus geometry was checked after publication")
     # Once a camera spawn is attempted, any failed creation must revoke only
