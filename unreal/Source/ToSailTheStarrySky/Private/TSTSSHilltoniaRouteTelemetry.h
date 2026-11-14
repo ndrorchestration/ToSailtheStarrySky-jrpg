@@ -30,6 +30,7 @@ inline const TCHAR* NearestWaypoint(const FVector& Position)
         {TEXT("DOCK_TOWN_SEAM"), -3650.f, -150.f, 240.f},
         {TEXT("TOWN_MAIN_STREET"), -5350.f, -150.f, 270.f},
         {TEXT("VILLAGE_SQUARE"), -7350.f, -150.f, 280.f},
+        {TEXT("TOWN_WEST_END"), -9050.f, -150.f, 270.f},
         {TEXT("WOODLAND_APPROACH"), -7350.f, -1450.f, 260.f},
         {TEXT("FOREST_EDGE"), -7350.f, -3120.f, 260.f}
     };
