@@ -27,6 +27,7 @@ RULES = {
     "deep_focus_denial": 'Intent.bRequireDeepFocus',
     "authorized_shot": 'FName(TEXT("FW03_Engine_Inspection"))',
     "review_user_opt_in": 'Coordinator->SetReviewEnabled(true);',
+    "existing_cinematic_owner_guard": 'if (bWasEnabled && Coordinator->GetCurrentIntent().bEligible)',
     "preview_camera_only": 'World->SpawnActor<ACineCameraActor>',
     "lens": 'Cine->SetCurrentFocalLength(65.f);',
     "aperture": 'Cine->SetCurrentAperture(2.8f);',
@@ -84,6 +85,12 @@ def check_contract(cpp: str, header: str, config: str) -> None:
             raise ValueError("camera action writes unrelated game state: " + unsafe)
     if 'Coordinator->TryPublishMoment(' not in section:
         raise ValueError("presentation source-of-truth bypassed")
+    # A shared coordinator can already be presenting a different active shot.
+    # The explicit camera review is never permitted to preempt that owner.
+    guard = section.index('if (bWasEnabled && Coordinator->GetCurrentIntent().bEligible)')
+    publication = section.index('Coordinator->TryPublishMoment(')
+    if guard >= publication:
+        raise ValueError("existing coordinator shot guard occurs after publication")
 
 
 class FirstWakePlayerFocusPreviewSourceTests(unittest.TestCase):
@@ -127,6 +134,23 @@ class FirstWakePlayerFocusPreviewSourceTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "real_gauge"):
             check_contract(self.cpp.replace('TEXT("TSTSS_VS_REVIEW_InstrumentCore_LIFT")',
                                             'TEXT("UntestedGauge")'), self.header, self.config)
+
+    def test_cinematic_owner_guard_cannot_be_removed(self):
+        edited = self.cpp.replace(
+            'if (bWasEnabled && Coordinator->GetCurrentIntent().bEligible)',
+            'if (false /* preempt any other cinematic shot */)')
+        with self.assertRaisesRegex(ValueError, "existing_cinematic_owner_guard"):
+            check_contract(edited, self.header, self.config)
+
+    def test_owner_check_must_precede_publication(self):
+        source = self.cpp
+        guard_line = 'if (bWasEnabled && Coordinator->GetCurrentIntent().bEligible)'
+        guard = source.index(guard_line)
+        publish = source.index('const FTSTSSPresentationIntent Intent = Coordinator->TryPublishMoment(')
+        self.assertLess(guard, publish)
+        # This remains an editor-only, explicit interaction—not part of E.
+        self.assertIn('Engine view held: another cinematic shot already owns presentation',
+                      source[guard:publish])
 
     def test_missing_optical_permission_fails(self):
         with self.assertRaisesRegex(ValueError, "optical_permission"):
