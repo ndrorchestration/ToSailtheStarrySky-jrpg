@@ -104,12 +104,15 @@ class HilltoniaRuntimeRouteFixtures(unittest.TestCase):
             assess("\n".join(lines))
 
     def test_too_few_actual_heartbeat_records_rejected(self):
-        lines = [x for x in synthetic_round_trip()
-                 if "ROUTE_WAYPOINT" in x or "ROUTE_SAMPLE" in x][:15]
-        lines = [x for x in lines if "ROUTE_WAYPOINT" in x] + [
-            x for x in synthetic_round_trip() if "ROUTE_WAYPOINT" in x
-        ]
-        with self.assertRaises(RouteNotEstablished):
+        lines = []
+        seen_samples = 0
+        for line in synthetic_round_trip():
+            if "ROUTE_SAMPLE" in line:
+                seen_samples += 1
+                if seen_samples > 3:
+                    continue
+            lines.append(line)
+        with self.assertRaisesRegex(RouteNotEstablished, "Insufficient live"):
             assess("\n".join(lines))
 
     def test_fall_recovery_not_accepted_as_clean_walk(self):
