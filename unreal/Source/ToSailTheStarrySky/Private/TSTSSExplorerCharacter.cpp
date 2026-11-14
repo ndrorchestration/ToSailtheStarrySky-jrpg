@@ -9,6 +9,7 @@
 #if WITH_EDITOR
 #include "TSTSSV5HarborReviewDressing.h"
 #include "TSTSSHilltoniaReviewExtension.h"
+#include "TSTSSHilltoniaRouteTelemetry.h"
 #include "AureateWakePreviewActor.h"
 #include "Engine/StaticMeshActor.h"
 #include "Engine/PostProcessVolume.h"
@@ -561,6 +562,51 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
     if (!Movement) return;
 
     const FVector Current = GetActorLocation();
+#if WITH_EDITOR
+    // Evidence from the real player's movement, never a scripted teleport.
+    // Only instrument the exact standalone V5 review map and landward area.
+    // Checkpoint entry and two-second heartbeat logs are read-only and do
+    // not modify collision, gameplay, save data or story progression.
+    if (bReviewNamespace && World->GetNetMode() == NM_Standalone &&
+        Scene == TEXT("FirstWake_PreludeInteraction_V5_VisualReview") &&
+        TSTSSHilltoniaRouteTelemetry::IsScopedRouteRegion(Current))
+    {
+        const TCHAR* RouteWaypoint =
+            TSTSSHilltoniaRouteTelemetry::NearestWaypoint(Current);
+        const FName CurrentWaypoint = RouteWaypoint ? FName(RouteWaypoint) : NAME_None;
+        const float Now = World->GetTimeSeconds();
+        const bool bNewWaypoint = CurrentWaypoint != NAME_None &&
+            CurrentWaypoint != LastHilltoniaProbeWaypoint;
+        const bool bHeartbeat = Now >= NextHilltoniaProbeTimeSeconds;
+        if (bNewWaypoint || bHeartbeat)
+        {
+            const bool bGrounded = Movement->IsMovingOnGround();
+            const bool bFivePointFooting = bGrounded &&
+                HasSupportedReviewFooting(World, Current);
+            if (bNewWaypoint)
+            {
+                UE_LOG(LogTemp, Display,
+                    TEXT("TSTSS_HILLTONIA_ROUTE_WAYPOINT map=V5 name=%s time=%.2f x=%.1f y=%.1f z=%.1f grounded=%d footing=%d"),
+                    RouteWaypoint, Now, Current.X, Current.Y, Current.Z,
+                    bGrounded ? 1 : 0, bFivePointFooting ? 1 : 0);
+            }
+            if (bHeartbeat)
+            {
+                UE_LOG(LogTemp, Display,
+                    TEXT("TSTSS_HILLTONIA_ROUTE_SAMPLE map=V5 name=%s time=%.2f x=%.1f y=%.1f z=%.1f grounded=%d footing=%d"),
+                    RouteWaypoint ? RouteWaypoint : TEXT("UNMARKED"),
+                    Now, Current.X, Current.Y, Current.Z,
+                    bGrounded ? 1 : 0, bFivePointFooting ? 1 : 0);
+                NextHilltoniaProbeTimeSeconds = Now + 2.f;
+            }
+        }
+        LastHilltoniaProbeWaypoint = CurrentWaypoint;
+    }
+    else
+    {
+        LastHilltoniaProbeWaypoint = NAME_None;
+    }
+#endif
     if (Movement->IsMovingOnGround() &&
         HasSupportedReviewFooting(World, Current))
     {
