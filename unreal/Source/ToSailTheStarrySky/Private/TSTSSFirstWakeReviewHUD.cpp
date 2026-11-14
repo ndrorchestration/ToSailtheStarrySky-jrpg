@@ -142,14 +142,24 @@ void ATSTSSFirstWakeReviewHUD::DrawHUD()
             Position.X <= -2800.f && Position.X >= -9700.f &&
             Position.Y >= -3650.f && Position.Y <= 1200.f)
         {
-            const bool bWoodland = Position.X < -6500.f &&
+            // These are reversible geographic directions, not one-way
+            // quest hints. The eleven-waypoint QA route returns to harbor
+            // after visiting the west end and forest edge, and player
+            // navigation must never imply the return is inaccessible.
+            const bool bWoodlandBranch = Position.X < -6500.f &&
                 Position.X > -8100.f && Position.Y < -850.f;
-            const bool bVillage = Position.X <= -6800.f;
-            const TCHAR* Direction = bWoodland
-                ? TEXT("WOODLAND TRACK  |  FOLLOW THE FOREST ROAD")
-                : bVillage
-                    ? TEXT("HILLTONIA SQUARE  |  FOREST PATH INLAND")
-                    : TEXT("HARBOR TO HILLTONIA  |  FOLLOW ROAD WEST");
+            const bool bForestEdge = bWoodlandBranch && Position.Y <= -2600.f;
+            const bool bTownWestEnd = Position.X <= -8300.f;
+            const bool bVillageSquare = Position.X <= -6800.f;
+            const TCHAR* Direction = bForestEdge
+                ? TEXT("FOREST EDGE  |  BACK: VILLAGE SQUARE")
+                : bWoodlandBranch
+                    ? TEXT("FOREST PATH  |  INLAND: EDGE / BACK: TOWN")
+                    : bTownWestEnd
+                        ? TEXT("TOWN WEST END  |  EAST: SQUARE")
+                        : bVillageSquare
+                            ? TEXT("VILLAGE SQUARE  |  WEST END / INLAND FOREST")
+                            : TEXT("ROAD  |  WEST: HILLTONIA / EAST: HARBOR");
             const float Left = Canvas->ClipX - 410.f;
             const float Top = 24.f;
             DrawRect(FLinearColor(0.012f, 0.036f, 0.026f, 0.91f),

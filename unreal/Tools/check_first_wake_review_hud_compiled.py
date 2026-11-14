@@ -288,16 +288,39 @@ int main() {
                hud.rects.size() == roadRects + 8,
                "V5 road must draw normal 6-line HUD plus 3-line route guidance");
         expect(hud.text[roadText+6].value.find("HILLTONIA") != FString::npos &&
-               hud.text[roadText+7].value.find("FOLLOW ROAD WEST") != FString::npos &&
+               hud.text[roadText+7].value.find("WEST: HILLTONIA") != FString::npos &&
+               hud.text[roadText+7].value.find("EAST: HARBOR") != FString::npos &&
                hud.text[roadText+8].value.find("NOT an [E]") != FString::npos,
                "wayfinding must distinguish non-interactive roads from E markers");
         expect(hud.rects.back().x > 800.f && hud.rects.back().w == 386.f,
                "route panel must sit beside rather than over Prelude objective");
+        explorer.Location = {-7350.f, -150.f, 130.f};
+        const auto squareText = hud.text.size();
+        hud.DrawHUD();
+        expect(hud.text[squareText+7].value.find("VILLAGE SQUARE") != FString::npos &&
+               hud.text[squareText+7].value.find("WEST END") != FString::npos &&
+               hud.text[squareText+7].value.find("INLAND FOREST") != FString::npos,
+               "village square must identify the west-end and woodland turnoffs");
+        explorer.Location = {-9050.f, -150.f, 130.f};
+        const auto westEndText = hud.text.size();
+        hud.DrawHUD();
+        expect(hud.text[westEndText+7].value.find("TOWN WEST END") != FString::npos &&
+               hud.text[westEndText+7].value.find("EAST: SQUARE") != FString::npos,
+               "west-end arrival must direct the return toward village square");
         explorer.Location = {-7350.f, -1700.f, 130.f};
         const auto forestText = hud.text.size();
         hud.DrawHUD();
-        expect(hud.text[forestText+7].value.find("WOODLAND TRACK") != FString::npos,
-               "forest route must use actual pawn location");
+        expect(hud.text[forestText+7].value.find("FOREST PATH") != FString::npos &&
+               hud.text[forestText+7].value.find("BACK: TOWN") != FString::npos,
+               "forest branch must explain how to return to town");
+        explorer.Location = {-7350.f, -3120.f, 130.f};
+        const auto edgeText = hud.text.size();
+        hud.DrawHUD();
+        expect(hud.text[edgeText+7].value.find("FOREST EDGE") != FString::npos &&
+               hud.text[edgeText+7].value.find("BACK: VILLAGE SQUARE") != FString::npos,
+               "forest edge must direct the return to village square");
+        expect(state.Objective == "Board the Aureate Wake" && state.Mask == 0x07u,
+               "wayfinding reads geography; it must never mutate story state");
         explorer.Location = {-1000.f, -150.f, 130.f};
         const auto outsideText = hud.text.size();
         hud.DrawHUD();
