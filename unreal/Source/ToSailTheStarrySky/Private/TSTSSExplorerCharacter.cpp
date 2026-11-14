@@ -471,12 +471,19 @@ void ATSTSSExplorerCharacter::RestoreEngineFocusPreview()
     }
     APlayerController* PC = EngineFocusPreviewController.Get();
     ACineCameraActor* Camera = EngineFocusPreviewCamera.Get();
-    // Do not override any new externally-owned view target.
+    // If the transition is still entering, UE may report the pawn as
+    // CurrentViewTarget even though the review camera is still pending.
+    // Reasserting the pawn with a zero-duration blend cancels that pending
+    // transition. NEVER steal a view already owned by a third-party actor.
     if (IsValid(PC))
     {
         if (IsValid(Camera) && PC->GetViewTarget() == Camera)
         {
             PC->SetViewTargetWithBlend(this, 0.3f, VTBlend_EaseInOut, 2.f);
+        }
+        else if (IsValid(Camera) && PC->GetViewTarget() == this)
+        {
+            PC->SetViewTargetWithBlend(this, 0.f);
         }
         if (bEngineFocusPreviewIgnoredMove) PC->SetIgnoreMoveInput(false);
         if (bEngineFocusPreviewIgnoredLook) PC->SetIgnoreLookInput(false);
