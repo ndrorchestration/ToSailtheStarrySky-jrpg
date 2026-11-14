@@ -57,6 +57,10 @@ PREFIX = r"""
 #define TEXT(value) value
 #define TOSAILTHESTARRYSKY_API
 #define WITH_DEV_AUTOMATION_TESTS 1
+// Mirror only Unreal's otherwise unavailable delegate type for extracting
+// water-state C++ behavior. Callback delivery is verified in native UE tests;
+// this portable stand-in must not fabricate event assertions.
+#define DECLARE_MULTICAST_DELEGATE(Name) struct Name { void Broadcast() const {} }
 using uint8 = std::uint8_t;
 using int32 = std::int32_t;
 using uint64 = std::uint64_t;

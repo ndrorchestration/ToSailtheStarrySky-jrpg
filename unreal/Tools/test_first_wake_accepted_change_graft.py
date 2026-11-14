@@ -18,6 +18,12 @@ class AcceptedChangeGraftTests(unittest.TestCase):
         self.assertIn("OnAcceptedChange().Remove(StoryChangedHandle)",c)
         self.assertIn("Only accepted changes notify",n)
         self.assertIn("Rejected restore preserved delegate count",n)
+    def test_portable_water_fixture_owns_only_delegate_type(self):
+        harness = (ROOT / "Tools/check_water_landing_rewind_compiled.py").read_text(encoding="utf-8")
+        self.assertIn("#define DECLARE_MULTICAST_DELEGATE(Name)", harness)
+        self.assertIn("void Broadcast() const {}", harness)
+        self.assertIn("Callback delivery is verified in native UE tests", harness)
+
     def test_rejected_paths_still_return_without_notification(self):
         s=S.read_text(encoding="utf-8")
         self.assertIn("if (RequestedBeat != ETSTSSFirstWakeBeat::FlyerDiscovered)",s)
