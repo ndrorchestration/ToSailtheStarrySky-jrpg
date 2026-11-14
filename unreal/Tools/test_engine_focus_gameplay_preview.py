@@ -91,6 +91,19 @@ def check_contract(cpp: str, header: str, config: str) -> None:
     publication = section.index('Coordinator->TryPublishMoment(')
     if guard >= publication:
         raise ValueError("existing coordinator shot guard occurs after publication")
+    geometry = section.index("const float FocusCm = FVector::Dist(Location, Target);")
+    if geometry >= publication:
+        raise ValueError("invalid focus geometry was checked after publication")
+    # Once a camera spawn is attempted, any failed creation must revoke only
+    # the engine shot that this preview just published. A pre-enabled neutral
+    # coordinator must not be switched off, nor a superseding shot reset.
+    camera_failure = section.split(
+        "if (!IsValid(Camera) || !IsValid(Camera->GetCineCameraComponent()))", 1
+    )[-1].split("Camera->SetActorLabel", 1)[0]
+    if ('Coordinator->ResetReviewIntent();' not in camera_failure
+            or 'if (Current.bEligible' not in camera_failure
+            or 'Current.ShotId == FName(TEXT("FW03_Engine_Inspection"))' not in camera_failure):
+        raise ValueError("failed camera spawn leaked borrowed coordinator intent")
 
 
 class FirstWakePlayerFocusPreviewSourceTests(unittest.TestCase):
@@ -151,6 +164,25 @@ class FirstWakePlayerFocusPreviewSourceTests(unittest.TestCase):
         # This remains an editor-only, explicit interaction—not part of E.
         self.assertIn('Engine view held: another cinematic shot already owns presentation',
                       source[guard:publish])
+
+    def test_nonfinite_focus_rejected_before_intent_publication(self):
+        text = self.cpp.replace(
+            "const float FocusCm = FVector::Dist(Location, Target);",
+            "const float FocusCm = 750.f; /* discarded geometry guard */")
+        with self.assertRaisesRegex(ValueError, "invalid focus geometry"):
+            check_contract(text, self.header, self.config)
+
+    def test_failed_cine_camera_spawn_releases_only_own_intent(self):
+        old = '''            if (Current.bEligible
+                && Current.ShotId == FName(TEXT("FW03_Engine_Inspection")))
+            {
+                Coordinator->ResetReviewIntent();
+            }'''
+        self.assertIn(old, self.cpp)
+        text = self.cpp.replace(old,
+            '''            // Deliberately omitted borrowed intent cleanup.''')
+        with self.assertRaisesRegex(ValueError, "failed camera spawn leaked"):
+            check_contract(text, self.header, self.config)
 
     def test_missing_optical_permission_fails(self):
         with self.assertRaisesRegex(ValueError, "optical_permission"):
