@@ -1,6 +1,6 @@
 """Fail-closed postflight reader for a *native* opt-in Resonant Pulse log.
 
-Requires a real UE5.8.4 PIE log from the three-foe focus review. This checks
+Requires a real UE5.8.4 game-world log (PIE or standalone -game). This checks
 observable atomic HP/MP behavior; it DOES NOT certify a physical keypress,
 rendered sphere, synchronized sound, exact Git SHA, or creator approval.
 Keep original logs/screenshots and SHA custody separately.
@@ -66,7 +66,7 @@ def verify_log(text: str) -> dict[str, int]:
 
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("log", type=Path, help="Exact-head Unreal PIE log file")
+    p.add_argument("log", type=Path, help="Exact-head Unreal game-world runtime log file")
     args = p.parse_args()
     try:
         data = verify_log(args.log.read_text(encoding="utf-8", errors="replace"))
@@ -78,7 +78,7 @@ def main() -> int:
         "observed_deltas": data,
         "qualification": (
             "Log contract only; requires independent exact-head custody, "
-            "witnessed keyboard PIE, VFX/audio comparison and creator approval."
+            "witnessed keyboard gameplay (PIE or standalone), VFX/audio review and creator approval."
         )
     }, sort_keys=True))
     return 0
