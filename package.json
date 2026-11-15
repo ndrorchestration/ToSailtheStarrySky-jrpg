@@ -76,6 +76,7 @@
     "test:cinematics": "node tests/cinematic-manifest-contract.test.js",
     "capture:player-evidence": "node scripts/capture-player-evidence.js",
     "test:player-evidence-capture": "node tests/player-evidence-capture-contract.test.js",
-    "test:player-evidence-workflow": "node tests/player-evidence-workflow-contract.test.js"
+    "test:player-evidence-workflow": "node tests/player-evidence-workflow-contract.test.js",
+    "test:quest-state": "node tests/quest-state-contract.test.js"
   }
 }

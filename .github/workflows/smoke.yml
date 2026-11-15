@@ -131,6 +131,7 @@ jobs:
 
       - name: Verify First Wake opening runtime
         run: npm run test:first-wake-opening
+          npm run test:quest-state
 
       - name: Validate Chapter One quality checklist schema (documentation only)
         run: node --test tests/chapter-one-polish-checklist.test.js
