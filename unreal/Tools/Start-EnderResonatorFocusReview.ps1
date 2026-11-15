@@ -111,23 +111,6 @@ foreach ($Relative in $Required) {
         throw ('HOLD: file hash changed '+$Relative)
     }
 }
-# Source and six hashed asset custody can be confirmed safely while a different
-# Editor is active. This stops here: native/process/memory/play gates NOT checked.
-if ($CheckAssetsOnly) {
-    Write-Output 'TSTSS_FOCUS_ASSET_CUSTODY_PASS: exact source, UE version, manifest, six SHA256 hashes'
-    Write-Output 'NO_EDITOR_LAUNCHED; NATIVE_PROCESS_RAM_PIE_GPU_AUDIO_NOT_TESTED'
-    return
-}
-$Use=@(Get-Process UnrealEditor,UnrealEditor-Cmd,LiveCodingConsole -ErrorAction SilentlyContinue | Where-Object {$_})
-if ($Use.Count -gt 0) {
-    throw ('HOLD: another Unreal/LiveCoding session is active, no interference. ' +
-        (($Use | ForEach-Object {$_.ProcessName+':'+$_.Id}) -join ', '))
-}
-$Memory=Get-CimInstance Win32_OperatingSystem
-$Disk=Get-PSDrive -Name C
-if ($Memory.FreePhysicalMemory -lt 6815744 -or $Disk.Free -lt 14GB) {
-    throw 'HOLD: need >=6.5 GiB free RAM and >=14 GiB free disk'
-}
 $Map=$Manifest.map_package
 if ($Map -ne '/Game/TSTSS/Review/ResonatorFocus/L_EnderCenteringPulseReview') {
     throw 'HOLD: invalid review map'
@@ -149,6 +132,24 @@ if ($MultiEnemyProof) {
         throw 'HOLD: V2 review map differs from exact-head committed bytes'
     }
     $Map='/Game/TSTSS/Review/ResonatorFocus/L_EnderCenteringPulseReview_V2'
+}
+# Source and six hashed asset custody can be confirmed safely while a different
+# Editor is active. This stops here: native/process/memory/play gates NOT checked.
+if ($CheckAssetsOnly) {
+    Write-Output 'TSTSS_FOCUS_ASSET_CUSTODY_PASS: exact source, UE version, manifest, six SHA256 hashes'
+    if ($MultiEnemyProof) { Write-Output 'TSTSS_FOCUS_V2_MAP_BLOB_PASS: exact-head committed review map' }
+    Write-Output 'NO_EDITOR_LAUNCHED; NATIVE_PROCESS_RAM_PIE_GPU_AUDIO_NOT_TESTED'
+    return
+}
+$Use=@(Get-Process UnrealEditor,UnrealEditor-Cmd,LiveCodingConsole -ErrorAction SilentlyContinue | Where-Object {$_})
+if ($Use.Count -gt 0) {
+    throw ('HOLD: another Unreal/LiveCoding session is active, no interference. ' +
+        (($Use | ForEach-Object {$_.ProcessName+':'+$_.Id}) -join ', '))
+}
+$Memory=Get-CimInstance Win32_OperatingSystem
+$Disk=Get-PSDrive -Name C
+if ($Memory.FreePhysicalMemory -lt 6815744 -or $Disk.Free -lt 14GB) {
+    throw 'HOLD: need >=6.5 GiB free RAM and >=14 GiB free disk'
 }
 $LogDir=Join-Path $Project 'Saved\ResonatorFocus'
 if (!(Test-Path -LiteralPath $LogDir)) {
