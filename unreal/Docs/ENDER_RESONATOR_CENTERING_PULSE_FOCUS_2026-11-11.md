@@ -1,5 +1,22 @@
 # TSTSS — Ender Resonator: Centering + Resonant Pulse focus
 
+## November 15, 2026 - #839 launcher source maintenance (draft, review-only)
+
+The integrated First Wake engine-room branch includes the native, non-shipping Ender focus review with actual keyboard bindings **1: Centering** and **2: Resonant Pulse** through the combat manager. This establishes the source input and permission path; it is **not** witnessed keyboard/PIE or creator-visual approval.
+
+- The Start-EnderResonatorFocusReview.ps1 launcher can accept the explicitly named integrated checkout C:\TSTSS_838_EngineRoomRoute_20261114 **only with -IntegratedReview**. The original TSTSS_CenteringPulse_20261111 dedicated checkout remains default. All other names fail closed. Both retain the clean exact SHA, UE 5.8.4, pinned asset commit, ten-row/two-spell manifest and six matching SHA-256 asset hashes.
+- NEONTIC PowerShell 5.1 lacks Get-FileHash. The launcher uses managed SHA-256 file-stream hashing with strict disposal, independently tested on original and tampered sample files. No cryptographic check was waived.
+- -CheckAssetsOnly verifies source, UE version, manifest and all six asset hashes without launching Unreal. This mode deliberately does **not** claim available native processes, RAM, GPU, speaker/audio, keyboard or PIE proof. Run from the integrated checkout (PowerShell):
+
+    $w = 'C:\TSTSS_838_EngineRoomRoute_20261114'
+    $sha = (git -C $w rev-parse HEAD).Trim()
+    & "$w\unreal\Tools\Start-EnderResonatorFocusReview.ps1" -ExpectedHead $sha -IntegratedReview -CheckAssetsOnly
+
+- For a full graphical review, omit -CheckAssetsOnly; launch fails closed when any other Unreal/LiveCoding process exists, RAM free is under **6.5 GiB**, disk free is under **14 GiB**, or source/asset checks fail. Do not interrupt another agent.
+- All this is source-level custody, not real PIE spell casting, animation, sound, save/restart, production art or creator approval. Eight remaining spells DesignOnly, no automatic campaign grants, Ionia review-only, Lyra after splashdown, Starbourne fail-closed.
+
+---
+
 ## November 13, 2026 — #826 spherical Pulse source supersession (draft, review only)
 
 **Source of authority:** [draft PR #826](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/826), stacked on [review ownership PR #825](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/825). The November 11 text below describes the **historical #810 one-enemy prototype**. Its phrases "Target: one living enemy" and "cyan expanding ring" are **SUPERSEDED ONLY IN THIS #826 SOURCE CANDIDATE**, not in protected main, shipped content or native-verified gameplay.
