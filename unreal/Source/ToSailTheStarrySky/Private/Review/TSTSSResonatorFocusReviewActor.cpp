@@ -1,5 +1,6 @@
 #include "Review/TSTSSResonatorFocusReviewActor.h"
 #include "Review/TSTSSResonatorFocusHUD.h"
+#include "Combat/TSTSSPulseAreaMath.h"
 #include "TSTSSResonatorVfxActor.h"
 #include "Camera/CameraComponent.h"
 #include "Components/PointLightComponent.h"
@@ -24,6 +25,8 @@ const FName FocusPulseSkill(TEXT("Ender_ResonantPulse"));
 const FName IoniaArt(TEXT("Review_FocusIoniaStrike"));
 const FName FoeArt(TEXT("Review_FocusFoeStrike"));
 const FName FocusOpponentId(TEXT("ReviewFocusFoe"));
+const FName FocusOpponentHighId(TEXT("ReviewFocusFoeElevated"));
+const FName FocusOpponentOutsideId(TEXT("ReviewFocusFoeOutside"));
 
 FTSS_CombatParticipant Member(FName Id,int32 HP,int32 MP,
                                 int32 Attack,int32 Defense,int32 Initiative,
@@ -117,16 +120,30 @@ ATSTSSResonatorFocusReviewActor::ATSTSSResonatorFocusReviewActor()
     EnderProxy=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("EnderReviewProxy"));
     IoniaProxy=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("IoniaReviewProxy"));
     FoeProxy=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("FoeReviewProxy"));
+    FoeHighProxy=CreateDefaultSubobject<UStaticMeshComponent>(
+        TEXT("FoeElevatedReviewProxy"));
+    FoeOutsideProxy=CreateDefaultSubobject<UStaticMeshComponent>(
+        TEXT("FoeOutsideReviewProxy"));
     EnderProxy->SetupAttachment(ReviewRoot);
     IoniaProxy->SetupAttachment(ReviewRoot);
     FoeProxy->SetupAttachment(ReviewRoot);
+    FoeHighProxy->SetupAttachment(ReviewRoot);
+    FoeOutsideProxy->SetupAttachment(ReviewRoot);
     EnderProxy->SetRelativeLocation(FVector(0.f,-100.f,80.f));
     IoniaProxy->SetRelativeLocation(FVector(0.f,-390.f,80.f));
     FoeProxy->SetRelativeLocation(FVector(500.f,-190.f,80.f));
+    // Opt-in review proof: elevated foe is 391 cm from Ender in true 3D,
+    // outside foe 724 cm away. Relative positions are revalidated at runtime.
+    FoeHighProxy->SetRelativeLocation(FVector(200.f,100.f,350.f));
+    FoeOutsideProxy->SetRelativeLocation(FVector(680.f,-100.f,330.f));
     EnderProxy->SetRelativeScale3D(FVector(.50f,.50f,1.45f));
     IoniaProxy->SetRelativeScale3D(FVector(.50f,.50f,1.30f));
     FoeProxy->SetRelativeScale3D(FVector(.85f,.75f,1.55f));
-    for(UStaticMeshComponent* Part:{EnderProxy.Get(),IoniaProxy.Get(),FoeProxy.Get()})
+    FoeHighProxy->SetRelativeScale3D(FVector(.70f,.70f,1.0f));
+    FoeOutsideProxy->SetRelativeScale3D(FVector(.70f,.70f,1.0f));
+    for(UStaticMeshComponent* Part:{
+        EnderProxy.Get(),IoniaProxy.Get(),FoeProxy.Get(),
+        FoeHighProxy.Get(),FoeOutsideProxy.Get()})
     {
         Part->SetCollisionEnabled(ECollisionEnabled::NoCollision);
         Part->SetGenerateOverlapEvents(false);
@@ -174,6 +191,10 @@ void ATSTSSResonatorFocusReviewActor::BeginPlay()
     EnderProxy->SetStaticMesh(Cube);
     IoniaProxy->SetStaticMesh(Cube);
     FoeProxy->SetStaticMesh(Cube);
+    FoeHighProxy->SetStaticMesh(Cube);
+    FoeOutsideProxy->SetStaticMesh(Cube);
+    FoeHighProxy->SetVisibility(bMultiEnemyPulseProofReview);
+    FoeOutsideProxy->SetVisibility(bMultiEnemyPulseProofReview);
     IoniaProxy->SetVisibility(bIoniaRecruitedForReview);
     if(!TryInitArena())
     {
@@ -187,7 +208,10 @@ void ATSTSSResonatorFocusReviewActor::BeginPlay()
     PulseSfx=LoadObject<USoundBase>(nullptr,
         TEXT("/Game/TSTSS/Review/ResonatorFocus/Audio/SFX_ResonantPulse.SFX_ResonantPulse"));
     LastReviewEvent=TEXT("READY: CAST CENTERING OR RESONANT PULSE");
-    UE_LOG(LogTemp,Display,TEXT("TSTSS_FOCUS_COMBAT_ADMITTED: two spells Ender/Ionia and one review enemy"));
+    UE_LOG(LogTemp,Display,
+        TEXT("TSTSS_FOCUS_COMBAT_ADMITTED: two spells; foes=%d multi_probe=%d"),
+        bMultiEnemyPulseProofReview ? 3 : 1,
+        bMultiEnemyPulseProofReview ? 1 : 0);
     TryAttachReviewPlayer();
     RefreshHUD();
 #endif
@@ -285,6 +309,41 @@ bool ATSTSSResonatorFocusReviewActor::TryInitArena()
     I.LearnedSkills={IoniaArt};
     FTSS_CombatParticipant F=Member(FocusOpponentId,145,0,3,1,7,false);
     F.LearnedSkills={FoeArt};
+    TArray<FTSS_CombatParticipant> Foes{F};
+    if (bMultiEnemyPulseProofReview)
+    {
+        // A bounded reviewer fixture, not a story encounter. Require Ionia
+        // as the in-radius ally and the same positional authority as Pulse.
+        if (!bIoniaRecruitedForReview || !IsValid(EnderProxy.Get()) ||
+            !IsValid(IoniaProxy.Get()) || !IsValid(FoeHighProxy.Get()) ||
+            !IsValid(FoeOutsideProxy.Get()))
+            return false;
+        const FVector Caster = EnderProxy->GetComponentLocation();
+        const auto Inside = [&Caster](const FVector& Point)
+        {
+            return TSTSSPulseAreaMath::WithinSphere(
+                Caster.X, Caster.Y, Caster.Z,
+                Point.X, Point.Y, Point.Z,
+                FTSTSSBattleSkillSystem::ResonantPulseRadiusCm);
+        };
+        if (!Inside(FoeProxy->GetComponentLocation()) ||
+            !Inside(FoeHighProxy->GetComponentLocation()) ||
+             Inside(FoeOutsideProxy->GetComponentLocation()) ||
+            !Inside(IoniaProxy->GetComponentLocation()))
+        {
+            UE_LOG(LogTemp,Error,
+                TEXT("TSTSS_FOCUS_MULTIFOE_HOLD: 600cm 3D geometry/ally mismatch"));
+            return false;
+        }
+        FTSS_CombatParticipant Elevated=Member(
+            FocusOpponentHighId,115,0,2,1,6,false);
+        FTSS_CombatParticipant Outside=Member(
+            FocusOpponentOutsideId,115,0,2,1,5,false);
+        Elevated.LearnedSkills={FoeArt};
+        Outside.LearnedSkills={FoeArt};
+        Foes.Add(Elevated);
+        Foes.Add(Outside);
+    }
     TArray<FTSS_CombatParticipant> Crew{E};
     TArray<FName> Active{E.ParticipantId};
     if(bIoniaRecruitedForReview)
@@ -295,7 +354,7 @@ bool ATSTSSResonatorFocusReviewActor::TryInitArena()
     CombatManager->SkillTable=AcceptedReviewTable;
     CombatManager->OnSkillAccepted.AddDynamic(this,
         &ATSTSSResonatorFocusReviewActor::OnAcceptedSkill);
-    bReviewReady=CombatManager->InitializeEncounter(Crew,Active,{F});
+    bReviewReady=CombatManager->InitializeEncounter(Crew,Active,Foes);
     if(!bReviewReady)
         UE_LOG(LogTemp,Error,TEXT("TSTSS_FOCUS_INIT_DENIED: combat manager rejected roster"));
     return bReviewReady;
@@ -344,6 +403,14 @@ bool ATSTSSResonatorFocusReviewActor::TryCastResonantPulse()
             Positions.Add(Unit.CharacterId, IoniaProxy->GetComponentLocation());
         else if (Unit.CharacterId == FocusOpponentId)
             Positions.Add(Unit.CharacterId, FoeProxy->GetComponentLocation());
+        else if (bMultiEnemyPulseProofReview &&
+                 Unit.CharacterId == FocusOpponentHighId &&
+                 IsValid(FoeHighProxy.Get()))
+            Positions.Add(Unit.CharacterId, FoeHighProxy->GetComponentLocation());
+        else if (bMultiEnemyPulseProofReview &&
+                 Unit.CharacterId == FocusOpponentOutsideId &&
+                 IsValid(FoeOutsideProxy.Get()))
+            Positions.Add(Unit.CharacterId, FoeOutsideProxy->GetComponentLocation());
         else
             return false;
     }
@@ -427,7 +494,9 @@ void ATSTSSResonatorFocusReviewActor::Tick(float DeltaSeconds)
                     Command.SkillId=IoniaArt;
                     Command.TargetParticipantId=FocusOpponentId;
                 }
-                else if(Actor==FocusOpponentId)
+                else if(Actor==FocusOpponentId ||
+                    (bMultiEnemyPulseProofReview &&
+                     (Actor==FocusOpponentHighId || Actor==FocusOpponentOutsideId)))
                 {
                     Command.SkillId=FoeArt;
                     Command.TargetParticipantId=bIoniaRecruitedForReview
@@ -486,11 +555,14 @@ void ATSTSSResonatorFocusReviewActor::RefreshHUD()
         ? TEXT("DEFEAT / RESTART REVIEW")
         : FString::Printf(TEXT("ROUND %d / ACTIVE: %s"),
             Round,*CombatManager->GetActiveParticipantId().ToString());
+    const FString FoeMode = bMultiEnemyPulseProofReview
+        ? TEXT("THREE REVIEW FOES: TWO INSIDE (ONE ELEVATED), ONE OUTSIDE")
+        : TEXT("ONE REVIEW FOE");
     ReviewHUD->SetReviewState(
         TEXT("ENDER / RESONATOR / TWO SPELLS / REVIEW ONLY"),
         State+TEXT("\n")+Units,LastReviewEvent,
-        TEXT("1  CENTERING: 5 MP, +15% PARTY PHYSICAL DEF, 3 ROUNDS\n"
-             "2  RESONANT PULSE: 3 MP, 600 CM ENEMY-ONLY 3D AOE\n"
-             "ONE REVIEW FOE; Ionia / enemy turns automated; NO CAMPAIGN SAVE"));
+        FString(TEXT("1  CENTERING: 5 MP, +15% PARTY PHYSICAL DEF, 3 ROUNDS\n"
+                     "2  RESONANT PULSE: 3 MP, 600 CM ENEMY-ONLY 3D AOE\n"))+
+        FoeMode+TEXT("; Ionia / enemy turns automated; NO CAMPAIGN SAVE"));
 #endif
 }

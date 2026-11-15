@@ -1,5 +1,18 @@
 # TSTSS — Ender Resonator: Centering + Resonant Pulse focus
 
+## November 15, 2026 - opt-in multi-foe Pulse review proof (SOURCE ONLY)
+
+**Status: isolated source candidate / UNCOMPILED ON UNREAL / not PIE-tested / not creator-approved / draft / unmerged.**
+
+- ATSTSSResonatorFocusReviewActor exposes bMultiEnemyPulseProofReview=false. The existing one-foe focus arena remains the default. Only a reviewer who explicitly enables the flag on the review actor can stage three foes; the review actor still requires the TSTSSReviewOnly actor tag, explicit bEnableFocusReview, a standalone gameplay world and UE_BUILD_SHIPPING exclusion. The rest of the party and all campaign saves remain unchanged.
+- In the proposed optional fixture, Ender is the caster and Ionia is the in-range party ally. Three collision-free cube proxy enemies are positioned so two foes are inside the shared caster-centered ResonantPulseRadiusCm = 600.0 three-dimensional boundary (one at a different height), and one foe is outside it. A runtime source guard checks their real Unreal component world positions with the shared TSTSSPulseAreaMath::WithinSphere predicate and refuses initialization if the topology or required ally changes.
+- The actual UTSS_CombatTurnManager::SubmitResonantPulseArea still owns faction filtering, learned/mastery admission, MP charge, turn expenditure and a single accepted cue. The optional three-foe mode contributes actual enemy components to the combat roster and their positions to the authoritative spatial command, rather than reporting a synthetic result or inventing damage. Additional foes may take their own authorized automated turns. The HUD switches its review-foe count when the flag is enabled.
+- New test_ender_focus_multifoe_review.py performs independent source and 3D coordinate checks and negative mutations for unauthorized admission, default-on drift, geometry drift and lost ally exclusion. The existing test_ender_focus_combat_hud_contract.py is adjusted to require the correct dynamic foe-count label.
+- **Still required before acceptance:** native UE5.8.4 Win64/UHT compile and editor automation at the exact final commit, actual reviewer flag set on a disposable review map or review actor, screenshot and key-2 input, verified HP deltas for two enemies and no damage for the ally/outside foe, exactly one 3 MP/turn charge, cue timing, sound, UI readability, map and save-state isolation, and creator visual approval. A source test does NOT meet those gates.
+- NEONTIC's independent Whiteout Unreal Editor + LiveCoding session remains active with free RAM below 6.5 GiB graphical-review floor. Do not interrupt or reuse it. No new map asset or production changes were performed as part of this source fixture.
+
+---
+
 ## November 15, 2026 - #839 launcher source maintenance (draft, review-only)
 
 The integrated First Wake engine-room branch includes the native, non-shipping Ender focus review with actual keyboard bindings **1: Centering** and **2: Resonant Pulse** through the combat manager. This establishes the source input and permission path; it is **not** witnessed keyboard/PIE or creator-visual approval.

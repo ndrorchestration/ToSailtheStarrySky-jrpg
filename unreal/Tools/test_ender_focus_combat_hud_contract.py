@@ -16,11 +16,14 @@ def check_contract(source: str, skills: str) -> None:
     required = (
         "1  CENTERING: 5 MP, +15% PARTY PHYSICAL DEF, 3 ROUNDS",
         "2  RESONANT PULSE: 3 MP, 600 CM ENEMY-ONLY 3D AOE",
-        "ONE REVIEW FOE;",
+        "ONE REVIEW FOE",
+        "THREE REVIEW FOES: TWO INSIDE (ONE ELEVATED), ONE OUTSIDE",
     )
     for token in required:
         if token not in controls:
             raise ValueError("Focus HUD contract drift: " + token)
+    if "FoeMode+TEXT(" not in controls:
+        raise ValueError("Focus HUD lost dynamic opt-in foe count")
     for misleading in ("SINGLE ENEMY", "SINGLE TARGET", "ALL TARGETS"):
         if misleading in controls:
             raise ValueError("Focus HUD misrepresents area targeting: " + misleading)
