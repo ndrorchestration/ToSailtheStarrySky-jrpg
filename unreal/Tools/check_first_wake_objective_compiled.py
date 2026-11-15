@@ -50,7 +50,7 @@ int main() {
         {false, ETSTSSFirstWakeBeat::FlyerDiscovered, 0, "Find Ionia's flyer"},
         {true, ETSTSSFirstWakeBeat::FlyerDiscovered, 0, "Speak with Captain Ionia"},
         {true, ETSTSSFirstWakeBeat::IoniaHired, 0, "Board the Aureate Wake"},
-        {true, ETSTSSFirstWakeBeat::BoardedAureateWake, 0, "Inspect the levitation lift"},
+        {true, ETSTSSFirstWakeBeat::BoardedAureateWake, 0, "Enter engine room; inspect the levitation LIFT"},
         {true, ETSTSSFirstWakeBeat::BoardedAureateWake, 1, "Inspect the pressure systems"},
         {true, ETSTSSFirstWakeBeat::BoardedAureateWake, 3, "Inspect the reserve systems"},
         {true, ETSTSSFirstWakeBeat::BoardedAureateWake, 5, "Inspect the pressure systems"},
@@ -144,7 +144,7 @@ def main() -> int:
                            + actual.stdout + actual.stderr)
     print(actual.stdout.strip())
     if args.self_test:
-        expected = 'return TEXT("Inspect the levitation lift");'
+        expected = 'return TEXT("Enter engine room; inspect the levitation LIFT");'
         if method.count(expected) != 1:
             raise RuntimeError("Negative control target is missing or duplicated")
         altered = method.replace(expected, 'return TEXT("WRONG_INJECTED_OBJECTIVE");', 1)

@@ -1,5 +1,35 @@
 # TSTSS — Ender Resonator: Centering + Resonant Pulse focus
 
+## November 15, 2026 - opt-in multi-foe Pulse review proof (SOURCE ONLY)
+
+**Status: isolated source candidate / UNCOMPILED ON UNREAL / not PIE-tested / not creator-approved / draft / unmerged.**
+
+- ATSTSSResonatorFocusReviewActor exposes bMultiEnemyPulseProofReview=false. The existing one-foe focus arena remains the default. Only a reviewer who explicitly enables the flag on the review actor can stage three foes; the review actor still requires the TSTSSReviewOnly actor tag, explicit bEnableFocusReview, a standalone gameplay world and UE_BUILD_SHIPPING exclusion. The rest of the party and all campaign saves remain unchanged.
+- In the proposed optional fixture, Ender is the caster and Ionia is the in-range party ally. Three collision-free cube proxy enemies are positioned so two foes are inside the shared caster-centered ResonantPulseRadiusCm = 600.0 three-dimensional boundary (one at a different height), and one foe is outside it. A runtime source guard checks their real Unreal component world positions with the shared TSTSSPulseAreaMath::WithinSphere predicate and refuses initialization if the topology or required ally changes.
+- The actual UTSS_CombatTurnManager::SubmitResonantPulseArea still owns faction filtering, learned/mastery admission, MP charge, turn expenditure and a single accepted cue. The optional three-foe mode contributes actual enemy components to the combat roster and their positions to the authoritative spatial command, rather than reporting a synthetic result or inventing damage. Additional foes may take their own authorized automated turns. The HUD switches its review-foe count when the flag is enabled.
+- New test_ender_focus_multifoe_review.py performs independent source and 3D coordinate checks and negative mutations for unauthorized admission, default-on drift, geometry drift and lost ally exclusion. The existing test_ender_focus_combat_hud_contract.py is adjusted to require the correct dynamic foe-count label.
+- **Still required before acceptance:** native UE5.8.4 Win64/UHT compile and editor automation at the exact final commit, actual reviewer flag set on a disposable review map or review actor, screenshot and key-2 input, verified HP deltas for two enemies and no damage for the ally/outside foe, exactly one 3 MP/turn charge, cue timing, sound, UI readability, map and save-state isolation, and creator visual approval. A source test does NOT meet those gates.
+- NEONTIC's independent Whiteout Unreal Editor + LiveCoding session remains active with free RAM below 6.5 GiB graphical-review floor. Do not interrupt or reuse it. No new map asset or production changes were performed as part of this source fixture.
+
+---
+
+## November 15, 2026 - #839 launcher source maintenance (draft, review-only)
+
+The integrated First Wake engine-room branch includes the native, non-shipping Ender focus review with actual keyboard bindings **1: Centering** and **2: Resonant Pulse** through the combat manager. This establishes the source input and permission path; it is **not** witnessed keyboard/PIE or creator-visual approval.
+
+- The Start-EnderResonatorFocusReview.ps1 launcher can accept the explicitly named integrated checkout C:\TSTSS_838_EngineRoomRoute_20261114 **only with -IntegratedReview**. The original TSTSS_CenteringPulse_20261111 dedicated checkout remains default. All other names fail closed. Both retain the clean exact SHA, UE 5.8.4, pinned asset commit, ten-row/two-spell manifest and six matching SHA-256 asset hashes.
+- NEONTIC PowerShell 5.1 lacks Get-FileHash. The launcher uses managed SHA-256 file-stream hashing with strict disposal, independently tested on original and tampered sample files. No cryptographic check was waived.
+- -CheckAssetsOnly verifies source, UE version, manifest and all six asset hashes without launching Unreal. This mode deliberately does **not** claim available native processes, RAM, GPU, speaker/audio, keyboard or PIE proof. Run from the integrated checkout (PowerShell):
+
+    $w = 'C:\TSTSS_838_EngineRoomRoute_20261114'
+    $sha = (git -C $w rev-parse HEAD).Trim()
+    & "$w\unreal\Tools\Start-EnderResonatorFocusReview.ps1" -ExpectedHead $sha -IntegratedReview -CheckAssetsOnly
+
+- For a full graphical review, omit -CheckAssetsOnly; launch fails closed when any other Unreal/LiveCoding process exists, RAM free is under **6.5 GiB**, disk free is under **14 GiB**, or source/asset checks fail. Do not interrupt another agent.
+- All this is source-level custody, not real PIE spell casting, animation, sound, save/restart, production art or creator approval. Eight remaining spells DesignOnly, no automatic campaign grants, Ionia review-only, Lyra after splashdown, Starbourne fail-closed.
+
+---
+
 ## November 13, 2026 — #826 spherical Pulse source supersession (draft, review only)
 
 **Source of authority:** [draft PR #826](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/826), stacked on [review ownership PR #825](https://github.com/ndrorchestration/ToSailtheStarrySky-jrpg/pull/825). The November 11 text below describes the **historical #810 one-enemy prototype**. Its phrases "Target: one living enemy" and "cyan expanding ring" are **SUPERSEDED ONLY IN THIS #826 SOURCE CANDIDATE**, not in protected main, shipped content or native-verified gameplay.

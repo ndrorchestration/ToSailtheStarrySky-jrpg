@@ -13,14 +13,14 @@ ROOT = TOOLS.parent
 NATIVE_TEST = ROOT / "Source/ToSailTheStarrySky/Private/Tests/TSTSSFirstWakeInteractionIntegrationTests.cpp"
 STATE = ROOT / "Source/ToSailTheStarrySky/Private/TSTSSFirstWakeState.cpp"
 
-# Maintain all 16 #734 ordered checkpoints; update only the two creator-revised
-# post-splashdown objective labels and their expected copy.
+# Maintain all 16 #734 ordered checkpoints, including creator-revised
+# post-splashdown copy and new boarding-to-engine-room objective.
 CHECKPOINTS = (
     ("Opening objective prompts Ender toward flyer", "Find Ionia's flyer", "Story"),
     ("Flyer changes objective to Captain Ionia", "Speak with Captain Ionia", "Story"),
     ("Rejected flyer keeps Ionia objective", "Speak with Captain Ionia", "Story"),
     ("Ionia hiring changes objective to ship boarding", "Board the Aureate Wake", "Story"),
-    ("Boarding prompts lift inspection", "Inspect the levitation lift", "Story"),
+    ("Boarding prompts lift inspection", "Enter engine room; inspect the levitation LIFT", "Story"),
     ("Lift check prompts pressure inspection", "Inspect the pressure systems", "Story"),
     ("Duplicate lift preserves pressure objective", "Inspect the pressure systems", "Story"),
     ("Pressure check prompts reserve inspection", "Inspect the reserve systems", "Story"),

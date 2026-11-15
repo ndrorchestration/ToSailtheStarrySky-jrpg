@@ -6,17 +6,49 @@ param(
     [Parameter(Mandatory=$true)][ValidatePattern('^[0-9a-fA-F]{40}$')][string]$ExpectedHead,
     [ValidateRange(640,3840)][int]$Width=1280,
     [ValidateRange(480,2160)][int]$Height=720,
-    [string]$EngineRoot='C:\Program Files\Epic Games\UE_5.8'
+    [string]$EngineRoot='C:\Program Files\Epic Games\UE_5.8',
+    [switch]$IntegratedReview,
+    [switch]$CheckAssetsOnly
 )
 $ErrorActionPreference='Stop'
+# Authenticated NEONTIC PowerShell 5.1 hosts may omit Get-FileHash.
+# Use the same SHA-256 cryptographic algorithm with strict disposal and no bypass.
+function Get-TSTSSFocusSHA256([string]$LiteralPath) {
+    $Resolved = (Resolve-Path -LiteralPath $LiteralPath -ErrorAction Stop).Path
+    $Stream = [System.IO.File]::Open($Resolved,
+        [System.IO.FileMode]::Open,
+        [System.IO.FileAccess]::Read,
+        [System.IO.FileShare]::Read)
+    try {
+        $Hasher = [System.Security.Cryptography.SHA256]::Create()
+        if ($null -eq $Hasher) { throw 'HOLD: SHA-256 provider unavailable' }
+        try {
+            $Digest = $Hasher.ComputeHash($Stream)
+        } finally {
+            $Hasher.Dispose()
+        }
+        if ($null -eq $Digest -or $Digest.Length -ne 32) {
+            throw 'HOLD: invalid asset SHA-256 result'
+        }
+        return [System.BitConverter]::ToString($Digest).Replace('-','').ToLowerInvariant()
+    } finally {
+        $Stream.Dispose()
+    }
+}
 $Root=(Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $Project=Join-Path $Root 'unreal'
 $ProjectFile=Join-Path $Project 'ToSailTheStarrySky.uproject'
 $Executable=Join-Path $EngineRoot 'Engine\Binaries\Win64\UnrealEditor.exe'
 $Version=Join-Path $EngineRoot 'Engine\Build\Build.version'
 $ManifestPath=Join-Path $Project 'Docs\Evidence\ender_resonator_focus_native_assets_20261111.json'
-if ((Split-Path $Root -Leaf) -ne 'TSTSS_CenteringPulse_20261111') {
-    throw 'HOLD: wrong review worktree'
+# The legacy isolated review is implicit; the joined First Wake checkout requires
+# explicit opt-in. Neither case relaxes source SHA or six native asset hashes.
+$WorktreeName=Split-Path $Root -Leaf
+$DedicatedReview=$WorktreeName -eq 'TSTSS_CenteringPulse_20261111'
+$JoinedReview=$WorktreeName -eq 'TSTSS_838_EngineRoomRoute_20261114'
+if (($DedicatedReview -and $IntegratedReview) -or
+    (-not $DedicatedReview -and -not ($JoinedReview -and $IntegratedReview))) {
+    throw 'HOLD: wrong review worktree or missing explicit integration opt-in'
 }
 if (!(Test-Path -LiteralPath $Executable -PathType Leaf) -or
     !(Test-Path -LiteralPath $Version -PathType Leaf) -or
@@ -72,9 +104,16 @@ foreach ($Relative in $Required) {
     } else {
         $Digest=$Manifest.source_wav.$Relative
     }
-    if ((Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant() -ne $Digest) {
+    if ((Get-TSTSSFocusSHA256 -LiteralPath $Path) -ne $Digest) {
         throw ('HOLD: file hash changed '+$Relative)
     }
+}
+# Source and six hashed asset custody can be confirmed safely while a different
+# Editor is active. This stops here: native/process/memory/play gates NOT checked.
+if ($CheckAssetsOnly) {
+    Write-Output 'TSTSS_FOCUS_ASSET_CUSTODY_PASS: exact source, UE version, manifest, six SHA256 hashes'
+    Write-Output 'NO_EDITOR_LAUNCHED; NATIVE_PROCESS_RAM_PIE_GPU_AUDIO_NOT_TESTED'
+    return
 }
 $Use=@(Get-Process UnrealEditor,UnrealEditor-Cmd,LiveCodingConsole -ErrorAction SilentlyContinue | Where-Object {$_})
 if ($Use.Count -gt 0) {
@@ -83,8 +122,8 @@ if ($Use.Count -gt 0) {
 }
 $Memory=Get-CimInstance Win32_OperatingSystem
 $Disk=Get-PSDrive -Name C
-if ($Memory.FreePhysicalMemory -lt 5242880 -or $Disk.Free -lt 14GB) {
-    throw 'HOLD: need >=5 GiB free RAM and >=14 GiB free disk'
+if ($Memory.FreePhysicalMemory -lt 6815744 -or $Disk.Free -lt 14GB) {
+    throw 'HOLD: need >=6.5 GiB free RAM and >=14 GiB free disk'
 }
 $Map=$Manifest.map_package
 if ($Map -ne '/Game/TSTSS/Review/ResonatorFocus/L_EnderCenteringPulseReview') {

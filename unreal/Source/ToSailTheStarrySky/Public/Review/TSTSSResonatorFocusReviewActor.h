@@ -33,6 +33,11 @@ public:
     UPROPERTY(EditAnywhere,Category="TSTSS|Review")
     bool bIoniaRecruitedForReview=true;
 
+    // Off by default. Editor-only reviewer opt-in; never an encounter spawn
+    // in production maps, shipped gameplay or a campaign save.
+    UPROPERTY(EditAnywhere,Category="TSTSS|Review")
+    bool bMultiEnemyPulseProofReview=false;
+
     UFUNCTION(BlueprintCallable,Category="TSTSS|Review")
     bool TryCastCentering();
 
@@ -55,6 +60,8 @@ private:
     UPROPERTY(VisibleAnywhere) TObjectPtr<UStaticMeshComponent> EnderProxy;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UStaticMeshComponent> IoniaProxy;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UStaticMeshComponent> FoeProxy;
+    UPROPERTY(VisibleAnywhere) TObjectPtr<UStaticMeshComponent> FoeHighProxy;
+    UPROPERTY(VisibleAnywhere) TObjectPtr<UStaticMeshComponent> FoeOutsideProxy;
     UPROPERTY(VisibleAnywhere) TObjectPtr<UTextRenderComponent> Label;
 
     UPROPERTY(VisibleAnywhere) TObjectPtr<UTSS_CombatTurnManager> CombatManager;

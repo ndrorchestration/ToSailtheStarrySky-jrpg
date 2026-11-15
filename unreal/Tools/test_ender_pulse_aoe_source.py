@@ -199,8 +199,15 @@ class PulseSpatialSourceTests(unittest.TestCase):
                            "manager")
 
     def test_pie_source_must_use_real_proxy_transform(self):
-        self.fail_mutation("review", "EnderProxy->GetComponentLocation()",
-                           "FVector::ZeroVector", "proxy")
+        # Mutate the *cast position map*, not an earlier identical
+        # GetComponentLocation() now used by the optional multi-foe staging
+        # topology guard. Both must use real actor transforms, but the core
+        # Pulse input test must specifically protect the admitted cast.
+        self.fail_mutation(
+            "review",
+            "Positions.Add(Unit.CharacterId, EnderProxy->GetComponentLocation());",
+            "Positions.Add(Unit.CharacterId, FVector::ZeroVector);",
+            "proxy")
 
     def test_source_approval_not_fabricated(self):
         self.fail_mutation("integration", '"pulse_source_head_native_verified": false',
