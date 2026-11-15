@@ -418,7 +418,61 @@ bool ATSTSSResonatorFocusReviewActor::TryCastResonantPulse()
     Command.SourceParticipantId = TEXT("Ender");
     Command.TargetParticipantId = TEXT("Ender");  // caster-centered sphere
     Command.SkillId = FocusPulseSkill;
-    return CombatManager->SubmitResonantPulseArea(Command, Positions);
+    // A read-only, nonshipping evidence point for the optional 3-foe
+    // review fixture. The manager remains the sole damage/MP authority.
+    // Record one before/after pair after the synchronous atomic action;
+    // do not infer native acceptance or player-key provenance from logs.
+    const bool bProof = bMultiEnemyPulseProofReview;
+    const TArray<FTSTSSCombatant> Before = bProof
+        ? CombatManager->GetCombatantSnapshot()
+        : TArray<FTSTSSCombatant>();
+    const bool bAccepted = CombatManager->SubmitResonantPulseArea(Command, Positions);
+    if (bProof)
+    {
+        if (!bAccepted)
+        {
+            UE_LOG(LogTemp,Warning,TEXT("TSTSS_FOCUS_MULTIFOE_READBACK_DENIED"));
+        }
+        else
+        {
+            const TArray<FTSTSSCombatant> After =
+                CombatManager->GetCombatantSnapshot();
+            const auto Find = [](const TArray<FTSTSSCombatant>& Roster,
+                                 FName Id) -> const FTSTSSCombatant*
+            {
+                for (const FTSTSSCombatant& Unit : Roster)
+                    if (Unit.CharacterId == Id) return &Unit;
+                return nullptr;
+            };
+            const FTSTSSCombatant* BE = Find(Before,TEXT("Ender"));
+            const FTSTSSCombatant* AE = Find(After,TEXT("Ender"));
+            const FTSTSSCombatant* BP = Find(Before,FocusOpponentId);
+            const FTSTSSCombatant* AP = Find(After,FocusOpponentId);
+            const FTSTSSCombatant* BH = Find(Before,FocusOpponentHighId);
+            const FTSTSSCombatant* AH = Find(After,FocusOpponentHighId);
+            const FTSTSSCombatant* BO = Find(Before,FocusOpponentOutsideId);
+            const FTSTSSCombatant* AO = Find(After,FocusOpponentOutsideId);
+            const FTSTSSCombatant* BI = Find(Before,TEXT("Ionia"));
+            const FTSTSSCombatant* AI = Find(After,TEXT("Ionia"));
+            if (!BE || !AE || !BP || !AP || !BH || !AH ||
+                !BO || !AO || !BI || !AI)
+            {
+                UE_LOG(LogTemp,Warning,
+                    TEXT("TSTSS_FOCUS_MULTIFOE_READBACK_INCOMPLETE"));
+            }
+            else
+            {
+                UE_LOG(LogTemp,Display,
+                    TEXT("TSTSS_FOCUS_MULTIFOE_READBACK mp_spent=%d primary_hp_delta=%d elevated_hp_delta=%d outside_hp_delta=%d ionia_hp_delta=%d"),
+                    BE->Resource-AE->Resource,
+                    BP->Health-AP->Health,
+                    BH->Health-AH->Health,
+                    BO->Health-AO->Health,
+                    BI->Health-AI->Health);
+            }
+        }
+    }
+    return bAccepted;
 #endif
 }
 void ATSTSSResonatorFocusReviewActor::CastCenteringKey()
