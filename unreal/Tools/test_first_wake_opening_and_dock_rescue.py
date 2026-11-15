@@ -44,7 +44,11 @@ class OpeningDockSourceContract(unittest.TestCase):
         self.assertEqual(hashlib.sha256(v2.read_bytes()).hexdigest(),
                          "4c96f1fb28fe4af91b879977e473c20de32bd933f741a5384bb8403a00254b80")
         self.assertIn('Name == PreludeName || Name == VisualReviewPreludeName', travel)
-        self.assertEqual(travel.count('IsPreludeScene(SourceMap)'), 2)
+        # V5 now has an explicit BoardedAureateWake->VS02 entry; legacy
+        # V2 keeps its original engineering-signoff-before-sky admission.
+        self.assertEqual(travel.count('IsPreludeScene(SourceMap)'), 1)
+        self.assertIn("SourceMap == VisualReviewPreludeName", travel)
+        self.assertIn("Beat == ETSTSSFirstWakeBeat::BoardedAureateWake", travel)
         self.assertIn('FirstWake_PreludeInteraction_V5_VisualReview', travel)
         self.assertNotIn('FirstWake_PreludeInteraction_V3_VisualReview', travel)
         self.assertNotIn('FirstWake_PreludeInteraction_V4_VisualReview', travel)

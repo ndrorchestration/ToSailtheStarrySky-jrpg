@@ -87,7 +87,7 @@ bool FTSTSSFirstWakeInteractionSplashdownTest::RunTest(const FString& Parameters
     TestTrue(TEXT("Board Aureate Wake in sequence"),
         ActivateBeat(ETSTSSFirstWakeBeat::BoardedAureateWake));
     TestEqual(TEXT("Boarding prompts lift inspection"), Story->GetReviewObjectiveText(),
-        FString(TEXT("Inspect the levitation lift")));
+        FString(TEXT("Enter engine room; inspect the levitation LIFT")));
     TestFalse(TEXT("Engineering clearance blocked until every inspection"),
         ActivateBeat(ETSTSSFirstWakeBeat::EngineeringChecked));
     TestTrue(TEXT("Lift station interaction accepted"), Inspect(ETSTSSInspectionStation::Lift));

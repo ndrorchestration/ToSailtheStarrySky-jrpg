@@ -31,18 +31,30 @@ const TCHAR* UTSTSSReviewShoreTravelSubsystem::ShorePackage()
 FString UTSTSSReviewShoreTravelSubsystem::NextReviewMap(
     const UTSTSSFirstWakeState* State, const FString& SourceMap)
 {
-    if (!IsValid(State) || !State->HasStarted() || !State->AreInspectionsComplete())
+    if (!IsValid(State) || !State->HasStarted())
     {
         return FString();
     }
     const ETSTSSFirstWakeBeat Beat = State->GetCurrentBeat();
-    if (IsPreludeScene(SourceMap) && Beat == ETSTSSFirstWakeBeat::EngineeringChecked)
+    // Creator-directed engine-room reboard: V5 boards BEFORE inspecting.
+    // Older partially inspected V5 saves retain their genuine bitmask on
+    // arrival; no travel automatically grants any missing inspection.
+    if (SourceMap == VisualReviewPreludeName &&
+        (Beat == ETSTSSFirstWakeBeat::BoardedAureateWake ||
+         (Beat == ETSTSSFirstWakeBeat::EngineeringChecked &&
+          State->AreInspectionsComplete())))
     {
-        // The visually verified V5 route must visit the ship interior before
-        // launch. Keep the original V2 review route unchanged for regression.
-        return SourceMap == VisualReviewPreludeName
-            ? TEXT("/Game/TSTSS/Review/VerticalSlice/VS02_AureateInteriors")
-            : TEXT("/Game/TSTSS/Review/VerticalSlice/VS03_FirstWakeSky");
+        return TEXT("/Game/TSTSS/Review/VerticalSlice/VS02_AureateInteriors");
+    }
+    // The V2 regression scene retains its original signoff-before-sky route.
+    // Once in VS02, sky launch still requires all three inspections.
+    if (!State->AreInspectionsComplete())
+    {
+        return FString();
+    }
+    if (SourceMap == PreludeName && Beat == ETSTSSFirstWakeBeat::EngineeringChecked)
+    {
+        return TEXT("/Game/TSTSS/Review/VerticalSlice/VS03_FirstWakeSky");
     }
     if (SourceMap == ShipName && Beat == ETSTSSFirstWakeBeat::EngineeringChecked)
     {
@@ -96,10 +108,10 @@ bool UTSTSSReviewShoreTravelSubsystem::QueueShore(
     {
         return false;
     }
-    // K explicitly requests travel; only the outbound ship/legacy V2
-    // departure counts as launch. Water beats require physical observation.
-    // V5 -> ship preserves EngineeringChecked. The actual launch action
-    // occurs only from the ship interior (or from the legacy V2 test map).
+    // K explicitly requests travel; only the ship/legacy V2 departure
+    // counts as launch. Water beats require physical observation.
+    // V5 -> engine room preserves BoardedAureateWake AND all inspection bits.
+    // Sky launch remains locked until shipboard signoff is genuinely earned.
     // No level travel may synthesize SeaContact or FlotationConfirmed.
     if (((IsPreludeScene(SourceMap) && SourceMap != VisualReviewPreludeName) ||
          SourceMap == ShipName || SourceMap == OpticalName) &&

@@ -24,7 +24,7 @@ bool FTSTSSFirstWakeReviewObjectiveTest::RunTest(const FString& Parameters)
         FString(TEXT("Board the Aureate Wake")));
     if (!TestTrue(TEXT("Board ship"), State->AdvanceTo(ETSTSSFirstWakeBeat::BoardedAureateWake))) return false;
     TestEqual(TEXT("First incomplete inspection shown"), State->GetReviewObjectiveText(),
-        FString(TEXT("Inspect the levitation lift")));
+        FString(TEXT("Enter engine room; inspect the levitation LIFT")));
 
     if (!TestTrue(TEXT("Inspect lift"), State->InspectStation(ETSTSSInspectionStation::Lift))) return false;
     TestEqual(TEXT("Pressure becomes next"), State->GetReviewObjectiveText(),
@@ -76,8 +76,9 @@ bool FTSTSSFirstWakeReviewObjectiveTest::RunTest(const FString& Parameters)
         State->Restore(true, ETSTSSFirstWakeBeat::BoardedAureateWake, 0));
     TestFalse(TEXT("Pre-inspection launch is refused"),
         Route::IsEligible(State, Prelude));
-    TestFalse(TEXT("V5 cannot leave for ship before inspections"),
-        Route::IsEligible(State, VisualPrelude));
+    TestEqual(TEXT("V5 boarded goes to ship engine room without any inspections"),
+        Route::NextReviewMap(State, VisualPrelude),
+        FString(TEXT("/Game/TSTSS/Review/VerticalSlice/VS02_AureateInteriors")));
     TestFalse(TEXT("Boarded alone cannot leave ship"),
         Route::IsEligible(State, TEXT("VS02_AureateInteriors")));
     TestTrue(TEXT("Fixture restores engineering signoff"),

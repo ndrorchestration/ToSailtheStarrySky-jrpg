@@ -381,6 +381,116 @@ bool LoadBoundReviewContinueCandidate(const UWorld* World, const FString& Slot,
     return true;
 }
 #endif
+
+#if WITH_EDITOR
+// Source-scoped, disposable runtime engineering markers. The existing VS02
+// ship interior has real deck/engine proxies but no authoritative E actors.
+// Never save these transients to maps or elevate them to production room art.
+void StageEarnedEngineRoomReview(UWorld* World, UTSTSSFirstWakeState* State,
+    ATSTSSExplorerCharacter* Pawn)
+{
+    if (!World ||
+        (World->WorldType != EWorldType::PIE &&
+         World->WorldType != EWorldType::Game) ||
+        World->GetNetMode() != NM_Standalone || !World->GetOutermost() ||
+        !World->GetOutermost()->GetName().StartsWith(TEXT("/Game/TSTSS/Review/")) ||
+        UGameplayStatics::GetCurrentLevelName(World, true) !=
+            TEXT("VS02_AureateInteriors") ||
+        !IsValid(State) || !State->HasStarted() || !IsValid(Pawn) ||
+        (State->GetCurrentBeat() != ETSTSSFirstWakeBeat::BoardedAureateWake &&
+         State->GetCurrentBeat() != ETSTSSFirstWakeBeat::EngineeringChecked))
+    {
+        return;
+    }
+    UStaticMesh* MarkerMesh = LoadObject<UStaticMesh>(
+        nullptr, TEXT("/Engine/BasicShapes/Cube.Cube"));
+    if (!IsValid(MarkerMesh))
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_ENGINE_ROOM_REVIEW_HOLD missing marker mesh"));
+        return;
+    }
+    struct FReviewMarkerPlacement
+    {
+        const TCHAR* Name;
+        FVector Location;
+        bool bInspection;
+        ETSTSSInspectionStation Station;
+        ETSTSSFirstWakeBeat Milestone;
+    };
+    const FReviewMarkerPlacement Placements[] =
+    {
+        {TEXT("LiftStation"), FVector(-220.f, -90.f, 140.f), true,
+         ETSTSSInspectionStation::Lift, ETSTSSFirstWakeBeat::BoardedAureateWake},
+        {TEXT("PressureStation"), FVector(250.f, -90.f, 140.f), true,
+         ETSTSSInspectionStation::Pressure, ETSTSSFirstWakeBeat::BoardedAureateWake},
+        {TEXT("ReserveStation"), FVector(700.f, -90.f, 140.f), true,
+         ETSTSSInspectionStation::Reserve, ETSTSSFirstWakeBeat::BoardedAureateWake},
+        {TEXT("EngineeringApproval"), FVector(970.f, -90.f, 140.f), false,
+         ETSTSSInspectionStation::Lift, ETSTSSFirstWakeBeat::EngineeringChecked}
+    };
+    // A single guarded arrival from boarding; no direct scene entry may
+    // instantiate progression markers or manufacture the story handoff.
+    TArray<ATSTSSMilestoneActor*> Spawned;
+    FActorSpawnParameters Spawn;
+    Spawn.SpawnCollisionHandlingOverride =
+        ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+    for (const FReviewMarkerPlacement& Item : Placements)
+    {
+        ATSTSSMilestoneActor* Marker =
+            World->SpawnActor<ATSTSSMilestoneActor>(
+                Item.Location, FRotator::ZeroRotator, Spawn);
+        if (!IsValid(Marker))
+        {
+            break;
+        }
+        Marker->SetActorLabel(FString::Printf(
+            TEXT("TSTSS_ENGINEROOM_REVIEW_%s"), Item.Name));
+        Marker->bIsInspectionStation = Item.bInspection;
+        Marker->InspectionStation = Item.Station;
+        Marker->Milestone = Item.Milestone;
+        UStaticMeshComponent* Shape =
+            Cast<UStaticMeshComponent>(Marker->GetRootComponent());
+        if (!IsValid(Shape))
+        {
+            Marker->Destroy();
+            break;
+        }
+        Shape->SetStaticMesh(MarkerMesh);
+        Shape->SetWorldScale3D(FVector(0.7f, 0.7f, 1.4f));
+        Spawned.Add(Marker);
+    }
+    if (Spawned.Num() != UE_ARRAY_COUNT(Placements))
+    {
+        for (ATSTSSMilestoneActor* Marker : Spawned)
+        {
+            if (IsValid(Marker)) Marker->Destroy();
+        }
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_ENGINE_ROOM_REVIEW_HOLD incomplete marker stage"));
+        return;
+    }
+    // Current VS02 PlayerStart intersects the solid BridgeDeck; reposition
+    // only the successfully earned PIE arrival to a collision-clear hatch
+    // staging spot on the existing MainWalkableDeck. This is NOT a finished
+    // physical doorway and must be audited before art acceptance.
+    if (!Pawn->SetActorLocation(FVector(-350.f, -90.f, 140.f),
+            false, nullptr, ETeleportType::TeleportPhysics))
+    {
+        for (ATSTSSMilestoneActor* Marker : Spawned)
+        {
+            if (IsValid(Marker)) Marker->Destroy();
+        }
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_ENGINE_ROOM_REVIEW_HOLD player hatch spawn"));
+        return;
+    }
+    UE_LOG(LogTemp, Display,
+        TEXT("TSTSS_ENGINE_ROOM_REVIEW_STAGED count=4 beat=%d mask=%u save_mutation=0"),
+        static_cast<int32>(State->GetCurrentBeat()), State->GetInspectionMask());
+}
+
+#endif
 }
 
 ATSTSSExplorerCharacter::ATSTSSExplorerCharacter()
@@ -424,15 +534,30 @@ void ATSTSSExplorerCharacter::BeginPlay()
                         TEXT("TSTSS_FIRSTWAKE_REVIEW_SCENE_ARRIVAL_STORY_RESTORED_NO_RECRUITMENT beat=%d"),
                         static_cast<int32>(FirstWakeState->GetCurrentBeat()));
                     const FString Scene = UGameplayStatics::GetCurrentLevelName(World, true);
+                    // Only a real queued boarding ticket stages E interactions
+                    // in the existing VS02 ship room. No harbor-side mechanic
+                    // can replace these interactions or grant inspection bits.
+                    if (Scene == TEXT("VS02_AureateInteriors"))
+                    {
+                        StageEarnedEngineRoomReview(World, FirstWakeState, this);
+                    }
                     // Only an earned in-memory arrival ticket reveals the
                     // optional optical study; a direct level launch gets none.
+                    if (GEngine &&
+                        FirstWakeState->GetCurrentBeat() ==
+                            ETSTSSFirstWakeBeat::BoardedAureateWake &&
+                        Scene == TEXT("VS02_AureateInteriors"))
+                    {
+                        GEngine->AddOnScreenDebugMessage(-1, 12.f, FColor::Cyan,
+                            TEXT("Aureate engine room: inspect LIFT, pressure and reserves [E], then sign off"));
+                    }
                     if (FirstWakeState->GetCurrentBeat() ==
                             ETSTSSFirstWakeBeat::EngineeringChecked && GEngine)
                     {
                         if (Scene == TEXT("VS02_AureateInteriors"))
                         {
                             GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Cyan,
-                                TEXT("Optional engine optics [O] | [K] launches First Wake"));
+                                TEXT("Engine room [C] LIFT camera near gauge | [K] launches | [O] dev optical lab"));
                         }
                         else if (Scene == TEXT("M_EnginePresentationReview"))
                         {
