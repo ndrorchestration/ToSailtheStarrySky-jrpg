@@ -70,8 +70,8 @@ class LauncherSourceTests(TestCase):
         self.assertIn("[switch]$CheckAssetsOnly", self.s)
         self.assertIn("$WorktreeName -eq 'TSTSS_CenteringPulse_20261111'", self.s)
         self.assertIn("$WorktreeName -eq 'TSTSS_838_EngineRoomRoute_20261114'", self.s)
-        self.assertIn("$JoinedReview -and $IntegratedReview", self.s)
-        self.assertIn("missing explicit integration opt-in", self.s)
+        self.assertIn("($JoinedReview -or $MultiProbeReview) -and $IntegratedReview", self.s)
+        self.assertIn("missing explicit integration/multi-foe opt-in", self.s)
         self.assertIn("TSTSS_FOCUS_ASSET_CUSTODY_PASS", self.s)
         self.assertIn("NO_EDITOR_LAUNCHED; NATIVE_PROCESS_RAM_PIE_GPU_AUDIO_NOT_TESTED", self.s)
         # Asset audit must conclude after every immutable asset check,
