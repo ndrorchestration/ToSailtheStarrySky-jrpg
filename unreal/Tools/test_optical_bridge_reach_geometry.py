@@ -8,6 +8,7 @@ import verify_optical_bridge_reach_geometry as geo
 
 ROOT=Path(__file__).resolve().parents[2]
 SCRIPT=(ROOT/"unreal/Tools/stage_vs02_optical_bridge_reach.py").read_text(encoding="utf-8")
+READBACK=(ROOT/"unreal/Tools/readback_vs02_optical_bridge_reach.py").read_text(encoding="utf-8")
 AUTHORING=geo.AUTHORING.read_text(encoding="utf-8")
 GAME=(ROOT/"unreal/Source/ToSailTheStarrySky/Private/TSTSSExplorerCharacter.cpp").read_text(encoding="utf-8")
 
@@ -75,6 +76,29 @@ class ReviewBridgeReachGeometryTests(unittest.TestCase):
         self.assertNotIn("TeleportTo",SCRIPT)
         self.assertNotIn("Starbourne",SCRIPT)
         self.assertNotIn("QuickSave",SCRIPT)
+
+    def test_fresh_native_readback_is_independent_and_read_only(self):
+        for token in (
+            "sys.path.insert(0",
+            "NativeStage",
+            "stage.json",
+            "independent_readback.json",
+            "new_review_copy_sha256",
+            "old_review_copy_sha256",
+            "get_all_level_actors()",
+            "get_collision_enabled()",
+            "TSTSSAtmosphereDirector",
+            "TSTSS_VS_REVIEW_PlayerStart_Review",
+            "TSTSS_VS_REVIEW_InstrumentCore_LIFT",
+            "explicit_review_opt_in",
+            "real_wasd_navigation_confirmed",
+            "c_key_preview_or_restore_confirmed",
+        ):
+            self.assertIn(token,READBACK,token)
+        self.assertNotIn("save_map(",READBACK)
+        self.assertNotIn("set_actor_location(",READBACK)
+        self.assertNotIn("set_actor_scale3d(",READBACK)
+        self.assertNotIn("TeleportTo",READBACK)
 
     def test_stager_mutates_only_named_bridge_and_review_copy(self):
         self.assertEqual(SCRIPT.count("bridge.set_actor_location("),1)

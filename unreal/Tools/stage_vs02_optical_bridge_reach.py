@@ -10,8 +10,10 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
+sys.path.insert(0,str(Path(__file__).resolve().parent))
 import unreal as u
 from verify_optical_bridge_reach_geometry import (
     PROJECT, ROOT, COPY, SOURCE, EXPECTED_SOURCE, EXPECTED_REVIEW,

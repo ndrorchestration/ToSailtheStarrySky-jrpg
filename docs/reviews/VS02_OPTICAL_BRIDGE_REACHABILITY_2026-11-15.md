@@ -17,6 +17,7 @@ At the original **authored** PlayerStart, Euclidean LIFT separation is approxima
 
 - `unreal/Tools/verify_optical_bridge_reach_geometry.py` – engine-free exact-hash/source geometry model, optional local Saved receipt. **No** actor edits.
 - `unreal/Tools/test_optical_bridge_reach_geometry.py` – six source/mutation/fail-closed tests; no Unreal runtime or GPU claims.
+- `unreal/Tools/readback_vs02_optical_bridge_reach.py` - **NOT EXECUTED**. A fresh native Editor reread checks exact stage/backup/new-map hashes, 28 actors, unchanged PlayerStart/LIFT, dual optics, one atmosphere owner, disabled receiver and restored BridgeDeck collision; no map writes.
 - `unreal/Tools/stage_vs02_optical_bridge_reach.py` – **NOT EXECUTED**. An explicitly gated native Editor staging script for only the existing `/Game/TSTSS/Review/EngineFocus_V1/M_EnginePresentationReview` asset. Requires correct new isolated branch and exact SHA environment, clean worktree, UE5.8.4, no local PIE, pristine map/input files and expected 28-actor/mesh/receiver configuration. Creates an ignored Saved byte-for-byte backup before writing the one named BridgeDeck actor. The original `/Game/TSTSS/Review/VerticalSlice/VS02_AureateInteriors` remains hash-guarded read-only.
 
 **Baseline original VS02 SHA256:** `a97fbb057cb87c0e35fe95195ca06c30de1a5cc60158bf31a657f738b22a9d69`
