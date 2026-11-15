@@ -113,6 +113,21 @@ class EngineRoomReboardSourceContract(unittest.TestCase):
         self.assertIn("enclosed physical engine room in actual Aureate Wake hull",
                       plan["production_requirements_not_established"])
 
+    def test_engine_room_native_assertions_preserve_38_test_registry(self):
+        source = (ROOT/"Source/ToSailTheStarrySky/Private/Tests/TSTSSFirstWakeReviewObjectiveTests.cpp").read_text()
+        verifier = (ROOT/"Tools/Verify-Unreal.ps1").read_text()
+        self.assertEqual(verifier.count("'TSTSS.FirstWake.ReviewObjectivesAreReadOnly'"), 1)
+        self.assertNotIn("TSTSS.FirstWake.EngineRoomReboardAuthority",verifier)
+        self.assertFalse((ROOT/"Source/ToSailTheStarrySky/Private/Tests/TSTSSFirstWakeEngineRoomReboardTests.cpp").exists())
+        for assertion in ("Shipboard LIFT inspection accepts only once",
+                          "Duplicate shipboard LIFT inspection rejected",
+                          "LIFT alone cannot permit sky departure",
+                          "Partially inspected V5 still routes to engine room",
+                          "Two checks cannot permit sky departure",
+                          "All three without signoff still cannot depart",
+                          "Earned engineering signoff"):
+            self.assertIn(assertion,source)
+
     def test_new_objective_mentions_engine_room(self):
         self.assertIn("Enter engine room; inspect the levitation LIFT",STATE)
 
