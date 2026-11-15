@@ -489,8 +489,8 @@ void ATSTSSResonatorFocusReviewActor::RefreshHUD()
     ReviewHUD->SetReviewState(
         TEXT("ENDER / RESONATOR / TWO SPELLS / REVIEW ONLY"),
         State+TEXT("\n")+Units,LastReviewEvent,
-        TEXT("1  CENTERING: 5 MP, +15% PHYSICAL DEF, 3 ROUNDS\n"
-             "2  RESONANT PULSE: 3 MP, SINGLE ENEMY\n"
-             "Ionia / enemy turns automated; NO CAMPAIGN SAVE"));
+        TEXT("1  CENTERING: 5 MP, +15% PARTY PHYSICAL DEF, 3 ROUNDS\n"
+             "2  RESONANT PULSE: 3 MP, 600 CM ENEMY-ONLY 3D AOE\n"
+             "ONE REVIEW FOE; Ionia / enemy turns automated; NO CAMPAIGN SAVE"));
 #endif
 }
