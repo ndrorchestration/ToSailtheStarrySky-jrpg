@@ -15,6 +15,8 @@
 #include "GameFramework/PlayerController.h"
 #include "InputCoreTypes.h"
 #include "Kismet/GameplayStatics.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 #include "Sound/SoundBase.h"
 #include "UObject/UObjectGlobals.h"
 
@@ -176,6 +178,27 @@ void ATSTSSResonatorFocusReviewActor::BeginPlay()
         SetActorHiddenInGame(true);
         return;
     }
+#if WITH_EDITOR
+    // Native review convenience: an explicit launcher argument can opt in to
+    // the three-foe proof in the original immutable V2 map. Never resave a
+    // canonical asset or allow this flag outside the exact isolated review map.
+    // Mandatory actor opt-in/tag/game-world checks above still apply.
+    if (FParse::Param(FCommandLine::Get(), TEXT("TSTSSFocusMultiProbe")))
+    {
+        const FString MapName=GetWorld()->GetMapName();
+        if (!MapName.EndsWith(TEXT("L_EnderCenteringPulseReview_V2")))
+        {
+            UE_LOG(LogTemp,Error,
+                TEXT("TSTSS_FOCUS_MULTIFOE_CLI_DENIED: wrong review map"));
+            SetActorTickEnabled(false);
+            SetActorHiddenInGame(true);
+            return;
+        }
+        bMultiEnemyPulseProofReview=true;
+        UE_LOG(LogTemp,Display,
+            TEXT("TSTSS_FOCUS_MULTIFOE_CLI_OPTIN: V2 map review only"));
+    }
+#endif
     // Capsule does not exist at /Engine/BasicShapes/Capsule.Capsule on this
     // exact Windows UE5.8.4 installation. Use a verified Engine Cube for all
     // visible provisional proxies until approved sculpt/rig assets are ready.
