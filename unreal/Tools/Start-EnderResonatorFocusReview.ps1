@@ -8,6 +8,7 @@ param(
     [ValidateRange(480,2160)][int]$Height=720,
     [string]$EngineRoot='C:\Program Files\Epic Games\UE_5.8',
     [switch]$IntegratedReview,
+    [switch]$MultiEnemyProof,
     [switch]$CheckAssetsOnly
 )
 $ErrorActionPreference='Stop'
@@ -46,9 +47,11 @@ $ManifestPath=Join-Path $Project 'Docs\Evidence\ender_resonator_focus_native_ass
 $WorktreeName=Split-Path $Root -Leaf
 $DedicatedReview=$WorktreeName -eq 'TSTSS_CenteringPulse_20261111'
 $JoinedReview=$WorktreeName -eq 'TSTSS_838_EngineRoomRoute_20261114'
-if (($DedicatedReview -and $IntegratedReview) -or
-    (-not $DedicatedReview -and -not ($JoinedReview -and $IntegratedReview))) {
-    throw 'HOLD: wrong review worktree or missing explicit integration opt-in'
+$MultiProbeReview=$WorktreeName -eq 'TSTSS_840_PulseReadback_20261115'
+if (($DedicatedReview -and ($IntegratedReview -or $MultiEnemyProof)) -or
+    (-not $DedicatedReview -and -not (($JoinedReview -or $MultiProbeReview) -and $IntegratedReview)) -or
+    ($MultiEnemyProof -and -not $MultiProbeReview)) {
+    throw 'HOLD: wrong review worktree or missing explicit integration/multi-foe opt-in'
 }
 if (!(Test-Path -LiteralPath $Executable -PathType Leaf) -or
     !(Test-Path -LiteralPath $Version -PathType Leaf) -or
@@ -129,6 +132,24 @@ $Map=$Manifest.map_package
 if ($Map -ne '/Game/TSTSS/Review/ResonatorFocus/L_EnderCenteringPulseReview') {
     throw 'HOLD: invalid review map'
 }
+if ($MultiEnemyProof) {
+    # The original V2 review map is committed and source-locked. The new
+    # optional CLI flag changes only transient game-world actor state; no Save As.
+    $ProofRelative='unreal/Content/TSTSS/Review/ResonatorFocus/L_EnderCenteringPulseReview_V2.umap'
+    $ProofFile=Join-Path $Root $ProofRelative
+    if (!(Test-Path -LiteralPath $ProofFile -PathType Leaf)) {
+        throw 'HOLD: missing committed focus V2 review map'
+    }
+    $PinnedBlob=(git -C $Root rev-parse ($ExpectedHead+':'+$ProofRelative)).Trim()
+    if ($LASTEXITCODE -ne 0 -or !$PinnedBlob) {
+        throw 'HOLD: V2 review map not present in exact-head source'
+    }
+    $ActualBlob=(git -C $Root hash-object -- $ProofRelative).Trim()
+    if ($LASTEXITCODE -ne 0 -or $PinnedBlob -ne $ActualBlob) {
+        throw 'HOLD: V2 review map differs from exact-head committed bytes'
+    }
+    $Map='/Game/TSTSS/Review/ResonatorFocus/L_EnderCenteringPulseReview_V2'
+}
 $LogDir=Join-Path $Project 'Saved\ResonatorFocus'
 if (!(Test-Path -LiteralPath $LogDir)) {
     New-Item -ItemType Directory -Path $LogDir -Force | Out-Null
@@ -138,6 +159,7 @@ $Parameters=@(
     ('"'+$ProjectFile+'"'),$Map,'-game','-windowed',("-ResX=$Width"),("-ResY=$Height"),
     '-NoSplash','-NoVSync','-log'
 )
+if ($MultiEnemyProof) { $Parameters+= '-TSTSSFocusMultiProbe' }
 $Run=Start-Process -FilePath $Executable -ArgumentList $Parameters -WorkingDirectory $Project -PassThru -ErrorAction Stop
 $Receipt=[ordered]@{
     status='REVIEW_WINDOW_LAUNCHED_NOT_PLAY_VERIFIED'
@@ -146,6 +168,8 @@ $Receipt=[ordered]@{
     map=$Map
     engine='5.8.4'
     player_keyboard='NOT_VERIFIED'
+    three_foe_proof_requested=[bool]$MultiEnemyProof
+    three_foe_hp_mp='NOT_VERIFIED'
     speaker_audio='NOT_VERIFIED'
     gpu_visual='NOT_VERIFIED'
     campaign_integration='NOT_VERIFIED'
@@ -154,5 +178,6 @@ $Receipt=[ordered]@{
 $Receipt | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $Record -Encoding UTF8 -NoNewline
 Write-Output "Review-only Unreal window launched, PID $($Run.Id)."
 Write-Output 'Controls: 1 = Centering (5 MP, 3 rounds); 2 = Resonant Pulse (3 MP).'
+if ($MultiEnemyProof) { Write-Output 'Three-foe V2 opt-in requested; HP/MP and input acceptance require native log review.' }
 Write-Output 'No GPU, speaker, or keyboard acceptance is claimed until witnessed.'
 Write-Output "Launch receipt: $Record"
