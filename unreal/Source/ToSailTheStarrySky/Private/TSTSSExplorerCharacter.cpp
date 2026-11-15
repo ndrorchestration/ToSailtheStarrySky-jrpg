@@ -169,6 +169,30 @@ void ApplySeabourneReviewExposure(UWorld* World)
             TEXT("TSTSS_SEABOURNE_REVIEW_EXPOSURE_APPLIED bias=-2.2 map_asset_unchanged=1"));
     }
 }
+// Provisional review-map player-view exposure, justified only by a
+// same-head native D3D11 PIE A/B. This is not production look approval.
+void ApplyOpticalReviewPlayerExposure(UWorld* World, UCameraComponent* Camera)
+{
+    if (!World || World->WorldType != EWorldType::PIE ||
+        World->GetNetMode() != NM_Standalone || !IsValid(Camera) ||
+        !World->GetOutermost() ||
+        !World->GetOutermost()->GetName().StartsWith(
+            TEXT("/Game/TSTSS/Review/EngineFocus_V1/")) ||
+        UGameplayStatics::GetCurrentLevelName(World, true) !=
+            TEXT("M_EnginePresentationReview"))
+    {
+        return;
+    }
+
+    // Keep the physical sky and sun; control only this disposable review
+    // player's camera. Do not modify global renderer settings or other maps.
+    Camera->PostProcessSettings.bOverride_AutoExposureBias = true;
+    Camera->PostProcessSettings.AutoExposureBias = -6.0f;
+    Camera->PostProcessBlendWeight = 1.0f;
+    UE_LOG(LogTemp, Display,
+        TEXT("TSTSS_PIE_OPTICAL_PLAYER_EXPOSURE_REVIEW_ONLY bias=-6 sky_enabled=1 map_asset_unchanged=1"));
+}
+
 void ApplyV5HarborReviewLookdev(UWorld* World)
 {
     if (!World || (World->WorldType != EWorldType::PIE &&
@@ -383,6 +407,7 @@ void ATSTSSExplorerCharacter::BeginPlay()
     Super::BeginPlay();
     FirstWakeState = NewObject<UTSTSSFirstWakeState>(this);
 #if WITH_EDITOR
+    ApplyOpticalReviewPlayerExposure(GetWorld(), FollowCamera);
     ApplyV5HarborReviewLookdev(GetWorld());
     ApplyCoastalRecoveryReviewSignage(GetWorld());
     ApplySeabourneReviewExposure(GetWorld());
