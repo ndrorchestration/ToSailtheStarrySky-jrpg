@@ -72,19 +72,55 @@ int main()
 class PulsePortableCppGeometryTests(unittest.TestCase):
     def test_compile_and_execute_actual_shared_cpp_geometry(self):
         compiler = shutil.which("g++") or shutil.which("clang++")
-        if compiler is None:
-            self.skipTest("No C++17 g++/clang++ compiler: portable geometry not executed")
         self.assertTrue((HEADER_DIR / "Combat/TSTSSPulseAreaMath.h").is_file())
         with tempfile.TemporaryDirectory(prefix="tstss_pulse_cpp_") as temp:
             source = Path(temp) / "pulse_geometry.cpp"
             binary = Path(temp) / ("pulse_geometry.exe" if os.name == "nt" else "pulse_geometry")
             source.write_text(CPP, encoding="utf-8")
-            built = subprocess.run(
-                [compiler, "-std=c++17", "-Wall", "-Wextra", "-Werror",
-                 "-O0", "-I", str(HEADER_DIR), str(source), "-o", str(binary)],
-                capture_output=True, text=True, timeout=90, check=False,
-            )
-            self.assertEqual(built.returncode, 0, built.stdout + built.stderr)
+            if compiler is not None:
+                built = subprocess.run(
+                    [compiler, "-std=c++17", "-Wall", "-Wextra", "-Werror",
+                     "-O0", "-I", str(HEADER_DIR), str(source), "-o", str(binary)],
+                    capture_output=True, text=True, timeout=90, check=False,
+                )
+                self.assertEqual(built.returncode, 0, built.stdout + built.stderr)
+            elif os.name == "nt":
+                # The Windows Unreal build machine has MSVC, often installed
+                # without cl.exe on PATH. Discover its vcvars64 initializer,
+                # compile the SAME shared header and run the SAME 28 cases.
+                program_files_x86 = Path(os.environ.get("ProgramFiles(x86)",
+                    r"C:\Program Files (x86)"))
+                vs_root = program_files_x86 / "Microsoft Visual Studio" / "2022"
+                initializers = [
+                    vs_root / edition / "VC/Auxiliary/Build/vcvars64.bat"
+                    for edition in ("BuildTools", "Community", "Professional", "Enterprise")
+                ]
+                vcvars = next((path for path in initializers if path.is_file()), None)
+                if vcvars is None:
+                    self.skipTest("No C++17 GCC/Clang or MSVC vcvars64 installed")
+                # All generated files and the executable stay inside a
+                # temporary folder. Do not mutate the repo or global PATH.
+                batch = Path(temp) / "run-pulse-geometry.cmd"
+                batch.write_text(
+                    "@echo off\n"
+                    f'call "{vcvars}" >nul\n'
+                    "if errorlevel 1 exit /b 3\n"
+                    f'cl /nologo /std:c++17 /EHsc /W4 /WX /Od /I"{HEADER_DIR}" '
+                    f'"{source}" /Fe:"{binary}"\n'
+                    "if errorlevel 1 exit /b 4\n"
+                    f'"{binary}"\n'
+                    "exit /b %ERRORLEVEL%\n",
+                    encoding="utf-8",
+                )
+                executed = subprocess.run(
+                    ["cmd.exe", "/d", "/c", str(batch)], cwd=temp,
+                    capture_output=True, text=True, timeout=120, check=False,
+                )
+                self.assertEqual(executed.returncode, 0, executed.stdout + executed.stderr)
+                self.assertIn("PULSE_CPP_GEOMETRY_PASS 28", executed.stdout)
+                return
+            else:
+                self.skipTest("No C++17 GCC/Clang compiler installed")
             executed = subprocess.run(
                 [str(binary)], capture_output=True, text=True,
                 timeout=15, check=False,
