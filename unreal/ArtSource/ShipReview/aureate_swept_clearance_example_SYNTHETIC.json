@@ -1,0 +1,299 @@
+{
+  "schema_version": 1,
+  "note": "SYNTHETIC ILLUSTRATIVE ENVELOPES - NOT exported from Unreal. Shows the input schema only; its verdict says nothing about the real Aureate Wake.",
+  "provisional": true,
+  "units": "cm",
+  "transition": {
+    "from": "Skybourne",
+    "to": "Submersible"
+  },
+  "required_clearance": 10.0,
+  "sweep": {
+    "max_depth": 16,
+    "max_evals": 400000
+  },
+  "obstacles": [
+    {
+      "role": "hull",
+      "parts": [
+        {
+          "center": [
+            0,
+            0,
+            0
+          ],
+          "half_extents": [
+            150,
+            30,
+            25
+          ]
+        }
+      ]
+    },
+    {
+      "role": "bridge",
+      "parts": [
+        {
+          "center": [
+            170,
+            0,
+            15
+          ],
+          "half_extents": [
+            30,
+            25,
+            25
+          ]
+        }
+      ]
+    },
+    {
+      "role": "quarters",
+      "parts": [
+        {
+          "center": [
+            0,
+            0,
+            40
+          ],
+          "half_extents": [
+            60,
+            22,
+            15
+          ]
+        }
+      ]
+    },
+    {
+      "role": "deck",
+      "parts": [
+        {
+          "center": [
+            110,
+            0,
+            30
+          ],
+          "half_extents": [
+            30,
+            28,
+            3
+          ]
+        }
+      ]
+    }
+  ],
+  "wings": [
+    {
+      "identity": "FORE_PORT",
+      "parts": [
+        {
+          "center": [
+            0,
+            -50,
+            0
+          ],
+          "half_extents": [
+            35,
+            50,
+            1
+          ]
+        }
+      ],
+      "pose_from": {
+        "position": [
+          70,
+          -110,
+          60
+        ],
+        "rotation_quat": [
+          1,
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "pose_to": {
+        "position": [
+          70,
+          -110,
+          60
+        ],
+        "rotation_quat": [
+          0.866025403784,
+          -0.5,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "identity": "FORE_STARBOARD",
+      "parts": [
+        {
+          "center": [
+            0,
+            50,
+            0
+          ],
+          "half_extents": [
+            35,
+            50,
+            1
+          ]
+        }
+      ],
+      "pose_from": {
+        "position": [
+          70,
+          110,
+          60
+        ],
+        "rotation_quat": [
+          1,
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "pose_to": {
+        "position": [
+          70,
+          110,
+          60
+        ],
+        "rotation_quat": [
+          0.866025403784,
+          0.5,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "identity": "AFT_PORT",
+      "parts": [
+        {
+          "center": [
+            0,
+            -50,
+            0
+          ],
+          "half_extents": [
+            35,
+            50,
+            1
+          ]
+        }
+      ],
+      "pose_from": {
+        "position": [
+          -70,
+          -110,
+          60
+        ],
+        "rotation_quat": [
+          1,
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "pose_to": {
+        "position": [
+          -70,
+          -110,
+          60
+        ],
+        "rotation_quat": [
+          0.866025403784,
+          -0.5,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "identity": "AFT_STARBOARD",
+      "parts": [
+        {
+          "center": [
+            0,
+            50,
+            0
+          ],
+          "half_extents": [
+            35,
+            50,
+            1
+          ]
+        }
+      ],
+      "pose_from": {
+        "position": [
+          -70,
+          110,
+          60
+        ],
+        "rotation_quat": [
+          1,
+          0,
+          0,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "pose_to": {
+        "position": [
+          -70,
+          110,
+          60
+        ],
+        "rotation_quat": [
+          0.866025403784,
+          0.5,
+          0.0,
+          0.0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      }
+    }
+  ]
+}
