@@ -46,7 +46,10 @@ class MultiFoePieReadbackTests(unittest.TestCase):
 
     def test_duplicate_pulse_denied(self):
         with self.assertRaisesRegex(ValueError, "exactly one Ender"):
-            verify_log(GOOD + "\n" + GOOD)
+            verify_log(GOOD + "\n" + (
+                "LogTemp: Display: TSTSS_FOCUS_ACTION_ACCEPTED "
+                "actor=Ender skill=Ender_ResonantPulse target=Ender"
+            ))
 
     def test_missing_optin_denied(self):
         with self.assertRaisesRegex(ValueError, "three-foe"):
