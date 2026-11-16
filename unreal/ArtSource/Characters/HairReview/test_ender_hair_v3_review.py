@@ -99,8 +99,8 @@ class EnderV3OfflineImageAndImportTests(unittest.TestCase):
         s=IMPORT_SCRIPT.read_text(encoding="utf-8")
         self.assertNotIn('"creator_approved":True',s)
         self.assertNotIn('"gameplay_ready":True',s)
-        self.assertIn('"original_approved_hair":False',s)
-        self.assertIn('"genuine_native_screenshot":False',s)
+        self.assertIn("original_approved_hair=False",s)
+        self.assertIn("genuine_native_screenshot=False",s)
 
 
 if __name__=="__main__":
