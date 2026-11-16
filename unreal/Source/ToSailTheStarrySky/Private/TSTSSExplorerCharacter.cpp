@@ -444,6 +444,14 @@ void StageDockedWakeReview(UWorld* World)
     CaptainVisual->SetRootComponent(Root);
     Root->SetMobility(EComponentMobility::Movable);
     Root->RegisterComponent();
+    // AActor had no root at spawn, so explicitly place the registered root.
+    if (!CaptainVisual->SetActorLocation(FVector(-1250.f, 200.f, 0.f)))
+    {
+        Ship->Destroy();
+        CaptainVisual->Destroy();
+        UE_LOG(LogTemp, Warning, TEXT("TSTSS_DOCKED_WAKE_REVIEW_HOLD captain_placement"));
+        return;
+    }
     UMaterialInterface* Coat = LoadObject<UMaterialInterface>(nullptr,
         TEXT("/Game/TSTSS/Review/MultipathV1/ObjectImports/HarborLantern/HarborLantern/Materials/TSTSS_dark_iron.TSTSS_dark_iron"));
     UMaterialInterface* Hair = LoadObject<UMaterialInterface>(nullptr,

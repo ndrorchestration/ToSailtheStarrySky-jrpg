@@ -17,6 +17,14 @@ class DockedWakeReviewTests(unittest.TestCase):
         self.assertIn('TEXT("TSTSS_PRELUDE_REVIEW_AureateBoarding")', accepted)
         self.assertIn("ReviewShoreTravel();", accepted)
 
+    def test_captain_visual_has_explicit_world_placement_after_root_registration(self):
+        stage = EXPLORER.split("void StageDockedWakeReview(", 1)[1].split(
+            "void StageEarnedEngineRoomReview(", 1)[0]
+        self.assertIn("CaptainVisual->SetActorLocation(", stage)
+        self.assertGreater(stage.index("CaptainVisual->SetActorLocation("),
+                           stage.index("Root->RegisterComponent()"))
+        self.assertIn('CaptainVisual->SetActorLocation(FVector(-1250.f, 200.f, 0.f))', stage)
+
     def test_docked_ship_and_captain_markers_are_staged_in_v5_only(self):
         self.assertIn("StageDockedWakeReview(GetWorld())", EXPLORER)
         self.assertIn("TSTSS_DOCKED_WAKE_REVIEW_APPLIED", EXPLORER)
