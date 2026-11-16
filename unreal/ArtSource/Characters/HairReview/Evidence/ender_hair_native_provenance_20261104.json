@@ -1,0 +1,56 @@
+{
+  "creator_approval": false,
+  "first_approved_character_art_not_in_git": true,
+  "gameplay_integration": false,
+  "hair_groom_rigging_approved": false,
+  "rejected_v1_goggles_promoted": false,
+  "scalp_bounds_native_api_unavailable": true,
+  "source_sha256": {
+    "map": "025539f8717c6215a17dc8acff24ec7bd39b3d43129de4069a9418b3d8da3a2a",
+    "meta": "2bb581a27aee55b0352f52227a3afe2c6d01a529b63c8dc661cbe8f4edbb2e3d",
+    "sealed_v2_goggles": "5b1b5c5ac0b1be754d9e19b3bd9cec293c819259d18b39e8ad8f56228d22b5cb"
+  },
+  "status": "NATIVE_V1_RENDER_VERIFIED_VISUAL_FAIL_V2_IMPORT_VERIFIED",
+  "v1_actual_native_gpu_png": {
+    "crc_valid": true,
+    "image_size": [
+      480,
+      320
+    ],
+    "mean_rgb": [
+      52.77,
+      48.06,
+      43.61
+    ],
+    "sha256_png_core": "fc3e70b005c9c6f4af419de9a91a1d6d077811969f0b816ec8fe72467f68bdcc",
+    "sha256_raw": "36d09e56c48fbe098e7bf7aac1b4a98e0ba168860df17b9d71895e4d60225e11",
+    "trailing_exporter_bytes": 772
+  },
+  "v1_static_import": {
+    "creator_approved": false,
+    "hair_source_sha256": "01bb9f400454d633c5e887cd47a12fd1af34e5bbf6b7c05ab6a5929b0a6db562",
+    "is_static_review_mesh": true,
+    "material_slots": 5,
+    "native_bounds_xyz_cm": [
+      23.0297,
+      18.7177,
+      24.3367
+    ],
+    "status": "NATIVE_ENDER_HAIR_STATIC_IMPORT_PASS_FIT_AND_ART_HOLD"
+  },
+  "v1_visual_qa": "FAIL_PALE_ROPELIKE_STRANDS_CROP_AND_HAIRLINE",
+  "v2_actual_native_gpu_png": null,
+  "v2_capture_status": "NOT_CAPTURED_NATIVE",
+  "v2_static_import": {
+    "creator_approved": false,
+    "hair_source_sha256": "0da20d3b34e3fdf6171476db1736d2e2607987c71403272207e428f18c8ca9cd",
+    "is_static_review_mesh": true,
+    "material_slots": 5,
+    "native_bounds_xyz_cm": [
+      23.027,
+      18.4382,
+      24.9912
+    ],
+    "status": "NATIVE_ENDER_HAIR_V2_STATIC_IMPORT_PASS_FIT_AND_ART_HOLD"
+  }
+}
