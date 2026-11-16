@@ -70,7 +70,7 @@ def stage():
          "dirty map packages before source lock")
     hold(not u.EditorLoadingAndSavingUtils.get_dirty_content_packages(),
          "dirty content packages before source lock")
-    report=diagnose()
+    report=diagnose(expected_review=EXPECTED_REVIEW)
     hold(report["player_start_inside_solid_bridge"],
          "baseline geometry no longer reproduces spawn overlap")
     world=u.EditorLoadingAndSavingUtils.load_map(MAP)

@@ -93,9 +93,19 @@ class ReviewBridgeReachGeometryTests(unittest.TestCase):
 
     def test_original_scene_and_c_key_guard_unchanged(self):
         self.assertEqual(geo.sha(geo.SOURCE),geo.EXPECTED_SOURCE)
-        self.assertEqual(geo.sha(geo.COPY),geo.EXPECTED_REVIEW)
+        self.assertEqual(geo.sha(geo.COPY),geo.CURRENT_REVIEW)
+        self.assertNotEqual(geo.CURRENT_REVIEW,geo.EXPECTED_REVIEW)
         self.assertIn("FVector::Dist(GetActorLocation(), Instrument->GetActorLocation()) > 450.f",GAME)
         self.assertIn("World->WorldType != EWorldType::PIE",GAME)
+
+    def test_diagnosis_rejects_wrong_map_and_unknown_baseline(self):
+        from unittest.mock import patch
+        with self.assertRaisesRegex(RuntimeError,"unauthorized review baseline"):
+            geo.diagnose(expected_review="0" * 64)
+        with patch.object(geo,"sha",side_effect=lambda p: geo.EXPECTED_SOURCE if p == geo.SOURCE else "0" * 64):
+            with self.assertRaisesRegex(RuntimeError,"baseline map SHA drift"):
+                geo.diagnose()
+        self.assertIn("diagnose(expected_review=EXPECTED_REVIEW)",SCRIPT)
 
     def test_stager_is_exact_source_and_opt_in_only(self):
         for required in (

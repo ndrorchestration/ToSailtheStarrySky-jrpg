@@ -20,6 +20,7 @@ COPY=PROJECT/"Content/TSTSS/Review/EngineFocus_V1/M_EnginePresentationReview.uma
 SOURCE=PROJECT/"Content/TSTSS/Review/VerticalSlice/VS02_AureateInteriors.umap"
 EXPECTED_SOURCE="a97fbb057cb87c0e35fe95195ca06c30de1a5cc60158bf31a657f738b22a9d69"
 EXPECTED_REVIEW="06f006b42d54a990ffefa5903bda0d24e34259a424c1f6bee4a51a29f0766223"
+CURRENT_REVIEW="7d4a1347f98fe3ab24551c4d452b2b8015331bf6666efff72c4b698ab3d07c87"
 CUBE_CM=100.0
 C_RADIUS_CM=450.0
 LIFT=(-250.0,-250.0,270.0)
@@ -148,10 +149,12 @@ def corridor_witness(authoring:str, proposed_bounds, player,
         "live_wasd_C_verified":False
     }
 
-def diagnose():
+def diagnose(expected_review=CURRENT_REVIEW):
     # Engine-free source checks also run in GitHub Actions clone directories.
     # Only the actual map-writing native stager is Neontic/worktree-locked.
-    if sha(SOURCE)!=EXPECTED_SOURCE or sha(COPY)!=EXPECTED_REVIEW:
+    if expected_review not in (EXPECTED_REVIEW,CURRENT_REVIEW):
+        raise RuntimeError("HOLD: unauthorized review baseline")
+    if sha(SOURCE)!=EXPECTED_SOURCE or sha(COPY)!=expected_review:
         raise RuntimeError("HOLD: baseline map SHA drift")
     authoring=AUTHORING.read_text(encoding="utf-8")
     deck_loc,deck_scale,floor_loc,floor_scale,player=validate_original_geometry(authoring)
@@ -175,7 +178,8 @@ def diagnose():
     corridor=corridor_witness(authoring,proposed_bounds,player)
     return {
         "status":"SOURCE_GEOMETRY_INTERSECTION_CONFIRMED_PROPOSED_FIX_NOT_NATIVE_TESTED",
-        "source_map_sha256":EXPECTED_SOURCE,"review_map_sha256":EXPECTED_REVIEW,
+        "source_map_sha256":EXPECTED_SOURCE,"review_map_sha256":expected_review,
+        "pre_stage_review_map_sha256":EXPECTED_REVIEW,
         "source_authoring_preserved":True,
         "actor_label":"TSTSS_VS_REVIEW_BridgeDeck",
         "nominal_basic_cube_dimension_cm":CUBE_CM,

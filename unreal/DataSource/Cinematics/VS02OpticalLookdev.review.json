@@ -6,7 +6,7 @@
   "original_source_sha256": "a97fbb057cb87c0e35fe95195ca06c30de1a5cc60158bf31a657f738b22a9d69",
   "current_review_map": "/Game/TSTSS/Review/EngineFocus_V1/M_EnginePresentationReview",
   "historical_review_map_sha256": "bbff86677b71e73609f9bdb95559f3af9af9ab0032857c613e1b8d4d36a5d5a3",
-  "current_review_map_sha256": "06f006b42d54a990ffefa5903bda0d24e34259a424c1f6bee4a51a29f0766223",
+  "current_review_map_sha256": "7d4a1347f98fe3ab24551c4d452b2b8015331bf6666efff72c4b698ab3d07c87",
   "actor_count": 28,
   "one_atmosphere_director": true,
   "camera_count": 2,
@@ -38,5 +38,10 @@
   "verified_earned_story_pie_input": false,
   "approved_assets": false,
   "creator_visual_approved": false,
-  "merge_authorized": false
+  "merge_authorized": false,
+  "pre_bridge_review_map_sha256": "06f006b42d54a990ffefa5903bda0d24e34259a424c1f6bee4a51a29f0766223",
+  "bridge_stage_source_head": "ed7537ab65de219492b6ee6409222092f0922b53",
+  "bridge_stage_scope": "REVIEW_ONLY_SINGLE_BRIDGE_ACTOR_NATIVE_READBACK_NOT_PIE",
+  "bridge_stage_readback": "unreal/Saved/OpticalReachGeometry/NativeStage/independent_readback.json",
+  "in_memory_gpu_exposure_trials_apply_to_map_sha256": "06f006b42d54a990ffefa5903bda0d24e34259a424c1f6bee4a51a29f0766223"
 }

@@ -1,3 +1,5 @@
+> 2026-11-16: The review-map hash and GPU observations below describe the earlier exposure study. The subsequent review-only bridge stage and fresh native readback are recorded in `VS02_OPTICAL_BRIDGE_REACHABILITY_2026-11-15.md`; visual approval remains open.
+
 # TSTSS ? VS02 optical engine-room disposable review copy
 
 **Evidence:** NATIVE UE 5.8.4 MAP COMPOSITION/READBACK PASS, NOT PIE, NOT GPU OR VISUAL APPROVAL.
