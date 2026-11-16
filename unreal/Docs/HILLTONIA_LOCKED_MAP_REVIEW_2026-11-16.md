@@ -30,3 +30,23 @@ walk from harbor to town, Greenwood and back; inspect collision, sign
 orientation, grounded scenery, scale, performance and screenshots; then
 creator visual feedback. Native tests do not substitute for player or
 visual acceptance. Do not merge or publish this branch automatically.
+
+## First live route and material repair — 2026-11-16
+
+At prior exact source `d7a3820763aae813001b749cd99a821279b8fe13`,
+the reviewed standalone title opened the V5 map and an automated keyboard
+operator walked harbor -> west end -> woodland edge -> harbor. The
+read-only route parser reported all eleven checkpoints, 95 heartbeat
+samples and 165.4 m measured, with all sampled footing grounded and
+supported. This is an automated-input walkthrough, not a human playtest
+or creator approval; parser status remains
+`REVIEW_ROUTE_LOG_CONSISTENT_NOT_NATIVE_ATTESTATION`.
+
+Real GPU windows showed placeholder house blocks, primitive trees, white
+ground, and a sign reversed from the west end. V5 reported that
+`M_VS_Green` lacked instanced-static-mesh usage. The material was changed
+only in this isolated worktree, and a fresh UE 5.8.4 native readback
+confirmed the flag persisted. The map was not resaved. The earlier walk
+and captures predate this material change; a new head requires fresh
+native validation and a new rendered inspection. No final art acceptance
+is implied.
