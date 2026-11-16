@@ -62,6 +62,7 @@ def native_export(a):
     if free_ram()<6.5*1024**3 or shutil.disk_usage(PROJECT).free<14*1024**3: raise RuntimeError("HOLD insufficient RAM or disk")
     protected=[project,mapfile]+[p for p in (PROJECT/"Config").glob("Default*.ini") if p.is_file()]
     before={str(p):sha(p) for p in protected}; saves=inventory(PROJECT/"Saved/SaveGames")
+    recorder_sha=sha(REC)
     token=uuid.uuid4().hex
     candidate=out.parent/(out.name+"."+token+".candidate")
     logfile=out.parent/(out.name+"."+token+".log")
@@ -87,6 +88,12 @@ def native_export(a):
     snap=json.loads(candidate.read_text(encoding="utf-8"))
     if snap.get("map_sha256")!=a.map_sha256 or snap.get("map_package")!=a.map or snap.get("frame")!=a.frame:
         raise RuntimeError("HOLD snapshot metadata mismatch")
+    after_head=subprocess.run(["git","-C",str(ROOT),"rev-parse","HEAD"],capture_output=True,text=True,check=True).stdout.strip()
+    after_dirty=subprocess.run(["git","-C",str(ROOT),"status","--porcelain","-uall"],capture_output=True,text=True,check=True).stdout
+    if after_head!=head or after_dirty or sha(REC)!=recorder_sha: raise RuntimeError("HOLD source changed during capture")
+    snap["host_evidence"]={"source_sha":head,"recorder_sha256":recorder_sha,"native_log_sha256":sha(logfile),
+       "protected_files_unchanged":True,"save_inventory_unchanged":True,"commandlet_exit_code":rc,
+       "mesh_package_bytes_verified":False,"actual_transition_verified":False}
     encoded=json.dumps(snap,indent=2,allow_nan=False)
     with out.open("x",encoding="utf-8") as f: f.write(encoded)
     print("NATIVE_SNAPSHOT_SAVED_NOT_COLLISION_PROOF",out,"sha256",sha(out),"log",logfile)

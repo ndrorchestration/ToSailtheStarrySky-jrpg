@@ -26,6 +26,18 @@ class CliTests(unittest.TestCase):
     def test_invalid_snapshot_fails_without_output(self):
         d=snapshot(); d["actors"].append(copy.deepcopy(d["actors"][0])); self.start.write_text(json.dumps(d))
         self.assertNotEqual(self.call().returncode,0); self.assertFalse(self.out.exists())
+    def test_collision_box_is_rejected_but_result_is_preserved(self):
+        d=snapshot(); d["actors"][4]["position"]=list(d["actors"][0]["position"])
+        self.start.write_text(json.dumps(d)); self.end.write_text(json.dumps(d))
+        r=self.call()
+        self.assertEqual(r.returncode,1,r.stderr)
+        result=json.loads(self.out.read_text())
+        self.assertEqual(result["verifier"]["verdict"],"REJECT_CLEARANCE_VIOLATION")
+        self.assertFalse(result["native_collision_verified"])
+    def test_moving_static_obstacle_is_rejected_without_output(self):
+        d=snapshot(); d["actors"][0]["position"][0]=0.00000001
+        self.end.write_text(json.dumps(d)); r=self.call()
+        self.assertEqual(r.returncode,2); self.assertFalse(self.out.exists())
     def test_native_recorder_has_no_scene_mutation_calls(self):
         tree=ast.parse(REC.read_text())
         banned={"save_current_level","save_map","spawn_actor_from_class","set_actor_location","set_actor_rotation","set_actor_scale3d"}

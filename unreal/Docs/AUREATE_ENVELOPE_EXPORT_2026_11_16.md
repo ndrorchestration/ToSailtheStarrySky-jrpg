@@ -29,3 +29,7 @@ The output records snapshot/map hashes, the supplied mapping hash, provisional c
 ## Verification boundary
 
 The Python tests use synthetic records and a simulated Unreal API. A real commandlet snapshot must be reported separately with exact source commit, map hash and local receipt; no positive claim about the other endpoint or actual transition follows from one snapshot. Keep the output and private review art out of the public repository.
+
+## Native review checkpoint
+
+On Neontic, an earlier source commit 641f6f0cde099f2622711526928995ccecd88707 ran the recorder in Unreal 5.8.4 on the SHA-locked coupled Skybourne review map, producing ten StaticMeshActor records and preserving the original map. One snapshot was supplied as both endpoints solely to smoke-test the source pipeline at rest. Eight of 22 box pairs returned REJECT_CLEARANCE_VIOLATION with zero clearance. This is an oriented-box overlap warning for the single review pose, not proof of mesh contact or any movement path. That run predates subsequent host-receipt changes and cannot establish those changes were natively exercised; re-run at the current exact commit before claiming current native verification.
