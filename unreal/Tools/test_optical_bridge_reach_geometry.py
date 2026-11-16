@@ -37,6 +37,47 @@ class ReviewBridgeReachGeometryTests(unittest.TestCase):
                       "creator_approved"):
             self.assertFalse(result[claim],claim)
 
+    def test_source_walk_corridor_reaches_real_C_radius_without_spawn_teleport(self):
+        r=geo.diagnose()
+        p=r["proposal"]
+        c=p["modeled_clear_approach_corridor"]
+        self.assertEqual(c["status"],
+                         "SOURCE_STATIC_COLLISION_CORRIDOR_WITNESS_NOT_NATIVE_NAVIGATION")
+        self.assertEqual(c["path_waypoints_xy_cm"],
+                         [[-1080.,0.],[-620.,-120.]])
+        self.assertEqual(c["sample_count"],49)
+        self.assertGreaterEqual(c["minimum_footprint_edge_clearance_cm"],45.)
+        self.assertLess(max(c["distance_to_lift_at_modeled_height_extremes_cm"]),
+                        450.)
+        self.assertGreater(r["spawn_distance_to_lift_cm"],450.)
+        self.assertFalse(c["gameplay_move_input_verified"])
+        self.assertFalse(c["native_collision_verified"])
+        self.assertFalse(c["live_wasd_C_verified"])
+        self.assertFalse(p["real_wasd_c_reachability_established"])
+
+    def test_source_corridor_rejects_unsafe_clearance_and_lens_distances(self):
+        r=geo.diagnose()
+        bounds=r["proposal"]["new_bridge_aabb_cm"]
+        kwargs=dict(authoring=AUTHORING,proposed_bounds=bounds,
+                    player=r["player_start_xyz_cm"])
+        unsafe=(
+            {"capsule_radius_cm":60.},
+            {"goal":(-700.,420.)},
+            {"goal":(-900.,0.)},
+            {"center_z_interval_cm":(20.,140.)},
+            {"proposed_bounds":geo.bbox((-780.,0.,65.),(7.,9.,1.4))},
+        )
+        for args in unsafe:
+            with self.subTest(args=args):
+                with self.assertRaises(RuntimeError):
+                    geo.corridor_witness(**(kwargs | args))
+        inserted='prop("UnreviewedWall", "Cube", (-850,0,40), (1,5,1), "stone", True)\n        '
+        modified=AUTHORING.replace('        player((-1080, 0, 120))',
+                                    '        '+inserted+'player((-1080, 0, 120))',1)
+        self.assertNotEqual(modified,AUTHORING)
+        with self.assertRaisesRegex(RuntimeError,"unreviewed additional solid"):
+            geo.corridor_witness(modified,bounds,r["player_start_xyz_cm"])
+
     def test_changed_or_nonblocking_authoring_does_not_pass(self):
         old='prop("BridgeDeck", "Cube", (-780, 0, 65), (7, 9, 1.4), "stone", True)'
         self.assertEqual(AUTHORING.count(old),1)
