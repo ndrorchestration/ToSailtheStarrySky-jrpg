@@ -196,6 +196,15 @@ void ATSTSSMilestoneActor::EnsureV5ReviewObjectProxy()
         return;
     }
     bReviewProxyInitialized = true;
+    // The harbor stages distinct ship and captain stand-ins. Preserve the
+    // existing invisible collision markers as the sole E/story authority.
+    if (Tags.Contains(TEXT("TSTSS_DOCKED_WAKE_STAGED")) &&
+        !bIsInspectionStation &&
+        (Milestone == ETSTSSFirstWakeBeat::IoniaHired ||
+         Milestone == ETSTSSFirstWakeBeat::BoardedAureateWake))
+    {
+        return;
+    }
 
     // Canon: review props, not representations of approved cast or ship art.
     // Every named source asset already exists in the integrated MultipathV1
@@ -302,7 +311,21 @@ void ATSTSSMilestoneActor::UpdateReviewBeacon(const UTSTSSFirstWakeState* State)
            static_cast<uint8>(Milestone));
     if (IsValid(InteractionMesh))
     {
-        InteractionMesh->SetVisibility(!bConsumed && !bReviewProxyReady, false);
+        const bool bHarborCharacterOrShip =
+            Tags.Contains(TEXT("TSTSS_DOCKED_WAKE_STAGED")) &&
+            UGameplayStatics::GetCurrentLevelName(GetWorld(), true) ==
+                TEXT("FirstWake_PreludeInteraction_V5_VisualReview") &&
+            !bIsInspectionStation &&
+            (Milestone == ETSTSSFirstWakeBeat::IoniaHired ||
+             Milestone == ETSTSSFirstWakeBeat::BoardedAureateWake);
+        if (bHarborCharacterOrShip)
+        {
+            InteractionMesh->SetVisibility(false, false);
+        }
+        else
+        {
+            InteractionMesh->SetVisibility(!bConsumed && !bReviewProxyReady, false);
+        }
     }
     if (bReviewProxyReady && IsValid(ReviewObjectProxy))
     {

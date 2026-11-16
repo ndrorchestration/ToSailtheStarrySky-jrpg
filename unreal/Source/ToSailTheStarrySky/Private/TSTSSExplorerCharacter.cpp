@@ -383,6 +383,113 @@ bool LoadBoundReviewContinueCandidate(const UWorld* World, const FString& Slot,
 #endif
 
 #if WITH_EDITOR
+// Provisional, unsaved harbor staging. The existing milestone actors retain
+// all story authority; the ship and captain meshes are noncolliding review art.
+void StageDockedWakeReview(UWorld* World)
+{
+    if (!World || (World->WorldType != EWorldType::PIE &&
+                   World->WorldType != EWorldType::Game) ||
+        World->GetNetMode() != NM_Standalone || !World->GetOutermost() ||
+        !World->GetOutermost()->GetName().StartsWith(TEXT("/Game/TSTSS/Review/")) ||
+        UGameplayStatics::GetCurrentLevelName(World, true) !=
+            TEXT("FirstWake_PreludeInteraction_V5_VisualReview"))
+    {
+        return;
+    }
+
+    ATSTSSMilestoneActor* Captain = nullptr;
+    ATSTSSMilestoneActor* Board = nullptr;
+    int32 CaptainCount = 0, BoardCount = 0;
+    for (TActorIterator<ATSTSSMilestoneActor> It(World); It; ++It)
+    {
+        if (It->GetActorLabel() == TEXT("TSTSS_PRELUDE_REVIEW_IoniaHiring"))
+        {
+            Captain = *It;
+            ++CaptainCount;
+        }
+        if (It->GetActorLabel() == TEXT("TSTSS_PRELUDE_REVIEW_AureateBoarding"))
+        {
+            Board = *It;
+            ++BoardCount;
+        }
+    }
+    UStaticMesh* Cube = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cube.Cube"));
+    UStaticMesh* Sphere = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Sphere.Sphere"));
+    if (CaptainCount != 1 || BoardCount != 1 || !IsValid(Captain) ||
+        !IsValid(Board) || !IsValid(Cube) || !IsValid(Sphere))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("TSTSS_DOCKED_WAKE_REVIEW_HOLD markers_or_meshes"));
+        return;
+    }
+
+    AAureateWakePreviewActor* Ship = World->SpawnActor<AAureateWakePreviewActor>(
+        AAureateWakePreviewActor::StaticClass(), FVector(-900.f, 950.f, 70.f),
+        FRotator::ZeroRotator);
+    AActor* CaptainVisual = World->SpawnActor<AActor>(
+        AActor::StaticClass(), FVector(-1250.f, 200.f, 0.f), FRotator::ZeroRotator);
+    if (!IsValid(Ship) || !IsValid(CaptainVisual))
+    {
+        if (IsValid(Ship)) Ship->Destroy();
+        if (IsValid(CaptainVisual)) CaptainVisual->Destroy();
+        UE_LOG(LogTemp, Warning, TEXT("TSTSS_DOCKED_WAKE_REVIEW_HOLD spawn"));
+        return;
+    }
+    Ship->SetActorLabel(TEXT("TSTSS_DOCKED_WAKE_REVIEW_SHIP_PROXY"));
+    Ship->SetActorScale3D(FVector(2.f));
+    Ship->SetActorEnableCollision(false);
+    CaptainVisual->SetActorLabel(TEXT("TSTSS_DOCKED_WAKE_REVIEW_IONIA_PROXY"));
+    CaptainVisual->SetActorEnableCollision(false);
+    USceneComponent* Root = NewObject<USceneComponent>(CaptainVisual, TEXT("CaptainVisualRoot"));
+    CaptainVisual->AddInstanceComponent(Root);
+    CaptainVisual->SetRootComponent(Root);
+    Root->SetMobility(EComponentMobility::Movable);
+    Root->RegisterComponent();
+    UMaterialInterface* Coat = LoadObject<UMaterialInterface>(nullptr,
+        TEXT("/Game/TSTSS/Review/MultipathV1/ObjectImports/HarborLantern/HarborLantern/Materials/TSTSS_dark_iron.TSTSS_dark_iron"));
+    UMaterialInterface* Hair = LoadObject<UMaterialInterface>(nullptr,
+        TEXT("/Game/TSTSS/Review/MultipathV1/ObjectImports/HarborLantern/HarborLantern/Materials/TSTSS_brass.TSTSS_brass"));
+    auto AddPart = [&](const TCHAR* Name, UStaticMesh* Mesh, const FVector& Location,
+                       const FVector& Scale, UMaterialInterface* Material)
+    {
+        UStaticMeshComponent* Part = NewObject<UStaticMeshComponent>(CaptainVisual, FName(Name));
+        Part->SetMobility(EComponentMobility::Movable);
+        Part->SetupAttachment(Root);
+        Part->SetStaticMesh(Mesh);
+        if (IsValid(Material)) Part->SetMaterial(0, Material);
+        Part->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        CaptainVisual->AddInstanceComponent(Part);
+        Part->RegisterComponent();
+        Part->SetRelativeLocation(Location);
+        Part->SetRelativeScale3D(Scale);
+    };
+    // Human-shaped stand-in, not approved Ionia character art.
+    AddPart(TEXT("Coat"), Cube, FVector(0, 0, 100), FVector(.42f, .24f, .90f), Coat);
+    AddPart(TEXT("Head"), Sphere, FVector(0, 0, 166), FVector(.29f, .29f, .34f), nullptr);
+    AddPart(TEXT("Hair"), Sphere, FVector(0, 0, 179), FVector(.31f, .31f, .22f), Hair);
+    AddPart(TEXT("LegL"), Cube, FVector(0, -12, 31), FVector(.14f, .12f, .62f), Coat);
+    AddPart(TEXT("LegR"), Cube, FVector(0, 12, 31), FVector(.14f, .12f, .62f), Coat);
+
+    UStaticMeshComponent* Target = Cast<UStaticMeshComponent>(Board->GetRootComponent());
+    const FVector OldCaptain = Captain->GetActorLocation();
+    const FVector OldBoard = Board->GetActorLocation();
+    if (!IsValid(Target) ||
+        !Captain->SetActorLocation(FVector(-1250.f, 200.f, 90.f)) ||
+        !Board->SetActorLocation(FVector(-900.f, 790.f, 90.f)))
+    {
+        Captain->SetActorLocation(OldCaptain);
+        Board->SetActorLocation(OldBoard);
+        Ship->Destroy();
+        CaptainVisual->Destroy();
+        UE_LOG(LogTemp, Warning, TEXT("TSTSS_DOCKED_WAKE_REVIEW_HOLD relocation"));
+        return;
+    }
+    Target->SetWorldScale3D(FVector(5.f, 2.6f, 1.6f));
+    Captain->Tags.AddUnique(TEXT("TSTSS_DOCKED_WAKE_STAGED"));
+    Board->Tags.AddUnique(TEXT("TSTSS_DOCKED_WAKE_STAGED"));
+    UE_LOG(LogTemp, Display,
+        TEXT("TSTSS_DOCKED_WAKE_REVIEW_APPLIED ship=proxy ionia=proxy saved_map_unchanged=1"));
+}
+
 // Source-scoped, disposable runtime engineering markers. The existing VS02
 // ship interior has real deck/engine proxies but no authoritative E actors.
 // Never save these transients to maps or elevate them to production room art.
@@ -519,6 +626,7 @@ void ATSTSSExplorerCharacter::BeginPlay()
 #if WITH_EDITOR
     ApplyOpticalReviewPlayerExposure(GetWorld(), FollowCamera);
     ApplyV5HarborReviewLookdev(GetWorld());
+    StageDockedWakeReview(GetWorld());
     ApplyCoastalRecoveryReviewSignage(GetWorld());
     ApplySeabourneReviewExposure(GetWorld());
     if (UWorld* World = GetWorld())
@@ -707,6 +815,7 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
     // reads the authoritative state; it cannot advance or save a story beat.
     if (bReviewNamespace && World->GetNetMode() == NM_Standalone &&
         (Scene == TEXT("FirstWake_PreludeInteraction_V5_VisualReview") ||
+         Scene == TEXT("VS02_AureateInteriors") ||
          Scene == TEXT("VS05_DenithFuelShanty")))
     {
         for (TActorIterator<ATSTSSMilestoneActor> It(World); It; ++It)
@@ -1349,6 +1458,21 @@ void ATSTSSExplorerCharacter::Interact()
 #endif
                     ShowFirstWakeReviewObjective(FirstWakeState);
                     ShowOptionalEngineFocusHint(GetWorld(), Milestone->bIsInspectionStation);
+#if WITH_EDITOR
+                    // An earned click on the docked ship is the boarding action.
+                    // Reuse the existing one-use, gated in-memory scene ticket.
+                    if (GetWorld()->GetNetMode() == NM_Standalone &&
+                        GetWorld()->GetOutermost() &&
+                        GetWorld()->GetOutermost()->GetName().StartsWith(TEXT("/Game/TSTSS/Review/")) &&
+                        UGameplayStatics::GetCurrentLevelName(GetWorld(), true) ==
+                            TEXT("FirstWake_PreludeInteraction_V5_VisualReview") &&
+                        Milestone->GetActorLabel() ==
+                            TEXT("TSTSS_PRELUDE_REVIEW_AureateBoarding"))
+                    {
+                        ReviewShoreTravel();
+                        return;
+                    }
+#endif
                 }
                 else
                 {

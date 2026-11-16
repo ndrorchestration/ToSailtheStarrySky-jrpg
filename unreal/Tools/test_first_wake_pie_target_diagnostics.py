@@ -25,8 +25,8 @@ class EditorOnlyInteractionTelemetryTests(unittest.TestCase):
         self.assertIn("*FirstWakeState->GetReviewObjectiveText()",self.interact)
 
     def test_only_in_editor_pie_and_no_extra_mutation(self):
-        self.assertEqual(self.interact.count("#if WITH_EDITOR"),5)
-        self.assertEqual(self.interact.count("#endif"),5)
+        self.assertEqual(self.interact.count("#if WITH_EDITOR"),6)
+        self.assertEqual(self.interact.count("#endif"),6)
         self.assertEqual(self.interact.count("GetWorld()->WorldType == EWorldType::PIE"),5)
         self.assertEqual(self.interact.count("Milestone->TryActivate(FirstWakeState)"),1)
         self.assertEqual(self.interact.count("ShowFirstWakeReviewObjective(FirstWakeState)"),1)
