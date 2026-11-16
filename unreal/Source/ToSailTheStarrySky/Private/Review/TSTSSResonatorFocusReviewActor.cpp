@@ -506,6 +506,13 @@ void ATSTSSResonatorFocusReviewActor::CastCenteringKey()
 }
 void ATSTSSResonatorFocusReviewActor::CastPulseKey()
 {
+#if !UE_BUILD_SHIPPING
+    // This reports the bound input-handler path, not physical keyboard provenance.
+    // Keep it review-only and off for the default single-foe sandbox.
+    if (bMultiEnemyPulseProofReview && bInputBound)
+        UE_LOG(LogTemp,Display,
+            TEXT("TSTSS_FOCUS_PULSE_KEY_CALLBACK: bound key 2 handler invoked"));
+#endif
     if(!TryCastResonantPulse())
         LastReviewEvent=TEXT("PULSE DENIED: TURN, MP OR AUTHORIZATION");
     RefreshHUD();
