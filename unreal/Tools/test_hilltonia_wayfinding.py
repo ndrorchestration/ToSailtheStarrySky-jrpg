@@ -15,7 +15,7 @@ PATTERN = re.compile(
     r'WayfindingSign\(Owner, Root, TEXT\("([^"]+)"\),\s*'
     r'TEXT\("([^"]+)"\),\s*'
     r'FVector\((-?\d+(?:\.\d*)?)f,\s*(-?\d+(?:\.\d*)?)f,\s*'
-    r'(-?\d+(?:\.\d*)?)f\),\s*(-?\d+(?:\.\d*)?)f\);'
+    r'(-?\d+(?:\.\d*)?)f\),\s*(-?\d+(?:\.\d*)?)f,\s*Cube,\s*Timber\);'
 )
 
 
@@ -80,7 +80,7 @@ class HilltoniaWayfindingContract(unittest.TestCase):
             "Text->SetCollisionEnabled(ECollisionEnabled::NoCollision);", CPP
         )
         self.assertIn("Text->SetMobility(EComponentMobility::Movable);", CPP)
-        self.assertIn("TownSigns(Owner, Root);", CPP)
+        self.assertIn("TownSigns(Owner, Root, Cube, Timber);", CPP)
         self.assertIn("wayfinding_signs=6", CPP)
         for prohibited in (
             "SpawnActor<ATSTSSMilestoneActor>",

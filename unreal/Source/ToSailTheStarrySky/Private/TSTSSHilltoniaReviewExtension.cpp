@@ -3,6 +3,7 @@
 #if WITH_EDITOR
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Components/SceneComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "Components/TextRenderComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
@@ -76,39 +77,66 @@ void Place(UInstancedStaticMeshComponent* Component,
 
 void WayfindingSign(AActor* Owner, USceneComponent* Root,
                     const TCHAR* ComponentName, const TCHAR* Caption,
-                    const FVector& Location, float Yaw)
+                    const FVector& Location, float Yaw,
+                    UStaticMesh* BoardMesh, UMaterialInterface* BoardMaterial)
 {
-    // Fixed local-to-map sign, deliberately NO collision or interaction.
-    // Wayfinding must never become a gameplay/quest milestone.
-    auto* Text = NewObject<UTextRenderComponent>(Owner, ComponentName);
-    Text->SetMobility(EComponentMobility::Movable);
-    Text->SetupAttachment(Root);
-    Text->SetText(FText::FromString(Caption));
-    Text->SetWorldSize(62.f);
-    Text->SetTextRenderColor(FColor(233, 220, 172));
-    Text->SetRelativeLocation(Location);
-    Text->SetRelativeRotation(FRotator(0.f, Yaw, 0.f));
-    Text->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-    Owner->AddInstanceComponent(Text);
-    Text->RegisterComponent();
+    // A thin opaque backing separates two readable faces. Every component is
+    // decorative and has no collision, interaction or story authority.
+    if (!IsValid(BoardMesh) || !IsValid(BoardMaterial)) return;
+    const FRotator FrontRotation(0.f, Yaw, 0.f);
+    const FVector FaceNormal = FrontRotation.Vector();
+    const FString BoardName = FString::Printf(TEXT("%s_Backboard"), ComponentName);
+    auto* Board = NewObject<UStaticMeshComponent>(Owner, FName(*BoardName));
+    Board->SetMobility(EComponentMobility::Movable);
+    Board->SetupAttachment(Root);
+    Board->SetStaticMesh(BoardMesh);
+    Board->SetMaterial(0, BoardMaterial);
+    Board->SetRelativeLocation(Location);
+    Board->SetRelativeRotation(FrontRotation);
+    const float Width = FMath::Clamp(FCString::Strlen(Caption) * .36f, 4.f, 15.f);
+    Board->SetRelativeScale3D(FVector(.12f, Width, 1.2f));
+    Board->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    Owner->AddInstanceComponent(Board);
+    Board->RegisterComponent();
+
+    const auto AddFace = [&](const TCHAR* Suffix, const FVector& Position, float FaceYaw)
+    {
+        const FString Name = FString::Printf(TEXT("%s_%s"), ComponentName, Suffix);
+        auto* Text = NewObject<UTextRenderComponent>(Owner, FName(*Name));
+        Text->SetMobility(EComponentMobility::Movable);
+        Text->SetupAttachment(Root);
+        Text->SetText(FText::FromString(Caption));
+        Text->SetWorldSize(62.f);
+        Text->SetHorizontalAlignment(EHTA_Center);
+        Text->SetVerticalAlignment(EVRTA_TextCenter);
+        Text->SetTextRenderColor(FColor(233, 220, 172));
+        Text->SetRelativeLocation(Position);
+        Text->SetRelativeRotation(FRotator(0.f, FaceYaw, 0.f));
+        Text->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        Owner->AddInstanceComponent(Text);
+        Text->RegisterComponent();
+    };
+    AddFace(TEXT("Front"), Location + FaceNormal * 10.f, Yaw);
+    AddFace(TEXT("Back"), Location - FaceNormal * 10.f, Yaw + 180.f);
 }
 
-void TownSigns(AActor* Owner, USceneComponent* Root)
+void TownSigns(AActor* Owner, USceneComponent* Root,
+               UStaticMesh* Cube, UMaterialInterface* Timber)
 {
     // Main arrival is visible from the original dock end, off the walkable
     // street. The three following signboards are on the verge, not on-road.
     WayfindingSign(Owner, Root, TEXT("HilltoniaLandwardEntrySign"),
         TEXT("HILLTONIA  |  WOODLAND ROAD"),
-        FVector(-4290.f, -690.f, 340.f), 0.f);
+        FVector(-4290.f, -690.f, 340.f), 0.f, Cube, Timber);
     WayfindingSign(Owner, Root, TEXT("HilltoniaWoodlandTurnoffSign"),
         TEXT("HILLTONIA  |  FOREST TRAIL"),
-        FVector(-7070.f, -690.f, 330.f), 0.f);
+        FVector(-7070.f, -690.f, 330.f), 0.f, Cube, Timber);
     WayfindingSign(Owner, Root, TEXT("HilltoniaForestEdgeReturnSign"),
         TEXT("FOREST EDGE  |  RETURN TO HILLTONIA"),
-        FVector(-7000.f, -2940.f, 325.f), 90.f);
+        FVector(-7000.f, -2940.f, 325.f), 90.f, Cube, Timber);
     WayfindingSign(Owner, Root, TEXT("HilltoniaTownWestReturnSign"),
         TEXT("TOWN END  |  RETURN TO HARBOR"),
-        FVector(-8750.f, -680.f, 315.f), 0.f);
+        FVector(-8750.f, -680.f, 315.f), 0.f, Cube, Timber);
 }
 }
 
@@ -283,13 +311,13 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
     // not a travel teleport, prompt or interactive progression marker.
     Place(TreeTrunks, -4280.f, -600.f, 155.f, .55f, .55f, 3.1f);
     Place(Trim, -4280.f, -610.f, 322.f, 4.5f, .24f, 1.1f);
-    TownSigns(Owner, Root);
+    TownSigns(Owner, Root, Cube, Timber);
     WayfindingSign(Owner, Root, TEXT("HilltoniaMarketGreenSign"),
         TEXT("THE GREEN  |  MARKET"),
-        FVector(-6780.f, 1250.f, 310.f), 0.f);
+        FVector(-6780.f, 1250.f, 310.f), 0.f, Cube, Timber);
     WayfindingSign(Owner, Root, TEXT("HilltoniaGreenwoodSign"),
         TEXT("GREENWOOD  |  FOREST EDGE"),
-        FVector(-7000.f, -3600.f, 330.f), 90.f);
+        FVector(-7000.f, -3600.f, 330.f), 90.f, Cube, Timber);
 
     UE_LOG(LogTemp, Display,
         TEXT("TSTSS_HILLTONIA_REVIEW_APPLIED land_ground_sections=2 road_segments=%d homes=%d hall=1 wayfinding_signs=6 deciduous_trees=%d town=Hilltonia forest=temperate world_north_latitude_provisional=1 road_collision=WorldStatic seven_firstwake_markers_unchanged=1 saved_map_unchanged=1"),

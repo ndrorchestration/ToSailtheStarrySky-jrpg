@@ -50,3 +50,12 @@ confirmed the flag persisted. The map was not resaved. The earlier walk
 and captures predate this material change; a new head requires fresh
 native validation and a new rendered inspection. No final art acceptance
 is implied.
+
+## Two-sided wayfinding candidate — 2026-11-16
+
+The initial player-camera review showed a mirrored forest-turn sign from
+the town-west return. This isolated review candidate uses a noncolliding
+timber backing and centered labels facing opposite directions at each
+of the six existing locations. It adds no quest interaction, travel state
+or saved map changes. Native camera captures from both approaches are
+required to assess orientation, contrast, size and overlapping scenery.
