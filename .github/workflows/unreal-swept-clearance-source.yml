@@ -4,11 +4,18 @@ on:
   push:
     branches:
       - feat/skybourne-swept-clearance-verifier-v2
+      - review/ue58-aureate-envelope-export-20261116
     paths:
       - "unreal/ArtSource/ShipReview/aureate_swept_clearance.py"
       - "unreal/ArtSource/ShipReview/aureate_swept_clearance_example_SYNTHETIC.json"
       - "unreal/Tests/test_aureate_swept_clearance.py"
       - "unreal/Tests/test_aureate_swept_clearance_crosscheck_747.py"
+      - "unreal/Tools/aureate_envelope_records.py"
+      - "unreal/Tools/export_aureate_envelopes_native.py"
+      - "unreal/Tools/run_aureate_envelope_export_native.py"
+      - "unreal/Tests/test_aureate_envelope_records.py"
+      - "unreal/Tests/test_aureate_envelope_export_source_contract.py"
+      - "unreal/Docs/AUREATE_ENVELOPE_EXPORT_2026_11_16.md"
       - ".github/workflows/unreal-swept-clearance-source.yml"
   workflow_dispatch:
 
@@ -31,6 +38,10 @@ jobs:
           python -m py_compile unreal/ArtSource/ShipReview/aureate_swept_clearance.py unreal/Tests/test_aureate_swept_clearance.py unreal/Tests/test_aureate_swept_clearance_crosscheck_747.py
           python -m unittest discover -s unreal/Tests -p "test_aureate_swept_clearance.py" -v
           python -m unittest discover -s unreal/Tests -p "test_aureate_swept_clearance_crosscheck_747.py" -v
+      - name: Envelope recorder and conversion source tests
+        run: |
+          python -m py_compile unreal/Tools/aureate_envelope_records.py unreal/Tools/export_aureate_envelopes_native.py unreal/Tools/run_aureate_envelope_export_native.py
+          python -m unittest discover -s unreal/Tests -p "test_aureate_envelope*.py" -v
       - name: Synthetic example verifies through the CLI
         run: python unreal/ArtSource/ShipReview/aureate_swept_clearance.py unreal/ArtSource/ShipReview/aureate_swept_clearance_example_SYNTHETIC.json > /dev/null
       - name: Check source patch whitespace
