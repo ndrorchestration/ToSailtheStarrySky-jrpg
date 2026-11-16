@@ -744,6 +744,10 @@ void ATSTSSExplorerCharacter::ToggleEngineFocusPreview()
         || PC->GetViewTarget() != this || PC->IsMoveInputIgnored()
         || PC->IsLookInputIgnored())
     {
+        // Passive, editor-only diagnostic: do not steal a camera, alter input,
+        // or bypass the review-only state guard.
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_PIE_GAMEPLAY_ENGINE_FOCUS_GATE denied=controller_or_input_owner"));
         Warn(TEXT("Engine view unavailable: player camera is already owned"));
         return;
     }
@@ -771,10 +775,24 @@ void ATSTSSExplorerCharacter::ToggleEngineFocusPreview()
             ++AtmosphereCount;
         }
     }
+    const FVector ReviewPawnLocation = GetActorLocation();
+    const FVector ReviewGaugeLocation = IsValid(Instrument)
+        ? Instrument->GetActorLocation() : FVector::ZeroVector;
+    const float ReviewGaugeDistanceCm = IsValid(Instrument)
+        ? FVector::Dist(ReviewPawnLocation, ReviewGaugeLocation) : -1.f;
+    // The same real PIE player and existing native gauge used by the guard
+    // below. This is a read-only diagnostic before any cinematic mutation.
+    UE_LOG(LogTemp, Display,
+        TEXT("TSTSS_PIE_GAMEPLAY_ENGINE_FOCUS_RANGE pawn_x=%.1f pawn_y=%.1f pawn_z=%.1f gauge_x=%.1f gauge_y=%.1f gauge_z=%.1f distance_cm=%.1f limit_cm=450.0 gauge_count=%d sky_count=%d"),
+        ReviewPawnLocation.X, ReviewPawnLocation.Y, ReviewPawnLocation.Z,
+        ReviewGaugeLocation.X, ReviewGaugeLocation.Y, ReviewGaugeLocation.Z,
+        ReviewGaugeDistanceCm, InstrumentCount, AtmosphereCount);
     if (InstrumentCount != 1 || AtmosphereCount != 1
         || !IsValid(Instrument) || !IsValid(Atmosphere)
         || FVector::Dist(GetActorLocation(), Instrument->GetActorLocation()) > 450.f)
     {
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_PIE_GAMEPLAY_ENGINE_FOCUS_GATE denied=instrument_or_range"));
         Warn(TEXT("Engine view: stand near the LIFT instrument in the ship"));
         return;
     }
@@ -791,6 +809,8 @@ void ATSTSSExplorerCharacter::ToggleEngineFocusPreview()
     // cinematic consumer. No lease exists for forcefully taking that intent.
     if (bWasEnabled && Coordinator->GetCurrentIntent().bEligible)
     {
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_PIE_GAMEPLAY_ENGINE_FOCUS_GATE denied=cinematic_owner"));
         Warn(TEXT("Engine view held: another cinematic shot already owns presentation"));
         return;
     }
@@ -819,6 +839,8 @@ void ATSTSSExplorerCharacter::ToggleEngineFocusPreview()
         || Intent.ShotId != FName(TEXT("FW03_Engine_Inspection")))
     {
         if (!bWasEnabled) Coordinator->SetReviewEnabled(false);
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_PIE_GAMEPLAY_ENGINE_FOCUS_GATE denied=story_weather_access"));
         Warn(TEXT("Engine view held: first-wake story/weather/access gate"));
         return;
     }
@@ -891,8 +913,11 @@ void ATSTSSExplorerCharacter::ToggleEngineFocusPreview()
         GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Cyan,
             TEXT("LIFT inspection view - press C to return (auto return 4s)"));
     }
-    UE_LOG(LogTemp, Display, TEXT("TSTSS_PIE_GAMEPLAY_ENGINE_FOCUS_ENTER focus_cm=%.1f"),
-        FocusCm);
+    UE_LOG(LogTemp, Display,
+        TEXT("TSTSS_PIE_GAMEPLAY_ENGINE_FOCUS_ENTER focus_cm=%.1f gauge_distance_cm=%.1f preview_limit_s=4.0 move_ignored=%d look_ignored=%d"),
+        FocusCm, ReviewGaugeDistanceCm,
+        PC->IsMoveInputIgnored() ? 1 : 0,
+        PC->IsLookInputIgnored() ? 1 : 0);
 }
 
 void ATSTSSExplorerCharacter::VerifyEngineFocusPreview()
@@ -986,6 +1011,21 @@ void ATSTSSExplorerCharacter::RestoreEngineFocusPreview()
                 }
             }
         }
+    }
+    // Capture the state after releasing only the input locks we owned.
+    // A pawn-view target can still be blending back for 0.3s here; this
+    // does NOT assert final rendered camera ownership or physical movement.
+    if (bHadPreview)
+    {
+        const double ElapsedSeconds = EngineFocusPreviewStartedSeconds > 0.
+            ? FPlatformTime::Seconds() - EngineFocusPreviewStartedSeconds : -1.;
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_PIE_GAMEPLAY_ENGINE_FOCUS_RESTORE_AUDIT elapsed_s=%.3f move_ignored=%d look_ignored=%d immediate_view_pawn=%d controller_valid=%d"),
+            ElapsedSeconds,
+            IsValid(PC) && PC->IsMoveInputIgnored() ? 1 : 0,
+            IsValid(PC) && PC->IsLookInputIgnored() ? 1 : 0,
+            IsValid(PC) && PC->GetViewTarget() == this ? 1 : 0,
+            IsValid(PC) ? 1 : 0);
     }
     EngineFocusPreviewCamera.Reset();
     EngineFocusPreviewController.Reset();
