@@ -1,7 +1,7 @@
 """Fail-closed postflight reader for a *native* opt-in Resonant Pulse log.
 
 Requires a real UE5.8.4 game-world log (PIE or standalone -game). This checks
-observable atomic HP/MP behavior; it DOES NOT certify a physical keypress,
+observable atomic HP/MP behavior and bound key-2 callback order; it DOES NOT certify a physical keypress,
 rendered sphere, synchronized sound, exact Git SHA, or creator approval.
 Keep original logs/screenshots and SHA custody separately.
 """
@@ -14,6 +14,7 @@ from pathlib import Path
 
 ADMITTED = "TSTSS_FOCUS_COMBAT_ADMITTED: two spells; foes=3 multi_probe=1"
 BOUND = "TSTSS_FOCUS_INPUT_AND_HUD_BOUND: keys 1 and 2"
+KEY_CALLBACK = "TSTSS_FOCUS_PULSE_KEY_CALLBACK: bound key 2 handler invoked"
 ACCEPTED = (
     "TSTSS_FOCUS_ACTION_ACCEPTED actor=Ender "
     "skill=Ender_ResonantPulse target=Ender"
@@ -38,6 +39,8 @@ def verify_log(text: str) -> dict[str, int]:
         raise ValueError("Expected exactly one admitted opt-in three-foe arena")
     if text.count(BOUND) != 1:
         raise ValueError("Expected exactly one focus input/HUD binding")
+    if text.count(KEY_CALLBACK) != 1:
+        raise ValueError("Expected exactly one bound key-2 handler callback")
     if text.count(ACCEPTED) != 1:
         raise ValueError("Expected exactly one Ender Pulse acceptance")
     for bad in (
@@ -50,6 +53,12 @@ def verify_log(text: str) -> dict[str, int]:
     if len(records) != 1 or text.count("TSTSS_FOCUS_MULTIFOE_READBACK ") != 1:
         raise ValueError("Expected exactly one complete atomic Pulse readback")
     record = records[0]
+    if text.index(ADMITTED) > text.index(BOUND):
+        raise ValueError("Focus binding preceded arena admission")
+    if text.index(BOUND) > text.index(KEY_CALLBACK):
+        raise ValueError("Key callback preceded input/HUD binding")
+    if text.index(KEY_CALLBACK) > text.index(ACCEPTED):
+        raise ValueError("Pulse acceptance preceded key callback")
     if record.start() < text.index(ACCEPTED):
         raise ValueError("Readback preceded accepted action")
     result = dict(zip(FIELDS, (int(x) for x in record.groups())))
