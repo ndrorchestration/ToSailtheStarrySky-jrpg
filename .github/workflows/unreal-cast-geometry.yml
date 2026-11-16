@@ -145,6 +145,7 @@ jobs:
 
       - name: Independently validate source-built Ender V3 broad-layer static hair
         run: |
+          python3 -m pip install --disable-pip-version-check --only-binary=:all: 'numpy>=2.3,<3'
           python3 -m unittest discover -s unreal/ArtSource/Characters/HairReview -p test_ender_hair_v3.py -v
           python3 -m py_compile unreal/ArtSource/Characters/HairReview/generate_ender_copper_hair_v3.py
           python3 -m py_compile unreal/ArtSource/Characters/HairReview/verify_ender_copper_hair_v3.py
