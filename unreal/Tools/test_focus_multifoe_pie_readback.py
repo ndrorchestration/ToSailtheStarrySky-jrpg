@@ -11,6 +11,7 @@ ACTOR = ROOT / "Source/ToSailTheStarrySky/Private/Review/TSTSSResonatorFocusRevi
 GOOD = "\n".join([
     "LogTemp: Display: TSTSS_FOCUS_COMBAT_ADMITTED: two spells; foes=3 multi_probe=1",
     "LogTemp: Display: TSTSS_FOCUS_INPUT_AND_HUD_BOUND: keys 1 and 2",
+    "LogTemp: Display: TSTSS_FOCUS_PULSE_KEY_CALLBACK: bound key 2 handler invoked",
     "LogTemp: Display: TSTSS_FOCUS_ACTION_ACCEPTED actor=Ender skill=Ender_ResonantPulse target=Ender",
     "LogTemp: Display: TSTSS_FOCUS_MULTIFOE_READBACK mp_spent=3 primary_hp_delta=12 elevated_hp_delta=9 outside_hp_delta=0 ionia_hp_delta=0",
 ])
@@ -59,10 +60,42 @@ class MultiFoePieReadbackTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "input/HUD"):
             verify_log(GOOD.replace("INPUT_AND_HUD_BOUND", "INPUT_NOT_BOUND"))
 
+    def test_missing_key_callback_denied(self):
+        with self.assertRaisesRegex(ValueError, "key-2 handler"):
+            verify_log(GOOD.replace("PULSE_KEY_CALLBACK", "PULSE_KEY_NOT_CALLED"))
+
+    def test_duplicate_key_callback_denied(self):
+        callback = "LogTemp: Display: TSTSS_FOCUS_PULSE_KEY_CALLBACK: bound key 2 handler invoked"
+        with self.assertRaisesRegex(ValueError, "exactly one bound key-2"):
+            verify_log(GOOD + "\\n" + callback)
+
+    def test_key_callback_before_binding_denied(self):
+        lines = GOOD.splitlines()
+        with self.assertRaisesRegex(ValueError, "preceded"):
+            verify_log("\\n".join([lines[0], lines[2], lines[1], lines[3], lines[4]]))
+
+    def test_action_before_key_callback_denied(self):
+        lines = GOOD.splitlines()
+        with self.assertRaisesRegex(ValueError, "preceded"):
+            verify_log("\\n".join([lines[0], lines[1], lines[3], lines[2], lines[4]]))
+
+    def test_explicit_key_2_callback_wired_before_cast(self):
+        source = ACTOR.read_text(encoding="utf-8")
+        binding = source.split("void ATSTSSResonatorFocusReviewActor::TryAttachReviewPlayer()", 1)[-1].split(
+            "bool ATSTSSResonatorFocusReviewActor::TryInitArena()", 1)[0]
+        callback = source.split("void ATSTSSResonatorFocusReviewActor::CastPulseKey()", 1)[-1].split(
+            "void ATSTSSResonatorFocusReviewActor::PlaySound(", 1)[0]
+        self.assertIn("InputComponent->BindKey(EKeys::Two,IE_Pressed,this,", binding)
+        self.assertIn("&ATSTSSResonatorFocusReviewActor::CastPulseKey", binding)
+        self.assertIn('TSTSS_FOCUS_PULSE_KEY_CALLBACK: bound key 2 handler invoked', callback)
+        self.assertLess(callback.index("TSTSS_FOCUS_PULSE_KEY_CALLBACK"),
+                        callback.index("TryCastResonantPulse()"))
+        self.assertIn("bMultiEnemyPulseProofReview && bInputBound", callback)
+
     def test_unaccepted_or_early_readback_denied(self):
         lines = GOOD.splitlines()
         with self.assertRaisesRegex(ValueError, "preceded"):
-            verify_log("\n".join([lines[0], lines[1], lines[3], lines[2]]))
+            verify_log("\n".join([lines[0], lines[1], lines[2], lines[4], lines[3]]))
 
     def test_denied_action_even_with_fake_readback(self):
         with self.assertRaisesRegex(ValueError, "Incomplete"):
