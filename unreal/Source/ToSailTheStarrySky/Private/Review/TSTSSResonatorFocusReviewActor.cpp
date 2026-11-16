@@ -15,6 +15,8 @@
 #include "GameFramework/PlayerController.h"
 #include "InputCoreTypes.h"
 #include "Kismet/GameplayStatics.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 #include "Sound/SoundBase.h"
 #include "UObject/UObjectGlobals.h"
 
@@ -176,6 +178,27 @@ void ATSTSSResonatorFocusReviewActor::BeginPlay()
         SetActorHiddenInGame(true);
         return;
     }
+#if WITH_EDITOR
+    // Native review convenience: an explicit launcher argument can opt in to
+    // the three-foe proof in the original immutable V2 map. Never resave a
+    // canonical asset or allow this flag outside the exact isolated review map.
+    // Mandatory actor opt-in/tag/game-world checks above still apply.
+    if (FParse::Param(FCommandLine::Get(), TEXT("TSTSSFocusMultiProbe")))
+    {
+        const FString MapName=GetWorld()->GetMapName();
+        if (!MapName.EndsWith(TEXT("L_EnderCenteringPulseReview_V2")))
+        {
+            UE_LOG(LogTemp,Error,
+                TEXT("TSTSS_FOCUS_MULTIFOE_CLI_DENIED: wrong review map"));
+            SetActorTickEnabled(false);
+            SetActorHiddenInGame(true);
+            return;
+        }
+        bMultiEnemyPulseProofReview=true;
+        UE_LOG(LogTemp,Display,
+            TEXT("TSTSS_FOCUS_MULTIFOE_CLI_OPTIN: V2 map review only"));
+    }
+#endif
     // Capsule does not exist at /Engine/BasicShapes/Capsule.Capsule on this
     // exact Windows UE5.8.4 installation. Use a verified Engine Cube for all
     // visible provisional proxies until approved sculpt/rig assets are ready.
@@ -418,7 +441,61 @@ bool ATSTSSResonatorFocusReviewActor::TryCastResonantPulse()
     Command.SourceParticipantId = TEXT("Ender");
     Command.TargetParticipantId = TEXT("Ender");  // caster-centered sphere
     Command.SkillId = FocusPulseSkill;
-    return CombatManager->SubmitResonantPulseArea(Command, Positions);
+    // A read-only, nonshipping evidence point for the optional 3-foe
+    // review fixture. The manager remains the sole damage/MP authority.
+    // Record one before/after pair after the synchronous atomic action;
+    // do not infer native acceptance or player-key provenance from logs.
+    const bool bProof = bMultiEnemyPulseProofReview;
+    const TArray<FTSTSSCombatant> Before = bProof
+        ? CombatManager->GetCombatantSnapshot()
+        : TArray<FTSTSSCombatant>();
+    const bool bAccepted = CombatManager->SubmitResonantPulseArea(Command, Positions);
+    if (bProof)
+    {
+        if (!bAccepted)
+        {
+            UE_LOG(LogTemp,Warning,TEXT("TSTSS_FOCUS_MULTIFOE_READBACK_DENIED"));
+        }
+        else
+        {
+            const TArray<FTSTSSCombatant> After =
+                CombatManager->GetCombatantSnapshot();
+            const auto Find = [](const TArray<FTSTSSCombatant>& Roster,
+                                 FName Id) -> const FTSTSSCombatant*
+            {
+                for (const FTSTSSCombatant& Unit : Roster)
+                    if (Unit.CharacterId == Id) return &Unit;
+                return nullptr;
+            };
+            const FTSTSSCombatant* BE = Find(Before,TEXT("Ender"));
+            const FTSTSSCombatant* AE = Find(After,TEXT("Ender"));
+            const FTSTSSCombatant* BP = Find(Before,FocusOpponentId);
+            const FTSTSSCombatant* AP = Find(After,FocusOpponentId);
+            const FTSTSSCombatant* BH = Find(Before,FocusOpponentHighId);
+            const FTSTSSCombatant* AH = Find(After,FocusOpponentHighId);
+            const FTSTSSCombatant* BO = Find(Before,FocusOpponentOutsideId);
+            const FTSTSSCombatant* AO = Find(After,FocusOpponentOutsideId);
+            const FTSTSSCombatant* BI = Find(Before,TEXT("Ionia"));
+            const FTSTSSCombatant* AI = Find(After,TEXT("Ionia"));
+            if (!BE || !AE || !BP || !AP || !BH || !AH ||
+                !BO || !AO || !BI || !AI)
+            {
+                UE_LOG(LogTemp,Warning,
+                    TEXT("TSTSS_FOCUS_MULTIFOE_READBACK_INCOMPLETE"));
+            }
+            else
+            {
+                UE_LOG(LogTemp,Display,
+                    TEXT("TSTSS_FOCUS_MULTIFOE_READBACK mp_spent=%d primary_hp_delta=%d elevated_hp_delta=%d outside_hp_delta=%d ionia_hp_delta=%d"),
+                    BE->Resource-AE->Resource,
+                    BP->Health-AP->Health,
+                    BH->Health-AH->Health,
+                    BO->Health-AO->Health,
+                    BI->Health-AI->Health);
+            }
+        }
+    }
+    return bAccepted;
 #endif
 }
 void ATSTSSResonatorFocusReviewActor::CastCenteringKey()
@@ -429,6 +506,13 @@ void ATSTSSResonatorFocusReviewActor::CastCenteringKey()
 }
 void ATSTSSResonatorFocusReviewActor::CastPulseKey()
 {
+#if !UE_BUILD_SHIPPING
+    // This reports the bound input-handler path, not physical keyboard provenance.
+    // Keep it review-only and off for the default single-foe sandbox.
+    if (bMultiEnemyPulseProofReview && bInputBound)
+        UE_LOG(LogTemp,Display,
+            TEXT("TSTSS_FOCUS_PULSE_KEY_CALLBACK: bound key 2 handler invoked"));
+#endif
     if(!TryCastResonantPulse())
         LastReviewEvent=TEXT("PULSE DENIED: TURN, MP OR AUTHORIZATION");
     RefreshHUD();
