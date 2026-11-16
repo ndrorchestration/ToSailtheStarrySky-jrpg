@@ -36,6 +36,14 @@ class BlenderStageSafety(unittest.TestCase):
         self.assertIn('"creator_approved":False',self.script)
         self.assertIn('"gpu_render_executed":False',self.script)
 
+    def test_import_restores_authored_up_axis_before_computing_cameras(self):
+        self.assertIn('hair.rotation_mode="XYZ"',self.script)
+        self.assertIn('hair.rotation_euler=(-math.pi/2,0,0)',self.script)
+        self.assertIn('bpy.context.view_layer.update()',self.script)
+        self.assertLess(self.script.index('bpy.context.view_layer.update()'),
+                        self.script.index('geometry_bbox='))
+        self.assertIn('source_up_axis_corrected',self.script)
+
     def test_strict_executable_and_no_overwrite(self):
         for required in ("bpy.app.version[:3]", "(5,2,4)",
                          "existing project/evidence; never overwrite",
