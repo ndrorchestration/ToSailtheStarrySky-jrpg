@@ -143,6 +143,13 @@ jobs:
           python3 -m py_compile unreal/ArtSource/Characters/HairReview/verify_ender_hair_native_v2_gpu_20261104.py
           echo 'Hosted source tests cannot certify native Unreal renders, scalp fit, hair groom, facial likeness, or creator approval.'
 
+      - name: Independently validate source-built Ender V3 broad-layer static hair
+        run: |
+          python3 -m unittest discover -s unreal/ArtSource/Characters/HairReview -p test_ender_hair_v3.py -v
+          python3 -m py_compile unreal/ArtSource/Characters/HairReview/generate_ender_copper_hair_v3.py
+          python3 -m py_compile unreal/ArtSource/Characters/HairReview/verify_ender_copper_hair_v3.py
+          echo 'V3 is original static art research. Unreal GPU/face/goggle fit and artist approval remain HOLD.'
+
       - name: Regenerate source assets and confirm exact bytes
         env:
           TSTSS_CAST_OUTPUT: unreal/ArtSource/Characters/Candidates
