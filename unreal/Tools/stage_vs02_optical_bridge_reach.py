@@ -19,6 +19,7 @@ from verify_optical_bridge_reach_geometry import (
     PROJECT, ROOT, COPY, SOURCE, EXPECTED_SOURCE, EXPECTED_REVIEW,
     diagnose, bbox, within, sha,
 )
+from optical_bridge_checkout_guard import INTEGRATION_BASE, validate_checkout
 
 MAP="/Game/TSTSS/Review/EngineFocus_V1/M_EnginePresentationReview"
 DIR=PROJECT/"Saved/OpticalReachGeometry/NativeStage"
@@ -48,14 +49,13 @@ def git(*args):
     return r.stdout.strip()
 
 def stage():
-    hold(ROOT.name=="TSTSS_840_OpticalReach_20261115",
-         "not an isolated reachability worktree")
     hold(os.environ.get("TSTSS_BRIDGE_REACH_STAGE_EXPLICIT")=="1",
          "stage requires opt-in")
-    hold(OLD_BRANCH_HEAD and git("rev-parse","HEAD")==OLD_BRANCH_HEAD,
-         "staging checkout SHA mismatch")
-    hold(git("branch","--show-current")=="review/ue58-optical-bridge-reach-probe-20261115",
-         "wrong branch")
+    ancestry=subprocess.run(["git","-C",str(ROOT),"merge-base","--is-ancestor",
+                             INTEGRATION_BASE,"HEAD"],capture_output=True,timeout=20)
+    validate_checkout(ROOT.name,git("branch","--show-current"),
+                      git("rev-parse","HEAD"),OLD_BRANCH_HEAD,
+                      ancestry.returncode==0)
     hold(not git("status","--porcelain=v1","--untracked-files=all"),
          "uncommitted source changes")
     hold(u.SystemLibrary.get_engine_version().startswith("5.8.4"),
