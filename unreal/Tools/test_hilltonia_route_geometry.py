@@ -53,10 +53,10 @@ def plan(source):
         'for (int32 Step = 0; Step < 6; ++Step)',
         'Place(Road, -7350.f, -620.f - 500.f * Step, -30.f,',
         '3.6f, 5.2f, .6f)',
-        'for (const float X : {-5050.f, -6250.f, -8500.f})',
+        'for (const float X : {-5750.f, -6950.f, -9200.f})',
         'for (const float Y : {-1090.f, 900.f})',
         'Place(Buildings, X, Y, 158.f, 7.0f, 5.4f, 3.16f)',
-        'Place(Buildings, -7450.f, 1110.f, 190.f, 9.2f, 6.3f, 3.8f)',
+        'Place(Buildings, -8150.f, 1110.f, 190.f, 9.2f, 6.3f, 3.8f)',
         'Place(TreeTrunks, -4280.f, -600.f, 155.f, .55f, .55f, 3.1f)',
         'FMath::Abs(X + 7350.f) < 420.f',
         'Y < -1500.f && Y > -3400.f',
@@ -83,8 +83,8 @@ def plan(source):
             raise ValueError('Ground top drift')
         soil.append(box(x, gy, sx, sy, f'soil-{i}'))
     solids = [box(x, by, 7., 5.4, 'house')
-              for x in (-5050., -6250., -8500.) for by in (-1090., 900.)]
-    solids += [box(-7450., 1110., 9.2, 6.3, 'hall'),
+              for x in (-5750., -6950., -9200.) for by in (-1090., 900.)]
+    solids += [box(-8150., 1110., 9.2, 6.3, 'hall'),
                box(-4280., -600., .55, .55, 'signpost')]
     for row in range(4):
         for col in range(8):

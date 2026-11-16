@@ -298,8 +298,8 @@ int main() {
         const auto squareText = hud.text.size();
         hud.DrawHUD();
         expect(hud.text[squareText+7].value.find("VILLAGE SQUARE") != FString::npos &&
-               hud.text[squareText+7].value.find("WEST END") != FString::npos &&
-               hud.text[squareText+7].value.find("INLAND FOREST") != FString::npos,
+               hud.text[squareText+7].value.find("WEST: GREENWOOD") != FString::npos &&
+               hud.text[squareText+7].value.find("NORTH: GROVE") != FString::npos,
                "village square must identify the west-end and woodland turnoffs");
         explorer.Location = {-9050.f, -150.f, 130.f};
         const auto westEndText = hud.text.size();
@@ -307,6 +307,12 @@ int main() {
         expect(hud.text[westEndText+7].value.find("TOWN WEST END") != FString::npos &&
                hud.text[westEndText+7].value.find("EAST: SQUARE") != FString::npos,
                "west-end arrival must direct the return toward village square");
+        explorer.Location = {-14500.f, -150.f, 130.f};
+        const auto greenwoodText = hud.text.size();
+        hud.DrawHUD();
+        expect(hud.text[greenwoodText+7].value.find("GREENWOOD") != FString::npos &&
+               hud.text[greenwoodText+7].value.find("EAST: HILLTONIA / HARBOR") != FString::npos,
+               "west forest road must lead back east to town and harbor");
         explorer.Location = {-7350.f, -1700.f, 130.f};
         const auto forestText = hud.text.size();
         hud.DrawHUD();

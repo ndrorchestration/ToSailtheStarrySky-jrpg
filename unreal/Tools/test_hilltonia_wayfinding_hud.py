@@ -36,8 +36,8 @@ class HilltoniaReviewWayfindingTests(unittest.TestCase):
         for token in (
             "HILLTONIA  |  EXPLORATION ROUTE",
             "ROAD  |  WEST: HILLTONIA / EAST: HARBOR",
-            "VILLAGE SQUARE  |  WEST END / INLAND FOREST",
-            "TOWN WEST END  |  EAST: SQUARE",
+            "VILLAGE SQUARE  |  WEST: GREENWOOD / NORTH: GROVE",
+            "TOWN WEST END  |  WEST: GREENWOOD / EAST: SQUARE",
             "FOREST PATH  |  INLAND: EDGE / BACK: TOWN",
             "FOREST EDGE  |  BACK: VILLAGE SQUARE",
             "Scenery is NOT an [E] quest target",
@@ -59,7 +59,7 @@ class HilltoniaReviewWayfindingTests(unittest.TestCase):
             "FMath::IsFinite(Position.X)",
             "FMath::IsFinite(Position.Y)",
             "FMath::IsFinite(Position.Z)",
-            "Position.X <= -2800.f && Position.X >= -9700.f",
+            "Position.X <= -2800.f && Position.X >= -16200.f",
             "Position.Y >= -3650.f && Position.Y <= 1200.f",
         ):
             self.assertIn(token, HUD)

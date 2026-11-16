@@ -139,7 +139,7 @@ void ATSTSSFirstWakeReviewHUD::DrawHUD()
             FMath::IsFinite(Position.X) &&
             FMath::IsFinite(Position.Y) &&
             FMath::IsFinite(Position.Z) &&
-            Position.X <= -2800.f && Position.X >= -9700.f &&
+            Position.X <= -2800.f && Position.X >= -16200.f &&
             Position.Y >= -3650.f && Position.Y <= 1200.f)
         {
             // These are reversible geographic directions, not one-way
@@ -151,14 +151,17 @@ void ATSTSSFirstWakeReviewHUD::DrawHUD()
             const bool bForestEdge = bWoodlandBranch && Position.Y <= -2600.f;
             const bool bTownWestEnd = Position.X <= -8300.f;
             const bool bVillageSquare = Position.X <= -6800.f;
-            const TCHAR* Direction = bForestEdge
+            const bool bWestGreenwood = Position.X <= -12000.f;
+            const TCHAR* Direction = bWestGreenwood
+                ? TEXT("GREENWOOD  |  EAST: HILLTONIA / HARBOR")
+                : bForestEdge
                 ? TEXT("FOREST EDGE  |  BACK: VILLAGE SQUARE")
                 : bWoodlandBranch
                     ? TEXT("FOREST PATH  |  INLAND: EDGE / BACK: TOWN")
                     : bTownWestEnd
-                        ? TEXT("TOWN WEST END  |  EAST: SQUARE")
+                        ? TEXT("TOWN WEST END  |  WEST: GREENWOOD / EAST: SQUARE")
                         : bVillageSquare
-                            ? TEXT("VILLAGE SQUARE  |  WEST END / INLAND FOREST")
+                            ? TEXT("VILLAGE SQUARE  |  WEST: GREENWOOD / NORTH: GROVE")
                             : TEXT("ROAD  |  WEST: HILLTONIA / EAST: HARBOR");
             const float Left = Canvas->ClipX - 410.f;
             const float Top = 24.f;

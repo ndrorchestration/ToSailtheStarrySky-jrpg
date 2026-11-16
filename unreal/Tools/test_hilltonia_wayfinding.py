@@ -34,6 +34,8 @@ def distance_to_road(x, y):
         dist_to_rectangle(-3650 - i * 600, -150, 310, 390)
         for i in range(10)
     ]
+    roads += [dist_to_rectangle(-9650 - i * 600, -150, 310, 390)
+              for i in range(11)]
     roads += [
         dist_to_rectangle(-7350, -620 - i * 500, 180, 260)
         for i in range(6)
@@ -42,9 +44,9 @@ def distance_to_road(x, y):
 
 
 class HilltoniaWayfindingContract(unittest.TestCase):
-    def test_six_unambiguous_town_and_forest_signs(self):
+    def test_eight_unambiguous_town_and_forest_signs(self):
         observed = signs()
-        self.assertEqual(len(observed), 6)
+        self.assertEqual(len(observed), 8)
         self.assertEqual(set(observed), {
             "HilltoniaLandwardEntrySign",
             "HilltoniaWoodlandTurnoffSign",
@@ -52,12 +54,14 @@ class HilltoniaWayfindingContract(unittest.TestCase):
             "HilltoniaTownWestReturnSign",
             "HilltoniaMarketGreenSign",
             "HilltoniaGreenwoodSign",
+            "HilltoniaWestRoadSign",
+            "HilltoniaWestForestSign",
         })
         self.assertEqual(
             observed["HilltoniaLandwardEntrySign"][0],
             "HILLTONIA  |  WOODLAND ROAD"
         )
-        self.assertIn("FOREST TRAIL", observed["HilltoniaWoodlandTurnoffSign"][0])
+        self.assertIn("GREENWOOD WEST", observed["HilltoniaWoodlandTurnoffSign"][0])
         self.assertIn("RETURN TO HILLTONIA",
                       observed["HilltoniaForestEdgeReturnSign"][0])
         self.assertIn("RETURN TO HARBOR",
@@ -81,7 +85,7 @@ class HilltoniaWayfindingContract(unittest.TestCase):
         )
         self.assertIn("Text->SetMobility(EComponentMobility::Movable);", CPP)
         self.assertIn("TownSigns(Owner, Root, Cube, Timber);", CPP)
-        self.assertIn("wayfinding_signs=6", CPP)
+        self.assertIn("wayfinding_signs=8", CPP)
         for prohibited in (
             "SpawnActor<ATSTSSMilestoneActor>",
             "AdvanceTo(", "OpenLevel(", "SaveGameToSlot(",
