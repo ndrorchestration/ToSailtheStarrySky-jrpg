@@ -791,9 +791,30 @@ void ATSTSSExplorerCharacter::ToggleEngineFocusPreview()
         || !IsValid(Instrument) || !IsValid(Atmosphere)
         || FVector::Dist(GetActorLocation(), Instrument->GetActorLocation()) > 450.f)
     {
-        UE_LOG(LogTemp, Display,
-            TEXT("TSTSS_PIE_GAMEPLAY_ENGINE_FOCUS_GATE denied=instrument_or_range"));
-        Warn(TEXT("Engine view: stand near the LIFT instrument in the ship"));
+        // Show actionable, measured distance when the real LIFT exists;
+        // never blame navigation if an actual review-map authority is missing.
+        if (InstrumentCount == 1 && AtmosphereCount == 1
+            && IsValid(Instrument) && IsValid(Atmosphere)
+            && FMath::IsFinite(ReviewGaugeDistanceCm)
+            && ReviewGaugeDistanceCm > 450.f)
+        {
+            if (GEngine)
+            {
+                GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow,
+                    FString::Printf(
+                        TEXT("LIFT inspection: %.1f m away - move within 4.5 m and press C"),
+                        ReviewGaugeDistanceCm / 100.f));
+            }
+            UE_LOG(LogTemp, Display,
+                TEXT("TSTSS_PIE_GAMEPLAY_ENGINE_FOCUS_GATE denied=too_far distance_cm=%.1f limit_cm=450.0"),
+                ReviewGaugeDistanceCm);
+        }
+        else
+        {
+            UE_LOG(LogTemp, Display,
+                TEXT("TSTSS_PIE_GAMEPLAY_ENGINE_FOCUS_GATE denied=missing_native_lift_or_sky"));
+            Warn(TEXT("Engine view unavailable: LIFT or sky authority missing"));
+        }
         return;
     }
     UTSTSSPresentationCoordinatorSubsystem* Coordinator =

@@ -66,12 +66,45 @@ class FocusTelemetryReviewTests(unittest.TestCase):
                         section.index("Coordinator->TryPublishMoment("))
         self.assertIn("FVector::Dist(GetActorLocation(), Instrument->GetActorLocation()) > 450.f",section)
         self.assertIn("World->WorldType != EWorldType::PIE",section)
-        self.assertIn("denied=instrument_or_range",section)
+        self.assertIn("denied=too_far distance_cm=%.1f limit_cm=450.0",section)
+        self.assertIn("denied=missing_native_lift_or_sky",section)
+        self.assertIn("LIFT inspection: %.1f m away - move within 4.5 m and press C",section)
         self.assertIn("denied=story_weather_access",section)
         self.assertIn("denied=cinematic_owner",section)
         self.assertIn("denied=controller_or_input_owner",section)
         self.assertNotIn("SetActorLocation(",section)
         self.assertNotIn("SaveFirstWake(",section)
+
+    def test_C_HUD_distance_does_not_bypass_native_geometry_or_owner_gate(self):
+        section=CPP.split("void ATSTSSExplorerCharacter::ToggleEngineFocusPreview()",1)[1].split(
+            "void ATSTSSExplorerCharacter::VerifyEngineFocusPreview()",1)[0]
+        guard="if (InstrumentCount != 1 || AtmosphereCount != 1"
+        self.assertEqual(section.count(guard),1)
+        self.assertIn("FVector::Dist(GetActorLocation(), Instrument->GetActorLocation()) > 450.f",section)
+        self.assertEqual(section.count("ReviewGaugeDistanceCm > 450.f"),1)
+        self.assertIn("FMath::IsFinite(ReviewGaugeDistanceCm)",section)
+        self.assertIn("InstrumentCount == 1 && AtmosphereCount == 1",section)
+        self.assertIn("IsValid(Instrument) && IsValid(Atmosphere)",section)
+        self.assertEqual(section.count("ReviewGaugeDistanceCm / 100.f"),1)
+        self.assertLess(section.index(guard),section.index("LIFT inspection: %.1f m away"))
+        self.assertLess(section.index("LIFT inspection: %.1f m away"),section.index("return;\n    }\n    UTSTSSPresentationCoordinatorSubsystem* Coordinator"))
+        self.assertIn('TEXT("Engine view unavailable: LIFT or sky authority missing")',section)
+        self.assertNotIn("SetActorLocation(",section)
+        self.assertNotIn("OpenLevel(",section)
+        self.assertNotIn("TryActivate(",section)
+        self.assertNotIn("SaveFirstWake(",section)
+        self.assertEqual(section.count("Coordinator->TryPublishMoment("),1)
+
+    def test_range_telemetry_stays_read_only_and_measured(self):
+        section=CPP.split("void ATSTSSExplorerCharacter::ToggleEngineFocusPreview()",1)[1].split(
+            "void ATSTSSExplorerCharacter::VerifyEngineFocusPreview()",1)[0]
+        self.assertIn("const FVector ReviewPawnLocation = GetActorLocation();",section)
+        self.assertIn("Instrument->GetActorLocation() : FVector::ZeroVector;",section)
+        self.assertIn("FVector::Dist(ReviewPawnLocation, ReviewGaugeLocation)",section)
+        self.assertIn("distance_cm=%.1f limit_cm=450.0 gauge_count=%d sky_count=%d",section)
+        self.assertIn("TSTSS_PIE_GAMEPLAY_ENGINE_FOCUS_GATE denied=too_far",section)
+        self.assertIn("TSTSS_PIE_GAMEPLAY_ENGINE_FOCUS_GATE denied=missing_native_lift_or_sky",section)
+        self.assertIn("TSTSS_PIE_GAMEPLAY_ENGINE_FOCUS_RESTORE_AUDIT",CPP)
 
     def test_negative_log_mutations_all_rejected(self):
         baseline=fixture()

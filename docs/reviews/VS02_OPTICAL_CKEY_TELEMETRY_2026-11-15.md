@@ -37,3 +37,9 @@ Neontic's separate PR #838 UnrealEditor PID 19268 and LiveCodingConsole PID 7176
 After safety admission, implement the one-actor nonshipping bridge fix in PR #841 with independent native map readback; then native compile and run actual PIE E→K→O→WASD→C, record the real 4-second camera return, verify physical player input and native D3D11/D3D12 Lit scene captures. The parser's positive synthetic tests must never be represented as a passed real keyboard, native build, bokeh, accessibility, or creator approval gate.
 
 Preserve Starbourne fail-closed, post-splashdown Seabourne plot lock, Ender/Ionia/Lyra slice availability, and the ship's first-journey story authority.
+
+## Follow-up: precise C-key distance feedback (review-only draft)
+
+The review HUD now distinguishes legitimate distance refusal from a missing/duplicate native LIFT or atmosphere director. If and only if the real review actor inventory is valid, the C-key range branch displays measured pawn-to-LIFT distance in metres alongside the unchanged 4.5m maximum. For example, at 9.6m it directs the player to move within 4.5m before pressing C again. When native actors/sky authority are invalid, the HUD reports that the engine view is unavailable rather than suggesting player movement would repair a missing scene authority.
+
+The new changes remain inside the existing failure branch. They do not move the pawn, spawn cameras, change the 450.f guard, award quest state, unlock party members or activate presentation. Source tests ensure the message occurs before any presentation publication. Unreal Editor compilation, actual on-screen legibility and distance-display accuracy await exact-head native tests.
