@@ -153,6 +153,12 @@ jobs:
           python3 -m py_compile unreal/ArtSource/Characters/HairReview/native_import_ender_hair_v3_20261115.py
           echo 'V3 and offline source preview are NOT native Unreal, fitted hair or approved character art.'
 
+      - name: Verify gated portable Blender DCC handoff without launching graphics
+        run: |
+          python3 -m unittest discover -s unreal/ArtSource/Characters/HairReview/BlenderStage -p test_blender_stage_source.py -v
+          python3 -m py_compile unreal/ArtSource/Characters/HairReview/BlenderStage/build_ender_v3_review_scene.py
+          echo 'SOURCE-ONLY: Blender executable, native Unreal, art fit, animation and artist approval NOT tested.'
+
       - name: Regenerate source assets and confirm exact bytes
         env:
           TSTSS_CAST_OUTPUT: unreal/ArtSource/Characters/Candidates
