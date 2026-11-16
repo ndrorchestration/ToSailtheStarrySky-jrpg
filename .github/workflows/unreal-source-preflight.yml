@@ -177,3 +177,21 @@ jobs:
         run: python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_combined_native_admission.py' -v
       - name: Test read-only exact-head UE readiness refusal paths (NO Unreal started)
         run: python3 -m unittest discover -s unreal/Tools -p 'test_first_wake_native_readiness.py' -v
+      - name: Source-validate isolated three-creature Unreal gallery (NOT native editor)
+        run: |
+          python3 unreal/Tools/tstss_slice_enemy_gallery.py --validate
+          python3 -m unittest discover -s unreal/Tools -p 'test_tstss_slice_enemy_gallery.py' -v
+      - name: Validate optional enemy combat sandbox source plan and fail-closed gates (NOT PIE)
+        run: |
+          python3 unreal/Tools/tstss_slice_enemy_combat_sandbox.py --validate
+          python3 -m unittest discover -s unreal/Tools -p 'test_tstss_slice_enemy_combat_sandbox.py' -v
+      - name: Validate hybrid JRPG random and scripted encounter plan (NOT native PIE)
+        run: |
+          python3 unreal/Tools/tstss_jrpg_hybrid_review_map.py --validate
+          python3 -m unittest discover -s unreal/Tools -p 'test_tstss_jrpg_hybrid_review_map.py' -v
+      - name: Validate original review SFX recipes and fail-closed SoundWave import plan (NOT audio playback)
+        run: |
+          python3 unreal/Tools/build_tstss_jrpg_review_audio.py --validate
+          python3 -m unittest discover -s unreal/Tools -p 'test_tstss_jrpg_review_audio.py' -v
+          python3 unreal/Tools/import_tstss_jrpg_review_sfx.py --validate
+          python3 -m unittest discover -s unreal/Tools -p 'test_import_tstss_jrpg_review_sfx.py' -v
