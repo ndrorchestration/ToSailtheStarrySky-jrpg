@@ -43,6 +43,15 @@ def main():
         fail("expected one static hair mesh; got "+str(len(subjects)))
     hair=subjects[0]
     hair.name="EnderV3_ORIGINAL_StaticHair_ART_HOLD"
+    # V3's original generator authors Z-up/+Y-front coordinates directly
+    # into glTF. Restore that authored frame after Blender's Y-up conversion.
+    # The importer uses quaternion mode, so set the rotation mode explicitly.
+    hair.rotation_mode="XYZ"
+    hair.rotation_euler=(-math.pi/2,0,0)
+    bpy.context.view_layer.update()
+    source_top=hair.matrix_world @ hair.data.vertices[0].co
+    if abs(source_top.z-.10498965)>0.0001 or abs(source_top.y)>0.0001:
+        fail("authored scalp up-axis not restored")
     # Geometry in Blender scene remains imported source data; never rewrite GLB.
     geometry_bbox=[hair.matrix_world @ Vector(corner) for corner in hair.bound_box]
     x0=min(p.x for p in geometry_bbox)
@@ -98,6 +107,7 @@ def main():
     hair["TSTSS_HEAD_FIT_VERIFIED"]=False
     hair["TSTSS_RIGGED_GROOM"]=False
     hair["TSTSS_SOURCE_GLB_SHA256"]=pinned
+    hair["TSTSS_SOURCE_UP_AXIS_CORRECTED"]=True
     scene["TSTSS_REVIEW_ONLY"]=True
     scene["TSTSS_APPROVED_ENDER_LIKENESS"]=False
     bpy.ops.wm.save_as_mainfile(filepath=str(destination),check_existing=True)
@@ -110,6 +120,7 @@ def main():
        "blend_sha256":hashlib.sha256(destination.read_bytes()).hexdigest(),
        "blend_file_size":destination.stat().st_size,
        "source_asset_has_not_been_modified":hashlib.sha256(source.read_bytes()).hexdigest()==pinned,
+       "source_up_axis_corrected":True,
        "four_cameras":[x[0] for x in cameras],
        "creator_approved":False,
        "native_unreal":False,
