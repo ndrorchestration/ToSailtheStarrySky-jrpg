@@ -21,10 +21,12 @@ def fixture():
         stamp=when.strftime("%Y.%m.%d-%H.%M.%S")
         ms=when.microsecond//1000
         lines.append(f"[{stamp}:{ms:03d}][007]LogTemp: Display: {msg}")
-    for i,name in enumerate(EXPECTED_E):
+    for i,name in enumerate(EXPECTED_E[:3]):
         line(i+1,f"TSTSS_PIE_REVIEW_E_ACCEPT target=TSTSS_PRELUDE_REVIEW_{name} pawn_hit_cm=220.0")
-    line(9.0,"TSTSS_FIRSTWAKE_REVIEW_SCENE_TRAVEL_QUEUED_NO_RECRUITMENT destination=/Game/TSTSS/Review/VerticalSlice/VS02_AureateInteriors")
-    line(9.1,"TSTSS_FIRSTWAKE_REVIEW_SCENE_ARRIVAL_STORY_RESTORED_NO_RECRUITMENT beat=3")
+    line(4.0,"TSTSS_FIRSTWAKE_REVIEW_SCENE_TRAVEL_QUEUED_NO_RECRUITMENT destination=/Game/TSTSS/Review/VerticalSlice/VS02_AureateInteriors")
+    line(4.1,"TSTSS_FIRSTWAKE_REVIEW_SCENE_ARRIVAL_STORY_RESTORED_NO_RECRUITMENT beat=2")
+    for i,name in enumerate(EXPECTED_E[3:]):
+        line(i+5,f"TSTSS_PIE_REVIEW_E_ACCEPT target=TSTSS_ENGINEROOM_REVIEW_{name} pawn_hit_cm=220.0")
     line(10.0,"TSTSS_FIRSTWAKE_OPTICAL_REVIEW_QUEUED_NO_STORY_ADVANCE destination=/Game/TSTSS/Review/EngineFocus_V1/M_EnginePresentationReview")
     line(10.1,"TSTSS_FIRSTWAKE_REVIEW_SCENE_ARRIVAL_STORY_RESTORED_NO_RECRUITMENT beat=3")
     d=math.dist((-620.,-120.,95.),(-250.,-250.,270.))
@@ -109,7 +111,9 @@ class FocusTelemetryReviewTests(unittest.TestCase):
     def test_negative_log_mutations_all_rejected(self):
         baseline=fixture()
         mutations={
-          "wrong_E_objective":("TSTSS_PRELUDE_REVIEW_LiftStation","TSTSS_PRELUDE_REVIEW_SpareStation"),
+          "dockside_label":("TSTSS_ENGINEROOM_REVIEW_LiftStation","TSTSS_PRELUDE_REVIEW_LiftStation"),
+          "wrong_E_objective":("TSTSS_ENGINEROOM_REVIEW_LiftStation","TSTSS_ENGINEROOM_REVIEW_SpareStation"),
+          "wrong_boarded_beat":("ARRIVAL_STORY_RESTORED_NO_RECRUITMENT beat=2","ARRIVAL_STORY_RESTORED_NO_RECRUITMENT beat=3"),
           "wrong_story_beat":("ARRIVAL_STORY_RESTORED_NO_RECRUITMENT beat=3","ARRIVAL_STORY_RESTORED_NO_RECRUITMENT beat=2"),
           "wrong_early_map":("VS02_AureateInteriors","VS03_FirstWakeSky"),
           "wrong_optical_map":("M_EnginePresentationReview","VS02_AureateInteriors"),
@@ -143,6 +147,8 @@ class FocusTelemetryReviewTests(unittest.TestCase):
                  "TSTSS_PIE_GAMEPLAY_ENGINE_FOCUS_ENTER" in x]
         self.assertEqual(len(indices),1)
         scenarios={
+            "inspection_before_boarding":baseline.replace("02.00.05:000","02.00.03:500",1),
+            "signoff_before_ship_arrival":baseline.replace("02.00.08:000","02.00.04:050",1),
             "missing_entry":"\n".join(x for x in lines if "TSTSS_PIE_GAMEPLAY_ENGINE_FOCUS_ENTER" not in x),
             "duplicate_entry":baseline+lines[indices[0]]+"\n",
             "duplicate_E":baseline+lines[0]+"\n",

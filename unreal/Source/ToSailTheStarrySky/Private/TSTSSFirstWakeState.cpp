@@ -16,7 +16,7 @@ FString UTSTSSFirstWakeState::GetReviewObjectiveText() const
     case ETSTSSFirstWakeBeat::IoniaHired:
         return TEXT("Board the Aureate Wake");
     case ETSTSSFirstWakeBeat::BoardedAureateWake:
-        if ((InspectionMask & 0x01u) == 0) return TEXT("Inspect the levitation lift");
+        if ((InspectionMask & 0x01u) == 0) return TEXT("Enter engine room; inspect the levitation LIFT");
         if ((InspectionMask & 0x02u) == 0) return TEXT("Inspect the pressure systems");
         if ((InspectionMask & 0x04u) == 0) return TEXT("Inspect the reserve systems");
         return TEXT("Complete engineering signoff");

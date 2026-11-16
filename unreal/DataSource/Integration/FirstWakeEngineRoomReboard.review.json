@@ -1,0 +1,90 @@
+{
+  "status": "RESEARCH_REVIEW_LAYOUT_NOT_NATIVE_VERIFIED_OR_CREATOR_ART_APPROVED",
+  "design_authority": "Creator: all opening mechanical inspections inside Aureate Wake engine room",
+  "engine": "Unreal Engine 5.8.4",
+  "source_parent_sha": "7321d555e8e8e4b94b8e807f86a18b90214f2dd5",
+  "target_review_map": "/Game/TSTSS/Review/VerticalSlice/VS02_AureateInteriors",
+  "active_on": "earned one-use boarding arrival ticket only",
+  "scope": [
+    "PIE",
+    "Editor standalone Game"
+  ],
+  "compartment_status": "Provisional service-bay zone on existing deck; enclosed room, hatch, circulation and ship-hull fit remain unbuilt",
+  "authored_world_static_bounds_cm": {
+    "MainWalkableDeck": {
+      "x_min": -1200,
+      "x_max": 1200,
+      "y_min": -500,
+      "y_max": 500,
+      "top_z": 0
+    },
+    "BridgeDeck": {
+      "x_min": -1130,
+      "x_max": -430,
+      "y_min": -450,
+      "y_max": 450,
+      "z_min": -5,
+      "z_max": 135
+    }
+  },
+  "review_player_capsule_radius_cm": 42,
+  "review_entry_cm": [
+    -350,
+    -90,
+    140
+  ],
+  "stations": [
+    {
+      "id": "LiftStation",
+      "location_cm": [
+        -220,
+        -90,
+        140
+      ],
+      "story_bit": 1
+    },
+    {
+      "id": "PressureStation",
+      "location_cm": [
+        250,
+        -90,
+        140
+      ],
+      "story_bit": 2
+    },
+    {
+      "id": "ReserveStation",
+      "location_cm": [
+        700,
+        -90,
+        140
+      ],
+      "story_bit": 4
+    },
+    {
+      "id": "EngineeringApproval",
+      "location_cm": [
+        970,
+        -90,
+        140
+      ],
+      "requires_mask": 7
+    }
+  ],
+  "cue_target": "TSTSS_VS_REVIEW_InstrumentCore_LIFT",
+  "interaction_reach_cm": 300,
+  "optical_proximity_cm": 450,
+  "engine_room_authority": "TSTSS_ENGINEROOM_REVIEW_",
+  "production_requirements_not_established": [
+    "enclosed physical engine room in actual Aureate Wake hull",
+    "native character scale/headroom and bulkhead doorway/collision",
+    "walkable continuous gangway from dock into ship engine bay",
+    "native UE5.8.4 build and actual E/K/C PIE",
+    "4-second cinematic view/input restoration",
+    "sound/light/bokeh/creator visual approval",
+    "F6/F7/F9 across map and restart"
+  ],
+  "no_art_promotion": true,
+  "savegame_schema_changed": false,
+  "starbourne_unlocked": false
+}

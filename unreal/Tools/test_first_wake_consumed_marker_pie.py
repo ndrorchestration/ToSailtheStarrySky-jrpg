@@ -33,8 +33,11 @@ class ConsumedReviewMarkerTests(unittest.TestCase):
         s = self.method
         helper = self.source.split("bool IsAuthorizedReviewMilestoneWorld(", 1)[1].split(
             "ATSTSSMilestoneActor::ATSTSSMilestoneActor()", 1)[0]
-        self.assertEqual(s.count("#if WITH_EDITOR"), 1)
-        self.assertEqual(s.count("#endif"), 1)
+        # One editor guard denies retired harbor mechanical markers before
+        # the original editor-only consumed-marker collision update.
+        self.assertEqual(s.count("#if WITH_EDITOR"), 2)
+        self.assertEqual(s.count("#endif"), 2)
+        self.assertIn("IsRetiredV5HarborEngineeringMarker", s)
         self.assertIn("IsAuthorizedReviewMilestoneWorld(World, GetActorLabel())", s)
         self.assertIn("World->WorldType != EWorldType::PIE", helper)
         self.assertIn("World->WorldType != EWorldType::Game", helper)

@@ -15,6 +15,19 @@ namespace
 {
 // Preserve consumed E-marker pass-through in standalone Editor Game and PIE,
 // but never in unrelated, networked, failed-V3/V4, or shipping worlds.
+bool IsRetiredV5HarborEngineeringMarker(const UWorld* World,
+    const FString& Label, bool bInspection, ETSTSSFirstWakeBeat Beat)
+{
+    return World &&
+        (World->WorldType == EWorldType::PIE ||
+         World->WorldType == EWorldType::Game) &&
+        World->GetNetMode() == NM_Standalone &&
+        UGameplayStatics::GetCurrentLevelName(World, true) ==
+            TEXT("FirstWake_PreludeInteraction_V5_VisualReview") &&
+        Label.StartsWith(TEXT("TSTSS_PRELUDE_REVIEW_")) &&
+        (bInspection || Beat == ETSTSSFirstWakeBeat::EngineeringChecked);
+}
+
 bool IsAuthorizedReviewMilestoneWorld(const UWorld* World, const FString& Label)
 {
     if (!World || (World->WorldType != EWorldType::PIE &&
@@ -29,8 +42,10 @@ bool IsAuthorizedReviewMilestoneWorld(const UWorld* World, const FString& Label)
     return (Label.StartsWith(TEXT("TSTSS_PRELUDE_REVIEW_")) &&
             (Scene == TEXT("FirstWake_PreludeInteraction_V2") ||
              Scene == TEXT("FirstWake_PreludeInteraction_V5_VisualReview"))) ||
-           (Label.StartsWith(TEXT("TSTSS_SPLASHDOWN_GREYBOX_")) &&
-            Scene == TEXT("VS05_DenithFuelShanty"));
+            (Label.StartsWith(TEXT("TSTSS_SPLASHDOWN_GREYBOX_")) &&
+             Scene == TEXT("VS05_DenithFuelShanty")) ||
+            (Label.StartsWith(TEXT("TSTSS_ENGINEROOM_REVIEW_")) &&
+             Scene == TEXT("VS02_AureateInteriors"));
 }
 }
 #endif
@@ -97,6 +112,15 @@ void ATSTSSMilestoneActor::BeginPlay()
     if (ReviewBeacon) ReviewBeacon->SetVisibility(false);
     if (ReviewBeaconBackdrop) ReviewBeaconBackdrop->SetVisibility(false);
     if (ReviewObjectProxy) ReviewObjectProxy->SetVisibility(false);
+    // The old V5 harbor corridor must not remain a competing story authority.
+    // Only retired mechanical markers are hidden; flyer, Ionia and boarding
+    // retain their exact old visibility and collision.
+    if (IsRetiredV5HarborEngineeringMarker(GetWorld(), GetActorLabel(),
+            bIsInspectionStation, Milestone))
+    {
+        SetActorHiddenInGame(true);
+        SetActorEnableCollision(false);
+    }
 #endif
 }
 
@@ -127,7 +151,10 @@ FString ATSTSSMilestoneActor::GetReviewDisplayName() const
 
 bool ATSTSSMilestoneActor::IsReviewActionable(const UTSTSSFirstWakeState* State) const
 {
-    if (!IsValid(State) || !IsAuthorizedReviewMilestoneWorld(GetWorld(), GetActorLabel()) ||
+    if (!IsValid(State) ||
+        IsRetiredV5HarborEngineeringMarker(GetWorld(), GetActorLabel(),
+            bIsInspectionStation, Milestone) ||
+        !IsAuthorizedReviewMilestoneWorld(GetWorld(), GetActorLabel()) ||
         Milestone == ETSTSSFirstWakeBeat::SeaContact ||
         Milestone == ETSTSSFirstWakeBeat::FlotationConfirmed)
     {
@@ -250,6 +277,8 @@ void ATSTSSMilestoneActor::EnsureV5ReviewObjectProxy()
 void ATSTSSMilestoneActor::UpdateReviewBeacon(const UTSTSSFirstWakeState* State)
 {
     if (!IsValid(ReviewBeacon) ||
+        IsRetiredV5HarborEngineeringMarker(GetWorld(), GetActorLabel(),
+            bIsInspectionStation, Milestone) ||
         !IsAuthorizedReviewMilestoneWorld(GetWorld(), GetActorLabel()))
     {
         return;
@@ -318,6 +347,13 @@ void ATSTSSMilestoneActor::UpdateReviewBeacon(const UTSTSSFirstWakeState* State)
 bool ATSTSSMilestoneActor::TryActivate(UTSTSSFirstWakeState* State)
 {
     if (!IsValid(State)) return false;
+#if WITH_EDITOR
+    if (IsRetiredV5HarborEngineeringMarker(GetWorld(), GetActorLabel(),
+            bIsInspectionStation, Milestone))
+    {
+        return false;
+    }
+#endif
     // Only physics observations may establish sea contact and stable flotation.
     if (!bIsInspectionStation && (Milestone == ETSTSSFirstWakeBeat::SeaContact ||
         Milestone == ETSTSSFirstWakeBeat::FlotationConfirmed)) return false;
@@ -370,7 +406,8 @@ void ATSTSSMilestoneActor::ReconcileReviewCollisionAfterRestore(
     }
     const FString Label = GetActorLabel();
     if (!Label.StartsWith(TEXT("TSTSS_PRELUDE_REVIEW_")) &&
-        !Label.StartsWith(TEXT("TSTSS_SPLASHDOWN_GREYBOX_")))
+        !Label.StartsWith(TEXT("TSTSS_SPLASHDOWN_GREYBOX_")) &&
+        !Label.StartsWith(TEXT("TSTSS_ENGINEROOM_REVIEW_")))
     {
         return;
     }

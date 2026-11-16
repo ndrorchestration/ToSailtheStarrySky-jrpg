@@ -24,7 +24,7 @@ bool FTSTSSFirstWakeReviewObjectiveTest::RunTest(const FString& Parameters)
         FString(TEXT("Board the Aureate Wake")));
     if (!TestTrue(TEXT("Board ship"), State->AdvanceTo(ETSTSSFirstWakeBeat::BoardedAureateWake))) return false;
     TestEqual(TEXT("First incomplete inspection shown"), State->GetReviewObjectiveText(),
-        FString(TEXT("Inspect the levitation lift")));
+        FString(TEXT("Enter engine room; inspect the levitation LIFT")));
 
     if (!TestTrue(TEXT("Inspect lift"), State->InspectStation(ETSTSSInspectionStation::Lift))) return false;
     TestEqual(TEXT("Pressure becomes next"), State->GetReviewObjectiveText(),
@@ -76,10 +76,32 @@ bool FTSTSSFirstWakeReviewObjectiveTest::RunTest(const FString& Parameters)
         State->Restore(true, ETSTSSFirstWakeBeat::BoardedAureateWake, 0));
     TestFalse(TEXT("Pre-inspection launch is refused"),
         Route::IsEligible(State, Prelude));
-    TestFalse(TEXT("V5 cannot leave for ship before inspections"),
-        Route::IsEligible(State, VisualPrelude));
+    TestEqual(TEXT("V5 boarded goes to ship engine room without any inspections"),
+        Route::NextReviewMap(State, VisualPrelude),
+        FString(TEXT("/Game/TSTSS/Review/VerticalSlice/VS02_AureateInteriors")));
     TestFalse(TEXT("Boarded alone cannot leave ship"),
         Route::IsEligible(State, TEXT("VS02_AureateInteriors")));
+    // New creator-directed route: genuine boarding opens the engine room,
+    // but no inspection or launch is earned by the travel itself.
+    TestTrue(TEXT("Shipboard LIFT inspection accepts only once"),
+        State->InspectStation(ETSTSSInspectionStation::Lift));
+    TestFalse(TEXT("Duplicate shipboard LIFT inspection rejected"),
+        State->InspectStation(ETSTSSInspectionStation::Lift));
+    TestFalse(TEXT("LIFT alone cannot permit sky departure"),
+        Route::IsEligible(State, TEXT("VS02_AureateInteriors")));
+    TestEqual(TEXT("Partially inspected V5 still routes to engine room"),
+        Route::NextReviewMap(State, VisualPrelude),
+        FString(TEXT("/Game/TSTSS/Review/VerticalSlice/VS02_AureateInteriors")));
+    TestTrue(TEXT("Shipboard pressure inspection accepted"),
+        State->InspectStation(ETSTSSInspectionStation::Pressure));
+    TestFalse(TEXT("Two checks cannot permit sky departure"),
+        Route::IsEligible(State, TEXT("VS02_AureateInteriors")));
+    TestTrue(TEXT("Shipboard reserve inspection accepted"),
+        State->InspectStation(ETSTSSInspectionStation::Reserve));
+    TestFalse(TEXT("All three without signoff still cannot depart"),
+        Route::IsEligible(State, TEXT("VS02_AureateInteriors")));
+    TestTrue(TEXT("Earned engineering signoff"),
+        State->AdvanceTo(ETSTSSFirstWakeBeat::EngineeringChecked));
     TestTrue(TEXT("Fixture restores engineering signoff"),
         State->Restore(true, ETSTSSFirstWakeBeat::EngineeringChecked, 0x07));
     TestEqual(TEXT("Engineering opens only the sky review"),

@@ -66,15 +66,16 @@ def validated(events):
         return hits
     es=exactly("E",7)
     targets=[x["kv"].get("target","") for x in es]
-    expected=["TSTSS_PRELUDE_REVIEW_"+label for label in EXPECTED_E]
+    expected=(["TSTSS_PRELUDE_REVIEW_"+label for label in EXPECTED_E[:3]] +
+              ["TSTSS_ENGINEROOM_REVIEW_"+label for label in EXPECTED_E[3:]])
     demand(targets==expected,"seven earned E objective sequence differs")
     k=exactly("K",1)[0]
     o=exactly("O",1)[0]
     arrivals=exactly("ARRIVAL",2)
     demand("VS02_AureateInteriors" in k["message"],"K did not load original ship")
     demand("M_EnginePresentationReview" in o["message"],"O did not load optical copy")
-    demand(all(x["kv"].get("beat")=="3" for x in arrivals),
-           "arrivals not preserved at engineering beat=3")
+    demand([x["kv"].get("beat") for x in arrivals]==["2","3"],
+           "ship arrival must preserve boarded beat=2, optical arrival engineering beat=3")
     entered=exactly("ENTER",1)[0]
     restored=exactly("RESTORE",1)[0]
     restoremarkers=exactly("RESTORE_MARKER",1)[0]
@@ -83,7 +84,7 @@ def validated(events):
     preceding=[x for x in ranges if x["ts"]<=entered["ts"]]
     demand(preceding,"no native gauge sample preceding camera entry")
     sample=preceding[-1]
-    ordered=[es[-1],k,arrivals[0],o,arrivals[1],sample,entered,restored,restoremarkers]
+    ordered=[*es[:3],k,arrivals[0],*es[3:],o,arrivals[1],sample,entered,restored,restoremarkers]
     demand(all(a["ts"]<b["ts"] for a,b in zip(ordered,ordered[1:])),
            "event sequence/order/camera restoration invalid")
     demand([x["ts"] for x in es]==sorted(x["ts"] for x in es),
@@ -122,7 +123,7 @@ def validated(events):
     return {
         "status":"PIE_LOG_CONTRACT_PASS_STILL_NEEDS_REAL_INPUT_AND_NATIVE_CUSTODY",
         "seven_earned_interactions":True,
-        "shipboard_k_then_optical_o_with_earned_beat":True,
+        "board_then_shipboard_inspections_then_optical_o":True,
         "real_lift_actor_and_sky_owner_count":1,
         "pawn_cm":pawn,"gauge_cm":gauge,
         "distance_cm":round(dist,2),

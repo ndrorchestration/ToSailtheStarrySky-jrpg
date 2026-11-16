@@ -43,3 +43,8 @@ Preserve Starbourne fail-closed, post-splashdown Seabourne plot lock, Ender/Ioni
 The review HUD now distinguishes legitimate distance refusal from a missing/duplicate native LIFT or atmosphere director. If and only if the real review actor inventory is valid, the C-key range branch displays measured pawn-to-LIFT distance in metres alongside the unchanged 4.5m maximum. For example, at 9.6m it directs the player to move within 4.5m before pressing C again. When native actors/sky authority are invalid, the HUD reports that the engine view is unavailable rather than suggesting player movement would repair a missing scene authority.
 
 The new changes remain inside the existing failure branch. They do not move the pawn, spawn cameras, change the 450.f guard, award quest state, unlock party members or activate presentation. Source tests ensure the message occurs before any presentation publication. Unreal Editor compilation, actual on-screen legibility and distance-display accuracy await exact-head native tests.
+
+
+## Hilltonia engine-room integration follow-up (2026-11-16)
+
+The earlier evidence above describes the previous route. In the integration candidate, the verifier now expects three earned shore interactions, K boarding and a VS02 arrival at boarded beat 2, then four engine-room interactions including signoff, followed by O and optical arrival at engineering beat 3. Negative fixtures reject an inspection or signoff before ship arrival. The fixtures are synthetic; they do not establish a native playthrough, a successful C-key camera view, or visual approval. The shipboard staging is a provisional service-bay review arrangement and does not implement a physical gangway or finished engine room.
