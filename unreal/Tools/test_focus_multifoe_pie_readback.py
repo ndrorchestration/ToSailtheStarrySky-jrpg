@@ -67,17 +67,17 @@ class MultiFoePieReadbackTests(unittest.TestCase):
     def test_duplicate_key_callback_denied(self):
         callback = "LogTemp: Display: TSTSS_FOCUS_PULSE_KEY_CALLBACK: bound key 2 handler invoked"
         with self.assertRaisesRegex(ValueError, "exactly one bound key-2"):
-            verify_log(GOOD + "\\n" + callback)
+            verify_log(GOOD + "\n" + callback)
 
     def test_key_callback_before_binding_denied(self):
         lines = GOOD.splitlines()
         with self.assertRaisesRegex(ValueError, "preceded"):
-            verify_log("\\n".join([lines[0], lines[2], lines[1], lines[3], lines[4]]))
+            verify_log("\n".join([lines[0], lines[2], lines[1], lines[3], lines[4]]))
 
     def test_action_before_key_callback_denied(self):
         lines = GOOD.splitlines()
         with self.assertRaisesRegex(ValueError, "preceded"):
-            verify_log("\\n".join([lines[0], lines[1], lines[3], lines[2], lines[4]]))
+            verify_log("\n".join([lines[0], lines[1], lines[3], lines[2], lines[4]]))
 
     def test_explicit_key_2_callback_wired_before_cast(self):
         source = ACTOR.read_text(encoding="utf-8")
