@@ -26,11 +26,18 @@ EXPECTED = (
     "FOREST_EDGE", "WOODLAND_APPROACH", "VILLAGE_SQUARE",
     "TOWN_MAIN_STREET", "DOCK_TOWN_SEAM"
 )
+EXPECTED_WEST = (
+    "DOCK_TOWN_SEAM", "TOWN_MAIN_STREET", "VILLAGE_SQUARE",
+    "TOWN_WEST_END", "WEST_ROAD", "GREENWOOD_WEST", "WEST_ROAD",
+    "TOWN_WEST_END", "VILLAGE_SQUARE", "TOWN_MAIN_STREET", "DOCK_TOWN_SEAM"
+)
 WAYPOINTS = {
     "DOCK_TOWN_SEAM": (-3650., -150., 240.),
     "TOWN_MAIN_STREET": (-5350., -150., 270.),
     "VILLAGE_SQUARE": (-7350., -150., 280.),
     "TOWN_WEST_END": (-9050., -150., 270.),
+    "WEST_ROAD": (-11800., -150., 270.),
+    "GREENWOOD_WEST": (-14500., -150., 270.),
     "WOODLAND_APPROACH": (-7350., -1450., 260.),
     "FOREST_EDGE": (-7350., -3120., 260.),
 }
@@ -82,13 +89,16 @@ def parse(text: str) -> list[Record]:
     return records
 
 
-def assess(text: str) -> dict:
+def assess(text: str, route: str = "north") -> dict:
+    if route not in ("north", "west"):
+        raise RouteNotEstablished("Unknown route")
+    expected = EXPECTED_WEST if route == "west" else EXPECTED
     records = parse(text)
     if not records:
         raise RouteNotEstablished("No native Hilltonia player route telemetry found")
     events = [r for r in records if r.kind == "WAYPOINT"]
     samples = [r for r in records if r.kind == "SAMPLE"]
-    if tuple(r.name for r in events) != EXPECTED:
+    if tuple(r.name for r in events) != expected:
         raise RouteNotEstablished(
             "Incomplete or unordered player round trip: "
             + ",".join(r.name for r in events)
@@ -141,11 +151,13 @@ def assess(text: str) -> dict:
             traveled_cm += distance
         # Match the active Unreal pawn's bounded geographic instrumentation:
         # records outside the scene region are not real V5 Hilltonia samples.
-        if not (-9650. <= rec.x <= -3400. and -3650. <= rec.y <= 1200.):
+        if not (-16200. <= rec.x <= -3400. and -3650. <= rec.y <= 1200.):
             raise RouteNotEstablished("Pawn left bounded Hilltonia review region")
 
-    if traveled_cm < 15000.:
+    if traveled_cm < (20000. if route == "west" else 15000.):
         raise RouteNotEstablished("Too little measured travel for harbor–forest return")
+    if route == "west" and not any(r.x <= -13000. for r in samples):
+        raise RouteNotEstablished("No heartbeat in western forest road")
     return {
         "status": "REVIEW_ROUTE_LOG_CONSISTENT_NOT_NATIVE_ATTESTATION",
         "review_map": "FirstWake_PreludeInteraction_V5_VisualReview",
@@ -153,7 +165,8 @@ def assess(text: str) -> dict:
         "heartbeat_samples": len(samples),
         "elapsed_seconds": round(end_time - start_time, 2),
         "measured_distance_cm": round(traveled_cm, 1),
-        "required_order": list(EXPECTED),
+        "required_order": list(expected),
+        "route": route,
         "all_grounded_and_five_point_supported": True,
         "native_receipt_confirmed": False,
         "source_revision_confirmed": False,
@@ -165,9 +178,11 @@ def assess(text: str) -> dict:
 def main(argv=None) -> int:
     arg = argparse.ArgumentParser(description=__doc__)
     arg.add_argument("--log", type=Path, required=True)
+    arg.add_argument("--route", choices=("north", "west"), default="north")
     options = arg.parse_args(argv)
     try:
-        summary = assess(options.log.read_text(encoding="utf-8", errors="replace"))
+        summary = assess(options.log.read_text(encoding="utf-8", errors="replace"),
+                         route=options.route)
     except (OSError, RouteNotEstablished) as exc:
         print(json.dumps({
             "status": "HOLD_ROUTE_NOT_ESTABLISHED",

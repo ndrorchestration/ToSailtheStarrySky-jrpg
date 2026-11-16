@@ -187,6 +187,8 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
                            Cylinder, Timber, true);
     auto* WestCrowns = Make(Owner, Root, TEXT("HilltoniaWestForestCrowns"),
                             Sphere, Canopy, false);
+    auto* WestUnderstory = Make(Owner, Root, TEXT("HilltoniaWestUnderstory"),
+                                Sphere, Canopy, false);
     auto* Buildings = Make(Owner, Root, TEXT("HilltoniaSolidTimberHouses"),
                            Cube, Timber, true);
     auto* Roofs = Make(Owner, Root, TEXT("HilltoniaPitchedRoofs"),
@@ -314,9 +316,17 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
             {
                 const float X = -12450.f - Column * 550.f - Row * 180.f;
                 const float Y = Side * (1050.f + Row * 650.f);
-                const float Height = 340.f + ((Row + Column) % 4) * 45.f;
+                const float Height = 450.f + ((Row + Column) % 4) * 55.f;
                 Place(WestTrees, X, Y, Height * .5f - 10.f, .55f, .55f, Height / 100.f);
+                // Overlapping lobes and low shrubs are a denser greybox,
+                // not approved or species-specific foliage.
                 Place(WestCrowns, X, Y, Height + 100.f, 2.8f, 2.7f, 2.8f);
+                Place(WestCrowns, X - 85.f, Y + Side * 60.f, Height + 55.f,
+                      1.9f, 2.1f, 1.9f);
+                Place(WestCrowns, X + 90.f, Y - Side * 50.f, Height + 35.f,
+                      1.8f, 1.9f, 1.8f);
+                Place(WestUnderstory, X + 150.f, Y + Side * 130.f, 35.f,
+                      1.1f, .9f, .9f);
                 ++WestTreeCount;
             }
         }

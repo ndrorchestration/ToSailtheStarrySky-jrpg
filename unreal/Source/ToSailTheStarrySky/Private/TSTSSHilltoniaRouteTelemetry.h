@@ -31,6 +31,8 @@ inline const TCHAR* NearestWaypoint(const FVector& Position)
         {TEXT("TOWN_MAIN_STREET"), -5350.f, -150.f, 270.f},
         {TEXT("VILLAGE_SQUARE"), -7350.f, -150.f, 280.f},
         {TEXT("TOWN_WEST_END"), -9050.f, -150.f, 270.f},
+        {TEXT("WEST_ROAD"), -11800.f, -150.f, 270.f},
+        {TEXT("GREENWOOD_WEST"), -14500.f, -150.f, 270.f},
         {TEXT("WOODLAND_APPROACH"), -7350.f, -1450.f, 260.f},
         {TEXT("FOREST_EDGE"), -7350.f, -3120.f, 260.f}
     };
@@ -52,7 +54,7 @@ inline bool IsScopedRouteRegion(const FVector& Position)
         FMath::IsFinite(Position.X) &&
         FMath::IsFinite(Position.Y) &&
         FMath::IsFinite(Position.Z) &&
-        Position.X <= -3400.f && Position.X >= -9650.f &&
+        Position.X <= -3400.f && Position.X >= -16200.f &&
         Position.Y >= -3650.f && Position.Y <= 1200.f;
 }
 }

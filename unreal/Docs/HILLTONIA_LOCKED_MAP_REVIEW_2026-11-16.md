@@ -83,3 +83,18 @@ route only; it does not attest to the new western road. Separate
 source-bound native walking evidence is required for the extension. All
 new geography remains review-only until checked in Unreal and by the
 creator.
+
+## Western Greenwood review — instrumentation and foliage pass
+
+The earlier note about the logger ending at X=-9650 is superseded in this
+candidate: the existing review-only pawn telemetry now covers the west
+road and Greenwood turnaround. The log checker accepts an explicit
+`--route west` for the dock-to-Greenwood round trip; its default north
+route remains supported. It still requires real ordered waypoint events,
+grounded five-point footing, heartbeats and plausible movement, and it
+never establishes creator approval or native provenance by itself.
+
+The western tree proxies are taller, have layered primitive crowns and
+non-colliding shrub shapes. These are interim look-development geometry,
+not approved foliage assets or an animal population. Native camera,
+walking, performance and creator review remain separate checks.
