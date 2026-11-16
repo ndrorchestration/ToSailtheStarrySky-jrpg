@@ -42,14 +42,16 @@ def distance_to_road(x, y):
 
 
 class HilltoniaWayfindingContract(unittest.TestCase):
-    def test_four_unambiguous_town_and_forest_signs(self):
+    def test_six_unambiguous_town_and_forest_signs(self):
         observed = signs()
-        self.assertEqual(len(observed), 4)
+        self.assertEqual(len(observed), 6)
         self.assertEqual(set(observed), {
             "HilltoniaLandwardEntrySign",
             "HilltoniaWoodlandTurnoffSign",
             "HilltoniaForestEdgeReturnSign",
             "HilltoniaTownWestReturnSign",
+            "HilltoniaMarketGreenSign",
+            "HilltoniaGreenwoodSign",
         })
         self.assertEqual(
             observed["HilltoniaLandwardEntrySign"][0],
@@ -79,7 +81,7 @@ class HilltoniaWayfindingContract(unittest.TestCase):
         )
         self.assertIn("Text->SetMobility(EComponentMobility::Movable);", CPP)
         self.assertIn("TownSigns(Owner, Root);", CPP)
-        self.assertIn("wayfinding_signs=4", CPP)
+        self.assertIn("wayfinding_signs=6", CPP)
         for prohibited in (
             "SpawnActor<ATSTSSMilestoneActor>",
             "AdvanceTo(", "OpenLevel(", "SaveGameToSlot(",

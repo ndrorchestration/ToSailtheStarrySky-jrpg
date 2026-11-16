@@ -158,6 +158,17 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
                             Cylinder, Timber, true);
     auto* TreeCrowns = Make(Owner, Root, TEXT("HilltoniaDeciduousCanopies"),
                             Sphere, Canopy, false);
+    // Backdrop trees and understory are cosmetic pending collision and art review.
+    auto* BackdropTrunks = Make(Owner, Root, TEXT("HilltoniaBackdropTrunks"),
+                                Cylinder, Timber, false);
+    auto* BackdropCrowns = Make(Owner, Root, TEXT("HilltoniaBackdropCrowns"),
+                                Sphere, Canopy, false);
+    auto* Understory = Make(Owner, Root, TEXT("HilltoniaUnderstory"),
+                            Sphere, Canopy, false);
+    auto* GreenBorder = Make(Owner, Root, TEXT("HilltoniaMarketGreenBorder"),
+                              Cube, Stone, false);
+    auto* GreenSurface = Make(Owner, Root, TEXT("HilltoniaMarketGreenSurface"),
+                               Cube, Canopy, false);
     auto* RollingHills = Make(Owner, Root, TEXT("HilltoniaWoodedSlopeBackdrop"),
                               Sphere, Canopy, false);
 
@@ -214,6 +225,11 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
     Place(Trim, -7000.f, 585.f, 100.f, 2.6f, 1.2f, .9f);
     Place(Trim, -7000.f, 585.f, 222.f, 2.9f, 1.45f, .11f);
 
+    // The Green is a small open, decorative market landmark beside the
+    // square, not an interactive market or a new quest authority.
+    Place(GreenBorder, -6780.f, 1400.f, -9.f, 3.0f, 3.0f, .04f);
+    Place(GreenSurface, -6780.f, 1400.f, -5.f, 2.6f, 2.6f, .04f);
+
     // Oak/maple/beech/birch-compatible deciduous silhouettes in the
     // adjacent north-temperate woodland. Review-only spheres are NOT
     // approved species meshes or final seasonally authored canopy colors.
@@ -237,6 +253,25 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
             ++Trees;
         }
     }
+    // Extra non-colliding tree and shrub silhouettes make Greenwood
+    // denser on the existing forest shelf; not species-approved assets.
+    for (int32 Row = 0; Row < 3; ++Row)
+    {
+        for (int32 Column = 0; Column < 10; ++Column)
+        {
+            const float X = -4800.f - Column * 540.f +
+                ((Row & 1) ? -125.f : 0.f);
+            const float Y = -4150.f - Row * 500.f +
+                ((Column & 1) ? -60.f : 0.f);
+            const float Height = 330.f + ((Row + Column) % 4) * 35.f;
+            Place(BackdropTrunks, X, Y, Height * .5f - 10.f,
+                  .48f, .48f, Height / 100.f);
+            Place(BackdropCrowns, X, Y, Height + 100.f,
+                  2.8f, 2.6f, 2.8f);
+            Place(Understory, X + 140.f, Y + 120.f, 35.f,
+                  1.0f, .8f, .9f);
+        }
+    }
     // Layered low rolling slopes behind the woodland, purely visual;
     // not a collision/terrain promise and not a world-latitude simulator.
     for (int32 Ridge = 0; Ridge < 4; ++Ridge)
@@ -249,9 +284,15 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
     Place(TreeTrunks, -4280.f, -600.f, 155.f, .55f, .55f, 3.1f);
     Place(Trim, -4280.f, -610.f, 322.f, 4.5f, .24f, 1.1f);
     TownSigns(Owner, Root);
+    WayfindingSign(Owner, Root, TEXT("HilltoniaMarketGreenSign"),
+        TEXT("THE GREEN  |  MARKET"),
+        FVector(-6780.f, 1250.f, 310.f), 0.f);
+    WayfindingSign(Owner, Root, TEXT("HilltoniaGreenwoodSign"),
+        TEXT("GREENWOOD  |  FOREST EDGE"),
+        FVector(-7000.f, -3600.f, 330.f), 90.f);
 
     UE_LOG(LogTemp, Display,
-        TEXT("TSTSS_HILLTONIA_REVIEW_APPLIED land_ground_sections=2 road_segments=%d homes=%d hall=1 wayfinding_signs=4 deciduous_trees=%d town=Hilltonia forest=temperate world_north_latitude_provisional=1 road_collision=WorldStatic seven_firstwake_markers_unchanged=1 saved_map_unchanged=1"),
+        TEXT("TSTSS_HILLTONIA_REVIEW_APPLIED land_ground_sections=2 road_segments=%d homes=%d hall=1 wayfinding_signs=6 deciduous_trees=%d town=Hilltonia forest=temperate world_north_latitude_provisional=1 road_collision=WorldStatic seven_firstwake_markers_unchanged=1 saved_map_unchanged=1"),
         RoadSegments, Homes, Trees);
     return true;
 }
