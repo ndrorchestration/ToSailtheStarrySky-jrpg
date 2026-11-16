@@ -134,13 +134,13 @@ def sculpted_blade(root, normal, sweep, width, length, material, category, twist
                 b=a+1
                 c=(j+1)*stride+offset+k
                 d=c+1
-                faces.extend(((a,c,b),(b,c,d)) if surf==0 else ((a,b,c),(b,d,c)))
+                faces.extend(((a,b,c),(b,d,c)) if surf==0 else ((a,c,b),(b,c,d)))
         for k in (0,across_count-1):
             a=j*stride+k
             b=j*stride+across_count+k
             c=(j+1)*stride+k
             d=(j+1)*stride+across_count+k
-            faces.extend(((a,b,c),(b,d,c)))
+            faces.extend(((a,c,b),(b,c,d)) if k==0 else ((a,b,c),(b,d,c)))
     # Seal roots/tips so the asset is a valid closed volume per sculpted section.
     for j in (0,segments):
         base=j*stride
