@@ -3,6 +3,7 @@
 #include "TSTSSFirstWakeState.h"
 #include "Engine/World.h"
 #include "Components/StaticMeshComponent.h"
+#include <limits>
 
 #if WITH_DEV_AUTOMATION_TESTS
 // Real native AActor geometry/policy test in an isolated transient world.
@@ -116,6 +117,87 @@ bool FTSTSSAureateSeabourneStoryGate::RunTest(const FString& Parameters)
         Ship->RequestForm(EAureateWakeForm::Seaborne));
     TestFalse(TEXT("Denied requests leave no pending transition"),
         Ship->IsTransitioning());
+
+    // Creator-directed four upright, aft-raked Seabourne wind-sail study.
+    // This opt-in test is REAL actor-component geometry, not a visual approval,
+    // aerodynamics, physical swept clearance, real wind or ship navigation.
+    TestFalse(TEXT("Wind sail study stays OFF unless explicitly selected"),
+        Ship->bUseSeabourneWindSailReview);
+    TestFalse(TEXT("Disabled wind trim refuses input"),
+        Ship->SetSeabourneWindTrimDegrees(1, 20.f));
+    Ship->bUseSeabourneWindSailReview = true;
+    TestTrue(TEXT("Rebinding opt-in docked study remains story scoped"),
+        Ship->BindReviewStory(Story));
+
+    UStaticMeshComponent* FourSails[4] = { nullptr, nullptr, nullptr, nullptr };
+    for (UStaticMeshComponent* Mesh : Meshes)
+    {
+        for (int32 Index = 0; Index < 4; ++Index)
+        {
+            if (Mesh->GetFName() ==
+                FName(*FString::Printf(TEXT("DragonflyWing_%d"), Index + 1)))
+            {
+                FourSails[Index] = Mesh;
+            }
+        }
+    }
+    bool bHaveFourDistinctSails = true;
+    for (int32 Index = 0; Index < 4; ++Index)
+    {
+        bHaveFourDistinctSails &= TestNotNull(
+            *FString::Printf(TEXT("Persistent Seabourne sail %d"), Index + 1),
+            FourSails[Index]);
+    }
+    if (!bHaveFourDistinctSails)
+    {
+        World->DestroyWorld(false);
+        return false;
+    }
+    for (int32 Index = 0; Index < 4; ++Index)
+    {
+        const FVector Root = FourSails[Index]->GetRelativeLocation();
+        const FVector Blade = FourSails[Index]->GetRelativeRotation().Vector();
+        TestTrue(TEXT("Each original sail moves to dorsal centerline"),
+            FMath::Abs(Root.Y) < 0.1f && Root.Z > 200.f);
+        TestTrue(TEXT("Each sail rises near vertical, gently aft-raked"),
+            Blade.Z > 0.94f && Blade.X < 0.f);
+        TestEqual(TEXT("Sail starts untrimmed"), Ship->GetSeabourneWindTrimDegrees(Index + 1), 0.f);
+        if (Index > 0)
+        {
+            TestTrue(TEXT("Dorsal row has distinct stations from fore to aft"),
+                FourSails[Index - 1]->GetRelativeLocation().X > Root.X);
+        }
+    }
+    const FRotator SecondBefore = FourSails[1]->GetRelativeRotation();
+    TestTrue(TEXT("Trim first sail independently"),
+        Ship->SetSeabourneWindTrimDegrees(1, 22.5f));
+    TestEqual(TEXT("Only sail 1 trim changed"), Ship->GetSeabourneWindTrimDegrees(1), 22.5f);
+    TestEqual(TEXT("Sail 2 unchanged"), Ship->GetSeabourneWindTrimDegrees(2), 0.f);
+    TestTrue(TEXT("Other sail yaw remains unchanged"),
+        FourSails[1]->GetRelativeRotation().Equals(SecondBefore, 0.01f));
+    TestTrue(TEXT("Trim fourth sail independently opposite direction"),
+        Ship->SetSeabourneWindTrimDegrees(4, -14.f));
+    TestEqual(TEXT("Fourth changed without overwriting first"),
+        Ship->GetSeabourneWindTrimDegrees(1), 22.5f);
+    TestEqual(TEXT("Fourth stored trim"), Ship->GetSeabourneWindTrimDegrees(4), -14.f);
+    TestFalse(TEXT("Invalid sail index zero denied"), Ship->SetSeabourneWindTrimDegrees(0, 4.f));
+    TestFalse(TEXT("Invalid fifth sail denied"), Ship->SetSeabourneWindTrimDegrees(5, 4.f));
+    TestFalse(TEXT("Beyond provisional visual yaw denied"), Ship->SetSeabourneWindTrimDegrees(3, 36.f));
+    TestFalse(TEXT("Non-finite wind yaw denied"), Ship->SetSeabourneWindTrimDegrees(
+        2, std::numeric_limits<float>::quiet_NaN()));
+    TestEqual(TEXT("Bad trim never changed second sail"),
+        Ship->GetSeabourneWindTrimDegrees(2), 0.f);
+    TestEqual(TEXT("Still four wings, never added sails"), Ship->GetWingCount(), 4);
+    TestEqual(TEXT("Still two hydrofoils"), Ship->GetHydrofoilCount(), 2);
+    TestTrue(TEXT("Restore authorized Seabourne resets ephemeral trim"),
+        Ship->BindReviewStory(Story));
+    TestEqual(TEXT("After story bind no stale sail 1 trim"),
+        Ship->GetSeabourneWindTrimDegrees(1), 0.f);
+    Ship->bUseSeabourneWindSailReview = false;
+    TestTrue(TEXT("Restore original noncanonical default pose"),
+        Ship->BindReviewStory(Story));
+    TestFalse(TEXT("Disabled study refuses another trim"),
+        Ship->SetSeabourneWindTrimDegrees(1, 10.f));
 
     TestTrue(TEXT("Later recovery beat restored"), Story->Restore(
         true, ETSTSSFirstWakeBeat::EmptyReserveInspected, 0x07));
