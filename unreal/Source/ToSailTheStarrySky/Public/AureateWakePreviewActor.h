@@ -77,6 +77,19 @@ public:
     bool bUseSeabourneWindSailReview = false;
 
     /**
+     * Optional noncanonical WingHinge V1 mesh study for the four dorsal swivel
+     * collars. OFF by default. Requires both an operator-selected asset and
+     * its exact review-only package path and source-sized native bounds.
+     * A missing or mismatched mesh HIDES the mounts, never silently promotes
+     * an unapproved asset, and does not grant sailing, collision or story state.
+     */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Preview|Wind Sail Review")
+    bool bUseImportedDorsalHingeReview = false;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Preview|Wind Sail Review")
+    TObjectPtr<UStaticMesh> ImportedDorsalHingeReviewMesh;
+
+    /**
      * Independently yaw a single deployed sail (one-based number 1..4).
      * Only in a story-authorized, settled Seabourne review with opt-in enabled.
      * +/-35 degrees is a provisional *input* bound, NOT a clearance proof.
