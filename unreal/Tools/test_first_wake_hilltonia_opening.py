@@ -42,5 +42,39 @@ class HilltoniaOpeningTests(unittest.TestCase):
         self.assertLess(start.index("!TeleportTo("),
                         start.index("OldFlyer->SetActorEnableCollision(false)"))
 
+    def test_enders_flyer_choice_holds_movement_camera_and_other_e_actions(self):
+        # This source contract prevents a visible Accept / Not now prompt
+        # from competing with movement, camera look or another [E] target.
+        controls = (
+            ("MoveForward", "MoveRight", "AddMovementInput("),
+            ("MoveRight", "Turn", "AddMovementInput("),
+            ("Turn", "LookUp", "AddControllerYawInput("),
+            ("LookUp", "GetReviewAimStatus", "AddControllerPitchInput("),
+        )
+        for current, following, native_input in controls:
+            with self.subTest(control=current):
+                code = method(current, following)
+                guard = "if (IsHilltoniaFlyerOpen()) return;"
+                self.assertIn("#if WITH_EDITOR", code)
+                self.assertIn(guard, code)
+                self.assertLess(code.index(guard), code.index(native_input))
+                self.assertNotIn("AdvanceTo(", code)
+
+        interaction = method("Interact", "ShowObjectiveReview")
+        self.assertLess(
+            interaction.index("if (IsHilltoniaFlyerOpen()) return;"),
+            interaction.index("LineTraceSingleByChannel("),
+        )
+        board = interaction.split("if (IsHilltoniaFlyerHit(Hit))", 1)[1].split(
+            "if (ATSTSSMilestoneActor* Milestone", 1)[0]
+        self.assertLess(
+            board.index("bHilltoniaFlyerRead = true;"),
+            board.index("Movement->StopMovementImmediately();"),
+        )
+        self.assertNotIn("AdvanceTo(", board)
+        self.assertIn("bHilltoniaFlyerRead = false;", method(
+            "DeclineHilltoniaFlyer", "GetHilltoniaCaptainWaypoint"
+        ))
+
 if __name__ == "__main__":
     unittest.main()
