@@ -30,6 +30,7 @@ AUDIT = PROJECT / "Saved/MigrationEvidence/EnderRetargetPrivate/prerequisite_rep
 FOLDER = "/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL"
 LOCAL_FOLDER = PROJECT / "Content/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL"
 OUTPUT = PROJECT / "Saved/MigrationEvidence/EnderRetargetPrivate/rig_build_receipt.json"
+STARTUP_GATE = PROJECT / "Saved/MigrationEvidence/EnderRetargetPrivate/startup_gate.json"
 MANNY = "/Game/Mannequins/Meshes/SKM_Manny_Simple"
 ENDER = (
     "/Game/ArtLookdev/Characters/Genesis9MergedFBXRigReview_20261109_NONCANONICAL/"
@@ -151,12 +152,31 @@ def admitted():
             "TRACKED_WORKTREE_DIRTY")
     require(os.environ.get("TSTSS_PRIVATE_IK_CREATE") == "1",
             "OWNER_OPT_IN_REQUIRED")
-    require(available_ram_gib() >= 6.0, "RAM_RESERVE")
-    require(ctypes.windll.kernel32.GetDiskFreeSpaceExW is not None,
-            "DISK_PROBE_MISSING")
+    # The 6.5 GiB RAM / 16.5 GiB disk STARTUP reserve must be measured
+    # before Unreal launches by the independent guarded host. Requiring
+    # the entire startup reserve INSIDE UE rejects healthy editor sessions.
+    # Keep lower, continuously monitored safety floors inside UE instead.
+    require(STARTUP_GATE.is_file(), "MISSING_HOST_STARTUP_GATE")
+    startup = json.loads(STARTUP_GATE.read_text(encoding="utf8"))
+    require(startup.get("status") == "HOST_ADMITTED" and
+            startup.get("source_head") == head and
+            startup.get("mode") == "create-rigs" and
+            startup.get("run_id") and
+            startup.get("run_id") == os.environ.get("TSTSS_PRIVATE_IK_RUN_ID"),
+            "HOST_STARTUP_GATE_MISMATCH")
+    gate_time = datetime.datetime.fromisoformat(startup["utc"])
+    require(gate_time.tzinfo is not None and
+            abs((datetime.datetime.now(datetime.timezone.utc) -
+                 gate_time).total_seconds()) < 15 * 60,
+            "HOST_STARTUP_GATE_STALE")
+    require(startup.get("disk_start_gib", 0) >= 16.5 and
+            startup.get("ram_start_gib", 0) >= 6.5,
+            "HOST_STARTUP_RESERVE_UNPROVEN")
     import shutil
-    require(shutil.disk_usage("C:\\").free >= 16 * 2**30,
-            "DISK_RESERVE")
+    require(available_ram_gib() >= 2.5, "RAM_RUNTIME_FLOOR")
+    require(shutil.disk_usage("C:\\").free >= 14.3 * 2**30,
+            "DISK_RUNTIME_FLOOR")
+    RECEIPT["host_startup_gate_run_id"] = startup["run_id"]
     require(AUDIT.is_file(), "MISSING_NATIVE_PREREQUISITE_AUDIT")
     audit = json.loads(AUDIT.read_text(encoding="utf8"))
     require(audit.get("status") == "NATIVE_RETARGET_INPUTS_VALIDATED_NOT_RETARGETED",
