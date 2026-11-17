@@ -23,7 +23,9 @@ import unreal
 
 PROJECT = Path(unreal.Paths.project_dir()).resolve()
 REPO = PROJECT.parent
-SHA = "2235f3a4283f93a12f5d3e85ce1a8039b2c865b3"
+# Never pin the build script to its own Git SHA: every commit changes that SHA.
+# Require a clean current HEAD matching the fresh native prerequisite report.
+VALIDATED_NATIVE_ANCESTOR = "cc7548ba53705f5f6d0fd331cf89d32d138a8e0f"
 AUDIT = PROJECT / "Saved/MigrationEvidence/EnderRetargetPrivate/prerequisite_report.json"
 FOLDER = "/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL"
 LOCAL_FOLDER = PROJECT / "Content/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL"
@@ -38,6 +40,17 @@ NAMES = (
     "IK_Genesis9_EnderReview_NONCANONICAL",
     "RTG_MannyToEnder_NONCANONICAL",
 )
+# Rehash all private and Epic template binaries at execution time. The native
+# prerequisite report alone is not sufficient if files changed between runs.
+SHA256_INPUTS = {
+    "Mannequins/Meshes/SKM_Manny_Simple.uasset": "be9f011191ee1887b97cd13bce09886a6066c2fd62c619991070ec142184e1bf",
+    "Mannequins/Meshes/SK_Mannequin.uasset": "22029d47455f24471195b26a0e04a1e1389f27d6a924e88c9f46a0f600c9a530",
+    "Mannequins/Anims/Unarmed/MM_Idle.uasset": "11ee7fdeb84db89c1a66785b43b9bfc1415782122b8ac229517f4c5125d9cb0d",
+    "Mannequins/Anims/Unarmed/Walk/MF_Unarmed_Walk_Fwd.uasset": "c74b2fc0cb651c4924804b364e534856a1b44dee818127c408dc055e4bda5ed9",
+    "Mannequins/Anims/Unarmed/Jog/MF_Unarmed_Jog_Fwd.uasset": "0ccbe851f85a6d4cd7c6438c219cb6af8e281784107b5be8e9b052e4df3069cb",
+    "ArtLookdev/Characters/Genesis9MergedFBXRigReview_20261109_NONCANONICAL/Genesis9_BaseShirtShorts_MergedRig_REVIEW.uasset": "6cd1b68e0e326e53ca40e984a7663b48dabbede7f213118c14544000861c462b",
+    "ArtLookdev/Characters/Genesis9MergedFBXRigReview_20261109_NONCANONICAL/Genesis9_BaseShirtShorts_MergedRig_REVIEW_Skeleton.uasset": "73050dbe498b85e2ec922c9e53ede68da88dfdd3af24e2894209c1e30978157c",
+}
 # Source and target retargeting chains; the native parent walk must prove every
 # endpoint is a descendant of its selected start bone before creation.
 CHAINS = {
@@ -50,7 +63,7 @@ CHAINS = {
 }
 RECEIPT = {
     "status": "NOT_STARTED",
-    "git_head_required": SHA,
+    "git_head_required": "MATCH_NATIVE_AUDIT_SOURCE_HEAD",
     "output": FOLDER,
     "local_private_assets_only": True,
     "animation_sequences_generated": 0,
@@ -76,6 +89,14 @@ def git(*args):
     )
     require(cmd.returncode == 0, "GIT_UNAVAILABLE")
     return cmd.stdout.strip()
+
+
+def hash_file(path):
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for block in iter(lambda: stream.read(8 * 1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
 
 
 def parent(mesh, bone):
@@ -118,7 +139,14 @@ def admitted():
             "WRONG_PROJECT")
     require(RECEIPT["engine_version"].startswith("5.8.4-"),
             "WRONG_UNREAL_VERSION")
-    require(git("rev-parse", "HEAD") == SHA, "SOURCE_REVISION_DRIFT")
+    head = git("rev-parse", "HEAD")
+    require(len(head) == 40, "SOURCE_HEAD_MALFORMED")
+    base = subprocess.run(
+        ["git", "-C", str(REPO), "merge-base", "--is-ancestor",
+         VALIDATED_NATIVE_ANCESTOR, head], timeout=15, check=False
+    )
+    require(base.returncode == 0, "SOURCE_NATIVE_ANCESTOR_DRIFT")
+    RECEIPT["source_head"] = head
     require(not git("status", "--porcelain=v1", "--untracked-files=no"),
             "TRACKED_WORKTREE_DIRTY")
     require(os.environ.get("TSTSS_PRIVATE_IK_CREATE") == "1",
@@ -135,6 +163,11 @@ def admitted():
             "NATIVE_AUDIT_NOT_ACCEPTED")
     require(audit.get("engine", "").startswith("5.8.4-"),
             "NATIVE_AUDIT_ENGINE_MISMATCH")
+    require(audit.get("source_head") == head, "NATIVE_AUDIT_HEAD_MISMATCH")
+    for relative, expected in SHA256_INPUTS.items():
+        file_path = PROJECT / "Content" / relative
+        require(file_path.is_file() and hash_file(file_path) == expected,
+                "PRIVATE_OR_TEMPLATE_FILE_HASH_DRIFT_" + Path(relative).name)
     require(audit.get("retarget_performed") is False and
             audit.get("animation_playback_verified") is False,
             "MALFORMED_AUDIT_AUTHORITY")
@@ -216,8 +249,11 @@ def create_private_rigs(audit):
             == source_rig, "SOURCE_IK_BIND_FAILURE")
     require(controller.get_ik_rig(unreal.RetargetSourceOrTarget.TARGET)
             == target_rig, "TARGET_IK_BIND_FAILURE")
+    require(controller.get_num_retarget_ops() > 0,
+            "RETARGETER_HAS_NO_FK_IK_CHAIN_OPS")
     for chain in CHAINS:
-        controller.set_source_chain(chain, chain)
+        require(controller.set_source_chain(chain, chain),
+                "RETARGET_CHAIN_SET_" + chain)
         require(str(controller.get_source_chain(chain)) == chain,
                 "RETARGET_CHAIN_MAPPING_" + chain)
     # Save only the three newly-created review assets after all gates pass;
@@ -227,6 +263,10 @@ def create_private_rigs(audit):
                 "OUTPUT_OUTSIDE_REVIEW")
         require(unreal.EditorAssetLibrary.save_loaded_asset(asset, only_if_is_dirty=True),
                 "PRIVATE_REVIEW_ASSET_SAVE_FAILED")
+    for relative, expected in SHA256_INPUTS.items():
+        file_path = PROJECT / "Content" / relative
+        require(file_path.is_file() and hash_file(file_path) == expected,
+                "SOURCE_FILE_CHANGED_DURING_IK_CREATE")
     RECEIPT["saved_assets"] = [
         asset.get_path_name() for asset in (source_rig, target_rig, retargeter)
     ]
