@@ -82,7 +82,10 @@ class ReadableInteractionContract(unittest.TestCase):
     def test_hud_has_high_contrast_and_follows_true_aim(self):
         self.assertIn("Explorer->GetReviewAimStatus()", HUD)
         self.assertIn("FOLLOW THE GOLD MARKER", HUD)
-        self.assertIn("Width = FMath::Min(690.f, Canvas->ClipX - 48.f)", HUD)
+        # Keep the legacy centered prompt, but leave Ender visible at the right shoulder.
+        self.assertIn("bShoulderFraming = Explorer->HasHilltoniaOpening()", HUD)
+        self.assertIn("Width = FMath::Min(bShoulderFraming ? 510.f : 690.f, Canvas->ClipX - 48.f)", HUD)
+        self.assertIn("Canvas->ClipX - Width - 24.f", HUD)
         self.assertIn("GEngine->GetMediumFont()", HUD)
         self.assertIn("Canvas->ClipY - 88.f", HUD)
         self.assertIn("DrawRect(Accent, Canvas->ClipX * .5f - 3.f", HUD)
