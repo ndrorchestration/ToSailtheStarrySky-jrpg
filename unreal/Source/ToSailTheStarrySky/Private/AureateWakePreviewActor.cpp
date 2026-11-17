@@ -448,8 +448,17 @@ void AAureateWakePreviewActor::SnapToForm(EAureateWakeForm Form)
 
 float AAureateWakePreviewActor::GetSeabourneWindTrimDegrees(int32 WingNumber) const
 {
-    return WingNumber >= 1 && WingNumber <= 4
-        ? SeabourneWindTrimDegrees[WingNumber - 1] : 0.f;
+    // Even a query must not expose stale trim from a revoked story, different
+    // form or a disabled study. This is not persisted player state.
+    if (WingNumber < 1 || WingNumber > 4 ||
+        !bUseSeabourneWindSailReview ||
+        CurrentForm != EAureateWakeForm::Seaborne ||
+        !IsValid(BoundReviewStory.Get()) ||
+        !BoundReviewStory->IsReviewShipModeAuthorized(FName(TEXT("Seabourne"))))
+    {
+        return 0.f;
+    }
+    return SeabourneWindTrimDegrees[WingNumber - 1];
 }
 
 bool AAureateWakePreviewActor::SetSeabourneWindTrimDegrees(int32 WingNumber, float Degrees)
@@ -554,9 +563,13 @@ void AAureateWakePreviewActor::Tick(float DeltaSeconds)
     if (IsValid(BoundReviewStory))
     {
         const FName Authorized = BoundReviewStory->GetReviewShipMode();
-        if (Authorized == NAME_None && bTransitioning)
+        if (Authorized == NAME_None &&
+            (bTransitioning ||
+             (bUseSeabourneWindSailReview &&
+              CurrentForm == EAureateWakeForm::Seaborne)))
         {
-            // Story reset revokes a pending transition immediately.
+            // Story reset revokes a pending transition AND an opted-in active
+            // Seabourne wind-trim pose. Never retain stale unauthorized sails.
             SnapToForm(EAureateWakeForm::Skyborne);
         }
         if (Authorized != NAME_None)
