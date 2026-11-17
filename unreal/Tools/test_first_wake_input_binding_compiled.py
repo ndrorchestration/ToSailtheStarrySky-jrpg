@@ -63,7 +63,7 @@ class FirstWakeInputBindingProbeContracts(unittest.TestCase):
             self.assertEqual(src.count('BindAction(TEXT("'+action+'")'),1)
         probe=PREFIX+SUFFIX
         for term in ('"FirstWakeBokehReview", questBindings',
-                     'EWorldType::PIE ? 11u',
+                     'EWorldType::PIE ? 13u',
                      'EWorldType::Game ? 8u',
                      'hasExactly(noWorldInput.actions, "FirstWakeBokehReview", 0)',
                      'hasExactly(noWorldInput.actions, "AcceptHilltoniaFlyer", 0)'):
@@ -79,6 +79,25 @@ class FirstWakeInputBindingProbeContracts(unittest.TestCase):
             with self.assertRaises(ValueError):
                 config_guard(self.config+'\n+ActionMappings=(ActionName="'+action+
                              '",Key='+key+')\n')
+
+    def test_ender_sprint_two_events_are_pie_only_and_key_locked(self):
+        src = method_from(self.character)
+        self.assertEqual(src.count('BindAction(TEXT("EnderPIEReviewSprint")'), 2)
+        self.assertIn('BindAction(TEXT("EnderPIEReviewSprint"), IE_Pressed', src)
+        self.assertIn('BindAction(TEXT("EnderPIEReviewSprint"), IE_Released', src)
+        self.assertIn("IE_Released", PREFIX)
+        self.assertIn('"EnderPIEReviewSprint", type == EWorldType::PIE ? 2 : 0', SUFFIX)
+        self.assertIn('hasExactly(input.releasedActions, "EnderPIEReviewSprint"', SUFFIX)
+        self.assertIn('hasExactly(noWorldInput.actions, "EnderPIEReviewSprint", 0)', SUFFIX)
+        self.assertIsNone(config_guard(self.config))
+        for key in ("E", "F5", "C", "W"):
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                config_guard(self.config.replace(
+                    'ActionName="EnderPIEReviewSprint",Key=LeftShift',
+                    f'ActionName="EnderPIEReviewSprint",Key={key}', 1))
+        with self.assertRaises(ValueError):
+            config_guard(self.config +
+                '\n+ActionMappings=(ActionName="EnderPIEReviewSprint",Key=E)\n')
 
     def test_probe_checks_pie_game_editor_and_missing_world(self):
         for token in ("EWorldType::PIE", "EWorldType::Game", "EWorldType::Editor",
