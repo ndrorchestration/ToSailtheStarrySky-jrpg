@@ -8,12 +8,17 @@ from pathlib import Path
 import datetime
 import hashlib
 import json
+import subprocess
 import traceback
 
 import unreal
 
 
 PROJECT = Path(unreal.Paths.project_dir()).resolve()
+# Stable ancestor is the previously native-validated locomotion implementation.
+# Actual audited HEAD is resolved live; a source file cannot safely pin its
+# own Git commit hash without creating a self-referential hash.
+VALIDATED_NATIVE_ANCESTOR = "cc7548ba53705f5f6d0fd331cf89d32d138a8e0f"
 ROOT = PROJECT / "Content"
 REPORT = PROJECT / "Saved/MigrationEvidence/EnderRetargetPrivate/prerequisite_report.json"
 PRIVATE_MESH = "/Game/ArtLookdev/Characters/Genesis9MergedFBXRigReview_20261109_NONCANONICAL/Genesis9_BaseShirtShorts_MergedRig_REVIEW"
@@ -71,6 +76,26 @@ def audit():
     require(str(PROJECT).lower() == "c:\\tstss_civicintegration_20261116\\unreal",
             "WRONG_PROJECT")
     require(REVIEW["engine"].startswith("5.8.4-"), "WRONG_ENGINE")
+    head = subprocess.run(
+        ["git", "-C", str(PROJECT.parent), "rev-parse", "HEAD"],
+        capture_output=True, text=True, timeout=15
+    )
+    require(head.returncode == 0 and len(head.stdout.strip()) == 40,
+            "GIT_HEAD_UNAVAILABLE")
+    REVIEW["source_head"] = head.stdout.strip()
+    ancestor = subprocess.run(
+        ["git", "-C", str(PROJECT.parent), "merge-base", "--is-ancestor",
+         VALIDATED_NATIVE_ANCESTOR, REVIEW["source_head"]],
+        capture_output=True, timeout=15
+    )
+    require(ancestor.returncode == 0, "PREVIOUS_NATIVE_BASE_NOT_ANCESTOR")
+    clean = subprocess.run(
+        ["git", "-C", str(PROJECT.parent), "status", "--porcelain=v1",
+         "--untracked-files=no"],
+        capture_output=True, text=True, timeout=15
+    )
+    require(clean.returncode == 0 and not clean.stdout.strip(),
+            "TRACKED_SOURCE_DIRTY")
     for relative, expected in SHA256.items():
         path = ROOT / relative
         require(path.is_file() and sha256(path) == expected,
