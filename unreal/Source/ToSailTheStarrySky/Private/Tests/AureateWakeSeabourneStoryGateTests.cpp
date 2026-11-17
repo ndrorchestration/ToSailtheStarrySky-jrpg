@@ -198,7 +198,7 @@ bool FTSTSSAureateSeabourneStoryGate::RunTest(const FString& Parameters)
     Ship->bUseSeabourneWindSailReview = false;
     Ship->Tick(0.1f);
     TestEqual(TEXT("Disabled live preview rolls back to legacy lateral wing"),
-        FourSails[1]->GetRelativeLocation().Y, 175.f);
+        static_cast<double>(FourSails[1]->GetRelativeLocation().Y), 175.0);
     TestEqual(TEXT("Live opt-out clears stale yaw"), Ship->GetSeabourneWindTrimDegrees(2), 0.f);
     TestEqual(TEXT("Live opt-out retains authorized Seabourne form"),
         Ship->GetCurrentForm(), EAureateWakeForm::Seaborne);
