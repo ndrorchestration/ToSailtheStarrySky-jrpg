@@ -270,6 +270,62 @@ class SeabourneWindSailSourceTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError,"WIND_SAIL_SOURCE_HOLD"):
                     require_contract(changed,(original,))
 
+    def test_imported_winghinge_is_explicitly_noncanonical_and_fails_closed(self):
+        require_contract(self.header,(
+            "bool bUseImportedDorsalHingeReview = false;",
+            "TObjectPtr<UStaticMesh> ImportedDorsalHingeReviewMesh;",
+        ))
+        mounting=self.cpp.split("void AAureateWakePreviewActor::UpdateDorsalMountTransforms()",1)[1].split(
+            "\nvoid AAureateWakePreviewActor::UpdateRootSupportTransforms()",1)[0]
+        require_contract(mounting,(
+            "const bool bHingeCandidateRequested = bUseImportedDorsalHingeReview;",
+            "UStaticMesh* HingeCandidate = ImportedDorsalHingeReviewMesh.Get();",
+            "const bool bHingeCandidateValid = !bHingeCandidateRequested ||",
+            "IsValid(HingeCandidate)",
+            "HingeCandidate->GetPathName() == TEXT(",
+            "/Game/TSTSS/Review/MultipathV1/ObjectImports/WingHinge/",
+            "WingHinge/StaticMeshes/WingHinge.WingHinge",
+            "HingeCandidate->GetBounds().BoxExtent.X, 80.f, 1.f",
+            "HingeCandidate->GetBounds().BoxExtent.Y, 62.5f, 1.f",
+            "HingeCandidate->GetBounds().BoxExtent.Z, 48.f, 1.f",
+            "bHingeCandidateValid;",
+            "Swivel->SetStaticMesh(bHingeCandidateRequested",
+            "? HingeCandidate : OriginalCubeWingMesh.Get());",
+            "? FVector(0.30f, 0.30f, 0.30f)",
+            ": FVector(0.48f, 0.32f, 0.12f)",
+        ))
+        # The same four wing components are preserved. No automatic import,
+        # editor map write, wind actuation, or gameplay authorization occurs.
+        for forbidden in ("LoadObject<", "SaveGame", "Wings.Add(", "SetSimulatePhysics"):
+            self.assertNotIn(forbidden,mounting)
+        require_contract(self.native,(
+            "Imported WingHinge review stays off by default",
+            "Missing imported hinge hides dorsal mast",
+            "Wrong package mesh cannot replace a hinge",
+            "Existing V1 WingHinge mesh resolves natively",
+            "Exactly the allowlisted WingHinge candidate selected",
+            "Imported hinge uniformly scaled to 30 percent",
+            "Disabling imported candidate restores cube collar",
+        ))
+
+    def test_mutations_reject_malformed_imported_hinge_or_missing_opt_in(self):
+        mounting=self.cpp.split("void AAureateWakePreviewActor::UpdateDorsalMountTransforms()",1)[1].split(
+            "\nvoid AAureateWakePreviewActor::UpdateRootSupportTransforms()",1)[0]
+        critical=(
+            "const bool bHingeCandidateValid = !bHingeCandidateRequested ||",
+            "HingeCandidate->GetPathName() == TEXT(",
+            "HingeCandidate->GetBounds().BoxExtent.X, 80.f, 1.f",
+            "HingeCandidate->GetBounds().BoxExtent.Y, 62.5f, 1.f",
+            "HingeCandidate->GetBounds().BoxExtent.Z, 48.f, 1.f",
+            "bHingeCandidateValid;",
+        )
+        for token in critical:
+            with self.subTest(required=token):
+                self.assertIn(token,mounting)
+                unsafe=mounting.replace(token,"/* UNSAFE IMPORTED HINGE ACCEPTANCE */",1)
+                with self.assertRaisesRegex(ValueError,"WIND_SAIL_SOURCE_HOLD"):
+                    require_contract(unsafe,(token,))
+
     def test_negative_mutations_detect_unsafe_permission_and_geometry(self):
         originals=(
             "!bUseSeabourneWindSailReview || bTransitioning",
