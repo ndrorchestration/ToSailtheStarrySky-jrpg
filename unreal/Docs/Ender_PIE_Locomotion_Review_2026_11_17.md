@@ -38,8 +38,19 @@ speed, the control stops and never forces a takeover. On release at PIE EndPlay
 or when the review scope is lost, it restores the original speed **only if**
 the last assigned value remains unchanged. Flyer and engine-focus UI suppress
 running; existing WASD/E/quest/save bindings and production movement untouched.
-The Shift mapping is globally declared but **bound only in editor PIE**;
-without the explicit Blueprint opt-in it is inert.
+The Shift mapping is globally declared but bound only in editor PIE or
+editor-built `-game` worlds; it never binds in shipping builds. PIE still
+requires the explicit private Blueprint opt-in. For the specific First Wake
+title review launcher, an additional `-EnderReviewSprint` switch enables
+walking at 260 cm/s and holding Shift to run at 600 cm/s. The preview is
+restricted to the possessed standalone V5/VS02 review pawn and the explicit
+review namespace; production maps remain denied. No static mesh animation
+is implied by the increased speed.
+
+**User feedback:** Shift did not change speed in the previous title launch
+because it was `-game`, while the feature was PIE-only and disabled by
+default. The running old binary is unchanged. This new source revision
+requires an exact-head native rebuild and full test receipt before relaunch.
 
 Native acceptance requires comparing observed walk/sprint speeds and animation
 bands on an actual player-controlled Ender, ensuring walking does not accidentally

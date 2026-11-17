@@ -64,7 +64,7 @@ class FirstWakeInputBindingProbeContracts(unittest.TestCase):
         probe=PREFIX+SUFFIX
         for term in ('"FirstWakeBokehReview", questBindings',
                      'EWorldType::PIE ? 13u',
-                     'EWorldType::Game ? 8u',
+                     'EWorldType::Game ? 10u',
                      'hasExactly(noWorldInput.actions, "FirstWakeBokehReview", 0)',
                      'hasExactly(noWorldInput.actions, "AcceptHilltoniaFlyer", 0)'):
             self.assertIn(term,probe)
@@ -80,13 +80,13 @@ class FirstWakeInputBindingProbeContracts(unittest.TestCase):
                 config_guard(self.config+'\n+ActionMappings=(ActionName="'+action+
                              '",Key='+key+')\n')
 
-    def test_ender_sprint_two_events_are_pie_only_and_key_locked(self):
+    def test_ender_sprint_two_events_are_playing_worlds_only_and_key_locked(self):
         src = method_from(self.character)
         self.assertEqual(src.count('BindAction(TEXT("EnderPIEReviewSprint")'), 2)
         self.assertIn('BindAction(TEXT("EnderPIEReviewSprint"), IE_Pressed', src)
         self.assertIn('BindAction(TEXT("EnderPIEReviewSprint"), IE_Released', src)
         self.assertIn("IE_Released", PREFIX)
-        self.assertIn('"EnderPIEReviewSprint", type == EWorldType::PIE ? 2 : 0', SUFFIX)
+        self.assertIn('"EnderPIEReviewSprint", type == EWorldType::Editor ? 0 : 2', SUFFIX)
         self.assertIn('hasExactly(input.releasedActions, "EnderPIEReviewSprint"', SUFFIX)
         self.assertIn('hasExactly(noWorldInput.actions, "EnderPIEReviewSprint", 0)', SUFFIX)
         self.assertIsNone(config_guard(self.config))

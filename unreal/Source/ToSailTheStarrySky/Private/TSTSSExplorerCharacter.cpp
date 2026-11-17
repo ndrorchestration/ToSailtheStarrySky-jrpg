@@ -23,6 +23,8 @@
 #include "Animation/Skeleton.h"
 #include "Animation/AnimSequence.h"
 #include "Animation/AnimSingleNodeInstance.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 #include "Components/CapsuleComponent.h"
 #endif
 #include "Engine/StaticMesh.h"
@@ -871,6 +873,15 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
     {
         DeclineHilltoniaFlyer();
     }
+    // Explicitly flagged editor-built -game title preview: movement speed
+    // only, never the separate skeletal/animation PIE preview.
+    if (bReviewNamespace && World->WorldType == EWorldType::Game &&
+        World->GetNetMode() == NM_Standalone && bFirstWakeThirdPersonReview &&
+        (Scene == TEXT("FirstWake_PreludeInteraction_V5_VisualReview") ||
+         Scene == TEXT("VS02_AureateInteriors")))
+    {
+        TryEnderPIEWalkRunControls();
+    }
     // Ender v0.1 PIE locomotion observation: record the real possessed pawn,
     // and only its velocity bands. A visible mesh and moving capsule do NOT
     // establish an animated pose, correct likeness, or artistic approval.
@@ -1451,10 +1462,19 @@ void ATSTSSExplorerCharacter::TryEnderPIEWalkRunControls()
     // Other review components, save/quest state, input axes and transforms
     // are never touched. This can be tested before private clips exist.
     const UWorld* World = GetWorld();
+    // PIE private Blueprint and editor-built -game command-line admissions
+    // are separate: neither can authorize shipping or production-map play.
+    const bool bPIEOptIn = World &&
+        World->WorldType == EWorldType::PIE &&
+        bEnableEnderPIEWalkRunControls;
+    const bool bGameOptIn = World &&
+        World->WorldType == EWorldType::Game &&
+        FParse::Param(FCommandLine::Get(), TEXT("EnderReviewSprint"));
     const bool bAllowed =
-        bEnableEnderPIEWalkRunControls &&
+        (bPIEOptIn || bGameOptIn) &&
         bFirstWakeThirdPersonReview && IsPlayerControlled() &&
-        World && World->WorldType == EWorldType::PIE &&
+        World && (World->WorldType == EWorldType::PIE ||
+                  World->WorldType == EWorldType::Game) &&
         World->GetNetMode() == NM_Standalone &&
         World->GetOutermost() &&
         World->GetOutermost()->GetName().StartsWith(
@@ -1510,7 +1530,7 @@ void ATSTSSExplorerCharacter::TryEnderPIEWalkRunControls()
         !PC->IsMoveInputIgnored() && !IsHilltoniaFlyerOpen() &&
         !EngineFocusPreviewCamera.IsValid();
     constexpr float WalkSpeedCmS = 260.f; // below 300 cm/s telemetry cutoff
-    constexpr float RunSpeedCmS = 480.f;  // above 300 cm/s telemetry cutoff
+    constexpr float RunSpeedCmS = 600.f;  // above 300 cm/s telemetry cutoff; distinct sprint
     const float TargetSpeed = bCanSprint ? RunSpeedCmS : WalkSpeedCmS;
     if (!FMath::IsNearlyEqual(TargetSpeed,
                               EnderPIELastAssignedMaxWalkSpeed, 0.1f))
@@ -1989,15 +2009,18 @@ void ATSTSSExplorerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
     }
     PlayerInputComponent->BindAction(TEXT("QuickLoad"), IE_Pressed, this, &ATSTSSExplorerCharacter::QuickLoad);
 #if WITH_EDITOR
-    if (InputWorld && InputWorld->WorldType == EWorldType::PIE)
+    // Input edges are inert without an explicit authorized review opt-in.
+    if (InputWorld && (InputWorld->WorldType == EWorldType::PIE ||
+                       InputWorld->WorldType == EWorldType::Game))
     {
-        PlayerInputComponent->BindAction(TEXT("ReviewContinue"), IE_Pressed, this, &ATSTSSExplorerCharacter::ReviewContinue);
-        // The global key mapping is inert in Game/shipping. Runtime checks
-        // narrow the only movement changes to opt-in First Wake PIE.
         PlayerInputComponent->BindAction(TEXT("EnderPIEReviewSprint"), IE_Pressed,
             this, &ATSTSSExplorerCharacter::PressEnderPIEReviewSprint);
         PlayerInputComponent->BindAction(TEXT("EnderPIEReviewSprint"), IE_Released,
             this, &ATSTSSExplorerCharacter::ReleaseEnderPIEReviewSprint);
+    }
+    if (InputWorld && InputWorld->WorldType == EWorldType::PIE)
+    {
+        PlayerInputComponent->BindAction(TEXT("ReviewContinue"), IE_Pressed, this, &ATSTSSExplorerCharacter::ReviewContinue);
         // Opt-in cinematography is separate from E, J, K, F6, F7 and F9.
         PlayerInputComponent->BindAction(TEXT("EngineFocusPreview"), IE_Pressed,
             this, &ATSTSSExplorerCharacter::ToggleEngineFocusPreview);

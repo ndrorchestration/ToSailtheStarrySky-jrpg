@@ -116,13 +116,13 @@ int main() {
                    "K review navigation incorrectly enabled or missing");
             verify(hasExactly(input.actions, "ReviewOpticalInspectionTravel", type == EWorldType::PIE ? 1 : 0),
                    "O optional engine review handoff must be PIE-only");
-            // Two sprint edges in PIE, never a stuck press-only Shift.
-            verify(hasExactly(input.actions, "EnderPIEReviewSprint", type == EWorldType::PIE ? 2 : 0),
-                   "Ender sprint must bind pressed and released in PIE only");
+            // Two sprint edges in editor PIE and -game, never stuck Shift.
+            verify(hasExactly(input.actions, "EnderPIEReviewSprint", type == EWorldType::Editor ? 0 : 2),
+                   "Ender sprint needs pressed and released in PIE/Game");
             verify(hasExactly(input.releasedActions, "EnderPIEReviewSprint",
-                              type == EWorldType::PIE ? 1 : 0),
-                   "Ender sprint release must bind once in PIE only");
-            verify(input.releasedActions.size() == (type == EWorldType::PIE ? 1u : 0u),
+                              type == EWorldType::Editor ? 0 : 1),
+                   "Ender sprint release needs one edge in PIE/Game");
+            verify(input.releasedActions.size() == (type == EWorldType::Editor ? 0u : 1u),
                    "Other input actions must be pressed-only");
             if (type == EWorldType::PIE) {
                 verify(hasExactly(input.actions, "PIEReviewQuickSave", 1),
@@ -152,7 +152,7 @@ int main() {
                 verify(hasExactly(input.actions, "EngineFocusPreview", 0),
                        "Editor world cannot bind PIE-only camera review");
             }
-            verify(input.actions.size() == (type == EWorldType::PIE ? 13u : (type == EWorldType::Game ? 8u : 3u)),
+            verify(input.actions.size() == (type == EWorldType::PIE ? 13u : (type == EWorldType::Game ? 10u : 3u)),
                    "Unexpected extra or duplicated action bindings");
         }
         ATSTSSExplorerCharacter missingWorld;

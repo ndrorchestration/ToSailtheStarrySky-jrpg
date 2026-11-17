@@ -1,4 +1,4 @@
-"""Source contract for opt-in Ender PIE walk and held-Shift sprint.
+"""Source contract for opt-in PIE and editor-built -game walk / sprint.
 
 Source-only negative mutation assertions; never claim native input or animation.
 """
@@ -21,6 +21,8 @@ def holds_lease(src):
     b = controls(src)
     return all(gate in b for gate in (
         "bEnableEnderPIEWalkRunControls",
+        "bPIEOptIn", "bGameOptIn", "FParse::Param(FCommandLine::Get()",
+        'TEXT("EnderReviewSprint")', "World->WorldType == EWorldType::Game",
         "bFirstWakeThirdPersonReview", "IsPlayerControlled()",
         "World->WorldType == EWorldType::PIE",
         "World->GetNetMode() == NM_Standalone",
@@ -37,13 +39,13 @@ def holds_lease(src):
         "EnderPIELastAssignedMaxWalkSpeed",
         "bEnderPIESprintHeld", "PC->IsMoveInputIgnored()",
         "IsHilltoniaFlyerOpen()", "EngineFocusPreviewCamera.IsValid()",
-        "WalkSpeedCmS = 260.f", "RunSpeedCmS = 480.f",
+        "WalkSpeedCmS = 260.f", "RunSpeedCmS = 600.f",
         "movement_owner_changed", "animation_NOT_VERIFIED"
     ))
 
 
 class EnderPIEWalkRunTests(unittest.TestCase):
-    def test_off_by_default_and_input_bound_only_in_editor_pie(self):
+    def test_off_by_default_and_input_bound_in_editor_playing_worlds(self):
         self.assertIn("bool bEnableEnderPIEWalkRunControls = false;", HDR)
         self.assertIn("#if WITH_EDITORONLY_DATA", HDR)
         self.assertEqual(INPUT.count('+ActionMappings=(ActionName="EnderPIEReviewSprint",Key=LeftShift)'), 1)
@@ -51,6 +53,9 @@ class EnderPIEWalkRunTests(unittest.TestCase):
             "void ATSTSSExplorerCharacter::MoveForward(", 1)[0]
         self.assertIn("#if WITH_EDITOR", bind)
         self.assertIn("InputWorld->WorldType == EWorldType::PIE", bind)
+        self.assertIn("InputWorld->WorldType == EWorldType::Game", bind)
+        self.assertIn('#include "Misc/CommandLine.h"', CPP)
+        self.assertIn('#include "Misc/Parse.h"', CPP)
         self.assertIn('BindAction(TEXT("EnderPIEReviewSprint"), IE_Pressed', bind)
         self.assertIn('BindAction(TEXT("EnderPIEReviewSprint"), IE_Released', bind)
         self.assertTrue(holds_lease(CPP))
@@ -78,6 +83,8 @@ class EnderPIEWalkRunTests(unittest.TestCase):
         tick = CPP.split("void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)", 1)[1].split(
             "void ATSTSSExplorerCharacter::EndPlay(", 1
         )[0]
+        self.assertEqual(tick.count("TryEnderPIEWalkRunControls();"), 2)
+        self.assertIn("World->WorldType == EWorldType::Game", tick)
         self.assertIn("TryEnderPIEWalkRunControls();", tick)
         self.assertIn("bReviewNamespace", tick)
         self.assertIn("World->WorldType == EWorldType::PIE", tick)
@@ -92,6 +99,9 @@ class EnderPIEWalkRunTests(unittest.TestCase):
         block = controls(CPP)
         for required in (
             "bEnableEnderPIEWalkRunControls",
+            "bPIEOptIn", "bGameOptIn",
+            "FParse::Param(FCommandLine::Get()",
+            'TEXT("EnderReviewSprint")',
             "bFirstWakeThirdPersonReview", "IsPlayerControlled()",
             "World->WorldType == EWorldType::PIE",
             "World->GetNetMode() == NM_Standalone",
@@ -104,7 +114,7 @@ class EnderPIEWalkRunTests(unittest.TestCase):
             "IsHilltoniaFlyerOpen()",
             "EngineFocusPreviewCamera.IsValid()",
             "WalkSpeedCmS = 260.f",
-            "RunSpeedCmS = 480.f",
+            "RunSpeedCmS = 600.f",
             "movement_owner_changed",
         ):
             with self.subTest(gate=required):
