@@ -198,6 +198,9 @@ private:
 
     // Transient preview angles only. Never serialized to player SaveGame.
     float SeabourneWindTrimDegrees[4] = { 0.f, 0.f, 0.f, 0.f };
+    // Transient presentation latch: used to roll back a live editor/PIE opt-out
+    // without keeping the experimental wing pose after the flag is disabled.
+    bool bSeabourneWindSailPoseActive = false;
 
     static FTransform SeabourneWindSailPose(int32 WingIndex, float TrimDegrees, bool bAuthoredRootPivot);
     static FTransform WingPose(EAureateWakeForm Form, int32 WingIndex);
