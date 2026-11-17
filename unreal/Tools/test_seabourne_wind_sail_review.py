@@ -111,14 +111,20 @@ class SeabourneWindSailSourceTests(unittest.TestCase):
             "!FMath::IsFinite(Degrees) || FMath::Abs(Degrees) > 35.f",
             "Wings.Num() != 4 || Hydrofoils.Num() != 2",
         )
+        # Mutation must target the setter BODY. The authorization predicate
+        # intentionally also occurs in the guarded getter, so mutating the
+        # first whole-file match could leave the setter unaffected.
+        setter=self.cpp.split("bool AAureateWakePreviewActor::SetSeabourneWindTrimDegrees",1)[1].split(
+            "\nbool AAureateWakePreviewActor::HasReviewStory",1)[0]
         for item in originals:
-            self.assertIn(item,self.cpp)
-            mutated=self.cpp.replace(item,"/* REDACTED UNSAFE */",1)
+            self.assertIn(item,setter)
+            mutated=setter.replace(item,"/* REDACTED UNSAFE */",1)
             with self.assertRaisesRegex(ValueError,"WIND_SAIL_SOURCE_HOLD"):
                 require_contract(mutated,(item,))
-        wrong=self.cpp.replace("300.f, 105.f, -90.f, -285.f",
-                               "300.f, 105.f, 105.f, -285.f",1)
-        self.assertNotIn("300.f, 105.f, -90.f, -285.f",wrong)
+        station="300.f, 105.f, -90.f, -285.f"
+        wrong=self.cpp.replace(station,"300.f, 105.f, 105.f, -285.f",1)
+        with self.assertRaisesRegex(ValueError,"WIND_SAIL_SOURCE_HOLD"):
+            require_contract(wrong,(station,))
 
 if __name__ == "__main__":
     unittest.main()
