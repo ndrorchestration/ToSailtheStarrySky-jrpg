@@ -257,10 +257,25 @@ void AAureateWakePreviewActor::UpdateDorsalMountTransforms()
     // Only a fully settled, explicitly opted-in Seabourne scene may reveal
     // these noncanonical supports. Their deployment path is NOT yet swept
     // for collision, so the masts never appear during any transformation.
+    // V1 WingHinge is an EXISTING imported REVIEW candidate, not approved art.
+    // An explicit second opt-in is required. Validate exact package identity
+    // AND native import bounds (source SHA is audited outside gameplay).
+    // On wrong input, fail closed by hiding both mount components.
+    const bool bHingeCandidateRequested = bUseImportedDorsalHingeReview;
+    UStaticMesh* HingeCandidate = ImportedDorsalHingeReviewMesh.Get();
+    const bool bHingeCandidateValid = !bHingeCandidateRequested ||
+        (IsValid(HingeCandidate) &&
+         HingeCandidate->GetPathName() == TEXT(
+             "/Game/TSTSS/Review/MultipathV1/ObjectImports/WingHinge/"
+             "WingHinge/StaticMeshes/WingHinge.WingHinge") &&
+         FMath::IsNearlyEqual(HingeCandidate->GetBounds().BoxExtent.X, 80.f, 1.f) &&
+         FMath::IsNearlyEqual(HingeCandidate->GetBounds().BoxExtent.Y, 62.5f, 1.f) &&
+         FMath::IsNearlyEqual(HingeCandidate->GetBounds().BoxExtent.Z, 48.f, 1.f));
     const bool bReady = bUseSeabourneWindSailReview &&
         CurrentForm == EAureateWakeForm::Seaborne && !bTransitioning &&
         Wings.Num() == 4 && Hydrofoils.Num() == 2 &&
-        DorsalMasts.Num() == 4 && DorsalSwivels.Num() == 4;
+        DorsalMasts.Num() == 4 && DorsalSwivels.Num() == 4 &&
+        bHingeCandidateValid;
     for (int32 Index = 0; Index < DorsalMasts.Num(); ++Index)
     {
         UStaticMeshComponent* Mast = DorsalMasts[Index];
@@ -298,10 +313,17 @@ void AAureateWakePreviewActor::UpdateDorsalMountTransforms()
             FVector(0.20f, 0.20f, Height / 100.f)));
         // This independent bearing remains at the fin's lower edge while
         // its yaw follows only that numbered sail's trim, not the others.
+        // The existing source-verified WingHinge is 160 x 125 x 96 cm
+        // in UE native bounds. At a noncanonical 0.30 scale its collar is
+        // 48 x 37.5 x 28.8 cm. BasicShapes cube remains the default.
+        Swivel->SetStaticMesh(bHingeCandidateRequested
+            ? HingeCandidate : OriginalCubeWingMesh.Get());
         Swivel->SetRelativeTransform(FTransform(
             FRotator(0.f, SeabourneWindTrimDegrees[Index], 0.f),
             FVector(WingRoot.X, 0.f, LowerEdge),
-            FVector(0.48f, 0.32f, 0.12f)));
+            bHingeCandidateRequested
+                ? FVector(0.30f, 0.30f, 0.30f)
+                : FVector(0.48f, 0.32f, 0.12f)));
         Mast->SetVisibility(true);
         Swivel->SetVisibility(true);
     }
