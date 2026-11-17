@@ -6,6 +6,7 @@
 #include "TSTSSExplorerCharacter.generated.h"
 
 class USkeletalMesh;
+class UAnimSequence;
 class UStaticMesh;
 class UStaticMeshComponent;
 
@@ -86,6 +87,23 @@ protected:
     FTransform EnderReviewGogglesLocalOffset = FTransform::Identity;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
     FTransform EnderReviewStaffLocalOffset = FTransform::Identity;
+    // Three explicit PRIVATE, in-place, matching-skeleton clips. None are
+    // assigned by default; preview is opt-in and never production locomotion.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview|Animation")
+    bool bEnableEnderPIELocomotionPreview = false;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview|Animation")
+    TSoftObjectPtr<UAnimSequence> EnderPIEIdleAnimation;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview|Animation")
+    TSoftObjectPtr<UAnimSequence> EnderPIEWalkAnimation;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview|Animation")
+    TSoftObjectPtr<UAnimSequence> EnderPIERunAnimation;
+    // Transient references survive PIE garbage collection but never persist.
+    UPROPERTY(Transient)
+    TObjectPtr<UAnimSequence> EnderPIEIdleLoaded;
+    UPROPERTY(Transient)
+    TObjectPtr<UAnimSequence> EnderPIEWalkLoaded;
+    UPROPERTY(Transient)
+    TObjectPtr<UAnimSequence> EnderPIERunLoaded;
 #endif
 private:
 #if WITH_EDITORONLY_DATA
@@ -99,6 +117,10 @@ private:
 #endif
 #if WITH_EDITOR
     void ApplyEnderSliceReviewAppearance();
+    void TryEnderPIELocomotionPreview(uint8 MotionBand);
+    bool bEnderPIEAnimPreviewChecked = false;
+    bool bEnderPIEAnimPreviewActive = false;
+    uint8 LastEnderPIEAnimBand = 255;
 #endif
 #if !UE_BUILD_SHIPPING
     bool HasSupportedReviewFooting(const UWorld* World, const FVector& PawnLocation) const;

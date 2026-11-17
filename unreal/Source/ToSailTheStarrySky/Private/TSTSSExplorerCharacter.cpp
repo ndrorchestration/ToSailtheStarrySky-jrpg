@@ -21,6 +21,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/SkeletalMesh.h"
 #include "Animation/Skeleton.h"
+#include "Animation/AnimSequence.h"
 #include "Components/CapsuleComponent.h"
 #endif
 #include "Engine/StaticMesh.h"
@@ -906,6 +907,13 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
                     GetCharacterMovement() && GetCharacterMovement()->IsMovingOnGround() ? 1 : 0);
                 LastEnderPIEMotionBand = MotionBand;
             }
+            // Only legitimate grounded speed bands can request a private
+            // animation preview; airborne clips are deliberately unimplemented.
+            if (GetCharacterMovement() &&
+                GetCharacterMovement()->IsMovingOnGround())
+            {
+                TryEnderPIELocomotionPreview(MotionBand);
+            }
         }
     }
     // Only scoped review worlds advertise live interaction. Visual refresh
@@ -1575,6 +1583,119 @@ void ATSTSSExplorerCharacter::SetupFirstWakeThirdPersonReview(UWorld* World)
     Visual->RegisterComponent();
     UE_LOG(LogTemp, Display, TEXT("TSTSS_ENDER_THIRD_PERSON_READY scene=%s source_height_cm=%.1f review_height_cm=176 static_lookdev=1"),
         *Scene, Height);
+}
+
+void ATSTSSExplorerCharacter::TryEnderPIELocomotionPreview(uint8 MotionBand)
+{
+    // This is an isolated, deliberately abrupt three-clip pose preview,
+    // not a production locomotion state machine or native proof of playback.
+    if (!bEnableEnderPIELocomotionPreview || MotionBand > 2 ||
+        !bFirstWakeThirdPersonReview || !IsPlayerControlled())
+    {
+        return;
+    }
+    const UWorld* World = GetWorld();
+    if (!World || World->WorldType != EWorldType::PIE ||
+        World->GetNetMode() != NM_Standalone || !World->GetOutermost() ||
+        !World->GetOutermost()->GetName().StartsWith(
+            TEXT("/Game/TSTSS/Review/")))
+    {
+        return;
+    }
+    const FString Scene = UGameplayStatics::GetCurrentLevelName(World, true);
+    if (Scene != TEXT("FirstWake_PreludeInteraction_V5_VisualReview") &&
+        Scene != TEXT("VS02_AureateInteriors"))
+    {
+        return;
+    }
+    USkeletalMeshComponent* Body = GetMesh();
+    if (!IsValid(Body) || !Body->IsRegistered() || !Body->IsVisible() ||
+        !IsValid(Body->GetSkeletalMeshAsset()) ||
+        EnderSliceReviewBody.IsNull() ||
+        Body->GetSkeletalMeshAsset() != EnderSliceReviewBody.Get())
+    {
+        return; // Never animate a stock, absent or unrelated body.
+    }
+    if (!GetCharacterMovement() ||
+        !GetCharacterMovement()->IsMovingOnGround())
+    {
+        return; // No implicit jumping or falling animation.
+    }
+    if (!bEnderPIEAnimPreviewChecked)
+    {
+        bEnderPIEAnimPreviewChecked = true; // Report each HOLD only once per PIE.
+        if (Body->GetAnimClass() != nullptr ||
+            Body->GetAnimationMode() == EAnimationMode::AnimationCustomMode)
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("TSTSS_ENDER_PIE_ANIM_HOLD existing_animation_owner"));
+            return; // Do not replace an authored AnimBP or custom owner.
+        }
+        if (EnderPIEIdleAnimation.IsNull() ||
+            EnderPIEWalkAnimation.IsNull() ||
+            EnderPIERunAnimation.IsNull())
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("TSTSS_ENDER_PIE_ANIM_HOLD incomplete_private_triplet"));
+            return;
+        }
+        UAnimSequence* Idle = EnderPIEIdleAnimation.LoadSynchronous();
+        UAnimSequence* Walk = EnderPIEWalkAnimation.LoadSynchronous();
+        UAnimSequence* Run = EnderPIERunAnimation.LoadSynchronous();
+        const USkeleton* BoundSkeleton =
+            Body->GetSkeletalMeshAsset()->GetSkeleton();
+        if (!BoundSkeleton || !IsValid(Idle) || !IsValid(Walk) ||
+            !IsValid(Run) ||
+            Idle->GetSkeleton() != BoundSkeleton ||
+            Walk->GetSkeleton() != BoundSkeleton ||
+            Run->GetSkeleton() != BoundSkeleton ||
+            Idle->bEnableRootMotion || Walk->bEnableRootMotion ||
+            Run->bEnableRootMotion)
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("TSTSS_ENDER_PIE_ANIM_HOLD incompatible_skeleton_or_root_motion"));
+            return; // No partial bindings or root-motion drift.
+        }
+        EnderPIEIdleLoaded = Idle;
+        EnderPIEWalkLoaded = Walk;
+        EnderPIERunLoaded = Run;
+        bEnderPIEAnimPreviewActive = true;
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_ENDER_PIE_ANIM_TRIPLET_STAGED clips=3 render_NOT_VERIFIED deformation_NOT_VERIFIED"));
+    }
+    if (!bEnderPIEAnimPreviewActive)
+    {
+        return;
+    }
+    if (LastEnderPIEAnimBand != 255 &&
+        Body->GetAnimationMode() != EAnimationMode::AnimationSingleNode)
+    {
+        bEnderPIEAnimPreviewActive = false;
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_ENDER_PIE_ANIM_HOLD animation_owner_changed"));
+        return; // Never reassert control over another animation owner.
+    }
+    if (LastEnderPIEAnimBand == MotionBand)
+    {
+        return;
+    }
+    UAnimSequence* Next = MotionBand == 0 ? EnderPIEIdleLoaded.Get() :
+        (MotionBand == 1 ? EnderPIEWalkLoaded.Get() : EnderPIERunLoaded.Get());
+    if (!IsValid(Next))
+    {
+        bEnderPIEAnimPreviewActive = false;
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_ENDER_PIE_ANIM_HOLD loaded_clip_unavailable"));
+        return;
+    }
+    // UE 5.8 transient single-node playback; intentionally no asset or map write.
+    Body->PlayAnimation(Next, true);
+    LastEnderPIEAnimBand = MotionBand;
+    UE_LOG(LogTemp, Display,
+        TEXT("TSTSS_ENDER_PIE_ANIM_REQUESTED band=%s clip=%s in_place=1 playback_NOT_VERIFIED"),
+        MotionBand == 0 ? TEXT("idle") :
+            (MotionBand == 1 ? TEXT("walk") : TEXT("run")),
+        *Next->GetName());
 }
 
 void ATSTSSExplorerCharacter::ToggleFirstWakeBokehReview()
