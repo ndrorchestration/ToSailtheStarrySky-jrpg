@@ -90,9 +90,14 @@ class EnderSkeletalPriorityTests(unittest.TestCase):
             "SkeletalBody->IsVisible()",
         ):
             with self.subTest(guard=guard):
-                self.assertFalse(skeletal_precedes_static(SOURCE.replace(
+                review_block = review_setup(SOURCE)
+                damaged_block = review_block.replace(
                     guard, "/* missing skeletal eligibility */", 1
-                )))
+                )
+                self.assertNotEqual(review_block, damaged_block)
+                self.assertFalse(skeletal_precedes_static(
+                    SOURCE.replace(review_block, damaged_block, 1)
+                ))
 
 
 if __name__ == "__main__":
