@@ -271,7 +271,7 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
     Place(NoticePanel, BoardX, BoardY, 221.f, 2.55f, .22f, 1.72f);
     Place(NoticeSheet, BoardX, BoardY - 13.f, 227.f, 1.78f, .045f, 1.31f);
     WayfindingSign(Owner, Root, TEXT("HilltoniaPostingFlyerPreview"),
-        TEXT("CAPTAIN IONIA\\nENGINEER WANTED"),
+        TEXT("CAPTAIN IONIA\nENGINEER WANTED"),
         FVector(BoardX - 90.f, BoardY - 20.f, 240.f), 0.f, 27.f);
 
     // Oak/maple/beech/birch-compatible deciduous silhouettes in the
