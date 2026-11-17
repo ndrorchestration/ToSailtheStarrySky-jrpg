@@ -82,7 +82,9 @@ class PrivateEnderSkeletalBindingSourceTests(unittest.TestCase):
             'Scene != TEXT("VS02_AureateInteriors")',
         ):
             with self.subTest(element=element):
-                self.assertFalse(eligible(CPP.replace(element, "/* removed gate */", 1)))
+                scoped = binding(CPP)
+                damaged = CPP.replace(scoped, scoped.replace(element, "/* removed gate */", 1), 1)
+                self.assertFalse(eligible(damaged))
 
     def test_mutation_dropping_bones_or_actual_mesh_bind_is_detected(self):
         for element in (
