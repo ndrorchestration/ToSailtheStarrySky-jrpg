@@ -62,6 +62,8 @@ class PrivateEnderIKBuilderContracts(unittest.TestCase):
         self.assertIn('unreal.IKRetargeterController.get_controller(retargeter)', CODE)
         self.assertIn('"SOURCE_SKELETON_DRIFT"', CODE)
         self.assertIn('"TARGET_SKELETON_DRIFT"', CODE)
+        self.assertIn('controller.add_default_ops()', CODE)
+        self.assertIn('controller.get_num_retarget_ops() >= 5', CODE)
         self.assertIn('"RETARGETER_HAS_NO_FK_IK_CHAIN_OPS"', CODE)
         self.assertIn('"RETARGET_CHAIN_SET_" + chain', CODE)
         self.assertIn('"SOURCE_FILE_CHANGED_DURING_IK_CREATE"', CODE)
