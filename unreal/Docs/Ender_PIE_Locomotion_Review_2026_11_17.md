@@ -11,8 +11,12 @@ single-node animation preview** of three legitimately licensed **in-place**
 `UAnimSequence` clips, without building a second pawn or treating capsule
 speed as proof of a deforming animated body.
 
-Epic UE 5.8 API reference: `USkeletalMeshComponent::PlayAnimation`
-(<https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Engine/USkeletalMeshComponent/PlayAnimation>).
+Epic UE 5.8 API references: `USkeletalMeshComponent::PlayAnimation`
+(<https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Engine/USkeletalMeshComponent/PlayAnimation>),
+`USkeletalMeshComponent::GetSingleNodeInstance`
+(<https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Engine/USkeletalMeshComponent>),
+and `UAnimSingleNodeInstance::GetCurrentAsset`
+(<https://dev.epicgames.com/documentation/unreal-engine/API/Runtime/Engine/UAnimSingleNodeInstance>).
 The API only requests transient playback; source tests and log entries do **not**
 establish native pose evaluation, foot placement or rendered evidence.
 
@@ -30,7 +34,11 @@ establish native pose evaluation, foot placement or rendered evidence.
 3. **Fail closed before mutation:** actual bound skeletal body matches the
    explicitly assigned candidate, registered and visible, grounded; three clips
    load together, use **exact same USkeleton**, and have root motion disabled.
-   Existing animation Blueprints and custom animation owners are not replaced.
+   Existing animation Blueprints, custom and pre-assigned single-node
+   animation owners are not replaced. After starting the review, each next
+   transition requires its prior single-node asset to still match the asset
+   requested by this preview. An external owner replacing a clip without
+   changing animation mode triggers a fail-closed HOLD, rather than a takeover.
    A failing gate causes a one-shot HOLD log and leaves the previous animation
    owner intact.
 4. **Review behavior:** transition among looping idle (speed <10 cm/s),

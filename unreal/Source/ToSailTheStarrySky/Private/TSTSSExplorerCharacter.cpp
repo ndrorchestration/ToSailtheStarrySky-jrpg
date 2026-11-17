@@ -22,6 +22,7 @@
 #include "Engine/SkeletalMesh.h"
 #include "Animation/Skeleton.h"
 #include "Animation/AnimSequence.h"
+#include "Animation/AnimSingleNodeInstance.h"
 #include "Components/CapsuleComponent.h"
 #endif
 #include "Engine/StaticMesh.h"
@@ -1625,11 +1626,12 @@ void ATSTSSExplorerCharacter::TryEnderPIELocomotionPreview(uint8 MotionBand)
     {
         bEnderPIEAnimPreviewChecked = true; // Report each HOLD only once per PIE.
         if (Body->GetAnimClass() != nullptr ||
-            Body->GetAnimationMode() == EAnimationMode::AnimationCustomMode)
+            Body->GetAnimInstance() != nullptr ||
+            Body->GetAnimationMode() != EAnimationMode::AnimationBlueprint)
         {
             UE_LOG(LogTemp, Warning,
                 TEXT("TSTSS_ENDER_PIE_ANIM_HOLD existing_animation_owner"));
-            return; // Do not replace an authored AnimBP or custom owner.
+            return; // Preserve Blueprint, custom AND prior single-node owners.
         }
         if (EnderPIEIdleAnimation.IsNull() ||
             EnderPIEWalkAnimation.IsNull() ||
@@ -1667,13 +1669,25 @@ void ATSTSSExplorerCharacter::TryEnderPIELocomotionPreview(uint8 MotionBand)
     {
         return;
     }
-    if (LastEnderPIEAnimBand != 255 &&
-        Body->GetAnimationMode() != EAnimationMode::AnimationSingleNode)
+    // Protect the exact single-node asset we most recently requested. Merely
+    // observing SingleNode mode is insufficient: another system can replace
+    // the asset without changing the mode. Never wrest control back.
+    if (LastEnderPIEAnimBand != 255)
     {
-        bEnderPIEAnimPreviewActive = false;
-        UE_LOG(LogTemp, Warning,
-            TEXT("TSTSS_ENDER_PIE_ANIM_HOLD animation_owner_changed"));
-        return; // Never reassert control over another animation owner.
+        UAnimSequence* PreviouslyRequested =
+            LastEnderPIEAnimBand == 0 ? EnderPIEIdleLoaded.Get() :
+            (LastEnderPIEAnimBand == 1 ? EnderPIEWalkLoaded.Get() :
+                                           EnderPIERunLoaded.Get());
+        UAnimSingleNodeInstance* CurrentNode = Body->GetSingleNodeInstance();
+        if (Body->GetAnimationMode() != EAnimationMode::AnimationSingleNode ||
+            Body->GetAnimClass() != nullptr || !IsValid(CurrentNode) ||
+            CurrentNode->GetCurrentAsset() != PreviouslyRequested)
+        {
+            bEnderPIEAnimPreviewActive = false;
+            UE_LOG(LogTemp, Warning,
+                TEXT("TSTSS_ENDER_PIE_ANIM_HOLD animation_owner_changed"));
+            return;
+        }
     }
     if (LastEnderPIEAnimBand == MotionBand)
     {

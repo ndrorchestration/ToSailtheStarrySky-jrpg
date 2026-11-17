@@ -33,7 +33,8 @@ def guarded(src):
         "GetCharacterMovement()->IsMovingOnGround()",
         "if (!bEnderPIEAnimPreviewChecked)",
         "Body->GetAnimClass() != nullptr",
-        "Body->GetAnimationMode() == EAnimationMode::AnimationCustomMode",
+        "Body->GetAnimInstance() != nullptr",
+        "Body->GetAnimationMode() != EAnimationMode::AnimationBlueprint",
         "EnderPIEIdleAnimation.IsNull()",
         "EnderPIEWalkAnimation.IsNull()",
         "EnderPIERunAnimation.IsNull()",
@@ -44,6 +45,8 @@ def guarded(src):
         "Walk->bEnableRootMotion",
         "Run->bEnableRootMotion",
         "Body->GetAnimationMode() != EAnimationMode::AnimationSingleNode",
+        "Body->GetSingleNodeInstance()",
+        "CurrentNode->GetCurrentAsset() != PreviouslyRequested",
         "if (LastEnderPIEAnimBand == MotionBand)",
         "Body->PlayAnimation(Next, true)",
         "playback_NOT_VERIFIED", "deformation_NOT_VERIFIED",
@@ -60,6 +63,7 @@ class EnderPIELocomotionPreviewTests(unittest.TestCase):
             self.assertIn(f"TSoftObjectPtr<UAnimSequence> EnderPIE{name}Animation", HDR)
             self.assertIn(f"TObjectPtr<UAnimSequence> EnderPIE{name}Loaded", HDR)
         self.assertIn("#include \"Animation/AnimSequence.h\"", CPP)
+        self.assertIn("#include \"Animation/AnimSingleNodeInstance.h\"", CPP)
         self.assertTrue(guarded(CPP))
 
     def test_transition_requires_grounded_genuine_controlled_pawn(self):
@@ -92,6 +96,8 @@ class EnderPIELocomotionPreviewTests(unittest.TestCase):
             "Body->GetSkeletalMeshAsset() != EnderSliceReviewBody.Get()",
             "GetCharacterMovement()->IsMovingOnGround()",
             "Body->GetAnimClass() != nullptr",
+            "Body->GetAnimInstance() != nullptr",
+            "Body->GetAnimationMode() != EAnimationMode::AnimationBlueprint",
             "EnderPIEIdleAnimation.IsNull()",
             "EnderPIEWalkAnimation.IsNull()",
             "EnderPIERunAnimation.IsNull()",
@@ -102,6 +108,7 @@ class EnderPIELocomotionPreviewTests(unittest.TestCase):
             "Walk->bEnableRootMotion",
             "Run->bEnableRootMotion",
             "Body->GetAnimationMode() != EAnimationMode::AnimationSingleNode",
+            "CurrentNode->GetCurrentAsset() != PreviouslyRequested",
             "Body->PlayAnimation(Next, true)",
             "playback_NOT_VERIFIED",
         ):
