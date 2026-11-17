@@ -39,6 +39,11 @@ class EnderRetargetPrerequisiteContracts(unittest.TestCase):
         self.assertIn("get_bone_parent(src[1])", SOURCE)
         self.assertIn("get_bone_parent(tgt[1])", SOURCE)
         self.assertIn("BONE_CHAIN_NOT_PRESENT_", SOURCE)
+        self.assertIn("CHAIN_ANCESTRY_INVALID_", SOURCE)
+        self.assertIn("trace_ancestry(source, src[0], src[1])", SOURCE)
+        self.assertIn("trace_ancestry(target, tgt[0], tgt[1])", SOURCE)
+        self.assertIn("cursor in seen", SOURCE)
+        self.assertIn("mesh.get_bone_parent(unreal.Name(cursor))", SOURCE)
         self.assertIn("IK_RIG_EDITOR_PLUGIN_MISSING", SOURCE)
 
     def test_does_not_create_or_bind_any_animation(self):
