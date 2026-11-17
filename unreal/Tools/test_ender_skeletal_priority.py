@@ -53,7 +53,7 @@ class EnderSkeletalPriorityTests(unittest.TestCase):
         self.assertIn('Scene != TEXT("FirstWake_PreludeInteraction_V5_VisualReview")', block)
         self.assertIn('Scene != TEXT("VS02_AureateInteriors")', block)
         self.assertIn(
-            "#if WITH_EDITOR\\nvoid ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance()",
+            "#if WITH_EDITOR\nvoid ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance()",
             SOURCE,
         )
         editor_segment = SOURCE.split(
