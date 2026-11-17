@@ -104,6 +104,67 @@ class SeabourneWindSailSourceTests(unittest.TestCase):
         ))
         self.assertEqual(self.native.count("IMPLEMENT_SIMPLE_AUTOMATION_TEST("),1)
 
+    def test_live_opt_out_restores_legacy_pose_without_story_progress(self):
+        require_contract(self.header,(
+            "bool bSeabourneWindSailPoseActive = false;",
+        ))
+        snap=self.cpp.split("void AAureateWakePreviewActor::SnapToForm",1)[1].split(
+            "\nfloat AAureateWakePreviewActor::GetSeabourneWindTrimDegrees",1)[0]
+        require_contract(snap,(
+            "bSeabourneWindSailPoseActive =",
+            "bUseSeabourneWindSailReview && Form == EAureateWakeForm::Seaborne;",
+            "RefreshRootSupports();",
+        ))
+        tick=self.cpp.split("void AAureateWakePreviewActor::Tick",1)[1]
+        require_contract(tick,(
+            "bSeabourneWindSailPoseActive && !bUseSeabourneWindSailReview",
+            "SnapToForm(CurrentForm);",
+            "(bUseSeabourneWindSailReview || bSeabourneWindSailPoseActive)",
+        ))
+        require_contract(self.native,(
+            "Ship->SetSeabourneWindTrimDegrees(2, 15.f)",
+            "Ship->bUseSeabourneWindSailReview = false;",
+            "Ship->Tick(0.1f);",
+            "Live opt-out clears stale yaw",
+            "Same-frame opt-out plus revocation denies Seabourne presentation",
+        ))
+        self.assertNotIn("SetReviewShipMode",tick)
+        self.assertNotIn("SaveGame",snap)
+
+    def test_old_lateral_struts_hidden_when_dorsal_route_is_active(self):
+        support=self.cpp.split("void AAureateWakePreviewActor::RefreshRootSupports",1)[1].split(
+            "\nFTransform AAureateWakePreviewActor::WingPose",1)[0]
+        require_contract(support,(
+            "const bool bDorsalRoute = bUseSeabourneWindSailReview &&",
+            "!bDorsalRoute;",
+            "(bTransitioning && TargetForm == EAureateWakeForm::Seaborne)",
+            "if (bUseSeabourneWindSailReview &&",
+            "if (Support) Support->SetVisibility(false);",
+            "return;",
+        ))
+        # Unmodified old side-anchor transform would otherwise draw across
+        # the vessel's bridge if used on a dorsal-mounted wing.
+        self.assertIn("const FVector HullAnchor(Root.X, Side * 73.f, 18.f);",support)
+        # The suppression is explicitly above that old side-anchor path.
+        self.assertLess(support.index("if (Support) Support->SetVisibility(false);"),
+                        support.index("const FVector HullAnchor("))
+        self.assertIn("RefreshRootSupports();",self.cpp.split(
+            "void AAureateWakePreviewActor::SnapToForm",1)[1].split(
+            "\nfloat AAureateWakePreviewActor::GetSeabourneWindTrimDegrees",1)[0])
+
+    def test_negative_mutations_guard_live_optout_and_mount_suppression(self):
+        original="bSeabourneWindSailPoseActive && !bUseSeabourneWindSailReview"
+        self.assertIn(original,self.cpp)
+        mutated=self.cpp.replace(original,"false /* unsafe disabled opt-out */",1)
+        with self.assertRaisesRegex(ValueError,"WIND_SAIL_SOURCE_HOLD"):
+            require_contract(mutated,(original,))
+        original="if (Support) Support->SetVisibility(false);"
+        self.assertIn(original,self.cpp)
+        mutated=self.cpp.replace(original,"/* unsafe support left visible */",1)
+        with self.assertRaisesRegex(ValueError,"WIND_SAIL_SOURCE_HOLD"):
+            require_contract(mutated,(original,))
+        self.assertIn("Same-frame opt-out plus revocation",self.native)
+
     def test_negative_mutations_detect_unsafe_permission_and_geometry(self):
         originals=(
             "!bUseSeabourneWindSailReview || bTransitioning",
