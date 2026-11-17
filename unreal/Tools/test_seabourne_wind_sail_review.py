@@ -187,7 +187,8 @@ class SeabourneWindSailSourceTests(unittest.TestCase):
             "DorsalMasts.Add(Mast);",
             "DorsalSwivels.Add(Swivel);",
         ))
-        assert ctor.count("for (int32 Index = 0; Index < 4; ++Index)") >= 4
+        self.assertGreaterEqual(
+            ctor.count("for (int32 Index = 0; Index < 4; ++Index)"),3)
         self.assertEqual(ctor.count("DorsalMasts.Add(Mast);"),1)
         self.assertEqual(ctor.count("DorsalSwivels.Add(Swivel);"),1)
         self.assertIn("Component->SetCollisionEnabled(ECollisionEnabled::NoCollision);",self.cpp)
