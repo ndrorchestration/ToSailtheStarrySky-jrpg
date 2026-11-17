@@ -14,7 +14,9 @@ import re
 from pathlib import Path
 
 PREFIX="LogTemp: Display: "
-STAMP=re.compile(r"^\[(\d{4}\.\d{2}\.\d{2}-\d{2}\.\d{2}\.\d{2}):(\d{3})\]\[\d+\]")
+# Unreal right-aligns its frame counter: [007] and [ 59] are both genuine.
+# Allow only ASCII padding inside the frame brackets; timestamps stay strict.
+STAMP=re.compile(r"^\[(\d{4}\.\d{2}\.\d{2}-\d{2}\.\d{2}\.\d{2}):(\d{3})\]\[ *\d+\]")
 KV=re.compile(r"([A-Za-z_]+)=([^\s]+)")
 EXPECTED_E=(
     "FlyerDiscovery","IoniaHiring","AureateBoarding",
