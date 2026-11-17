@@ -3,6 +3,8 @@
 #include "TSTSSFirstWakeState.h"
 #include "Engine/World.h"
 #include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
+#include <limits>
 
 #if WITH_DEV_AUTOMATION_TESTS
 // Real native AActor geometry/policy test in an isolated transient world.
@@ -43,6 +45,50 @@ bool FTSTSSAureateSeabourneStoryGate::RunTest(const FString& Parameters)
     }
     const FVector SkyWingRoot = FirstWing->GetRelativeLocation();
     TestFalse(TEXT("Skybourne hydrofoil initially stowed"), FirstFoil->IsVisible());
+    TestEqual(TEXT("Exactly four inert dorsal masts"), Ship->GetDorsalMastCount(), 4);
+    TestEqual(TEXT("Exactly four separate swivel collars"), Ship->GetDorsalSwivelCount(), 4);
+    UStaticMeshComponent* DorsalMasts[4] = { nullptr, nullptr, nullptr, nullptr };
+    UStaticMeshComponent* DorsalSwivels[4] = { nullptr, nullptr, nullptr, nullptr };
+    for (UStaticMeshComponent* Mesh : Meshes)
+    {
+        for (int32 Index = 0; Index < 4; ++Index)
+        {
+            if (Mesh->GetFName() ==
+                FName(*FString::Printf(TEXT("DorsalMast_%d"), Index + 1)))
+            {
+                DorsalMasts[Index] = Mesh;
+            }
+            if (Mesh->GetFName() ==
+                FName(*FString::Printf(TEXT("DorsalSwivel_%d"), Index + 1)))
+            {
+                DorsalSwivels[Index] = Mesh;
+            }
+        }
+    }
+    bool bFoundMountPairs = true;
+    for (int32 Index = 0; Index < 4; ++Index)
+    {
+        bFoundMountPairs &= TestNotNull(
+            *FString::Printf(TEXT("Dorsal mast %d persists"), Index + 1),
+            DorsalMasts[Index]);
+        bFoundMountPairs &= TestNotNull(
+            *FString::Printf(TEXT("Dorsal swivel %d persists"), Index + 1),
+            DorsalSwivels[Index]);
+    }
+    if (!bFoundMountPairs)
+    {
+        World->DestroyWorld(false);
+        return false;
+    }
+    for (int32 Index = 0; Index < 4; ++Index)
+    {
+        TestFalse(TEXT("Unselected dorsal mast hidden"), DorsalMasts[Index]->IsVisible());
+        TestFalse(TEXT("Unselected swivel hidden"), DorsalSwivels[Index]->IsVisible());
+        TestEqual(TEXT("Dorsal mast never adds collision"),
+            DorsalMasts[Index]->GetCollisionEnabled(), ECollisionEnabled::NoCollision);
+        TestEqual(TEXT("Dorsal swivel never adds collision"),
+            DorsalSwivels[Index]->GetCollisionEnabled(), ECollisionEnabled::NoCollision);
+    }
     // Editor presentation may start folded for a disposable coastal review
     // but does not grant any runtime configuration authorization.
     Ship->EditorReviewPose = EAureateWakeForm::Seaborne;
@@ -117,15 +163,233 @@ bool FTSTSSAureateSeabourneStoryGate::RunTest(const FString& Parameters)
     TestFalse(TEXT("Denied requests leave no pending transition"),
         Ship->IsTransitioning());
 
+    // Creator-directed four upright, aft-raked Seabourne wind-sail study.
+    // This opt-in test is REAL actor-component geometry, not a visual approval,
+    // aerodynamics, physical swept clearance, real wind or ship navigation.
+    TestFalse(TEXT("Wind sail study stays OFF unless explicitly selected"),
+        Ship->bUseSeabourneWindSailReview);
+    TestFalse(TEXT("Disabled wind trim refuses input"),
+        Ship->SetSeabourneWindTrimDegrees(1, 20.f));
+    Ship->bUseSeabourneWindSailReview = true;
+    TestTrue(TEXT("Rebinding opt-in docked study remains story scoped"),
+        Ship->BindReviewStory(Story));
+
+    UStaticMeshComponent* FourSails[4] = { nullptr, nullptr, nullptr, nullptr };
+    for (UStaticMeshComponent* Mesh : Meshes)
+    {
+        for (int32 Index = 0; Index < 4; ++Index)
+        {
+            if (Mesh->GetFName() ==
+                FName(*FString::Printf(TEXT("DragonflyWing_%d"), Index + 1)))
+            {
+                FourSails[Index] = Mesh;
+            }
+        }
+    }
+    bool bHaveFourDistinctSails = true;
+    for (int32 Index = 0; Index < 4; ++Index)
+    {
+        bHaveFourDistinctSails &= TestNotNull(
+            *FString::Printf(TEXT("Persistent Seabourne sail %d"), Index + 1),
+            FourSails[Index]);
+    }
+    if (!bHaveFourDistinctSails)
+    {
+        World->DestroyWorld(false);
+        return false;
+    }
+    for (int32 Index = 0; Index < 4; ++Index)
+    {
+        const FVector Root = FourSails[Index]->GetRelativeLocation();
+        const FVector Blade = FourSails[Index]->GetRelativeRotation().Vector();
+        TestTrue(TEXT("Each original sail moves to dorsal centerline"),
+            FMath::Abs(Root.Y) < 0.1f && Root.Z > 200.f);
+        TestTrue(TEXT("Each sail rises near vertical, gently aft-raked"),
+            Blade.Z > 0.94f && Blade.X < 0.f);
+        TestEqual(TEXT("Sail starts untrimmed"), Ship->GetSeabourneWindTrimDegrees(Index + 1), 0.f);
+        if (Index > 0)
+        {
+            TestTrue(TEXT("Dorsal row has distinct stations from fore to aft"),
+                FourSails[Index - 1]->GetRelativeLocation().X > Root.X);
+        }
+    }
+    for (int32 Index = 0; Index < 4; ++Index)
+    {
+        UStaticMeshComponent* Mast = DorsalMasts[Index];
+        UStaticMeshComponent* Swivel = DorsalSwivels[Index];
+        TestTrue(TEXT("Settled opt-in Seabourne mast visible"), Mast->IsVisible());
+        TestTrue(TEXT("Settled opt-in Seabourne hinge visible"), Swivel->IsVisible());
+        TestTrue(TEXT("Swivel and mast follow numbered wing station"),
+            FMath::IsNearlyEqual(Mast->GetRelativeLocation().X,
+                FourSails[Index]->GetRelativeLocation().X, 0.1) &&
+            FMath::IsNearlyEqual(Swivel->GetRelativeLocation().X,
+                FourSails[Index]->GetRelativeLocation().X, 0.1));
+        const double ExpectedBaseZ = Index == 0 ? 150.0 : 32.5;
+        const double BaseZ = Mast->GetRelativeLocation().Z -
+            50.0 * Mast->GetRelativeScale3D().Z;
+        const double MastTopZ = Mast->GetRelativeLocation().Z +
+            50.0 * Mast->GetRelativeScale3D().Z;
+        TestTrue(TEXT("Mast begins at proxy deck or bridge roof, not inside crew space"),
+            FMath::IsNearlyEqual(BaseZ, ExpectedBaseZ, 0.1));
+        TestTrue(TEXT("Mast physically touches its hinge collar at sail bottom"),
+            FMath::IsNearlyEqual(MastTopZ,
+                Swivel->GetRelativeLocation().Z, 0.5));
+        TestTrue(TEXT("Swivel starts at zero individual wind trim"),
+            FMath::IsNearlyZero(Swivel->GetRelativeRotation().Yaw, 0.1));
+    }
+    // Optional imported review hardware never changes the default cube
+    // mounting behavior. Bad/missing candidates fail CLOSED (hide mounts).
+    TestFalse(TEXT("Imported WingHinge review stays off by default"),
+        Ship->bUseImportedDorsalHingeReview);
+    TestNull(TEXT("No WingHinge asset is silently selected by the constructor"),
+        Ship->ImportedDorsalHingeReviewMesh.Get());
+    Ship->bUseImportedDorsalHingeReview = true;
+    Ship->RefreshRootSupports();
+    for (int32 Index = 0; Index < 4; ++Index)
+    {
+        TestFalse(TEXT("Missing imported hinge hides dorsal mast"),
+            DorsalMasts[Index]->IsVisible());
+        TestFalse(TEXT("Missing imported hinge hides dorsal collar"),
+            DorsalSwivels[Index]->IsVisible());
+    }
+    Ship->ImportedDorsalHingeReviewMesh = FourSails[0]->GetStaticMesh();
+    Ship->RefreshRootSupports();
+    for (int32 Index = 0; Index < 4; ++Index)
+    {
+        TestFalse(TEXT("Wrong package mesh cannot replace a hinge"),
+            DorsalSwivels[Index]->IsVisible());
+    }
+    UStaticMesh* WingHingeCandidate = LoadObject<UStaticMesh>(nullptr,
+        TEXT("/Game/TSTSS/Review/MultipathV1/ObjectImports/WingHinge/"
+             "WingHinge/StaticMeshes/WingHinge.WingHinge"));
+    if (!TestNotNull(TEXT("Existing V1 WingHinge mesh resolves natively"),
+        WingHingeCandidate))
+    {
+        World->DestroyWorld(false);
+        return false;
+    }
+    Ship->ImportedDorsalHingeReviewMesh = WingHingeCandidate;
+    Ship->RefreshRootSupports();
+    for (int32 Index = 0; Index < 4; ++Index)
+    {
+        TestTrue(TEXT("Source-sized reviewed hinge visible when doubly opted in"),
+            DorsalSwivels[Index]->IsVisible() && DorsalMasts[Index]->IsVisible());
+        TestTrue(TEXT("Exactly the allowlisted WingHinge candidate selected"),
+            DorsalSwivels[Index]->GetStaticMesh() == WingHingeCandidate);
+        TestTrue(TEXT("Imported hinge uniformly scaled to 30 percent"),
+            DorsalSwivels[Index]->GetRelativeScale3D().Equals(
+                FVector(0.30, 0.30, 0.30), 0.001));
+    }
+    Ship->bUseImportedDorsalHingeReview = false;
+    Ship->RefreshRootSupports();
+    for (int32 Index = 0; Index < 4; ++Index)
+    {
+        TestTrue(TEXT("Disabling imported candidate restores cube collar"),
+            DorsalSwivels[Index]->IsVisible() &&
+            DorsalSwivels[Index]->GetStaticMesh() ==
+                FourSails[Index]->GetStaticMesh());
+        TestTrue(TEXT("Default cube hinge dimensions recovered"),
+            DorsalSwivels[Index]->GetRelativeScale3D().Equals(
+                FVector(0.48, 0.32, 0.12), 0.001));
+    }
+    const FRotator SecondBefore = FourSails[1]->GetRelativeRotation();
+    const FRotator SecondSwivelBefore = DorsalSwivels[1]->GetRelativeRotation();
+    TestTrue(TEXT("Trim first sail independently"),
+        Ship->SetSeabourneWindTrimDegrees(1, 22.5f));
+    TestEqual(TEXT("Only sail 1 trim changed"), Ship->GetSeabourneWindTrimDegrees(1), 22.5f);
+    TestTrue(TEXT("First dorsal hinge independently tracks sail 1 trim"),
+        FMath::IsNearlyEqual(DorsalSwivels[0]->GetRelativeRotation().Yaw, 22.5, 0.1));
+    TestTrue(TEXT("Second dorsal swivel remains untrimmed"),
+        DorsalSwivels[1]->GetRelativeRotation().Equals(SecondSwivelBefore, 0.01));
+    TestEqual(TEXT("Sail 2 unchanged"), Ship->GetSeabourneWindTrimDegrees(2), 0.f);
+    TestTrue(TEXT("Other sail yaw remains unchanged"),
+        FourSails[1]->GetRelativeRotation().Equals(SecondBefore, 0.01f));
+    TestTrue(TEXT("Trim fourth sail independently opposite direction"),
+        Ship->SetSeabourneWindTrimDegrees(4, -14.f));
+    TestEqual(TEXT("Fourth changed without overwriting first"),
+        Ship->GetSeabourneWindTrimDegrees(1), 22.5f);
+    TestEqual(TEXT("Fourth stored trim"), Ship->GetSeabourneWindTrimDegrees(4), -14.f);
+    TestTrue(TEXT("Fourth dorsal swivel tracks independent opposing trim"),
+        FMath::IsNearlyEqual(DorsalSwivels[3]->GetRelativeRotation().Yaw, -14.0, 0.1));
+    TestFalse(TEXT("Invalid sail index zero denied"), Ship->SetSeabourneWindTrimDegrees(0, 4.f));
+    TestFalse(TEXT("Invalid fifth sail denied"), Ship->SetSeabourneWindTrimDegrees(5, 4.f));
+    TestFalse(TEXT("Beyond provisional visual yaw denied"), Ship->SetSeabourneWindTrimDegrees(3, 36.f));
+    TestFalse(TEXT("Non-finite wind yaw denied"), Ship->SetSeabourneWindTrimDegrees(
+        2, std::numeric_limits<float>::quiet_NaN()));
+    TestEqual(TEXT("Bad trim never changed second sail"),
+        Ship->GetSeabourneWindTrimDegrees(2), 0.f);
+    TestEqual(TEXT("Still four wings, never added sails"), Ship->GetWingCount(), 4);
+    TestEqual(TEXT("Still two hydrofoils"), Ship->GetHydrofoilCount(), 2);
+    TestTrue(TEXT("Restore authorized Seabourne resets ephemeral trim"),
+        Ship->BindReviewStory(Story));
+    TestEqual(TEXT("After story bind no stale sail 1 trim"),
+        Ship->GetSeabourneWindTrimDegrees(1), 0.f);
+    TestTrue(TEXT("Run separate test trim before live opt-out"),
+        Ship->SetSeabourneWindTrimDegrees(2, 15.f));
+    Ship->bUseSeabourneWindSailReview = false;
+    Ship->Tick(0.1f);
+    TestEqual(TEXT("Disabled live preview rolls back to legacy lateral wing"),
+        static_cast<double>(FourSails[1]->GetRelativeLocation().Y), 175.0);
+    TestEqual(TEXT("Live opt-out clears stale yaw"), Ship->GetSeabourneWindTrimDegrees(2), 0.f);
+    TestEqual(TEXT("Live opt-out retains authorized Seabourne form"),
+        Ship->GetCurrentForm(), EAureateWakeForm::Seaborne);
+    for (int32 Index = 0; Index < 4; ++Index)
+    {
+        TestFalse(TEXT("Live opt-out hides former dorsal mast"),
+            DorsalMasts[Index]->IsVisible());
+        TestFalse(TEXT("Live opt-out hides former dorsal swivel"),
+            DorsalSwivels[Index]->IsVisible());
+    }
+    TestTrue(TEXT("Restore original noncanonical default pose"),
+        Ship->BindReviewStory(Story));
+    TestFalse(TEXT("Disabled study refuses another trim"),
+        Ship->SetSeabourneWindTrimDegrees(1, 10.f));
+
     TestTrue(TEXT("Later recovery beat restored"), Story->Restore(
         true, ETSTSSFirstWakeBeat::EmptyReserveInspected, 0x07));
     TestTrue(TEXT("Rebind later Seabourne recovery"), Ship->BindReviewStory(Story));
     TestEqual(TEXT("Seabourne restriction persists beyond first shore"),
         Ship->GetCurrentForm(), EAureateWakeForm::Seaborne);
 
+    Ship->bUseSeabourneWindSailReview = true;
+    TestTrue(TEXT("Study yaw before story revocation"),
+        Ship->SetSeabourneWindTrimDegrees(3, 12.f));
     Story->Reset();
+    TestFalse(TEXT("Reset story immediately blocks wind trim"),
+        Ship->SetSeabourneWindTrimDegrees(3, 5.f));
+    TestEqual(TEXT("Unapproved stale trim not exposed after reset"),
+        Ship->GetSeabourneWindTrimDegrees(3), 0.f);
+    Ship->Tick(0.1f);
+    TestEqual(TEXT("Revocation snaps visual ship from study to Skybourne"),
+        Ship->GetCurrentForm(), EAureateWakeForm::Skyborne);
+    TestEqual(TEXT("Revocation clears ephemeral trim storage"),
+        Ship->GetSeabourneWindTrimDegrees(3), 0.f);
+    for (int32 Index = 0; Index < 4; ++Index)
+    {
+        TestFalse(TEXT("Story revocation hides every dorsal mast"),
+            DorsalMasts[Index]->IsVisible());
+        TestFalse(TEXT("Story revocation hides every dorsal swivel"),
+            DorsalSwivels[Index]->IsVisible());
+    }
+
+    // Additional adversarial ordering: disable the feature and reset the
+    // story in the same frame; revocation still has precedence over opt-out.
+    TestTrue(TEXT("Recreate authorized Seabourne for simultaneous opt-out test"),
+        Story->Restore(true, ETSTSSFirstWakeBeat::FlotationConfirmed, 0x07));
+    TestTrue(TEXT("Rebind legal Seabourne before simultaneous opt-out test"),
+        Ship->BindReviewStory(Story));
+    TestTrue(TEXT("Trim sail 4 before simultaneous opt-out and story reset"),
+        Ship->SetSeabourneWindTrimDegrees(4, 10.f));
+    Ship->bUseSeabourneWindSailReview = false;
+    Story->Reset();
+    Ship->Tick(0.1f);
+    TestEqual(TEXT("Same-frame opt-out plus revocation denies Seabourne presentation"),
+        Ship->GetCurrentForm(), EAureateWakeForm::Skyborne);
+    TestEqual(TEXT("Same-frame opt-out plus revocation masks stale sail trim"),
+        Ship->GetSeabourneWindTrimDegrees(4), 0.f);
     TestFalse(TEXT("Reset story denies mode changes"),
         Ship->RequestForm(EAureateWakeForm::Skyborne));
+    Ship->bUseSeabourneWindSailReview = false;
     TestTrue(TEXT("Restore pre-splashdown story again"), Story->Restore(
         true, ETSTSSFirstWakeBeat::Launched, 0x07));
     TestTrue(TEXT("Rebind previous story snapshot"), Ship->BindReviewStory(Story));

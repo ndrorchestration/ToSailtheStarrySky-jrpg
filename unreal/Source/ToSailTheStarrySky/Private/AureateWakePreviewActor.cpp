@@ -79,6 +79,25 @@ AAureateWakePreviewActor::AAureateWakePreviewActor()
         Support->SetVisibility(false);
         WingRootSupports.Add(Support);
     }
+    // Separate, inert hinge/mast proxies. The approved ship has no dorsal
+    // mast asset yet. These BasicShapes blocks are only visible in the
+    // explicit, settled Seabourne wind-sail review, never in production forms.
+    for (int32 Index = 0; Index < 4; ++Index)
+    {
+        UStaticMeshComponent* Mast = CreateDefaultSubobject<UStaticMeshComponent>(
+            FName(*FString::Printf(TEXT("DorsalMast_%d"), Index + 1)));
+        Mast->SetupAttachment(VesselRoot);
+        SetupPreviewMesh(Mast, Shape);
+        Mast->SetVisibility(false);
+        DorsalMasts.Add(Mast);
+
+        UStaticMeshComponent* Swivel = CreateDefaultSubobject<UStaticMeshComponent>(
+            FName(*FString::Printf(TEXT("DorsalSwivel_%d"), Index + 1)));
+        Swivel->SetupAttachment(VesselRoot);
+        SetupPreviewMesh(Swivel, Shape);
+        Swivel->SetVisibility(false);
+        DorsalSwivels.Add(Swivel);
+    }
     SnapToForm(EAureateWakeForm::Skyborne);
 }
 
@@ -214,8 +233,15 @@ void AAureateWakePreviewActor::RefreshWingMeshes()
 
 void AAureateWakePreviewActor::RefreshRootSupports()
 {
+    // Old hull-flank struts are NOT compatible with four dorsal roots. Until
+    // a separately cleared dorsal mount is authored, never render the old
+    // telescope supports during or after the experimental Seabourne route.
+    const bool bDorsalRoute = bUseSeabourneWindSailReview &&
+        (CurrentForm == EAureateWakeForm::Seaborne ||
+         (bTransitioning && TargetForm == EAureateWakeForm::Seaborne));
     const bool bVisible = bUseRootPivotedWingPose && AuthoredWingMesh &&
-        AuthoredRootSupportMesh && CurrentForm != EAureateWakeForm::Orbiter;
+        AuthoredRootSupportMesh && CurrentForm != EAureateWakeForm::Orbiter &&
+        !bDorsalRoute;
     for (UStaticMeshComponent* Support : WingRootSupports)
     {
         if (!Support) continue;
@@ -223,6 +249,84 @@ void AAureateWakePreviewActor::RefreshRootSupports()
         Support->SetVisibility(bVisible);
     }
     UpdateRootSupportTransforms();
+    UpdateDorsalMountTransforms();
+}
+
+void AAureateWakePreviewActor::UpdateDorsalMountTransforms()
+{
+    // Only a fully settled, explicitly opted-in Seabourne scene may reveal
+    // these noncanonical supports. Their deployment path is NOT yet swept
+    // for collision, so the masts never appear during any transformation.
+    // V1 WingHinge is an EXISTING imported REVIEW candidate, not approved art.
+    // An explicit second opt-in is required. Validate exact package identity
+    // AND native import bounds (source SHA is audited outside gameplay).
+    // On wrong input, fail closed by hiding both mount components.
+    const bool bHingeCandidateRequested = bUseImportedDorsalHingeReview;
+    UStaticMesh* HingeCandidate = ImportedDorsalHingeReviewMesh.Get();
+    const bool bHingeCandidateValid = !bHingeCandidateRequested ||
+        (IsValid(HingeCandidate) &&
+         HingeCandidate->GetPathName() == TEXT(
+             "/Game/TSTSS/Review/MultipathV1/ObjectImports/WingHinge/"
+             "WingHinge/StaticMeshes/WingHinge.WingHinge") &&
+         FMath::IsNearlyEqual(HingeCandidate->GetBounds().BoxExtent.X, 80.f, 1.f) &&
+         FMath::IsNearlyEqual(HingeCandidate->GetBounds().BoxExtent.Y, 62.5f, 1.f) &&
+         FMath::IsNearlyEqual(HingeCandidate->GetBounds().BoxExtent.Z, 48.f, 1.f));
+    const bool bReady = bUseSeabourneWindSailReview &&
+        CurrentForm == EAureateWakeForm::Seaborne && !bTransitioning &&
+        Wings.Num() == 4 && Hydrofoils.Num() == 2 &&
+        DorsalMasts.Num() == 4 && DorsalSwivels.Num() == 4 &&
+        bHingeCandidateValid;
+    for (int32 Index = 0; Index < DorsalMasts.Num(); ++Index)
+    {
+        UStaticMeshComponent* Mast = DorsalMasts[Index];
+        UStaticMeshComponent* Swivel =
+            DorsalSwivels.IsValidIndex(Index) ? DorsalSwivels[Index].Get() : nullptr;
+        if (!Mast || !Swivel) continue;
+        Mast->SetVisibility(false);
+        Swivel->SetVisibility(false);
+        if (!bReady || !IsValid(Wings[Index].Get())) continue;
+
+        const FVector WingRoot = Wings[Index]->GetRelativeLocation();
+        if (!FMath::IsFinite(WingRoot.X) || !FMath::IsFinite(WingRoot.Y) ||
+            !FMath::IsFinite(WingRoot.Z) || FMath::Abs(WingRoot.Y) > 1.f)
+        {
+            continue;
+        }
+        const bool bRootPivot = bUseRootPivotedWingPose && AuthoredWingMesh;
+        // Basic-shape +X 280cm fins are centered on their rotation root:
+        // the lower edge is roughly 140cm below the pivot at 98deg pitch.
+        // An authored root-pivoted wing's base is already at its root.
+        const float LowerEdge = bRootPivot ? WingRoot.Z :
+            WingRoot.Z - 140.f * FMath::Abs(
+                Wings[Index]->GetRelativeRotation().Vector().Z);
+        // The first station sits directly over the *proxy bridge roof*
+        // (95cm center + 55cm half height). Other stations rest on the
+        // hull proxy deck (32.5cm). Neither is a real mesh clearance claim.
+        const float BaseZ = Index == 0 ? 150.f : 32.5f;
+        const float Height = LowerEdge - BaseZ;
+        if (!FMath::IsFinite(Height) || Height < 15.f) continue;
+
+        // 100cm cube prototype, 20x20cm square mast. Its lower face
+        // TOUCHES the proxy structure without passing through its interior.
+        Mast->SetRelativeTransform(FTransform(FRotator::ZeroRotator,
+            FVector(WingRoot.X, 0.f, BaseZ + 0.5f * Height),
+            FVector(0.20f, 0.20f, Height / 100.f)));
+        // This independent bearing remains at the fin's lower edge while
+        // its yaw follows only that numbered sail's trim, not the others.
+        // The existing source-verified WingHinge is 160 x 125 x 96 cm
+        // in UE native bounds. At a noncanonical 0.30 scale its collar is
+        // 48 x 37.5 x 28.8 cm. BasicShapes cube remains the default.
+        Swivel->SetStaticMesh(bHingeCandidateRequested
+            ? HingeCandidate : OriginalCubeWingMesh.Get());
+        Swivel->SetRelativeTransform(FTransform(
+            FRotator(0.f, SeabourneWindTrimDegrees[Index], 0.f),
+            FVector(WingRoot.X, 0.f, LowerEdge),
+            bHingeCandidateRequested
+                ? FVector(0.30f, 0.30f, 0.30f)
+                : FVector(0.48f, 0.32f, 0.12f)));
+        Mast->SetVisibility(true);
+        Swivel->SetVisibility(true);
+    }
 }
 
 void AAureateWakePreviewActor::UpdateRootSupportTransforms()
@@ -231,6 +335,21 @@ void AAureateWakePreviewActor::UpdateRootSupportTransforms()
     // the moving wing-root location. It is purely a visual telescoping member.
     if (!bUseRootPivotedWingPose || !AuthoredWingMesh ||
         WingRootSupports.Num() != 4 || Wings.Num() != 4) return;
+
+    if (bUseSeabourneWindSailReview &&
+        (CurrentForm == EAureateWakeForm::Seaborne ||
+         (bTransitioning && TargetForm == EAureateWakeForm::Seaborne)))
+    {
+        // The wing roots have translated to the dorsal centerline, whereas
+        // these old strut anchors remain on the hull flanks. Hide instead of
+        // stretching unsupported geometry through the bridge/crew spaces.
+        for (UStaticMeshComponent* Support : WingRootSupports)
+        {
+            if (Support) Support->SetVisibility(false);
+        }
+        return;
+    }
+
     for (int32 Index = 0; Index < 4; ++Index)
     {
         UStaticMeshComponent* Support = WingRootSupports[Index];
@@ -350,8 +469,37 @@ FTransform AAureateWakePreviewActor::RootPivotedWingPose(EAureateWakeForm Form, 
     return FTransform(Rotation, Position, Scale);
 }
 
+FTransform AAureateWakePreviewActor::SeabourneWindSailPose(
+    int32 WingIndex, float TrimDegrees, bool bAuthoredRootPivot)
+{
+    // Provisional 3D review dimensions in cm, NOT canonical engineering data.
+    // The original four wings are re-used, never spawned or swapped. Fore +X,
+    // aft -X. All four roots move to the dorsal centerline; existing port/
+    // starboard wing 2 and 4 mounts gain independent fore/aft station offsets.
+    static constexpr float StationsX[4] = { 300.f, 105.f, -90.f, -285.f };
+    if (WingIndex < 0 || WingIndex >= 4 || !FMath::IsFinite(TrimDegrees))
+    {
+        return FTransform::Identity; // Invalid input cannot generate NaN poses.
+    }
+    // Existing authored art extends 280cm from its root along local +X;
+    // basic-shape cube preview instead has a centered +X axis and needs a
+    // raised origin. Both display an almost vertical, slightly aft-raked sail.
+    // Yaw rotates each panel independently around the world's up axis.
+    const float Z = bAuthoredRootPivot ? 228.f : 365.f;
+    const FVector Scale = bAuthoredRootPivot
+        ? FVector::OneVector : FVector(2.8f, 1.25f, 0.05f);
+    return FTransform(FRotator(98.f, TrimDegrees, 0.f),
+        FVector(StationsX[WingIndex], 0.f, Z), Scale);
+}
+
 FTransform AAureateWakePreviewActor::WingPoseForMesh(EAureateWakeForm Form, int32 WingIndex) const
 {
+    if (Form == EAureateWakeForm::Seaborne && bUseSeabourneWindSailReview &&
+        WingIndex >= 0 && WingIndex < 4)
+    {
+        return SeabourneWindSailPose(WingIndex, SeabourneWindTrimDegrees[WingIndex],
+            bUseRootPivotedWingPose && AuthoredWingMesh);
+    }
     return bUseRootPivotedWingPose && AuthoredWingMesh
         ? RootPivotedWingPose(Form, WingIndex)
         : WingPose(Form, WingIndex);
@@ -391,6 +539,12 @@ void AAureateWakePreviewActor::RefreshWingMaterials()
 
 void AAureateWakePreviewActor::SnapToForm(EAureateWakeForm Form)
 {
+    // On load/rebind/revocation never restore a stale preview trim from
+    // another form, wind direction, map or gameplay save.
+    for (float& Degrees : SeabourneWindTrimDegrees)
+    {
+        Degrees = 0.f;
+    }
     for (int32 Index = 0; Index < Wings.Num(); ++Index)
     {
         Wings[Index]->SetRelativeTransform(WingPoseForMesh(Form, Index));
@@ -405,10 +559,61 @@ void AAureateWakePreviewActor::SnapToForm(EAureateWakeForm Form)
     {
         if (Dynamic) Dynamic->SetScalarParameterValue(TEXT("OrbiterSailBlend"), OrbiterSailBlend);
     }
-    UpdateRootSupportTransforms();
     CurrentForm = Form;
     TargetForm = Form;
     bTransitioning = false;
+    bSeabourneWindSailPoseActive =
+        bUseSeabourneWindSailReview && Form == EAureateWakeForm::Seaborne;
+    // Re-evaluate visibility as well as geometry now that the settled form is
+    // known; old supports must return on opt-out, not stay hidden forever.
+    RefreshRootSupports();
+}
+
+float AAureateWakePreviewActor::GetSeabourneWindTrimDegrees(int32 WingNumber) const
+{
+    // Even a query must not expose stale trim from a revoked story, different
+    // form or a disabled study. This is not persisted player state.
+    if (WingNumber < 1 || WingNumber > 4 ||
+        !bUseSeabourneWindSailReview ||
+        CurrentForm != EAureateWakeForm::Seaborne ||
+        !IsValid(BoundReviewStory.Get()) ||
+        !BoundReviewStory->IsReviewShipModeAuthorized(FName(TEXT("Seabourne"))))
+    {
+        return 0.f;
+    }
+    return SeabourneWindTrimDegrees[WingNumber - 1];
+}
+
+bool AAureateWakePreviewActor::SetSeabourneWindTrimDegrees(int32 WingNumber, float Degrees)
+{
+    // An explicit, settled Seabourne story binding is mandatory. This is a
+    // visual azimuth controller, NOT wind simulation, propulsion or ship input.
+    if (!bUseSeabourneWindSailReview || bTransitioning ||
+        CurrentForm != EAureateWakeForm::Seaborne ||
+        WingNumber < 1 || WingNumber > 4 ||
+        !FMath::IsFinite(Degrees) || FMath::Abs(Degrees) > 35.f ||
+        Wings.Num() != 4 || Hydrofoils.Num() != 2 ||
+        (bUseRootPivotedWingPose && !AuthoredWingMesh) ||
+        !IsValid(BoundReviewStory.Get()) ||
+        !BoundReviewStory->IsReviewShipModeAuthorized(FName(TEXT("Seabourne"))))
+    {
+        return false;
+    }
+    if (!IsValid(Wings[WingNumber - 1].Get()))
+    {
+        return false;
+    }
+    SeabourneWindTrimDegrees[WingNumber - 1] = Degrees;
+    // Reposition all four to the same dorsal study layout; only this wing's
+    // azimuth changes. No changes to hydrofoils, form authority or player save.
+    for (int32 Index = 0; Index < 4; ++Index)
+    {
+        Wings[Index]->SetRelativeTransform(WingPoseForMesh(
+            EAureateWakeForm::Seaborne, Index));
+    }
+    bSeabourneWindSailPoseActive = true;
+    RefreshRootSupports();
+    return true;
 }
 
 bool AAureateWakePreviewActor::HasReviewStory() const
@@ -473,6 +678,9 @@ bool AAureateWakePreviewActor::RequestForm(EAureateWakeForm RequestedForm)
             RequestedForm == EAureateWakeForm::Seaborne);
     }
     bTransitioning = true;
+    // All unreviewed moving mast geometry remains hidden until the
+    // transition settles; old hull-flank struts must not cross the dome.
+    RefreshRootSupports();
     return true;
 }
 
@@ -482,9 +690,13 @@ void AAureateWakePreviewActor::Tick(float DeltaSeconds)
     if (IsValid(BoundReviewStory))
     {
         const FName Authorized = BoundReviewStory->GetReviewShipMode();
-        if (Authorized == NAME_None && bTransitioning)
+        if (Authorized == NAME_None &&
+            (bTransitioning ||
+             ((bUseSeabourneWindSailReview || bSeabourneWindSailPoseActive) &&
+              CurrentForm == EAureateWakeForm::Seaborne)))
         {
-            // Story reset revokes a pending transition immediately.
+            // Story reset revokes a pending transition AND an opted-in active
+            // Seabourne wind-trim pose. Never retain stale unauthorized sails.
             SnapToForm(EAureateWakeForm::Skyborne);
         }
         if (Authorized != NAME_None)
@@ -505,6 +717,13 @@ void AAureateWakePreviewActor::Tick(float DeltaSeconds)
     }
     if (!bTransitioning)
     {
+        if (bSeabourneWindSailPoseActive && !bUseSeabourneWindSailReview)
+        {
+            // Unchecking the experimental option in a live review cannot
+            // leave upright, trimmed blades visible. Restore the legacy
+            // form pose with no story progress or component replacement.
+            SnapToForm(CurrentForm);
+        }
         return;
     }
 

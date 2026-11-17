@@ -47,6 +47,15 @@ jobs:
         run: |
           python3 -m unittest discover -s unreal/Tools -p 'test_ender_resonator_magic_source.py' -v
           python3 -m py_compile unreal/Tools/build_ender_resonator_preview.py
+      - name: Guard opt-in Seabourne wind-sail preview (source-only, no native execution)
+        run: |
+          python3 -m unittest discover -s unreal/Tools -p 'test_seabourne_wind_sail_review.py' -v
+          python3 -m unittest discover -s unreal/Tools -p 'test_seabourne_proxy_envelope.py' -v
+          python3 unreal/Tools/audit_seabourne_proxy_envelope.py --check
+          python3 -m py_compile unreal/Tools/test_seabourne_wind_sail_review.py
+          python3 -m py_compile unreal/Tools/audit_seabourne_proxy_envelope.py
+          echo 'Source-only AABB of provisional cube endpoints, NOT native mesh sweep, actual physics or gameplay.'
+
       - name: Verify checker self-tests
         run: python3 unreal/Tools/test_automation_registry.py
       - name: Compare expected and registered Unreal tests

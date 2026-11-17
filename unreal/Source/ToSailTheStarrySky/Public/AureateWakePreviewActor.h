@@ -67,6 +67,40 @@ public:
     UFUNCTION(BlueprintCallable, Category="Aureate Wake|Preview|Review")
     bool ApplyEditorReviewPose();
 
+    /**
+     * OFF-by-default, review-only Seabourne dorsal wind-sail silhouette.
+     * The same four wings move to a fore/aft dorsal row, upright and aft-raked.
+     * Does NOT authorize physics, sailing, wing clearance, save changes or gameplay art.
+     * The older preview pose remains untouched unless an operator explicitly opts in.
+     */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Preview|Wind Sail Review")
+    bool bUseSeabourneWindSailReview = false;
+
+    /**
+     * Optional noncanonical WingHinge V1 mesh study for the four dorsal swivel
+     * collars. OFF by default. Requires both an operator-selected asset and
+     * its exact review-only package path and source-sized native bounds.
+     * A missing or mismatched mesh HIDES the mounts, never silently promotes
+     * an unapproved asset, and does not grant sailing, collision or story state.
+     */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Preview|Wind Sail Review")
+    bool bUseImportedDorsalHingeReview = false;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Preview|Wind Sail Review")
+    TObjectPtr<UStaticMesh> ImportedDorsalHingeReviewMesh;
+
+    /**
+     * Independently yaw a single deployed sail (one-based number 1..4).
+     * Only in a story-authorized, settled Seabourne review with opt-in enabled.
+     * +/-35 degrees is a provisional *input* bound, NOT a clearance proof.
+     * Refuses invalid/stale story, transition, NaN and unauthorized form.
+     */
+    UFUNCTION(BlueprintCallable, Category="Aureate Wake|Preview|Wind Sail Review")
+    bool SetSeabourneWindTrimDegrees(int32 WingNumber, float Degrees);
+
+    UFUNCTION(BlueprintPure, Category="Aureate Wake|Preview|Wind Sail Review")
+    float GetSeabourneWindTrimDegrees(int32 WingNumber) const;
+
     /** Optional creator-authored translucent/iridescent wing material; no material asset is included yet. */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Visuals")
     TObjectPtr<UMaterialInterface> WingMaterial;
@@ -124,6 +158,13 @@ public:
     UFUNCTION(BlueprintPure, Category="Aureate Wake|Preview")
     int32 GetRootSupportCount() const { return WingRootSupports.Num(); }
 
+    /** Four separate dorsal mast + azimuth collar pairs, hidden by default. */
+    UFUNCTION(BlueprintPure, Category="Aureate Wake|Preview|Wind Sail Review")
+    int32 GetDorsalMastCount() const { return DorsalMasts.Num(); }
+
+    UFUNCTION(BlueprintPure, Category="Aureate Wake|Preview|Wind Sail Review")
+    int32 GetDorsalSwivelCount() const { return DorsalSwivels.Num(); }
+
     UFUNCTION(BlueprintCallable, Category="Aureate Wake|Visuals")
     void RefreshWingMeshes();
 
@@ -150,6 +191,17 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Preview")
     TArray<TObjectPtr<UStaticMeshComponent>> WingRootSupports;
 
+    /**
+     * Noncanonical BasicShapes review-only masts and trim-yaw collars.
+     * Distinct from the four persistent wings; hidden outside a settled,
+     * opted-in Seabourne pose, including throughout all unverified transitions.
+     */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Preview|Wind Sail Review")
+    TArray<TObjectPtr<UStaticMeshComponent>> DorsalMasts;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Preview|Wind Sail Review")
+    TArray<TObjectPtr<UStaticMeshComponent>> DorsalSwivels;
+
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Preview")
     TArray<TObjectPtr<UStaticMeshComponent>> Hydrofoils;
 
@@ -175,6 +227,13 @@ private:
     TArray<FTransform> StartFoilTransforms;
     TArray<FTransform> TargetFoilTransforms;
 
+    // Transient preview angles only. Never serialized to player SaveGame.
+    float SeabourneWindTrimDegrees[4] = { 0.f, 0.f, 0.f, 0.f };
+    // Transient presentation latch: used to roll back a live editor/PIE opt-out
+    // without keeping the experimental wing pose after the flag is disabled.
+    bool bSeabourneWindSailPoseActive = false;
+
+    static FTransform SeabourneWindSailPose(int32 WingIndex, float TrimDegrees, bool bAuthoredRootPivot);
     static FTransform WingPose(EAureateWakeForm Form, int32 WingIndex);
     static FTransform RootPivotedWingPose(EAureateWakeForm Form, int32 WingIndex);
     FTransform WingPoseForMesh(EAureateWakeForm Form, int32 WingIndex) const;
@@ -182,4 +241,5 @@ private:
     static FTransform Interpolate(const FTransform& Start, const FTransform& End, float Alpha);
     void SnapToForm(EAureateWakeForm Form);
     void UpdateRootSupportTransforms();
+    void UpdateDorsalMountTransforms();
 };
