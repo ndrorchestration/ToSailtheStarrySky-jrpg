@@ -72,6 +72,22 @@ def sha256(path):
     return digest.hexdigest()
 
 
+def trace_ancestry(mesh, start, end):
+    """Return the actual end-to-start chain, refusing cycles or missing bones."""
+    path = []
+    seen = set()
+    cursor = end
+    for _ in range(96):
+        if cursor in seen or cursor in ("", "None", "NAME_None"):
+            return None
+        path.append(cursor)
+        if cursor == start:
+            return path
+        seen.add(cursor)
+        cursor = str(mesh.get_bone_parent(unreal.Name(cursor)))
+    return None
+
+
 def audit():
     require(str(PROJECT).lower() == "c:\\tstss_civicintegration_20261116\\unreal",
             "WRONG_PROJECT")
@@ -143,6 +159,14 @@ def audit():
         require(source_parent not in ("None", "", "NAME_None") and
                 target_parent not in ("None", "", "NAME_None"),
                 "BONE_CHAIN_NOT_PRESENT_" + chain)
+        source_path = trace_ancestry(source, src[0], src[1])
+        target_path = trace_ancestry(target, tgt[0], tgt[1])
+        REVIEW["proposed_chain_end_bone_parents"][chain]["ancestry"] = {
+            "source_end_to_start": source_path,
+            "target_end_to_start": target_path,
+        }
+        require(bool(source_path) and bool(target_path),
+                "CHAIN_ANCESTRY_INVALID_" + chain)
 
     require(all(hasattr(unreal, name) for name in (
         "IKRigController", "IKRetargeterController", "IKRetargetBatchOperation",
