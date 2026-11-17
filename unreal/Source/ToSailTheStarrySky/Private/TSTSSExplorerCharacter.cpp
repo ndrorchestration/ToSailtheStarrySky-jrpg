@@ -1356,8 +1356,9 @@ void ATSTSSExplorerCharacter::SetupFirstWakeThirdPersonReview(UWorld* World)
     // Local Ender V2 look-development package. Keep the donor and its materials
     // at their original package paths, outside tracked Content on Neontic.
     constexpr const TCHAR* PackageRoot = TEXT("/Game/ArtLookdev/Characters/EnderFidelityV2/");
-    constexpr const TCHAR* MeshPath =
-        TEXT("/Game/ArtLookdev/Characters/EnderFidelityV2/Ender_ender_fidelity_v2/StaticMeshes/Ender_ender_fidelity_v2.Ender_ender_fidelity_v2");
+    const FString MeshPackage =
+        TEXT("/Game/ArtLookdev/Characters/EnderFidelityV2/Ender_ender_fidelity_v2/StaticMeshes/Ender_ender_fidelity_v2");
+    const FString MeshPath = MeshPackage + TEXT(".Ender_ender_fidelity_v2");
     const FString LocalPath = FPaths::ConvertRelativePathToFull(
         FPaths::ProjectSavedDir() / TEXT("FirstWakeEnderReview/EnderFidelityV2/"));
     static bool bMountedEnderReview = false;
@@ -1366,9 +1367,8 @@ void ATSTSSExplorerCharacter::SetupFirstWakeThirdPersonReview(UWorld* World)
         FPackageName::RegisterMountPoint(PackageRoot, LocalPath);
         bMountedEnderReview = true;
     }
-    const FString MeshPackage = FPackageName::ObjectPathToPackageName(MeshPath);
     UStaticMesh* Body = FPackageName::DoesPackageExist(MeshPackage)
-        ? LoadObject<UStaticMesh>(nullptr, MeshPath) : nullptr;
+        ? LoadObject<UStaticMesh>(nullptr, *MeshPath) : nullptr;
     if (!IsValid(Body))
     {
         UE_LOG(LogTemp, Warning, TEXT("TSTSS_ENDER_THIRD_PERSON_HOLD missing local Ender review mesh"));
@@ -1434,7 +1434,7 @@ void ATSTSSExplorerCharacter::UpdateFirstWakeBokehReview(float DeltaSeconds)
     const bool bExploring = GetVelocity().SizeSquared2D() > FMath::Square(35.f) ||
         IsHilltoniaFlyerOpen();
     const float TargetFstop = bExploring ? 16.f : 3.5f;
-    FirstWakeReviewFstop = FMath::FInterpTo(FirstWakeReviewFstop, TargetFstop, DeltaSeconds, 5.f);
+    FirstWakeReviewFstop = FMath::FInterpTo(FirstWakeReviewFstop, TargetFstop, DeltaSeconds, 2.8f);
     const FVector FocusPoint = GetActorLocation() + FVector(0.f, 0.f, 28.f);
     const float Depth = FVector::DotProduct(
         FocusPoint - FollowCamera->GetComponentLocation(), FollowCamera->GetForwardVector());
