@@ -34,6 +34,17 @@ def skeletal_precedes_static(src):
     ))
 
 
+def editor_scope_contains_appearance(src):
+    """The closest editor section must remain open across appearance binding."""
+    marker = "void ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance()"
+    if src.count(marker) != 1:
+        return False
+    before = src.split(marker, 1)[0]
+    opened = before.rfind("#if WITH_EDITOR\n")
+    closed = before.rfind("#endif")
+    return opened >= 0 and opened > closed
+
+
 class EnderSkeletalPriorityTests(unittest.TestCase):
     def test_private_or_review_skeletal_candidate_not_hidden_by_static_mesh(self):
         self.assertTrue(skeletal_precedes_static(SOURCE))
@@ -52,10 +63,7 @@ class EnderSkeletalPriorityTests(unittest.TestCase):
         self.assertIn('StartsWith(TEXT("/Game/TSTSS/Review/"))', block)
         self.assertIn('Scene != TEXT("FirstWake_PreludeInteraction_V5_VisualReview")', block)
         self.assertIn('Scene != TEXT("VS02_AureateInteriors")', block)
-        self.assertIn(
-            "#if WITH_EDITOR\nvoid ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance()",
-            SOURCE,
-        )
+        self.assertTrue(editor_scope_contains_appearance(SOURCE))
         editor_segment = SOURCE.split(
             "void ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance()", 1
         )[1].split(

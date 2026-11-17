@@ -37,6 +37,17 @@ def eligible(src):
     ))
 
 
+def editor_scope_contains_appearance(src):
+    """The closest editor section must remain open across appearance binding."""
+    marker = "void ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance()"
+    if src.count(marker) != 1:
+        return False
+    before = src.split(marker, 1)[0]
+    opened = before.rfind("#if WITH_EDITOR\n")
+    closed = before.rfind("#endif")
+    return opened >= 0 and opened > closed
+
+
 class PrivateEnderSkeletalBindingSourceTests(unittest.TestCase):
     def test_private_unassigned_blueprint_property_is_editor_only(self):
         self.assertIn("class USkeletalMesh;", HDR)
@@ -72,7 +83,17 @@ class PrivateEnderSkeletalBindingSourceTests(unittest.TestCase):
         ):
             with self.subTest(denied=denied):
                 self.assertNotIn(denied, b)
-        self.assertIn("#if WITH_EDITOR\nvoid ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance()", CPP)
+        self.assertTrue(editor_scope_contains_appearance(CPP))
+
+    def test_mutation_removing_editor_section_is_rejected(self):
+        self.assertTrue(editor_scope_contains_appearance(CPP))
+        marker = "void ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance()"
+        before = CPP.split(marker, 1)[0]
+        pos = before.rfind("#if WITH_EDITOR\n")
+        self.assertGreaterEqual(pos, 0)
+        damaged = CPP[:pos] + CPP[pos:].replace(
+            "#if WITH_EDITOR\n", "/* removed editor section */\n", 1)
+        self.assertFalse(editor_scope_contains_appearance(damaged))
 
     def test_mutation_dropping_pie_or_review_namespace_is_detected(self):
         for element in (
