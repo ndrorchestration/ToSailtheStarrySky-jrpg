@@ -90,6 +90,9 @@ private:
     void ToggleFirstWakeBokehReview();
     void UpdateFirstWakeBokehReview(float DeltaSeconds);
     bool bFirstWakeThirdPersonReview = false;
+    // Runtime-only diagnostic state; never serialized or enabled in shipping.
+    bool bEnderPIEPossessionLogged = false;
+    uint8 LastEnderPIEMotionBand = 255;
     bool bFirstWakeBokehReview = false;
     float FirstWakeReviewFstop = 9.f;
     void AcceptHilltoniaFlyer();

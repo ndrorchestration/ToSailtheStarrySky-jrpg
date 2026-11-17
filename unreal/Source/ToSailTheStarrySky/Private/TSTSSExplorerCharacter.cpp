@@ -850,6 +850,45 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
     {
         DeclineHilltoniaFlyer();
     }
+    // Ender v0.1 PIE locomotion observation: record the real possessed pawn,
+    // and only its velocity bands. A visible mesh and moving capsule do NOT
+    // establish an animated pose, correct likeness, or artistic approval.
+    // Read-only: no asset/animation assignment, story, save, or map changes.
+    if (bReviewNamespace && World->WorldType == EWorldType::PIE &&
+        World->GetNetMode() == NM_Standalone && bFirstWakeThirdPersonReview &&
+        (Scene == TEXT("FirstWake_PreludeInteraction_V5_VisualReview") ||
+         Scene == TEXT("VS02_AureateInteriors")))
+    {
+        USkeletalMeshComponent* SkeletalBody = GetMesh();
+        const bool bSkeletalVisible = IsValid(SkeletalBody) &&
+            SkeletalBody->IsRegistered() &&
+            IsValid(SkeletalBody->GetSkeletalMeshAsset()) &&
+            SkeletalBody->GetNumBones() > 0 && SkeletalBody->IsVisible();
+        if (!bEnderPIEPossessionLogged)
+        {
+            UE_LOG(LogTemp, Display,
+                TEXT("TSTSS_ENDER_PIE_POSSESSION_SAMPLE map=%s possessed=1 skeletal_visible=%d bones=%d anim_instance_present=%d animation_NOT_VERIFIED art_NOT_APPROVED"),
+                *Scene, bSkeletalVisible ? 1 : 0,
+                bSkeletalVisible ? SkeletalBody->GetNumBones() : 0,
+                bSkeletalVisible && SkeletalBody->GetAnimInstance() != nullptr ? 1 : 0);
+            bEnderPIEPossessionLogged = true;
+        }
+        if (bSkeletalVisible)
+        {
+            const float SpeedCmS = GetVelocity().Size2D();
+            const uint8 MotionBand = SpeedCmS < 10.f ? 0 : (SpeedCmS < 300.f ? 1 : 2);
+            if (MotionBand != LastEnderPIEMotionBand)
+            {
+                const TCHAR* BandName = MotionBand == 0 ? TEXT("stationary") :
+                    (MotionBand == 1 ? TEXT("walking_speed") : TEXT("running_speed"));
+                UE_LOG(LogTemp, Display,
+                    TEXT("TSTSS_ENDER_PIE_VELOCITY_BAND band=%s speed_cm_s=%.1f grounded=%d animation_NOT_VERIFIED art_NOT_APPROVED"),
+                    BandName, SpeedCmS,
+                    GetCharacterMovement() && GetCharacterMovement()->IsMovingOnGround() ? 1 : 0);
+                LastEnderPIEMotionBand = MotionBand;
+            }
+        }
+    }
     // Only scoped review worlds advertise live interaction. Visual refresh
     // reads the authoritative state; it cannot advance or save a story beat.
     if (bReviewNamespace && World->GetNetMode() == NM_Standalone &&
