@@ -42,13 +42,13 @@ def examine(source: str) -> list[str]:
     ):
         if fragment not in source:
             errors.append("missing-review-contract:" + fragment)
-    if not re.search(r"constexpr float FountainX = -7200\\.f;", source):
+    if "FountainX = -7200.f;" not in source:
         errors.append("fountain-x-drift")
-    if not re.search(r"constexpr float FountainY = 600\\.f;", source):
+    if "FountainY = 600.f;" not in source:
         errors.append("fountain-y-drift")
-    if not re.search(r"constexpr float BoardX = -6810\\.f;", source):
+    if "BoardX = -6810.f;" not in source:
         errors.append("board-x-drift")
-    if not re.search(r"constexpr float BoardY = 600\\.f;", source):
+    if "BoardY = 600.f;" not in source:
         errors.append("board-y-drift")
     # Check the source owns only geometry and cosmetic signs. No story/save or
     # fake actor-hit grant is permitted in an environmental extension.
