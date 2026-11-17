@@ -1,4 +1,5 @@
 #include "TSTSSExplorerCharacter.h"
+#include "UObject/Package.h"
 #include "TSTSSReviewGrounding.h"
 #include "TSTSSMilestoneActor.h"
 #include "TSTSSPersistence.h"

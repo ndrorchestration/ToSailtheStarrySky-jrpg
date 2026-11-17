@@ -1,4 +1,5 @@
 #include "Misc/AutomationTest.h"
+#include "UObject/Package.h"
 #include "Engine/DataTable.h"
 #include "UObject/UObjectGlobals.h"
 #include "TSTSSJobClassSystem.h"

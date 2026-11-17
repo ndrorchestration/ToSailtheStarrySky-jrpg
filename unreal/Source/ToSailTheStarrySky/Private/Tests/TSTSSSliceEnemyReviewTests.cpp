@@ -1,4 +1,5 @@
 #include "Misc/AutomationTest.h"
+#include "UObject/Package.h"
 #include "Enemies/TSTSSSliceEnemyCatalog.h"
 #include "Enemies/TSTSSSliceEnemyActor.h"
 #include "Engine/DataTable.h"

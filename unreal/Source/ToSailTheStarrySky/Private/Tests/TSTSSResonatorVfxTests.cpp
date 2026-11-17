@@ -1,4 +1,5 @@
 #include "Misc/AutomationTest.h"
+#include "UObject/Package.h"
 #include "TSTSSResonatorVfxActor.h"
 #include "Combat/TSS_CombatTurnManager.h"
 #include "Engine/DataTable.h"

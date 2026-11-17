@@ -1,4 +1,5 @@
 #include "TSTSSResonatorVfxActor.h"
+#include "UObject/Package.h"
 
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Components/PointLightComponent.h"

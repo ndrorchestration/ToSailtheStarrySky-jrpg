@@ -1,4 +1,5 @@
 #include "TSTSSFirstWakeReviewHUD.h"
+#include "UObject/Package.h"
 #include "TSTSSExplorerCharacter.h"
 #include "TSTSSFirstWakeState.h"
 #include "Engine/Engine.h"

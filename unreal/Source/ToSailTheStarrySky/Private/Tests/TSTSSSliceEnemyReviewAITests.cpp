@@ -1,4 +1,5 @@
 #include "Misc/AutomationTest.h"
+#include "UObject/Package.h"
 #include "Enemies/TSTSSSliceEnemyReviewAI.h"
 #include "Combat/TSS_CombatTurnManager.h"
 

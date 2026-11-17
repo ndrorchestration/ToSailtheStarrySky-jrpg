@@ -1,4 +1,5 @@
 #include "TSTSSMilestoneActor.h"
+#include "UObject/Package.h"
 #include "TSTSSAudioSubsystem.h"
 #include "Components/StaticMeshComponent.h"
 #if WITH_EDITOR

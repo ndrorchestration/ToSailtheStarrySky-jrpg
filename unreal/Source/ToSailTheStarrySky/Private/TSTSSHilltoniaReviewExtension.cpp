@@ -1,4 +1,5 @@
 #include "TSTSSHilltoniaReviewExtension.h"
+#include "UObject/Package.h"
 
 #if WITH_EDITOR
 #include "Components/InstancedStaticMeshComponent.h"
