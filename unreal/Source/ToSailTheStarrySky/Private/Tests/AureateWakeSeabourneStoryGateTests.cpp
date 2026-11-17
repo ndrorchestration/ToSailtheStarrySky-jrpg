@@ -3,6 +3,7 @@
 #include "TSTSSFirstWakeState.h"
 #include "Engine/World.h"
 #include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
 #include <limits>
 
 #if WITH_DEV_AUTOMATION_TESTS
@@ -235,6 +236,61 @@ bool FTSTSSAureateSeabourneStoryGate::RunTest(const FString& Parameters)
                 Swivel->GetRelativeLocation().Z, 0.5));
         TestTrue(TEXT("Swivel starts at zero individual wind trim"),
             FMath::IsNearlyZero(Swivel->GetRelativeRotation().Yaw, 0.1));
+    }
+    // Optional imported review hardware never changes the default cube
+    // mounting behavior. Bad/missing candidates fail CLOSED (hide mounts).
+    TestFalse(TEXT("Imported WingHinge review stays off by default"),
+        Ship->bUseImportedDorsalHingeReview);
+    TestNull(TEXT("No WingHinge asset is silently selected by the constructor"),
+        Ship->ImportedDorsalHingeReviewMesh.Get());
+    Ship->bUseImportedDorsalHingeReview = true;
+    Ship->RefreshRootSupports();
+    for (int32 Index = 0; Index < 4; ++Index)
+    {
+        TestFalse(TEXT("Missing imported hinge hides dorsal mast"),
+            DorsalMasts[Index]->IsVisible());
+        TestFalse(TEXT("Missing imported hinge hides dorsal collar"),
+            DorsalSwivels[Index]->IsVisible());
+    }
+    Ship->ImportedDorsalHingeReviewMesh = FourSails[0]->GetStaticMesh();
+    Ship->RefreshRootSupports();
+    for (int32 Index = 0; Index < 4; ++Index)
+    {
+        TestFalse(TEXT("Wrong package mesh cannot replace a hinge"),
+            DorsalSwivels[Index]->IsVisible());
+    }
+    UStaticMesh* WingHingeCandidate = LoadObject<UStaticMesh>(nullptr,
+        TEXT("/Game/TSTSS/Review/MultipathV1/ObjectImports/WingHinge/"
+             "WingHinge/StaticMeshes/WingHinge.WingHinge"));
+    if (!TestNotNull(TEXT("Existing V1 WingHinge mesh resolves natively"),
+        WingHingeCandidate))
+    {
+        World->DestroyWorld(false);
+        return false;
+    }
+    Ship->ImportedDorsalHingeReviewMesh = WingHingeCandidate;
+    Ship->RefreshRootSupports();
+    for (int32 Index = 0; Index < 4; ++Index)
+    {
+        TestTrue(TEXT("Source-sized reviewed hinge visible when doubly opted in"),
+            DorsalSwivels[Index]->IsVisible() && DorsalMasts[Index]->IsVisible());
+        TestTrue(TEXT("Exactly the allowlisted WingHinge candidate selected"),
+            DorsalSwivels[Index]->GetStaticMesh() == WingHingeCandidate);
+        TestTrue(TEXT("Imported hinge uniformly scaled to 30 percent"),
+            DorsalSwivels[Index]->GetRelativeScale3D().Equals(
+                FVector(0.30, 0.30, 0.30), 0.001));
+    }
+    Ship->bUseImportedDorsalHingeReview = false;
+    Ship->RefreshRootSupports();
+    for (int32 Index = 0; Index < 4; ++Index)
+    {
+        TestTrue(TEXT("Disabling imported candidate restores cube collar"),
+            DorsalSwivels[Index]->IsVisible() &&
+            DorsalSwivels[Index]->GetStaticMesh() ==
+                FourSails[Index]->GetStaticMesh());
+        TestTrue(TEXT("Default cube hinge dimensions recovered"),
+            DorsalSwivels[Index]->GetRelativeScale3D().Equals(
+                FVector(0.48, 0.32, 0.12), 0.001));
     }
     const FRotator SecondBefore = FourSails[1]->GetRelativeRotation();
     const FRotator SecondSwivelBefore = DorsalSwivels[1]->GetRelativeRotation();
