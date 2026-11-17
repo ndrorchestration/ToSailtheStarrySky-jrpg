@@ -101,8 +101,8 @@ class ReviewBridgeReachGeometryTests(unittest.TestCase):
         for required in (
             "TSTSS_BRIDGE_REACH_STAGE_EXPLICIT",
             "TSTSS_BRIDGE_REACH_EXPECT_HEAD",
-            "TSTSS_840_OpticalReach_20261115",
-            "review/ue58-optical-bridge-reach-probe-20261115",
+            "validate_checkout(",
+            "INTEGRATION_BASE",
             "git(\"status\",\"--porcelain=v1\",\"--untracked-files=all\")",
             "WorldType" if False else "is_in_play_in_editor()",
             "get_dirty_map_packages()",

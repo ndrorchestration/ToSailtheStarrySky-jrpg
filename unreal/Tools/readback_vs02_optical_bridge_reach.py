@@ -8,6 +8,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import subprocess
 import sys
 from pathlib import Path
 
@@ -17,6 +18,7 @@ from verify_optical_bridge_reach_geometry import (
     ROOT, PROJECT, COPY, SOURCE, EXPECTED_SOURCE, EXPECTED_REVIEW,
     sha, bbox, within,
 )
+from optical_bridge_checkout_guard import INTEGRATION_BASE, validate_checkout
 
 MAP="/Game/TSTSS/Review/EngineFocus_V1/M_EnginePresentationReview"
 DIR=PROJECT/"Saved/OpticalReachGeometry/NativeStage"
@@ -40,13 +42,20 @@ def only(actors,label):
     return matches[0]
 
 def inspect():
-    require(ROOT.name=="TSTSS_840_OpticalReach_20261115",
-            "wrong isolated review worktree")
     require(u.SystemLibrary.get_engine_version().startswith("5.8.4"),
             "unexpected UE version")
     require(STAGE.exists() and BACKUP.exists() and not RECEIPT.exists(),
             "missing stage/backup or duplicate independent receipt")
     stage=json.loads(STAGE.read_text(encoding="utf-8"))
+    def git(*args):
+        result=subprocess.run(["git","-C",str(ROOT),*args],capture_output=True,
+                              text=True,timeout=20)
+        require(result.returncode==0,"git readback identity check failed")
+        return result.stdout.strip()
+    ancestry=subprocess.run(["git","-C",str(ROOT),"merge-base","--is-ancestor",
+                             INTEGRATION_BASE,"HEAD"],capture_output=True,timeout=20)
+    validate_checkout(ROOT.name,git("branch","--show-current"),git("rev-parse","HEAD"),
+                      stage.get("head_at_stage"),ancestry.returncode==0)
     require(stage["status"]=="NATIVE_NONSHIPPING_WALKABILITY_MAP_STAGE_NOT_PIE",
             "stage native result was not an accepted save")
     require(stage["saved_review_map"]==MAP,"unexpected saved package")
