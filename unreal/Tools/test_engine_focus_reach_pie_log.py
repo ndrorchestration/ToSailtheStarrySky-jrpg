@@ -124,6 +124,27 @@ class FocusTelemetryReviewTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"expected 7 E"):
             verify(live_shape.replace("][ 59]LogTemp:","][oops]LogTemp:",1))
 
+    def test_same_millisecond_restore_marker_requires_log_line_order(self):
+        # Real native UE can write the restore audit and the next marker
+        # under one millisecond, but in strictly ordered log lines.
+        baseline=fixture()
+        marker=("[2026.11.15-02.00.16:120][007]LogTemp: Display: "
+                "TSTSS_PIE_GAMEPLAY_ENGINE_FOCUS_RESTORE\n")
+        same_ms=marker.replace("16:120","16:110")
+        self.assertEqual(baseline.count(marker),1)
+        held=baseline.replace(marker,same_ms,1)
+        self.assertTrue(verify(held)["input_unlock_observed_in_native_log"])
+        lines=held.splitlines()
+        audit_idx=next(i for i,x in enumerate(lines)
+                       if "RESTORE_AUDIT" in x)
+        marker_idx=next(i for i,x in enumerate(lines)
+                        if x.endswith("TSTSS_PIE_GAMEPLAY_ENGINE_FOCUS_RESTORE"))
+        self.assertLess(audit_idx,marker_idx)
+        lines[audit_idx],lines[marker_idx]=lines[marker_idx],lines[audit_idx]
+        with self.assertRaisesRegex(ValueError,
+                                    "event sequence/order/camera restoration"):
+            verify("\n".join(lines)+"\n")
+
     def test_negative_log_mutations_all_rejected(self):
         baseline=fixture()
         mutations={
