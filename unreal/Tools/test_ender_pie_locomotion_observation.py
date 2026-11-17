@@ -79,7 +79,7 @@ class EnderPIELocomotionObservationSourceTests(unittest.TestCase):
                      "if (MotionBand != LastEnderPIEMotionBand)",
                      "animation_NOT_VERIFIED art_NOT_APPROVED"):
             with self.subTest(gate=gate):
-                altered = CPP.replace(baseline, baseline.replace(gate, "/* missing gate */", 1), 1)
+                altered = CPP.replace(baseline, baseline.replace(gate, "/* missing gate */"), 1)
                 self.assertFalse(is_bounded(altered))
 
 
