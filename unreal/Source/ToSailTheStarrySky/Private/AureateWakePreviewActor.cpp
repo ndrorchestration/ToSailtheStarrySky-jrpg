@@ -214,8 +214,15 @@ void AAureateWakePreviewActor::RefreshWingMeshes()
 
 void AAureateWakePreviewActor::RefreshRootSupports()
 {
+    // Old hull-flank struts are NOT compatible with four dorsal roots. Until
+    // a separately cleared dorsal mount is authored, never render the old
+    // telescope supports during or after the experimental Seabourne route.
+    const bool bDorsalRoute = bUseSeabourneWindSailReview &&
+        (CurrentForm == EAureateWakeForm::Seaborne ||
+         (bTransitioning && TargetForm == EAureateWakeForm::Seaborne));
     const bool bVisible = bUseRootPivotedWingPose && AuthoredWingMesh &&
-        AuthoredRootSupportMesh && CurrentForm != EAureateWakeForm::Orbiter;
+        AuthoredRootSupportMesh && CurrentForm != EAureateWakeForm::Orbiter &&
+        !bDorsalRoute;
     for (UStaticMeshComponent* Support : WingRootSupports)
     {
         if (!Support) continue;
@@ -231,6 +238,21 @@ void AAureateWakePreviewActor::UpdateRootSupportTransforms()
     // the moving wing-root location. It is purely a visual telescoping member.
     if (!bUseRootPivotedWingPose || !AuthoredWingMesh ||
         WingRootSupports.Num() != 4 || Wings.Num() != 4) return;
+
+    if (bUseSeabourneWindSailReview &&
+        (CurrentForm == EAureateWakeForm::Seaborne ||
+         (bTransitioning && TargetForm == EAureateWakeForm::Seaborne)))
+    {
+        // The wing roots have translated to the dorsal centerline, whereas
+        // these old strut anchors remain on the hull flanks. Hide instead of
+        // stretching unsupported geometry through the bridge/crew spaces.
+        for (UStaticMeshComponent* Support : WingRootSupports)
+        {
+            if (Support) Support->SetVisibility(false);
+        }
+        return;
+    }
+
     for (int32 Index = 0; Index < 4; ++Index)
     {
         UStaticMeshComponent* Support = WingRootSupports[Index];
@@ -440,10 +462,14 @@ void AAureateWakePreviewActor::SnapToForm(EAureateWakeForm Form)
     {
         if (Dynamic) Dynamic->SetScalarParameterValue(TEXT("OrbiterSailBlend"), OrbiterSailBlend);
     }
-    UpdateRootSupportTransforms();
     CurrentForm = Form;
     TargetForm = Form;
     bTransitioning = false;
+    bSeabourneWindSailPoseActive =
+        bUseSeabourneWindSailReview && Form == EAureateWakeForm::Seaborne;
+    // Re-evaluate visibility as well as geometry now that the settled form is
+    // known; old supports must return on opt-out, not stay hidden forever.
+    RefreshRootSupports();
 }
 
 float AAureateWakePreviewActor::GetSeabourneWindTrimDegrees(int32 WingNumber) const
@@ -488,7 +514,8 @@ bool AAureateWakePreviewActor::SetSeabourneWindTrimDegrees(int32 WingNumber, flo
         Wings[Index]->SetRelativeTransform(WingPoseForMesh(
             EAureateWakeForm::Seaborne, Index));
     }
-    UpdateRootSupportTransforms();
+    bSeabourneWindSailPoseActive = true;
+    RefreshRootSupports();
     return true;
 }
 
@@ -590,6 +617,13 @@ void AAureateWakePreviewActor::Tick(float DeltaSeconds)
     }
     if (!bTransitioning)
     {
+        if (bSeabourneWindSailPoseActive && !bUseSeabourneWindSailReview)
+        {
+            // Unchecking the experimental option in a live review cannot
+            // leave upright, trimmed blades visible. Restore the legacy
+            // form pose with no story progress or component replacement.
+            SnapToForm(CurrentForm);
+        }
         return;
     }
 
