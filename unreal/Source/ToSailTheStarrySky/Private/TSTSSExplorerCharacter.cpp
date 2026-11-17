@@ -1344,13 +1344,13 @@ void ATSTSSExplorerCharacter::SetupFirstWakeThirdPersonReview(UWorld* World)
 
     // Reuse the existing possession, movement, smart boom collision and E ray.
     const bool bInteriors = Scene == TEXT("VS02_AureateInteriors");
-    CameraBoom->TargetArmLength = bInteriors ? 340.f : 440.f;
-    CameraBoom->TargetOffset = FVector(0.f, 0.f, 52.f);
+    CameraBoom->TargetArmLength = bInteriors ? 340.f : 480.f;
+    CameraBoom->TargetOffset = FVector(0.f, 0.f, bInteriors ? 45.f : 35.f);
     CameraBoom->SocketOffset = FVector(0.f, 48.f, 12.f);
     CameraBoom->bEnableCameraLag = true;
     CameraBoom->CameraLagSpeed = 13.f;
     CameraBoom->CameraLagMaxDistance = 55.f;
-    FollowCamera->SetFieldOfView(bInteriors ? 70.f : 64.f);
+    FollowCamera->SetFieldOfView(bInteriors ? 70.f : 68.f);
     bFirstWakeThirdPersonReview = true;
 
     // Local Ender V2 look-development package. Keep the donor and its materials
@@ -1382,7 +1382,8 @@ void ATSTSSExplorerCharacter::SetupFirstWakeThirdPersonReview(UWorld* World)
         return;
     }
     const double Scale = 176.0 / Height;
-    const FRotator BodyYaw(0.f, 0.f, 0.f);
+    // This import faces +Y; match the controlled pawn's +X forward.
+    const FRotator BodyYaw(0.f, -90.f, 0.f);
     const FVector FootCenter(Bounds.GetCenter().X, Bounds.GetCenter().Y, Bounds.Min.Z);
     auto* Visual = NewObject<UStaticMeshComponent>(this, TEXT("EnderFirstWakeReviewBody"));
     Visual->SetMobility(EComponentMobility::Movable);
@@ -1410,6 +1411,10 @@ void ATSTSSExplorerCharacter::ToggleFirstWakeBokehReview()
     }
     bFirstWakeBokehReview = !bFirstWakeBokehReview;
     FPostProcessSettings& Lens = FollowCamera->PostProcessSettings;
+    Lens.bOverride_DepthOfFieldEnabled = bFirstWakeBokehReview;
+    Lens.DepthOfFieldEnabled = true;
+    Lens.bOverride_DepthOfFieldSensorWidth = bFirstWakeBokehReview;
+    Lens.DepthOfFieldSensorWidth = 48.f;
     Lens.bOverride_DepthOfFieldFocalDistance = bFirstWakeBokehReview;
     Lens.bOverride_DepthOfFieldFstop = bFirstWakeBokehReview;
     Lens.bOverride_DepthOfFieldBladeCount = bFirstWakeBokehReview;
@@ -1433,7 +1438,7 @@ void ATSTSSExplorerCharacter::UpdateFirstWakeBokehReview(float DeltaSeconds)
     // while reading the flyer, so walking and the choice overlay remain clear.
     const bool bExploring = GetVelocity().SizeSquared2D() > FMath::Square(35.f) ||
         IsHilltoniaFlyerOpen();
-    const float TargetFstop = bExploring ? 16.f : 3.5f;
+    const float TargetFstop = bExploring ? 16.f : 2.8f;
     FirstWakeReviewFstop = FMath::FInterpTo(FirstWakeReviewFstop, TargetFstop, DeltaSeconds, 2.8f);
     const FVector FocusPoint = GetActorLocation() + FVector(0.f, 0.f, 28.f);
     const float Depth = FVector::DotProduct(

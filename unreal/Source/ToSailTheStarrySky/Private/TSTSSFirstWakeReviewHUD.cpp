@@ -71,6 +71,11 @@ void ATSTSSFirstWakeReviewHUD::DrawHUD()
         return; // No illegible/offscreen overlay at very small sizes.
     }
     const bool bCompact = PanelWidth < 640.f;
+    DrawRect(FLinearColor(0.012f, 0.024f, 0.035f, 0.84f),
+             Margin, Margin, PanelWidth, 132.f);
+    DrawText(TEXT("FIRST WAKE  |  PRELUDE REVIEW"),
+             FLinearColor(0.35f, 0.90f, 0.93f, 1.f),
+             Margin + 16.f, Margin + 10.f, GEngine->GetSmallFont(), 1.1f);
 #if WITH_EDITOR
     if (Explorer->HasHilltoniaOpening())
     {
@@ -78,11 +83,6 @@ void ATSTSSFirstWakeReviewHUD::DrawHUD()
                  Margin + PanelWidth - 130.f, Margin + 12.f, GEngine->GetSmallFont(), .78f);
     }
 #endif
-    DrawRect(FLinearColor(0.012f, 0.024f, 0.035f, 0.84f),
-             Margin, Margin, PanelWidth, 132.f);
-    DrawText(TEXT("FIRST WAKE  |  PRELUDE REVIEW"),
-             FLinearColor(0.35f, 0.90f, 0.93f, 1.f),
-             Margin + 16.f, Margin + 10.f, GEngine->GetSmallFont(), 1.1f);
     DrawText(State->GetReviewObjectiveText(),
              FLinearColor::White,
              Margin + 16.f, Margin + 38.f, GEngine->GetMediumFont(), 1.f);
@@ -127,8 +127,13 @@ void ATSTSSFirstWakeReviewHUD::DrawHUD()
 #endif
             ? TEXT("FOLLOW THE GOLD MARKER  |  LOOK AT IT TO INTERACT")
             : AimedPrompt;
-        const float Width = FMath::Min(690.f, Canvas->ClipX - 48.f);
-        const float Left = (Canvas->ClipX - Width) * 0.5f;
+        bool bShoulderFraming = false;
+#if WITH_EDITOR
+        bShoulderFraming = Explorer->HasHilltoniaOpening();
+#endif
+        const float Width = FMath::Min(bShoulderFraming ? 510.f : 690.f, Canvas->ClipX - 48.f);
+        const float Left = bShoulderFraming ? Canvas->ClipX - Width - 24.f
+            : (Canvas->ClipX - Width) * 0.5f;
         const float Top = Canvas->ClipY - 88.f;
         const FLinearColor Accent = bReady
             ? FLinearColor(1.f, 0.81f, 0.39f, 1.f)
