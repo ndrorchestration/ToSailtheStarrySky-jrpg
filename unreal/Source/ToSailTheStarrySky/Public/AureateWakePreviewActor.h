@@ -145,6 +145,13 @@ public:
     UFUNCTION(BlueprintPure, Category="Aureate Wake|Preview")
     int32 GetRootSupportCount() const { return WingRootSupports.Num(); }
 
+    /** Four separate dorsal mast + azimuth collar pairs, hidden by default. */
+    UFUNCTION(BlueprintPure, Category="Aureate Wake|Preview|Wind Sail Review")
+    int32 GetDorsalMastCount() const { return DorsalMasts.Num(); }
+
+    UFUNCTION(BlueprintPure, Category="Aureate Wake|Preview|Wind Sail Review")
+    int32 GetDorsalSwivelCount() const { return DorsalSwivels.Num(); }
+
     UFUNCTION(BlueprintCallable, Category="Aureate Wake|Visuals")
     void RefreshWingMeshes();
 
@@ -170,6 +177,17 @@ protected:
     /** Four independent hull-to-root telescope visuals; never counted as wings. */
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Preview")
     TArray<TObjectPtr<UStaticMeshComponent>> WingRootSupports;
+
+    /**
+     * Noncanonical BasicShapes review-only masts and trim-yaw collars.
+     * Distinct from the four persistent wings; hidden outside a settled,
+     * opted-in Seabourne pose, including throughout all unverified transitions.
+     */
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Preview|Wind Sail Review")
+    TArray<TObjectPtr<UStaticMeshComponent>> DorsalMasts;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Preview|Wind Sail Review")
+    TArray<TObjectPtr<UStaticMeshComponent>> DorsalSwivels;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Aureate Wake|Preview")
     TArray<TObjectPtr<UStaticMeshComponent>> Hydrofoils;
@@ -210,4 +228,5 @@ private:
     static FTransform Interpolate(const FTransform& Start, const FTransform& End, float Alpha);
     void SnapToForm(EAureateWakeForm Form);
     void UpdateRootSupportTransforms();
+    void UpdateDorsalMountTransforms();
 };
