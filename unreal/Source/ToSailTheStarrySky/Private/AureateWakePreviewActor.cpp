@@ -592,7 +592,7 @@ void AAureateWakePreviewActor::Tick(float DeltaSeconds)
         const FName Authorized = BoundReviewStory->GetReviewShipMode();
         if (Authorized == NAME_None &&
             (bTransitioning ||
-             (bUseSeabourneWindSailReview &&
+             ((bUseSeabourneWindSailReview || bSeabourneWindSailPoseActive) &&
               CurrentForm == EAureateWakeForm::Seaborne)))
         {
             // Story reset revokes a pending transition AND an opted-in active
