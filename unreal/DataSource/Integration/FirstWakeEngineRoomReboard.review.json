@@ -25,6 +25,14 @@
       "y_max": 450,
       "z_min": -5,
       "z_max": 135
+    },
+    "Forecastle": {
+      "x_min": 650,
+      "x_max": 1250,
+      "y_min": -400,
+      "y_max": 400,
+      "z_min": 15,
+      "z_max": 135
     }
   },
   "review_player_capsule_radius_cm": 42,
@@ -55,8 +63,8 @@
     {
       "id": "ReserveStation",
       "location_cm": [
-        700,
-        -90,
+        570,
+        -180,
         140
       ],
       "story_bit": 4
@@ -64,13 +72,25 @@
     {
       "id": "EngineeringApproval",
       "location_cm": [
-        970,
-        -90,
+        520,
+        130,
         140
       ],
       "requires_mask": 7
     }
   ],
+  "forecastle_route_source_audit": {
+    "status": "SOURCE_GEOMETRY_WITNESS_NOT_NATIVE_COLLISION_OR_NAVMESH",
+    "provisional_actor_center_z_cm": 88,
+    "approach_waypoints_cm": [
+      [-350, -90],
+      [-220, -90],
+      [250, -90],
+      [530, -160],
+      [475, 120]
+    ],
+    "no_higher_deck_transition_claimed": true
+  },
   "cue_target": "TSTSS_VS_REVIEW_InstrumentCore_LIFT",
   "interaction_reach_cm": 300,
   "optical_proximity_cm": 450,

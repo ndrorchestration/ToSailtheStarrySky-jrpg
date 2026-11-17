@@ -539,15 +539,21 @@ void StageEarnedEngineRoomReview(UWorld* World, UTSTSSFirstWakeState* State,
         ETSTSSInspectionStation Station;
         ETSTSSFirstWakeBeat Milestone;
     };
+    // Never stage E targets inside the raised, solid Forecastle. The
+    // original review ship has no approved stair/ramp up to its top:
+    // Forecastle X=650..1250, Y=-400..400, Z=15..135 cm.
+    // Keep reserve next to its physical gauge and the signoff on the
+    // lower main deck, with a capsule-clear approach from the hatch.
+    // These are provisional in-memory placements, NOT a ship room build.
     const FReviewMarkerPlacement Placements[] =
     {
         {TEXT("LiftStation"), FVector(-220.f, -90.f, 140.f), true,
          ETSTSSInspectionStation::Lift, ETSTSSFirstWakeBeat::BoardedAureateWake},
         {TEXT("PressureStation"), FVector(250.f, -90.f, 140.f), true,
          ETSTSSInspectionStation::Pressure, ETSTSSFirstWakeBeat::BoardedAureateWake},
-        {TEXT("ReserveStation"), FVector(700.f, -90.f, 140.f), true,
+        {TEXT("ReserveStation"), FVector(570.f, -180.f, 140.f), true,
          ETSTSSInspectionStation::Reserve, ETSTSSFirstWakeBeat::BoardedAureateWake},
-        {TEXT("EngineeringApproval"), FVector(970.f, -90.f, 140.f), false,
+        {TEXT("EngineeringApproval"), FVector(520.f, 130.f, 140.f), false,
          ETSTSSInspectionStation::Lift, ETSTSSFirstWakeBeat::EngineeringChecked}
     };
     // A single guarded arrival from boarding; no direct scene entry may
