@@ -467,7 +467,7 @@ bool AAureateWakePreviewActor::SetSeabourneWindTrimDegrees(int32 WingNumber, flo
     {
         return false;
     }
-    if (!IsValid(Wings[WingNumber - 1]))
+    if (!IsValid(Wings[WingNumber - 1].Get()))
     {
         return false;
     }
