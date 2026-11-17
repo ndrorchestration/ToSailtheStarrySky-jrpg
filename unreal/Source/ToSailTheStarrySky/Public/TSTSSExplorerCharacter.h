@@ -6,6 +6,8 @@
 #include "TSTSSExplorerCharacter.generated.h"
 
 class USkeletalMesh;
+class UStaticMesh;
+class UStaticMeshComponent;
 
 UCLASS()
 class TOSAILTHESTARRYSKY_API ATSTSSExplorerCharacter : public ACharacter
@@ -61,8 +63,40 @@ protected:
     // Unset by default; never points at a canonical or packaged character.
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
     TSoftObjectPtr<USkeletalMesh> EnderSliceReviewBody;
+    // Imported privately with proven game rights; never bundled or enabled by default.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    TSoftObjectPtr<UStaticMesh> EnderSliceReviewHair;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    TSoftObjectPtr<UStaticMesh> EnderSliceReviewGoggles;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    TSoftObjectPtr<UStaticMesh> EnderSliceReviewStaff;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    bool bShowEnderReviewHair = false;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    bool bShowEnderReviewGoggles = false;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    bool bShowEnderReviewStaff = false;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    FName EnderReviewHeadBone = TEXT("head");
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    FName EnderReviewGripBone = TEXT("l_hand");
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    FTransform EnderReviewHairLocalOffset = FTransform::Identity;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    FTransform EnderReviewGogglesLocalOffset = FTransform::Identity;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    FTransform EnderReviewStaffLocalOffset = FTransform::Identity;
 #endif
 private:
+#if WITH_EDITORONLY_DATA
+    // Inert hidden review components; never production character equipment.
+    UPROPERTY(VisibleAnywhere, Category="TSTSS|Ender|SliceReview")
+    TObjectPtr<UStaticMeshComponent> EnderReviewHairComponent;
+    UPROPERTY(VisibleAnywhere, Category="TSTSS|Ender|SliceReview")
+    TObjectPtr<UStaticMeshComponent> EnderReviewGogglesComponent;
+    UPROPERTY(VisibleAnywhere, Category="TSTSS|Ender|SliceReview")
+    TObjectPtr<UStaticMeshComponent> EnderReviewStaffComponent;
+#endif
 #if WITH_EDITOR
     void ApplyEnderSliceReviewAppearance();
 #endif

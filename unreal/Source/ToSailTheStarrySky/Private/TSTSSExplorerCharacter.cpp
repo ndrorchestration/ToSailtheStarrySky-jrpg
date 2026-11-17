@@ -640,6 +640,25 @@ ATSTSSExplorerCharacter::ATSTSSExplorerCharacter()
     FollowCamera->bUsePawnControlRotation = false;
     bUseControllerRotationYaw = false;
     GetCharacterMovement()->bOrientRotationToMovement = true;
+#if WITH_EDITOR
+    // Reuse the established PR #812 private visual-bridge pattern. No asset
+    // references are installed on the default object; PIE opt-in is required.
+    EnderReviewHairComponent = CreateDefaultSubobject<UStaticMeshComponent>(
+        TEXT("EnderSliceHair_REVIEW_ONLY"));
+    EnderReviewGogglesComponent = CreateDefaultSubobject<UStaticMeshComponent>(
+        TEXT("EnderSliceGoggles_REVIEW_ONLY"));
+    EnderReviewStaffComponent = CreateDefaultSubobject<UStaticMeshComponent>(
+        TEXT("EnderSliceStaff_REVIEW_ONLY"));
+    for (UStaticMeshComponent* Part : {EnderReviewHairComponent.Get(),
+                                        EnderReviewGogglesComponent.Get(),
+                                        EnderReviewStaffComponent.Get()})
+    {
+        Part->SetupAttachment(GetMesh());
+        Part->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        Part->SetGenerateOverlapEvents(false);
+        Part->SetVisibility(false);
+    }
+#endif
 }
 
 void ATSTSSExplorerCharacter::BeginPlay()
@@ -1419,6 +1438,51 @@ void ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance()
     UE_LOG(LogTemp, Display,
         TEXT("TSTSS_ENDER_SLICE_REVIEW_MESH_BOUND bones=%d animation_NOT_VERIFIED art_NOT_APPROVED"),
         Bones.GetNum());
+
+    // Prior PR #812 visual bridge, deliberately opt-in and private. Attach
+    // only to a valid bone/socket on the bound skeletal pawn. An invalid
+    // asset or missing bone must never create a floating prop or partial rig.
+    // Accessory fit and licensing still require independent creator review.
+    const auto AttachEnderReviewPart = [Body](UStaticMeshComponent* Preview,
+        const TSoftObjectPtr<UStaticMesh>& Asset, bool bEnabled, FName Bone,
+        const FTransform& Offset, const TCHAR* Label)
+    {
+        if (!bEnabled) return;
+        if (!IsValid(Preview) || Asset.IsNull() || !IsValid(Body) ||
+            Bone.IsNone() || !Body->DoesSocketExist(Bone) ||
+            Offset.ContainsNaN())
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("TSTSS_ENDER_ACCESSORY_HOLD kind=%s invalid_candidate_or_socket"),
+                Label);
+            return;
+        }
+        UStaticMesh* Part = Asset.LoadSynchronous();
+        if (!IsValid(Part))
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("TSTSS_ENDER_ACCESSORY_HOLD kind=%s failed_private_asset"),
+                Label);
+            return;
+        }
+        Preview->AttachToComponent(Body,
+            FAttachmentTransformRules::SnapToTargetNotIncludingScale, Bone);
+        Preview->SetStaticMesh(Part);
+        Preview->SetRelativeTransform(Offset);
+        Preview->SetVisibility(true);
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_ENDER_ACCESSORY_REVIEW_ATTACHED kind=%s fit_NOT_VERIFIED art_NOT_APPROVED"),
+            Label);
+    };
+    AttachEnderReviewPart(EnderReviewHairComponent, EnderSliceReviewHair,
+        bShowEnderReviewHair, EnderReviewHeadBone,
+        EnderReviewHairLocalOffset, TEXT("HAIR"));
+    AttachEnderReviewPart(EnderReviewGogglesComponent, EnderSliceReviewGoggles,
+        bShowEnderReviewGoggles, EnderReviewHeadBone,
+        EnderReviewGogglesLocalOffset, TEXT("GOGGLES"));
+    AttachEnderReviewPart(EnderReviewStaffComponent, EnderSliceReviewStaff,
+        bShowEnderReviewStaff, EnderReviewGripBone,
+        EnderReviewStaffLocalOffset, TEXT("STAFF"));
 }
 
 void ATSTSSExplorerCharacter::SetupFirstWakeThirdPersonReview(UWorld* World)
