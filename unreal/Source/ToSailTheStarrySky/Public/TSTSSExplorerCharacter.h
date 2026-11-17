@@ -75,6 +75,12 @@ private:
 #if WITH_EDITOR
     void ReviewContinue();
     void StartHilltoniaOpening(UWorld* World);
+    void SetupFirstWakeThirdPersonReview(UWorld* World);
+    void ToggleFirstWakeBokehReview();
+    void UpdateFirstWakeBokehReview(float DeltaSeconds);
+    bool bFirstWakeThirdPersonReview = false;
+    bool bFirstWakeBokehReview = false;
+    float FirstWakeReviewFstop = 9.f;
     void AcceptHilltoniaFlyer();
     void DeclineHilltoniaFlyer();
     bool IsHilltoniaFlyerHit(const FHitResult& Hit) const;

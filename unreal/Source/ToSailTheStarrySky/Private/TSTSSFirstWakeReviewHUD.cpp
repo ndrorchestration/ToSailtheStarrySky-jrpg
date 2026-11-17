@@ -71,6 +71,13 @@ void ATSTSSFirstWakeReviewHUD::DrawHUD()
         return; // No illegible/offscreen overlay at very small sizes.
     }
     const bool bCompact = PanelWidth < 640.f;
+#if WITH_EDITOR
+    if (Explorer->HasHilltoniaOpening())
+    {
+        DrawText(TEXT("B  Cinematic focus"), FLinearColor(0.77f, 0.84f, 0.86f, 1.f),
+                 Margin + PanelWidth - 130.f, Margin + 12.f, GEngine->GetSmallFont(), .78f);
+    }
+#endif
     DrawRect(FLinearColor(0.012f, 0.024f, 0.035f, 0.84f),
              Margin, Margin, PanelWidth, 132.f);
     DrawText(TEXT("FIRST WAKE  |  PRELUDE REVIEW"),

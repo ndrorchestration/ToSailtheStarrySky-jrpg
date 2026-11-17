@@ -56,7 +56,7 @@ struct ATSTSSExplorerCharacter : TSTSSBaseCharacter {
     void Interact(); void QuickSave(); void QuickLoad(); void ReviewContinue(); void ShowObjectiveReview(); void ReviewShoreTravel(); void ReviewOpticalInspectionTravel();
     // Stand-in only: actual C-key input method is declared in the production header.
     void ToggleEngineFocusPreview();
-    void AcceptHilltoniaFlyer(); void DeclineHilltoniaFlyer();
+    void AcceptHilltoniaFlyer(); void DeclineHilltoniaFlyer(); void ToggleFirstWakeBokehReview();
 };
 // The binder receives real member-function pointers; provide no-op implementations
 // only so the standalone executable links. None of these methods are executed.
@@ -74,6 +74,7 @@ void ATSTSSExplorerCharacter::ReviewOpticalInspectionTravel() {}
 void ATSTSSExplorerCharacter::ToggleEngineFocusPreview() {}
 void ATSTSSExplorerCharacter::AcceptHilltoniaFlyer() {}
 void ATSTSSExplorerCharacter::DeclineHilltoniaFlyer() {}
+void ATSTSSExplorerCharacter::ToggleFirstWakeBokehReview() {}
 """
 SUFFIX = r"""
 static unsigned cases = 0;

@@ -640,6 +640,7 @@ void ATSTSSExplorerCharacter::BeginPlay()
 #if WITH_EDITOR
     ApplyOpticalReviewPlayerExposure(GetWorld(), FollowCamera);
     bTryHilltoniaOpening = ApplyV5HarborReviewLookdev(GetWorld());
+    SetupFirstWakeThirdPersonReview(GetWorld());
     StageDockedWakeReview(GetWorld());
     ApplyCoastalRecoveryReviewSignage(GetWorld());
     ApplySeabourneReviewExposure(GetWorld());
@@ -830,6 +831,10 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
     {
         bTryHilltoniaOpening = false;
         StartHilltoniaOpening(World);
+    }
+    if (bFirstWakeBokehReview)
+    {
+        UpdateFirstWakeBokehReview(DeltaSeconds);
     }
     if (bHilltoniaFlyerRead && !IsHilltoniaFlyerOpen())
     {
@@ -1321,6 +1326,123 @@ void ATSTSSExplorerCharacter::RestoreEngineFocusPreview()
 #endif // WITH_EDITOR
 
 #if WITH_EDITOR
+void ATSTSSExplorerCharacter::SetupFirstWakeThirdPersonReview(UWorld* World)
+{
+    if (!World || !IsValid(FollowCamera) || !IsValid(CameraBoom) ||
+        (World->WorldType != EWorldType::PIE && World->WorldType != EWorldType::Game) ||
+        World->GetNetMode() != NM_Standalone || !World->GetOutermost() ||
+        !World->GetOutermost()->GetName().StartsWith(TEXT("/Game/TSTSS/Review/")))
+    {
+        return;
+    }
+    const FString Scene = UGameplayStatics::GetCurrentLevelName(World, true);
+    if (Scene != TEXT("FirstWake_PreludeInteraction_V5_VisualReview") &&
+        Scene != TEXT("VS02_AureateInteriors"))
+    {
+        return;
+    }
+
+    // Reuse the existing possession, movement, smart boom collision and E ray.
+    const bool bInteriors = Scene == TEXT("VS02_AureateInteriors");
+    CameraBoom->TargetArmLength = bInteriors ? 340.f : 440.f;
+    CameraBoom->TargetOffset = FVector(0.f, 0.f, 52.f);
+    CameraBoom->SocketOffset = FVector(0.f, 48.f, 12.f);
+    CameraBoom->bEnableCameraLag = true;
+    CameraBoom->CameraLagSpeed = 13.f;
+    CameraBoom->CameraLagMaxDistance = 55.f;
+    FollowCamera->SetFieldOfView(bInteriors ? 70.f : 64.f);
+    bFirstWakeThirdPersonReview = true;
+
+    // Local Ender V2 look-development package. Keep the donor and its materials
+    // at their original package paths, outside tracked Content on Neontic.
+    constexpr const TCHAR* PackageRoot = TEXT("/Game/ArtLookdev/Characters/EnderFidelityV2/");
+    constexpr const TCHAR* MeshPath =
+        TEXT("/Game/ArtLookdev/Characters/EnderFidelityV2/Ender_ender_fidelity_v2/StaticMeshes/Ender_ender_fidelity_v2.Ender_ender_fidelity_v2");
+    const FString LocalPath = FPaths::ConvertRelativePathToFull(
+        FPaths::ProjectSavedDir() / TEXT("FirstWakeEnderReview/EnderFidelityV2/"));
+    static bool bMountedEnderReview = false;
+    if (!bMountedEnderReview && FPaths::DirectoryExists(LocalPath))
+    {
+        FPackageName::RegisterMountPoint(PackageRoot, LocalPath);
+        bMountedEnderReview = true;
+    }
+    const FString MeshPackage = FPackageName::ObjectPathToPackageName(MeshPath);
+    UStaticMesh* Body = FPackageName::DoesPackageExist(MeshPackage)
+        ? LoadObject<UStaticMesh>(nullptr, MeshPath) : nullptr;
+    if (!IsValid(Body))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("TSTSS_ENDER_THIRD_PERSON_HOLD missing local Ender review mesh"));
+        return;
+    }
+    const FBox Bounds = Body->GetBoundingBox();
+    const double Height = Bounds.GetSize().Z;
+    if (!Bounds.IsValid || !FMath::IsFinite(Height) || Height < 1.f || Height > 1000.f)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("TSTSS_ENDER_THIRD_PERSON_HOLD invalid body bounds"));
+        return;
+    }
+    const double Scale = 176.0 / Height;
+    const FRotator BodyYaw(0.f, 0.f, 0.f);
+    const FVector FootCenter(Bounds.GetCenter().X, Bounds.GetCenter().Y, Bounds.Min.Z);
+    auto* Visual = NewObject<UStaticMeshComponent>(this, TEXT("EnderFirstWakeReviewBody"));
+    Visual->SetMobility(EComponentMobility::Movable);
+    Visual->SetStaticMesh(Body);
+    Visual->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    Visual->SetGenerateOverlapEvents(false);
+    Visual->SetupAttachment(GetRootComponent());
+    Visual->SetRelativeRotation(BodyYaw);
+    Visual->SetRelativeScale3D(FVector(Scale));
+    Visual->SetRelativeLocation(
+        FVector(0.f, 0.f, -GetCapsuleComponent()->GetScaledCapsuleHalfHeight()) -
+        BodyYaw.RotateVector(FootCenter * Scale));
+    AddInstanceComponent(Visual);
+    Visual->RegisterComponent();
+    UE_LOG(LogTemp, Display, TEXT("TSTSS_ENDER_THIRD_PERSON_READY scene=%s source_height_cm=%.1f review_height_cm=176 static_lookdev=1"),
+        *Scene, Height);
+}
+
+void ATSTSSExplorerCharacter::ToggleFirstWakeBokehReview()
+{
+    if (!bFirstWakeThirdPersonReview || !FollowCamera || IsHilltoniaFlyerOpen() ||
+        EngineFocusPreviewCamera.IsValid())
+    {
+        return;
+    }
+    bFirstWakeBokehReview = !bFirstWakeBokehReview;
+    FPostProcessSettings& Lens = FollowCamera->PostProcessSettings;
+    Lens.bOverride_DepthOfFieldFocalDistance = bFirstWakeBokehReview;
+    Lens.bOverride_DepthOfFieldFstop = bFirstWakeBokehReview;
+    Lens.bOverride_DepthOfFieldBladeCount = bFirstWakeBokehReview;
+    Lens.DepthOfFieldBladeCount = 9;
+    if (bFirstWakeBokehReview)
+    {
+        FirstWakeReviewFstop = 9.f;
+        UpdateFirstWakeBokehReview(0.f);
+    }
+    if (GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Cyan,
+            bFirstWakeBokehReview ? TEXT("Cinematic focus on [B]") : TEXT("Cinematic focus off [B]"));
+    }
+    UE_LOG(LogTemp, Display, TEXT("TSTSS_FIRST_WAKE_BOKEH enabled=%d"), bFirstWakeBokehReview);
+}
+
+void ATSTSSExplorerCharacter::UpdateFirstWakeBokehReview(float DeltaSeconds)
+{
+    // Keep the character plane sharp at rest. Close down during locomotion and
+    // while reading the flyer, so walking and the choice overlay remain clear.
+    const bool bExploring = GetVelocity().SizeSquared2D() > FMath::Square(35.f) ||
+        IsHilltoniaFlyerOpen();
+    const float TargetFstop = bExploring ? 16.f : 3.5f;
+    FirstWakeReviewFstop = FMath::FInterpTo(FirstWakeReviewFstop, TargetFstop, DeltaSeconds, 5.f);
+    const FVector FocusPoint = GetActorLocation() + FVector(0.f, 0.f, 28.f);
+    const float Depth = FVector::DotProduct(
+        FocusPoint - FollowCamera->GetComponentLocation(), FollowCamera->GetForwardVector());
+    FPostProcessSettings& Lens = FollowCamera->PostProcessSettings;
+    Lens.DepthOfFieldFocalDistance = FMath::Clamp(Depth, 210.f, 900.f);
+    Lens.DepthOfFieldFstop = FirstWakeReviewFstop;
+}
+
 void ATSTSSExplorerCharacter::StartHilltoniaOpening(UWorld* World)
 {
     if (!IsValid(FirstWakeState) || FirstWakeState->HasStarted() || !Controller)
@@ -1454,6 +1576,8 @@ void ATSTSSExplorerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
             this, &ATSTSSExplorerCharacter::AcceptHilltoniaFlyer);
         PlayerInputComponent->BindAction(TEXT("DeclineHilltoniaFlyer"), IE_Pressed,
             this, &ATSTSSExplorerCharacter::DeclineHilltoniaFlyer);
+        PlayerInputComponent->BindAction(TEXT("FirstWakeBokehReview"), IE_Pressed,
+            this, &ATSTSSExplorerCharacter::ToggleFirstWakeBokehReview);
     }
 #endif
 }
