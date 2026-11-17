@@ -880,6 +880,9 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
         (Scene == TEXT("FirstWake_PreludeInteraction_V5_VisualReview") ||
          Scene == TEXT("VS02_AureateInteriors")))
     {
+        // Independent of private animation assets: allow opt-in physical
+        // walk and held-Shift sprint testing on the actual possessed pawn.
+        TryEnderPIEWalkRunControls();
         USkeletalMeshComponent* SkeletalBody = GetMesh();
         const bool bSkeletalVisible = IsValid(SkeletalBody) &&
             SkeletalBody->IsRegistered() &&
@@ -1050,6 +1053,7 @@ static void ShowOptionalEngineFocusHint(const UWorld* World, bool bInspection)
 void ATSTSSExplorerCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 #if WITH_EDITOR
+    RestoreEnderPIEWalkRunControls();
     RestoreEngineFocusPreview();
 #endif
     Super::EndPlay(EndPlayReason);
@@ -1403,6 +1407,122 @@ void ATSTSSExplorerCharacter::RestoreEngineFocusPreview()
 #endif // WITH_EDITOR
 
 #if WITH_EDITOR
+
+void ATSTSSExplorerCharacter::PressEnderPIEReviewSprint()
+{
+    bEnderPIESprintHeld = true;
+    TryEnderPIEWalkRunControls(); // immediate response, not 0.2s later
+}
+
+void ATSTSSExplorerCharacter::ReleaseEnderPIEReviewSprint()
+{
+    bEnderPIESprintHeld = false;
+    TryEnderPIEWalkRunControls();
+}
+
+void ATSTSSExplorerCharacter::RestoreEnderPIEWalkRunControls()
+{
+    if (!bEnderPIEWalkRunActive)
+    {
+        return;
+    }
+    UCharacterMovementComponent* Movement = GetCharacterMovement();
+    if (IsValid(Movement) &&
+        FMath::IsNearlyEqual(Movement->MaxWalkSpeed,
+                            EnderPIELastAssignedMaxWalkSpeed, 0.1f))
+    {
+        Movement->MaxWalkSpeed = EnderPIEOriginalMaxWalkSpeed;
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_ENDER_PIE_WALKRUN_RESTORED original_speed_cm_s=%.1f"),
+            EnderPIEOriginalMaxWalkSpeed);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_ENDER_PIE_WALKRUN_HOLD movement_owner_changed_no_restore"));
+    }
+    bEnderPIEWalkRunActive = false;
+    bEnderPIESprintHeld = false;
+}
+
+void ATSTSSExplorerCharacter::TryEnderPIEWalkRunControls()
+{
+    // Optional only; preserve the game's original locomotion authority.
+    // Other review components, save/quest state, input axes and transforms
+    // are never touched. This can be tested before private clips exist.
+    const UWorld* World = GetWorld();
+    const bool bAllowed =
+        bEnableEnderPIEWalkRunControls &&
+        bFirstWakeThirdPersonReview && IsPlayerControlled() &&
+        World && World->WorldType == EWorldType::PIE &&
+        World->GetNetMode() == NM_Standalone &&
+        World->GetOutermost() &&
+        World->GetOutermost()->GetName().StartsWith(
+            TEXT("/Game/TSTSS/Review/"));
+    if (!bAllowed)
+    {
+        RestoreEnderPIEWalkRunControls();
+        return;
+    }
+    const FString Scene = UGameplayStatics::GetCurrentLevelName(World, true);
+    if (Scene != TEXT("FirstWake_PreludeInteraction_V5_VisualReview") &&
+        Scene != TEXT("VS02_AureateInteriors"))
+    {
+        RestoreEnderPIEWalkRunControls();
+        return;
+    }
+    UCharacterMovementComponent* Movement = GetCharacterMovement();
+    if (!IsValid(Movement))
+    {
+        RestoreEnderPIEWalkRunControls();
+        return;
+    }
+    if (!bEnderPIEWalkRunChecked)
+    {
+        bEnderPIEWalkRunChecked = true;
+        const float PriorSpeed = Movement->MaxWalkSpeed;
+        if (!FMath::IsFinite(PriorSpeed) ||
+            PriorSpeed < 180.f || PriorSpeed > 900.f)
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("TSTSS_ENDER_PIE_WALKRUN_HOLD unsuitable_existing_speed_cm_s=%.1f"),
+                PriorSpeed);
+            return;
+        }
+        EnderPIEOriginalMaxWalkSpeed = PriorSpeed;
+        EnderPIELastAssignedMaxWalkSpeed = PriorSpeed;
+        bEnderPIEWalkRunActive = true;
+    }
+    if (!bEnderPIEWalkRunActive)
+    {
+        return; // One admission per PIE instance, never retry a held owner.
+    }
+    if (!FMath::IsNearlyEqual(Movement->MaxWalkSpeed,
+                              EnderPIELastAssignedMaxWalkSpeed, 0.1f))
+    {
+        bEnderPIEWalkRunActive = false;
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_ENDER_PIE_WALKRUN_HOLD movement_owner_changed"));
+        return; // Another system changed speed: do not wrest it back.
+    }
+    const APlayerController* PC = Cast<APlayerController>(GetController());
+    const bool bCanSprint = bEnderPIESprintHeld && IsValid(PC) &&
+        !PC->IsMoveInputIgnored() && !IsHilltoniaFlyerOpen() &&
+        !EngineFocusPreviewCamera.IsValid();
+    constexpr float WalkSpeedCmS = 260.f; // below 300 cm/s telemetry cutoff
+    constexpr float RunSpeedCmS = 480.f;  // above 300 cm/s telemetry cutoff
+    const float TargetSpeed = bCanSprint ? RunSpeedCmS : WalkSpeedCmS;
+    if (!FMath::IsNearlyEqual(TargetSpeed,
+                              EnderPIELastAssignedMaxWalkSpeed, 0.1f))
+    {
+        Movement->MaxWalkSpeed = TargetSpeed;
+        EnderPIELastAssignedMaxWalkSpeed = TargetSpeed;
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_ENDER_PIE_WALKRUN_APPLIED band=%s max_speed_cm_s=%.1f animation_NOT_VERIFIED"),
+            bCanSprint ? TEXT("run") : TEXT("walk"), TargetSpeed);
+    }
+}
+
 void ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance()
 {
     // Port the bounded, private Ender skeletal candidate from the earlier
@@ -1872,6 +1992,12 @@ void ATSTSSExplorerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
     if (InputWorld && InputWorld->WorldType == EWorldType::PIE)
     {
         PlayerInputComponent->BindAction(TEXT("ReviewContinue"), IE_Pressed, this, &ATSTSSExplorerCharacter::ReviewContinue);
+        // The global key mapping is inert in Game/shipping. Runtime checks
+        // narrow the only movement changes to opt-in First Wake PIE.
+        PlayerInputComponent->BindAction(TEXT("EnderPIEReviewSprint"), IE_Pressed,
+            this, &ATSTSSExplorerCharacter::PressEnderPIEReviewSprint);
+        PlayerInputComponent->BindAction(TEXT("EnderPIEReviewSprint"), IE_Released,
+            this, &ATSTSSExplorerCharacter::ReleaseEnderPIEReviewSprint);
         // Opt-in cinematography is separate from E, J, K, F6, F7 and F9.
         PlayerInputComponent->BindAction(TEXT("EngineFocusPreview"), IE_Pressed,
             this, &ATSTSSExplorerCharacter::ToggleEngineFocusPreview);

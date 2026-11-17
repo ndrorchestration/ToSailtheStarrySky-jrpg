@@ -20,6 +20,31 @@ and `UAnimSingleNodeInstance::GetCurrentAsset`
 The API only requests transient playback; source tests and log entries do **not**
 establish native pose evaluation, foot placement or rendered evidence.
 
+## Optional controlled walk/sprint review (separate from animation clips)
+
+The existing pawn now supports the review-only `EnderPIEReviewSprint` key
+(`LeftShift`, held to run), **disabled by default** via the private Blueprint
+property `bEnableEnderPIEWalkRunControls=false`. When explicitly enabled,
+only the genuinely player-possessed standalone PIE V5/VS02 review pawn receives
+a 260 cm/s walk cap; holding Shift requests 480 cm/s until released. This is
+a physical movement-speed review control: it does **not** prove, request or
+author any skeletal animation, and it can be tested before the three private
+animation clips are available.
+
+The controller leases the preexisting `MaxWalkSpeed` from the spawned pawn,
+refuses speeds outside 180–900 cm/s or non-finite speeds, and writes only when
+the last observed speed is still the one it owns. If another owner changes the
+speed, the control stops and never forces a takeover. On release at PIE EndPlay
+or when the review scope is lost, it restores the original speed **only if**
+the last assigned value remains unchanged. Flyer and engine-focus UI suppress
+running; existing WASD/E/quest/save bindings and production movement untouched.
+The Shift mapping is globally declared but **bound only in editor PIE**;
+without the explicit Blueprint opt-in it is inert.
+
+Native acceptance requires comparing observed walk/sprint speeds and animation
+bands on an actual player-controlled Ender, ensuring walking does not accidentally
+fire run pose and transitions do not override camera/E/story/modal controls.
+
 ## Non-negotiable gates
 
 1. **Editor only, explicit opt-in:** a private review Blueprint derived from

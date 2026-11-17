@@ -104,6 +104,9 @@ protected:
     TObjectPtr<UAnimSequence> EnderPIEWalkLoaded;
     UPROPERTY(Transient)
     TObjectPtr<UAnimSequence> EnderPIERunLoaded;
+    // Opt-in, editor-only review input. Never changes shipping movement.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview|Movement")
+    bool bEnableEnderPIEWalkRunControls = false;
 #endif
 private:
 #if WITH_EDITORONLY_DATA
@@ -118,6 +121,15 @@ private:
 #if WITH_EDITOR
     void ApplyEnderSliceReviewAppearance();
     void TryEnderPIELocomotionPreview(uint8 MotionBand);
+    void PressEnderPIEReviewSprint();
+    void ReleaseEnderPIEReviewSprint();
+    void TryEnderPIEWalkRunControls();
+    void RestoreEnderPIEWalkRunControls();
+    bool bEnderPIEWalkRunChecked = false;
+    bool bEnderPIEWalkRunActive = false;
+    bool bEnderPIESprintHeld = false;
+    float EnderPIEOriginalMaxWalkSpeed = 0.f;
+    float EnderPIELastAssignedMaxWalkSpeed = 0.f;
     bool bEnderPIEAnimPreviewChecked = false;
     bool bEnderPIEAnimPreviewActive = false;
     uint8 LastEnderPIEAnimBand = 255;
