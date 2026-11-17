@@ -106,6 +106,24 @@ class FocusTelemetryReviewTests(unittest.TestCase):
         self.assertIn("TSTSS_PIE_GAMEPLAY_ENGINE_FOCUS_GATE denied=missing_native_lift_or_sky",section)
         self.assertIn("TSTSS_PIE_GAMEPLAY_ENGINE_FOCUS_RESTORE_AUDIT",CPP)
 
+    def test_native_unreal_space_padded_frame_counter_preserves_seven_E_events(self):
+        # UE's runtime frame counter can render as [ 59] after wrapping
+        # instead of [007]. This is a real logged event, not a missing E.
+        original=fixture()
+        target=next(line for line in original.splitlines()
+                    if "TSTSS_PIE_REVIEW_E_ACCEPT" in line
+                    and "ReserveStation" in line)
+        self.assertIn("][007]LogTemp:",target)
+        padded=target.replace("][007]LogTemp:","][ 59]LogTemp:")
+        live_shape=original.replace(target,padded,1)
+        result=verify(live_shape)
+        self.assertTrue(result["seven_earned_interactions"])
+        self.assertTrue(result["shipboard_k_then_optical_o_with_earned_beat"])
+        # Do not accept arbitrary/corrupted frame fields while admitting
+        # exactly the ASCII-space padding emitted by native Unreal.
+        with self.assertRaisesRegex(ValueError,"expected 7 E"):
+            verify(live_shape.replace("][ 59]LogTemp:","][oops]LogTemp:",1))
+
     def test_negative_log_mutations_all_rejected(self):
         baseline=fixture()
         mutations={
