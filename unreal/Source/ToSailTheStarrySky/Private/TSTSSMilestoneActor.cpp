@@ -151,7 +151,7 @@ FString ATSTSSMilestoneActor::GetReviewDisplayName() const
 
 bool ATSTSSMilestoneActor::IsReviewActionable(const UTSTSSFirstWakeState* State) const
 {
-    if (!IsValid(State) ||
+    if (!IsValid(State) || Tags.Contains(TEXT("TSTSS_RETIRED_HARBOR_FLYER")) ||
         IsRetiredV5HarborEngineeringMarker(GetWorld(), GetActorLabel(),
             bIsInspectionStation, Milestone) ||
         !IsAuthorizedReviewMilestoneWorld(GetWorld(), GetActorLabel()) ||
@@ -285,7 +285,7 @@ void ATSTSSMilestoneActor::EnsureV5ReviewObjectProxy()
 
 void ATSTSSMilestoneActor::UpdateReviewBeacon(const UTSTSSFirstWakeState* State)
 {
-    if (!IsValid(ReviewBeacon) ||
+    if (!IsValid(ReviewBeacon) || Tags.Contains(TEXT("TSTSS_RETIRED_HARBOR_FLYER")) ||
         IsRetiredV5HarborEngineeringMarker(GetWorld(), GetActorLabel(),
             bIsInspectionStation, Milestone) ||
         !IsAuthorizedReviewMilestoneWorld(GetWorld(), GetActorLabel()))
@@ -371,7 +371,8 @@ bool ATSTSSMilestoneActor::TryActivate(UTSTSSFirstWakeState* State)
 {
     if (!IsValid(State)) return false;
 #if WITH_EDITOR
-    if (IsRetiredV5HarborEngineeringMarker(GetWorld(), GetActorLabel(),
+    if (Tags.Contains(TEXT("TSTSS_RETIRED_HARBOR_FLYER")) ||
+        IsRetiredV5HarborEngineeringMarker(GetWorld(), GetActorLabel(),
             bIsInspectionStation, Milestone))
     {
         return false;

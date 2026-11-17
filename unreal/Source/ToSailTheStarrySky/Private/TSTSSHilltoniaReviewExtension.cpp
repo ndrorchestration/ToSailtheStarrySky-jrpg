@@ -228,6 +228,7 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
                              Cube, Timber, true);
     auto* NoticePanel = Make(Owner, Root, TEXT("HilltoniaPostingBoardPanel"),
                              Cube, Timber, true);
+    NoticePanel->ComponentTags.Add(TEXT("TSTSS_HILLTONIA_FLYER"));
     auto* NoticeSheet = Make(Owner, Root, TEXT("HilltoniaPostingBoardFlyerPaper"),
                              Cube, Stone, false);
 

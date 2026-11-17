@@ -16,6 +16,9 @@
 #include "Materials/MaterialInterface.h"
 #endif
 #include "Components/StaticMeshComponent.h"
+#if WITH_EDITOR
+#include "Components/CapsuleComponent.h"
+#endif
 #include "Engine/StaticMesh.h"
 #include "Engine/TextRenderActor.h"
 #include "Components/TextRenderComponent.h"
@@ -193,7 +196,7 @@ void ApplyOpticalReviewPlayerExposure(UWorld* World, UCameraComponent* Camera)
         TEXT("TSTSS_PIE_OPTICAL_PLAYER_EXPOSURE_REVIEW_ONLY bias=-6 sky_enabled=1 map_asset_unchanged=1"));
 }
 
-void ApplyV5HarborReviewLookdev(UWorld* World)
+bool ApplyV5HarborReviewLookdev(UWorld* World)
 {
     if (!World || (World->WorldType != EWorldType::PIE &&
                    World->WorldType != EWorldType::Game) ||
@@ -202,7 +205,7 @@ void ApplyV5HarborReviewLookdev(UWorld* World)
         UGameplayStatics::GetCurrentLevelName(World, true) !=
             TEXT("FirstWake_PreludeInteraction_V5_VisualReview"))
     {
-        return;
+        return false;
     }
     // Source-locked V5 static blockout only. Existing imported material
     // assets provide the first harbor palette; no source .umap is saved.
@@ -237,7 +240,7 @@ void ApplyV5HarborReviewLookdev(UWorld* World)
         {
             UE_LOG(LogTemp, Warning,
                 TEXT("TSTSS_V5_LOOKDEV_HOLD missing material=%s"), *ObjectPath);
-            return; // Never partially re-skin a failed asset inventory.
+            return false; // Never partially re-skin a failed asset inventory.
         }
         // Optional 512px albedo/normal/ORM native imports. All-or-nothing:
         // no mixed partially imported PBR palette may influence the review.
@@ -264,7 +267,7 @@ void ApplyV5HarborReviewLookdev(UWorld* World)
         {
             UE_LOG(LogTemp, Warning,
                 TEXT("TSTSS_V5_LOOKDEV_HOLD missing geometry=%s"), Palette[Index].Label);
-            return;
+            return false;
         }
     }
     for (int32 Index = 0; Index < UE_ARRAY_COUNT(Palette); ++Index)
@@ -287,6 +290,7 @@ void ApplyV5HarborReviewLookdev(UWorld* World)
     // A separate unsaved harbor-dressing actor makes the first real PBR
     // texture pass readable as dock architecture instead of a single floor.
     // A partial or missing PBR asset set must never create mismatched props.
+    bool bTownReady = false;
     if (bCompletePBRPack)
     {
         const bool bDockReady = TSTSSV5HarborReviewDressing::Apply(
@@ -300,7 +304,7 @@ void ApplyV5HarborReviewLookdev(UWorld* World)
                 nullptr, TEXT("/Game/TSTSS/Review/VerticalSlice/M_VS_Green.M_VS_Green"));
             if (IsValid(Canopy))
             {
-                TSTSSHilltoniaReviewExtension::Apply(
+                bTownReady = TSTSSHilltoniaReviewExtension::Apply(
                     World, PBRLoaded[0], PBRLoaded[2], PBRLoaded[3], Canopy);
             }
             else
@@ -313,6 +317,7 @@ void ApplyV5HarborReviewLookdev(UWorld* World)
     UE_LOG(LogTemp, Display,
         TEXT("TSTSS_V5_LOOKDEV_APPLIED material_slots=6 pbr=%d exposure_bias=-2.2 source_map_unchanged=1"),
         bCompletePBRPack ? 1 : 0);
+    return bTownReady;
 }
 #endif
 
@@ -633,7 +638,7 @@ void ATSTSSExplorerCharacter::BeginPlay()
     FirstWakeState = NewObject<UTSTSSFirstWakeState>(this);
 #if WITH_EDITOR
     ApplyOpticalReviewPlayerExposure(GetWorld(), FollowCamera);
-    ApplyV5HarborReviewLookdev(GetWorld());
+    bTryHilltoniaOpening = ApplyV5HarborReviewLookdev(GetWorld());
     StageDockedWakeReview(GetWorld());
     ApplyCoastalRecoveryReviewSignage(GetWorld());
     ApplySeabourneReviewExposure(GetWorld());
@@ -763,7 +768,8 @@ void ATSTSSExplorerCharacter::BeginPlay()
             }
         }
     }
-#endif    bPIEReviewQuickSlotOwned = false;
+#endif
+    bPIEReviewQuickSlotOwned = false;
 #if WITH_EDITOR
     bPendingReviewContinue = false;
 #endif
@@ -819,6 +825,15 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
         World->GetOutermost()->GetName().StartsWith(TEXT("/Game/TSTSS/Review/"));
     const FString Scene = UGameplayStatics::GetCurrentLevelName(World, true);
 #if WITH_EDITOR
+    if (bTryHilltoniaOpening)
+    {
+        bTryHilltoniaOpening = false;
+        StartHilltoniaOpening(World);
+    }
+    if (bHilltoniaFlyerRead && !IsHilltoniaFlyerOpen())
+    {
+        DeclineHilltoniaFlyer();
+    }
     // Only scoped review worlds advertise live interaction. Visual refresh
     // reads the authoritative state; it cannot advance or save a story beat.
     if (bReviewNamespace && World->GetNetMode() == NM_Standalone &&
@@ -1304,6 +1319,94 @@ void ATSTSSExplorerCharacter::RestoreEngineFocusPreview()
 }
 #endif // WITH_EDITOR
 
+#if WITH_EDITOR
+void ATSTSSExplorerCharacter::StartHilltoniaOpening(UWorld* World)
+{
+    if (!IsValid(FirstWakeState) || FirstWakeState->HasStarted() || !Controller)
+    {
+        return;
+    }
+    ATSTSSMilestoneActor* OldFlyer = nullptr;
+    ATSTSSMilestoneActor* Captain = nullptr;
+    for (TActorIterator<ATSTSSMilestoneActor> It(World); It; ++It)
+    {
+        if (It->GetActorLabel() == TEXT("TSTSS_PRELUDE_REVIEW_FlyerDiscovery"))
+        {
+            if (OldFlyer) return;
+            OldFlyer = *It;
+        }
+        if (It->GetActorLabel() == TEXT("TSTSS_PRELUDE_REVIEW_IoniaHiring"))
+        {
+            if (Captain) return;
+            Captain = *It;
+        }
+    }
+    // Center the capsule over the built west road and face town (+X).
+    const FVector Spawn(-14650.f, -150.f,
+        GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + 8.f);
+    if (!IsValid(OldFlyer) || !IsValid(Captain) ||
+        !HasSupportedReviewFooting(World, Spawn) || !TeleportTo(Spawn, FRotator::ZeroRotator))
+    {
+        UE_LOG(LogTemp, Warning, TEXT("TSTSS_HILLTONIA_OPENING_HOLD spawn or marker inventory"));
+        return;
+    }
+    GetCharacterMovement()->StopMovementImmediately();
+    Controller->SetControlRotation(FRotator(-8.f, 0.f, 0.f));
+    HilltoniaCaptain = Captain;
+    bHilltoniaOpeningActive = true;
+    OldFlyer->Tags.AddUnique(TEXT("TSTSS_RETIRED_HARBOR_FLYER"));
+    OldFlyer->SetActorHiddenInGame(true);
+    OldFlyer->SetActorEnableCollision(false);
+    UE_LOG(LogTemp, Display, TEXT("TSTSS_HILLTONIA_OPENING_READY location=%s"),
+        *GetActorLocation().ToCompactString());
+}
+
+bool ATSTSSExplorerCharacter::IsHilltoniaFlyerHit(const FHitResult& Hit) const
+{
+    const UPrimitiveComponent* Component = Hit.GetComponent();
+    return bHilltoniaOpeningActive && IsValid(FirstWakeState) &&
+        !FirstWakeState->HasStarted() && IsValid(Component) &&
+        Component->ComponentHasTag(TEXT("TSTSS_HILLTONIA_FLYER"));
+}
+
+bool ATSTSSExplorerCharacter::IsHilltoniaFlyerOpen() const
+{
+    return bHilltoniaOpeningActive && bHilltoniaFlyerRead &&
+        IsValid(FirstWakeState) && !FirstWakeState->HasStarted() &&
+        FirstWakeState->GetRestoreGeneration() == HilltoniaFlyerGeneration &&
+        TSTSSInteractionReach::IsInsidePlayerReach(
+            GetActorLocation(), HilltoniaFlyerHit, InteractionDistance);
+}
+
+void ATSTSSExplorerCharacter::AcceptHilltoniaFlyer()
+{
+    if (!IsHilltoniaFlyerOpen() || !HilltoniaCaptain.IsValid()) return;
+    bHilltoniaFlyerRead = false;
+    if (FirstWakeState->AdvanceTo(ETSTSSFirstWakeBeat::FlyerDiscovered))
+    {
+        UE_LOG(LogTemp, Display, TEXT("TSTSS_HILLTONIA_FLYER_ACCEPT"));
+        ShowFirstWakeReviewObjective(FirstWakeState);
+    }
+}
+
+void ATSTSSExplorerCharacter::DeclineHilltoniaFlyer()
+{
+    bHilltoniaFlyerRead = false;
+}
+
+bool ATSTSSExplorerCharacter::GetHilltoniaCaptainWaypoint(FVector& Location) const
+{
+    if (!bHilltoniaOpeningActive || !HilltoniaCaptain.IsValid() ||
+        !IsValid(FirstWakeState) || !FirstWakeState->HasStarted() ||
+        FirstWakeState->GetCurrentBeat() != ETSTSSFirstWakeBeat::FlyerDiscovered)
+    {
+        return false;
+    }
+    Location = HilltoniaCaptain->GetActorLocation() + FVector(0.f, 0.f, 175.f);
+    return !Location.ContainsNaN();
+}
+#endif
+
 void ATSTSSExplorerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -1346,6 +1449,10 @@ void ATSTSSExplorerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
     {
         PlayerInputComponent->BindAction(TEXT("ReviewShoreTravel"), IE_Pressed,
             this, &ATSTSSExplorerCharacter::ReviewShoreTravel);
+        PlayerInputComponent->BindAction(TEXT("AcceptHilltoniaFlyer"), IE_Pressed,
+            this, &ATSTSSExplorerCharacter::AcceptHilltoniaFlyer);
+        PlayerInputComponent->BindAction(TEXT("DeclineHilltoniaFlyer"), IE_Pressed,
+            this, &ATSTSSExplorerCharacter::DeclineHilltoniaFlyer);
     }
 #endif
 }
@@ -1394,6 +1501,12 @@ FString ATSTSSExplorerCharacter::GetReviewAimStatus() const
         ECC_Visibility, Query))
     {
         return FString();
+    }
+    if (IsHilltoniaFlyerHit(Hit))
+    {
+        return TSTSSInteractionReach::IsInsidePlayerReach(
+            Pawn, Hit.ImpactPoint, InteractionDistance)
+            ? TEXT("[E]  READ IONIA'S FLYER") : TEXT("MOVE CLOSER  |  IONIA'S FLYER");
     }
     const ATSTSSMilestoneActor* Marker = Cast<ATSTSSMilestoneActor>(Hit.GetActor());
     if (!IsValid(Marker)) return FString();
@@ -1446,6 +1559,20 @@ void ATSTSSExplorerCharacter::Interact()
 #endif
     if (bTraceHit)
     {
+#if WITH_EDITOR
+        if (IsHilltoniaFlyerHit(Hit))
+        {
+            if (TSTSSInteractionReach::IsInsidePlayerReach(
+                    PawnLocation, Hit.ImpactPoint, InteractionDistance))
+            {
+                HilltoniaFlyerHit = Hit.ImpactPoint;
+                HilltoniaFlyerGeneration = FirstWakeState->GetRestoreGeneration();
+                bHilltoniaFlyerRead = true;
+                UE_LOG(LogTemp, Display, TEXT("TSTSS_HILLTONIA_FLYER_READ"));
+            }
+            return;
+        }
+#endif
         if (ATSTSSMilestoneActor* Milestone = Cast<ATSTSSMilestoneActor>(Hit.GetActor()))
         {
             // A longer camera ray never increases interaction reach.

@@ -25,13 +25,13 @@ class EditorOnlyInteractionTelemetryTests(unittest.TestCase):
         self.assertIn("*FirstWakeState->GetReviewObjectiveText()",self.interact)
 
     def test_only_in_editor_pie_and_no_extra_mutation(self):
-        self.assertEqual(self.interact.count("#if WITH_EDITOR"),6)
-        self.assertEqual(self.interact.count("#endif"),6)
+        self.assertEqual(self.interact.count("#if WITH_EDITOR"),7)
+        self.assertEqual(self.interact.count("#endif"),7)
         self.assertEqual(self.interact.count("GetWorld()->WorldType == EWorldType::PIE"),5)
         self.assertEqual(self.interact.count("Milestone->TryActivate(FirstWakeState)"),1)
         self.assertEqual(self.interact.count("ShowFirstWakeReviewObjective(FirstWakeState)"),1)
         self.assertEqual(self.interact.count("ShowFirstWakeReviewBlockedInteraction(FirstWakeState)"),1)
-        self.assertEqual(self.interact.count("UE_LOG("),5)
+        self.assertEqual(self.interact.count("UE_LOG("),6)
         for forbidden in ("SetActorLocation(", "SetActorRotation(", "SaveGameToSlot(",
                           "OnMilestoneActivated(", "AdvanceTo(", "InteractionDistance ="):
             self.assertNotIn(forbidden,self.interact)

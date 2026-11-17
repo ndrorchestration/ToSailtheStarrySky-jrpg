@@ -13,4 +13,12 @@ class TOSAILTHESTARRYSKY_API ATSTSSFirstWakeReviewHUD : public AHUD
 
 public:
     virtual void DrawHUD() override;
+
+private:
+#if WITH_EDITOR
+    bool DrawHilltoniaOpening(const class ATSTSSExplorerCharacter& Explorer);
+    bool bTriedHilltoniaIcon = false;
+#endif
+    UPROPERTY(Transient)
+    TObjectPtr<class UTexture2D> HilltoniaWaypointTexture;
 };

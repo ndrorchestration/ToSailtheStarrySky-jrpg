@@ -56,6 +56,7 @@ struct ATSTSSExplorerCharacter : TSTSSBaseCharacter {
     void Interact(); void QuickSave(); void QuickLoad(); void ReviewContinue(); void ShowObjectiveReview(); void ReviewShoreTravel(); void ReviewOpticalInspectionTravel();
     // Stand-in only: actual C-key input method is declared in the production header.
     void ToggleEngineFocusPreview();
+    void AcceptHilltoniaFlyer(); void DeclineHilltoniaFlyer();
 };
 // The binder receives real member-function pointers; provide no-op implementations
 // only so the standalone executable links. None of these methods are executed.
@@ -71,6 +72,8 @@ void ATSTSSExplorerCharacter::ShowObjectiveReview() {}
 void ATSTSSExplorerCharacter::ReviewShoreTravel() {}
 void ATSTSSExplorerCharacter::ReviewOpticalInspectionTravel() {}
 void ATSTSSExplorerCharacter::ToggleEngineFocusPreview() {}
+void ATSTSSExplorerCharacter::AcceptHilltoniaFlyer() {}
+void ATSTSSExplorerCharacter::DeclineHilltoniaFlyer() {}
 """
 SUFFIX = r"""
 static unsigned cases = 0;
@@ -97,6 +100,10 @@ int main() {
             verify(hasExactly(input.actions, "Interact", 1), "Interaction unavailable");
             verify(hasExactly(input.actions, "QuickLoad", 1), "QuickLoad unavailable");
             verify(hasExactly(input.actions, "ReviewObjective", 1), "Read-only objective unavailable");
+            const size_t questBindings = type == EWorldType::Editor ? 0 : 1;
+            verify(hasExactly(input.actions, "AcceptHilltoniaFlyer", questBindings) &&
+                   hasExactly(input.actions, "DeclineHilltoniaFlyer", questBindings),
+                   "Hilltonia choice bindings must be available in PIE and Game only");
             verify(hasExactly(input.actions, "ReviewShoreTravel", type == EWorldType::Editor ? 0 : 1),
                    "K review navigation incorrectly enabled or missing");
             verify(hasExactly(input.actions, "ReviewOpticalInspectionTravel", type == EWorldType::PIE ? 1 : 0),

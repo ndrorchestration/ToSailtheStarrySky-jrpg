@@ -8,7 +8,7 @@ import unittest
 ROOT=Path(__file__).resolve().parents[1]
 CPP=(ROOT/"Source/ToSailTheStarrySky/Private/TSTSSExplorerCharacter.cpp").read_text(encoding="utf-8")
 BEGIN="void ApplyOpticalReviewPlayerExposure(UWorld* World, UCameraComponent* Camera)"
-END="void ApplyV5HarborReviewLookdev(UWorld* World)"
+END="bool ApplyV5HarborReviewLookdev(UWorld* World)"
 
 class OpticalPlayerExposureSourceContract(unittest.TestCase):
     def helper(self):

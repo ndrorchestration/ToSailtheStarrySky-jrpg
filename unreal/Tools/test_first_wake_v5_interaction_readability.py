@@ -90,7 +90,7 @@ class ReadableInteractionContract(unittest.TestCase):
         self.assertNotIn("AdvanceTo(", HUD)
 
     def test_native_material_pass_is_one_review_world_only(self):
-        src = PAWN.split("void ApplyV5HarborReviewLookdev(", 1)[1].split(
+        src = PAWN.split("bool ApplyV5HarborReviewLookdev(", 1)[1].split(
             "#endif", 1
         )[0]
         self.assertIn("NM_Standalone", src)
@@ -109,7 +109,7 @@ class ReadableInteractionContract(unittest.TestCase):
         for name in ("TSTSS_wood", "TSTSS_teal_glass", "TSTSS_dark_iron",
                      "TSTSS_brass", "TSTSS_patina"):
             self.assertIn('TEXT("' + name + '")', src)
-        self.assertIn("return; // Never partially re-skin", src)
+        self.assertIn("return false; // Never partially re-skin", src)
         for forbidden in ("SaveCurrentLevel", "SaveMap(", "SaveGameToSlot(",
                           "SetCollisionEnabled(", "AdvanceWaterBeat(", "TeleportTo("):
             self.assertNotIn(forbidden, src)

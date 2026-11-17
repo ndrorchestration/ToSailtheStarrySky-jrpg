@@ -18,6 +18,11 @@ public:
 #if !UE_BUILD_SHIPPING
     // Cosmetic aim prompt from the same camera trace and pawn reach as E.
     FString GetReviewAimStatus() const;
+#if WITH_EDITOR
+    bool HasHilltoniaOpening() const { return bHilltoniaOpeningActive; }
+    bool IsHilltoniaFlyerOpen() const;
+    bool GetHilltoniaCaptainWaypoint(FVector& Location) const;
+#endif
 #endif
     UFUNCTION(BlueprintCallable, Category="TSTSS|First Wake")
     UTSTSSFirstWakeState* GetFirstWakeState() const { return FirstWakeState; }
@@ -69,6 +74,16 @@ private:
     void ShowObjectiveReview();
 #if WITH_EDITOR
     void ReviewContinue();
+    void StartHilltoniaOpening(UWorld* World);
+    void AcceptHilltoniaFlyer();
+    void DeclineHilltoniaFlyer();
+    bool IsHilltoniaFlyerHit(const FHitResult& Hit) const;
+    bool bTryHilltoniaOpening = false;
+    bool bHilltoniaOpeningActive = false;
+    bool bHilltoniaFlyerRead = false;
+    uint64 HilltoniaFlyerGeneration = 0;
+    FVector HilltoniaFlyerHit = FVector::ZeroVector;
+    TWeakObjectPtr<class ATSTSSMilestoneActor> HilltoniaCaptain;
     void ReviewShoreTravel();
     void ReviewOpticalInspectionTravel();
     void ToggleEngineFocusPreview();

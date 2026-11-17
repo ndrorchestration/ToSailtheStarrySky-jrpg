@@ -5,6 +5,11 @@
 #include "Engine/Canvas.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
+#if WITH_EDITOR
+#include "Engine/Texture2D.h"
+#include "ImageUtils.h"
+#include "Misc/Paths.h"
+#endif
 
 // Draw only in non-shipping review builds. The story state remains the
 // authority; no separate HUD progression, timers or persistent cache.
@@ -55,6 +60,9 @@ void ATSTSSFirstWakeReviewHUD::DrawHUD()
         return; // This debug overlay must not masquerade as Chapter 1 UI.
     }
 
+#if WITH_EDITOR
+    if (DrawHilltoniaOpening(*Explorer)) return;
+#endif
     const float Margin = 24.f;
     const float PanelWidth = FMath::Max(0.f, FMath::Min(780.f, Canvas->ClipX - Margin * 2.f));
     if (PanelWidth < 440.f || Canvas->ClipY < 170.f)
@@ -104,6 +112,11 @@ void ATSTSSFirstWakeReviewHUD::DrawHUD()
         const FString AimedPrompt = Explorer->GetReviewAimStatus();
         const bool bReady = AimedPrompt.StartsWith(TEXT("[E]"));
         const FString Prompt = AimedPrompt.IsEmpty()
+#if WITH_EDITOR
+            && Explorer->HasHilltoniaOpening() && !State->HasStarted()
+            ? TEXT("FOLLOW THE ROAD TO HILLTONIA  |  FIND THE POSTING BOARD")
+            : AimedPrompt.IsEmpty()
+#endif
             ? TEXT("FOLLOW THE GOLD MARKER  |  LOOK AT IT TO INTERACT")
             : AimedPrompt;
         const float Width = FMath::Min(690.f, Canvas->ClipX - 48.f);
@@ -182,3 +195,60 @@ void ATSTSSFirstWakeReviewHUD::DrawHUD()
     }
 #endif
 }
+
+#if WITH_EDITOR
+bool ATSTSSFirstWakeReviewHUD::DrawHilltoniaOpening(const ATSTSSExplorerCharacter& Explorer)
+{
+    if (!Explorer.HasHilltoniaOpening()) return false;
+    const FLinearColor Gold(0.96f, 0.81f, 0.48f, 1.f);
+    if (Explorer.IsHilltoniaFlyerOpen())
+    {
+        const float Width = FMath::Min(610.f, FMath::Max(0.f, Canvas->ClipX - 24.f));
+        const float TextScale = FMath::Clamp(Width / 400.f, .5f, 1.f);
+        const float Left = (Canvas->ClipX - Width) * .5f;
+        const float Top = FMath::Max(12.f, (Canvas->ClipY - 142.f) * .5f);
+        DrawRect(FLinearColor(.02f, .03f, .035f, .96f), Left, Top, Width, 142.f);
+        DrawText(TEXT("ENGINEER WANTED"), Gold, Left + 18.f, Top + 14.f,
+                 GEngine->GetMediumFont(), 1.f);
+        DrawText(TEXT("Preflight inspection aboard the Aureate Wake."),
+                 FLinearColor::White, Left + 18.f, Top + 48.f, GEngine->GetSmallFont(), TextScale);
+        DrawText(TEXT("Meet Captain Ionia at the harbor."),
+                 FLinearColor::White, Left + 18.f, Top + 71.f, GEngine->GetSmallFont(), TextScale);
+        DrawText(TEXT("[Enter] Accept quest     [Backspace] Not now"),
+                 Gold, Left + 18.f, Top + 108.f, GEngine->GetSmallFont(), TextScale);
+        return true;
+    }
+    FVector Location;
+    if (!Explorer.GetHilltoniaCaptainWaypoint(Location)) return false;
+    if (!bTriedHilltoniaIcon)
+    {
+        bTriedHilltoniaIcon = true;
+        const FString Path = FPaths::ProjectSavedDir() /
+            TEXT("FirstWakeApprovedAssets/ionia-waypoint-source.png");
+        if (FPaths::FileExists(Path))
+        {
+            HilltoniaWaypointTexture = FImageUtils::ImportFileAsTexture2D(Path);
+        }
+    }
+    FVector2D Screen;
+    if (PlayerOwner->ProjectWorldLocationToScreen(Location, Screen) &&
+        Screen.X >= 50.f && Screen.X <= Canvas->ClipX - 50.f &&
+        Screen.Y >= 65.f && Screen.Y <= Canvas->ClipY - 115.f)
+    {
+        if (IsValid(HilltoniaWaypointTexture))
+        {
+            // Crop the approved source's transparent margins in the HUD brush.
+            DrawTexture(HilltoniaWaypointTexture, Screen.X - 15.f, Screen.Y - 60.f,
+                        30.f, 56.f, .335f, .185f, .33f, .62f);
+        }
+        DrawText(TEXT("IONIA"), Gold, Screen.X - 20.f, Screen.Y,
+                 GEngine->GetSmallFont(), 1.f);
+    }
+    else
+    {
+        DrawText(TEXT("CAPTAIN IONIA   |   HARBOR EAST"), Gold,
+                 40.f, 164.f, GEngine->GetSmallFont(), 1.f);
+    }
+    return false;
+}
+#endif
