@@ -7,6 +7,7 @@ from pathlib import Path
 import ast
 import re
 import unittest
+from types import SimpleNamespace
 
 
 SOURCE = (Path(__file__).resolve().parent /
@@ -45,6 +46,47 @@ class EnderRetargetPrerequisiteContracts(unittest.TestCase):
         self.assertIn("cursor in seen", SOURCE)
         self.assertIn("mesh.get_bone_parent(unreal.Name(cursor))", SOURCE)
         self.assertIn("IK_RIG_EDITOR_PLUGIN_MISSING", SOURCE)
+
+
+    def test_real_algorithm_accepts_valid_target_bone_ancestry(self):
+        tree = ast.parse(SOURCE)
+        fn = next(node for node in tree.body
+                  if isinstance(node, ast.FunctionDef) and
+                  node.name == "trace_ancestry")
+        module = ast.Module(body=[fn], type_ignores=[])
+        namespace = {"unreal": SimpleNamespace(Name=str)}
+        exec(compile(module, "<isolated-trace-ancestry>", "exec"), namespace)
+        trace = namespace["trace_ancestry"]
+        class FakeMesh:
+            def __init__(self, parents):
+                self.parents = parents
+            def get_bone_parent(self, name):
+                return self.parents.get(str(name), "None")
+        parents = {
+            "l_toes": "l_foot", "l_foot": "l_shin",
+            "l_shin": "l_thigh", "l_thigh": "pelvis",
+            "l_hand": "l_forearm", "l_forearm": "l_upperarm",
+            "l_upperarm": "l_shoulder",
+        }
+        mesh = FakeMesh(parents)
+        self.assertEqual(
+            trace(mesh, "l_thigh", "l_toes"),
+            ["l_toes", "l_foot", "l_shin", "l_thigh"],
+        )
+        self.assertEqual(
+            trace(mesh, "l_upperarm", "l_hand"),
+            ["l_hand", "l_forearm", "l_upperarm"],
+        )
+        self.assertIsNone(trace(mesh, "r_thigh", "l_toes"))
+        self.assertIsNone(trace(mesh, "l_upperarm", "l_toes"))
+        self.assertIsNone(trace(mesh, "l_thigh", "missing_toe"))
+        cycle = FakeMesh({"a": "b", "b": "a"})
+        self.assertIsNone(trace(cycle, "pelvis", "a"))
+        self.assertIsNone(trace(mesh, "pelvis", "missing_bone"))
+        too_deep = FakeMesh(
+            {f"b{i}": f"b{i+1}" for i in range(100)}
+        )
+        self.assertIsNone(trace(too_deep, "pelvis", "b0"))
 
     def test_does_not_create_or_bind_any_animation(self):
         for forbidden in ("create_asset(", "set_editor_property(",
