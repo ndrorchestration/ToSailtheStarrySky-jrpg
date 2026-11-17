@@ -79,6 +79,25 @@ AAureateWakePreviewActor::AAureateWakePreviewActor()
         Support->SetVisibility(false);
         WingRootSupports.Add(Support);
     }
+    // Separate, inert hinge/mast proxies. The approved ship has no dorsal
+    // mast asset yet. These BasicShapes blocks are only visible in the
+    // explicit, settled Seabourne wind-sail review, never in production forms.
+    for (int32 Index = 0; Index < 4; ++Index)
+    {
+        UStaticMeshComponent* Mast = CreateDefaultSubobject<UStaticMeshComponent>(
+            FName(*FString::Printf(TEXT("DorsalMast_%d"), Index + 1)));
+        Mast->SetupAttachment(VesselRoot);
+        SetupPreviewMesh(Mast, Shape);
+        Mast->SetVisibility(false);
+        DorsalMasts.Add(Mast);
+
+        UStaticMeshComponent* Swivel = CreateDefaultSubobject<UStaticMeshComponent>(
+            FName(*FString::Printf(TEXT("DorsalSwivel_%d"), Index + 1)));
+        Swivel->SetupAttachment(VesselRoot);
+        SetupPreviewMesh(Swivel, Shape);
+        Swivel->SetVisibility(false);
+        DorsalSwivels.Add(Swivel);
+    }
     SnapToForm(EAureateWakeForm::Skyborne);
 }
 
@@ -230,6 +249,62 @@ void AAureateWakePreviewActor::RefreshRootSupports()
         Support->SetVisibility(bVisible);
     }
     UpdateRootSupportTransforms();
+    UpdateDorsalMountTransforms();
+}
+
+void AAureateWakePreviewActor::UpdateDorsalMountTransforms()
+{
+    // Only a fully settled, explicitly opted-in Seabourne scene may reveal
+    // these noncanonical supports. Their deployment path is NOT yet swept
+    // for collision, so the masts never appear during any transformation.
+    const bool bReady = bUseSeabourneWindSailReview &&
+        CurrentForm == EAureateWakeForm::Seaborne && !bTransitioning &&
+        Wings.Num() == 4 && Hydrofoils.Num() == 2 &&
+        DorsalMasts.Num() == 4 && DorsalSwivels.Num() == 4;
+    for (int32 Index = 0; Index < DorsalMasts.Num(); ++Index)
+    {
+        UStaticMeshComponent* Mast = DorsalMasts[Index];
+        UStaticMeshComponent* Swivel =
+            DorsalSwivels.IsValidIndex(Index) ? DorsalSwivels[Index].Get() : nullptr;
+        if (!Mast || !Swivel) continue;
+        Mast->SetVisibility(false);
+        Swivel->SetVisibility(false);
+        if (!bReady || !IsValid(Wings[Index].Get())) continue;
+
+        const FVector WingRoot = Wings[Index]->GetRelativeLocation();
+        if (!FMath::IsFinite(WingRoot.X) || !FMath::IsFinite(WingRoot.Y) ||
+            !FMath::IsFinite(WingRoot.Z) || FMath::Abs(WingRoot.Y) > 1.f)
+        {
+            continue;
+        }
+        const bool bRootPivot = bUseRootPivotedWingPose && AuthoredWingMesh;
+        // Basic-shape +X 280cm fins are centered on their rotation root:
+        // the lower edge is roughly 140cm below the pivot at 98deg pitch.
+        // An authored root-pivoted wing's base is already at its root.
+        const float LowerEdge = bRootPivot ? WingRoot.Z :
+            WingRoot.Z - 140.f * FMath::Abs(
+                Wings[Index]->GetRelativeRotation().Vector().Z);
+        // The first station sits directly over the *proxy bridge roof*
+        // (95cm center + 55cm half height). Other stations rest on the
+        // hull proxy deck (32.5cm). Neither is a real mesh clearance claim.
+        const float BaseZ = Index == 0 ? 150.f : 32.5f;
+        const float Height = LowerEdge - BaseZ;
+        if (!FMath::IsFinite(Height) || Height < 15.f) continue;
+
+        // 100cm cube prototype, 20x20cm square mast. Its lower face
+        // TOUCHES the proxy structure without passing through its interior.
+        Mast->SetRelativeTransform(FTransform(FRotator::ZeroRotator,
+            FVector(WingRoot.X, 0.f, BaseZ + 0.5f * Height),
+            FVector(0.20f, 0.20f, Height / 100.f)));
+        // This independent bearing remains at the fin's lower edge while
+        // its yaw follows only that numbered sail's trim, not the others.
+        Swivel->SetRelativeTransform(FTransform(
+            FRotator(0.f, SeabourneWindTrimDegrees[Index], 0.f),
+            FVector(WingRoot.X, 0.f, LowerEdge),
+            FVector(0.48f, 0.32f, 0.12f)));
+        Mast->SetVisibility(true);
+        Swivel->SetVisibility(true);
+    }
 }
 
 void AAureateWakePreviewActor::UpdateRootSupportTransforms()
@@ -581,6 +656,9 @@ bool AAureateWakePreviewActor::RequestForm(EAureateWakeForm RequestedForm)
             RequestedForm == EAureateWakeForm::Seaborne);
     }
     bTransitioning = true;
+    // All unreviewed moving mast geometry remains hidden until the
+    // transition settles; old hull-flank struts must not cross the dome.
+    RefreshRootSupports();
     return true;
 }
 
