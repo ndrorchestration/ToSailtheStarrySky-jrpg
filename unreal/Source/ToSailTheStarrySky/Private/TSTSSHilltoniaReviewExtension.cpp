@@ -230,6 +230,8 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
     auto* NoticePanel = Make(Owner, Root, TEXT("HilltoniaPostingBoardPanel"),
                              Cube, Timber, true);
     NoticePanel->ComponentTags.Add(TEXT("TSTSS_HILLTONIA_FLYER"));
+    auto* NoticeRoof = Make(Owner, Root, TEXT("HilltoniaPostingBoardGable"),
+                            Cube, Timber, false);
     auto* NoticeSheet = Make(Owner, Root, TEXT("HilltoniaPostingBoardFlyerPaper"),
                              Cube, Stone, false);
 
@@ -319,10 +321,14 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
 
     constexpr float BoardX = -7380.f;
     constexpr float BoardY = 440.f;
-    Place(NoticePosts, BoardX - 110.f, BoardY, 126.f, .18f, .23f, 2.52f);
-    Place(NoticePosts, BoardX + 110.f, BoardY, 126.f, .18f, .23f, 2.52f);
-    Place(NoticePanel, BoardX, BoardY, 221.f, 2.55f, .22f, 1.72f);
-    Place(NoticeSheet, BoardX, BoardY - 13.f, 227.f, 1.78f, .045f, 1.31f);
+    Place(NoticePosts, BoardX - 110.f, BoardY, 119.f, .18f, .23f, 2.38f);
+    Place(NoticePosts, BoardX + 110.f, BoardY, 119.f, .18f, .23f, 2.38f);
+    Place(NoticePanel, BoardX, BoardY, 174.f, 2.55f, .22f, 1.42f);
+    Place(NoticeSheet, BoardX, BoardY - 13.f, 180.f, 1.78f, .045f, 1.12f);
+    // Shallow gable and lintel shelter the flyer. Their geometry cannot intercept E.
+    Place(NoticeRoof, BoardX, BoardY, 244.f, 2.65f, .32f, .16f);
+    Place(NoticeRoof, BoardX, BoardY - 35.f, 260.f, 2.95f, .79f, .10f, 0.f, -25.f);
+    Place(NoticeRoof, BoardX, BoardY + 35.f, 260.f, 2.95f, .79f, .10f, 0.f, 25.f);
     auto* NoticeText = NewObject<UTextRenderComponent>(
         Owner, TEXT("HilltoniaPostingFlyerPreview"));
     NoticeText->SetMobility(EComponentMobility::Movable);
@@ -332,7 +338,7 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
     NoticeText->SetHorizontalAlignment(EHTA_Center);
     NoticeText->SetVerticalAlignment(EVRTA_TextCenter);
     NoticeText->SetTextRenderColor(FColor(45, 37, 28));
-    NoticeText->SetRelativeLocation(FVector(BoardX, BoardY - 18.f, 227.f));
+    NoticeText->SetRelativeLocation(FVector(BoardX, BoardY - 18.f, 180.f));
     NoticeText->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
     NoticeText->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     Owner->AddInstanceComponent(NoticeText);
