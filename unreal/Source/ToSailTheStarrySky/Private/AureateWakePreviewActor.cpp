@@ -350,8 +350,37 @@ FTransform AAureateWakePreviewActor::RootPivotedWingPose(EAureateWakeForm Form, 
     return FTransform(Rotation, Position, Scale);
 }
 
+FTransform AAureateWakePreviewActor::SeabourneWindSailPose(
+    int32 WingIndex, float TrimDegrees, bool bAuthoredRootPivot)
+{
+    // Provisional 3D review dimensions in cm, NOT canonical engineering data.
+    // The original four wings are re-used, never spawned or swapped. Fore +X,
+    // aft -X. All four roots move to the dorsal centerline; existing port/
+    // starboard wing 2 and 4 mounts gain independent fore/aft station offsets.
+    static constexpr float StationsX[4] = { 300.f, 105.f, -90.f, -285.f };
+    if (WingIndex < 0 || WingIndex >= 4 || !FMath::IsFinite(TrimDegrees))
+    {
+        return FTransform::Identity; // Invalid input cannot generate NaN poses.
+    }
+    // Existing authored art extends 280cm from its root along local +X;
+    // basic-shape cube preview instead has a centered +X axis and needs a
+    // raised origin. Both display an almost vertical, slightly aft-raked sail.
+    // Yaw rotates each panel independently around the world's up axis.
+    const float Z = bAuthoredRootPivot ? 228.f : 365.f;
+    const FVector Scale = bAuthoredRootPivot
+        ? FVector::OneVector : FVector(2.8f, 1.25f, 0.05f);
+    return FTransform(FRotator(98.f, TrimDegrees, 0.f),
+        FVector(StationsX[WingIndex], 0.f, Z), Scale);
+}
+
 FTransform AAureateWakePreviewActor::WingPoseForMesh(EAureateWakeForm Form, int32 WingIndex) const
 {
+    if (Form == EAureateWakeForm::Seaborne && bUseSeabourneWindSailReview &&
+        WingIndex >= 0 && WingIndex < 4)
+    {
+        return SeabourneWindSailPose(WingIndex, SeabourneWindTrimDegrees[WingIndex],
+            bUseRootPivotedWingPose && AuthoredWingMesh);
+    }
     return bUseRootPivotedWingPose && AuthoredWingMesh
         ? RootPivotedWingPose(Form, WingIndex)
         : WingPose(Form, WingIndex);
@@ -391,6 +420,12 @@ void AAureateWakePreviewActor::RefreshWingMaterials()
 
 void AAureateWakePreviewActor::SnapToForm(EAureateWakeForm Form)
 {
+    // On load/rebind/revocation never restore a stale preview trim from
+    // another form, wind direction, map or gameplay save.
+    for (float& Degrees : SeabourneWindTrimDegrees)
+    {
+        Degrees = 0.f;
+    }
     for (int32 Index = 0; Index < Wings.Num(); ++Index)
     {
         Wings[Index]->SetRelativeTransform(WingPoseForMesh(Form, Index));
@@ -409,6 +444,43 @@ void AAureateWakePreviewActor::SnapToForm(EAureateWakeForm Form)
     CurrentForm = Form;
     TargetForm = Form;
     bTransitioning = false;
+}
+
+float AAureateWakePreviewActor::GetSeabourneWindTrimDegrees(int32 WingNumber) const
+{
+    return WingNumber >= 1 && WingNumber <= 4
+        ? SeabourneWindTrimDegrees[WingNumber - 1] : 0.f;
+}
+
+bool AAureateWakePreviewActor::SetSeabourneWindTrimDegrees(int32 WingNumber, float Degrees)
+{
+    // An explicit, settled Seabourne story binding is mandatory. This is a
+    // visual azimuth controller, NOT wind simulation, propulsion or ship input.
+    if (!bUseSeabourneWindSailReview || bTransitioning ||
+        CurrentForm != EAureateWakeForm::Seaborne ||
+        WingNumber < 1 || WingNumber > 4 ||
+        !FMath::IsFinite(Degrees) || FMath::Abs(Degrees) > 35.f ||
+        Wings.Num() != 4 || Hydrofoils.Num() != 2 ||
+        (bUseRootPivotedWingPose && !AuthoredWingMesh) ||
+        !IsValid(BoundReviewStory.Get()) ||
+        !BoundReviewStory->IsReviewShipModeAuthorized(FName(TEXT("Seabourne"))))
+    {
+        return false;
+    }
+    if (!IsValid(Wings[WingNumber - 1]))
+    {
+        return false;
+    }
+    SeabourneWindTrimDegrees[WingNumber - 1] = Degrees;
+    // Reposition all four to the same dorsal study layout; only this wing's
+    // azimuth changes. No changes to hydrofoils, form authority or player save.
+    for (int32 Index = 0; Index < 4; ++Index)
+    {
+        Wings[Index]->SetRelativeTransform(WingPoseForMesh(
+            EAureateWakeForm::Seaborne, Index));
+    }
+    UpdateRootSupportTransforms();
+    return true;
 }
 
 bool AAureateWakePreviewActor::HasReviewStory() const
