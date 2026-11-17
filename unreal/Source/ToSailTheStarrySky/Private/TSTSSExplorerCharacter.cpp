@@ -1595,6 +1595,11 @@ void ATSTSSExplorerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
 
 void ATSTSSExplorerCharacter::MoveForward(float Value)
 {
+#if WITH_EDITOR
+    // The flyer is a focused quest decision: do not walk or look away
+    // while Accept / Not now is displayed. Only those actions dismiss it.
+    if (IsHilltoniaFlyerOpen()) return;
+#endif
     if (Controller && !FMath::IsNearlyZero(Value))
     {
         const FRotator Yaw(0.f, Controller->GetControlRotation().Yaw, 0.f);
@@ -1603,14 +1608,35 @@ void ATSTSSExplorerCharacter::MoveForward(float Value)
 }
 void ATSTSSExplorerCharacter::MoveRight(float Value)
 {
+#if WITH_EDITOR
+    // The flyer is a focused quest decision: do not walk or look away
+    // while Accept / Not now is displayed. Only those actions dismiss it.
+    if (IsHilltoniaFlyerOpen()) return;
+#endif
     if (Controller && !FMath::IsNearlyZero(Value))
     {
         const FRotator Yaw(0.f, Controller->GetControlRotation().Yaw, 0.f);
         AddMovementInput(FRotationMatrix(Yaw).GetUnitAxis(EAxis::Y), Value);
     }
 }
-void ATSTSSExplorerCharacter::Turn(float Value) { AddControllerYawInput(Value); }
-void ATSTSSExplorerCharacter::LookUp(float Value) { AddControllerPitchInput(Value); }
+void ATSTSSExplorerCharacter::Turn(float Value)
+{
+#if WITH_EDITOR
+    // The flyer is a focused quest decision: do not walk or look away
+    // while Accept / Not now is displayed. Only those actions dismiss it.
+    if (IsHilltoniaFlyerOpen()) return;
+#endif
+    AddControllerYawInput(Value);
+}
+void ATSTSSExplorerCharacter::LookUp(float Value)
+{
+#if WITH_EDITOR
+    // The flyer is a focused quest decision: do not walk or look away
+    // while Accept / Not now is displayed. Only those actions dismiss it.
+    if (IsHilltoniaFlyerOpen()) return;
+#endif
+    AddControllerPitchInput(Value);
+}
 
 #if !UE_BUILD_SHIPPING
 FString ATSTSSExplorerCharacter::GetReviewAimStatus() const
@@ -1665,6 +1691,11 @@ FString ATSTSSExplorerCharacter::GetReviewAimStatus() const
 
 void ATSTSSExplorerCharacter::Interact()
 {
+#if WITH_EDITOR
+    // E opens the flyer once; it cannot interact with another target
+    // while the explicit Enter / Backspace decision is pending.
+    if (IsHilltoniaFlyerOpen()) return;
+#endif
     if (!FirstWakeState || !FollowCamera || !GetWorld()) return;
     const FVector Start = FollowCamera->GetComponentLocation();
     const FVector PawnLocation = GetActorLocation();
@@ -1704,6 +1735,12 @@ void ATSTSSExplorerCharacter::Interact()
                 HilltoniaFlyerHit = Hit.ImpactPoint;
                 HilltoniaFlyerGeneration = FirstWakeState->GetRestoreGeneration();
                 bHilltoniaFlyerRead = true;
+                // Prevent residual WASD velocity carrying Ender out of
+                // interaction reach while the flyer modal is on screen.
+                if (UCharacterMovementComponent* Movement = GetCharacterMovement())
+                {
+                    Movement->StopMovementImmediately();
+                }
                 UE_LOG(LogTemp, Display, TEXT("TSTSS_HILLTONIA_FLYER_READ"));
             }
             return;
