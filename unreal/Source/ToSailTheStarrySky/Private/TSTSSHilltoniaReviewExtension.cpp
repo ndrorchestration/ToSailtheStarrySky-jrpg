@@ -4,6 +4,7 @@
 #if WITH_EDITOR
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Components/SceneComponent.h"
+#include "Components/PointLightComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/TextRenderComponent.h"
 #include "Engine/StaticMesh.h"
@@ -122,6 +123,28 @@ void WayfindingSign(AActor* Owner, USceneComponent* Root,
     AddFace(TEXT("Back"), Location - FaceNormal * 10.f, Yaw + 180.f);
 }
 
+// Native TextRender lettering stays vector-sharp at play distance. No generated
+// concept image is substituted for a physical quest target in the review map.
+void NoticeLettering(AActor* Owner, USceneComponent* Root,
+                     const TCHAR* Name, const TCHAR* Caption,
+                     const FVector& Position, float WorldSize,
+                     const FColor& Ink)
+{
+    auto* Text = NewObject<UTextRenderComponent>(Owner, Name);
+    Text->SetMobility(EComponentMobility::Movable);
+    Text->SetupAttachment(Root);
+    Text->SetText(FText::FromString(Caption));
+    Text->SetWorldSize(WorldSize);
+    Text->SetHorizontalAlignment(EHTA_Center);
+    Text->SetVerticalAlignment(EVRTA_TextCenter);
+    Text->SetTextRenderColor(Ink);
+    Text->SetRelativeLocation(Position);
+    Text->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
+    Text->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    Owner->AddInstanceComponent(Text);
+    Text->RegisterComponent();
+}
+
 void TownSigns(AActor* Owner, USceneComponent* Root,
                UStaticMesh* Cube, UMaterialInterface* Timber)
 {
@@ -234,6 +257,27 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
                             Cube, Timber, false);
     auto* NoticeSheet = Make(Owner, Root, TEXT("HilltoniaPostingBoardFlyerPaper"),
                              Cube, Stone, false);
+    // Approved concept study: low gabled noticeboard, visible readable flyer,
+    // wooden name plaque, layered paper notices, brass fittings and warm lamp.
+    // These are geometry-only preview accents, NOT imported concept pixels.
+    auto* NoticeHeader = Make(Owner, Root, TEXT("HilltoniaPostingBoardNamePlaque"),
+                              Cube, Timber, false);
+    auto* NoticePlaqueTrim = Make(Owner, Root, TEXT("HilltoniaPostingBoardPlaqueTrim"),
+                                  Cube, Brass, false);
+    auto* NoticePinnedPapers = Make(Owner, Root, TEXT("HilltoniaPostingBoardOtherNotices"),
+                                    Cube, Stone, false);
+    auto* NoticePaperInk = Make(Owner, Root, TEXT("HilltoniaPostingBoardInkRules"),
+                                Cube, Timber, false);
+    auto* NoticeTacks = Make(Owner, Root, TEXT("HilltoniaPostingBoardBrassTacks"),
+                             Sphere, Brass, false);
+    auto* NoticeSeal = Make(Owner, Root, TEXT("HilltoniaPostingBoardGearSeal"),
+                            Cylinder, Brass, false);
+    auto* NoticeLantern = Make(Owner, Root, TEXT("HilltoniaPostingBoardLanternFixture"),
+                               Cube, Brass, false);
+    auto* NoticeFlowers = Make(Owner, Root, TEXT("HilltoniaPostingBoardFlowerPlanters"),
+                               Sphere, Canopy, false);
+    auto* NoticePots = Make(Owner, Root, TEXT("HilltoniaPostingBoardPlanterPots"),
+                            Cylinder, Stone, false);
 
     // Actual land mass, not houses hovering over the original ocean plane.
     // Grass/soil surface is Z=-10cm, ten centimeters below the road top.
@@ -321,28 +365,85 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
 
     constexpr float BoardX = -7380.f;
     constexpr float BoardY = 440.f;
+    // Keep the approved SHORT roof profile and existing E-query component.
+    // These coordinates stay outside the road, fountain and nearest house.
     Place(NoticePosts, BoardX - 110.f, BoardY, 119.f, .18f, .23f, 2.38f);
     Place(NoticePosts, BoardX + 110.f, BoardY, 119.f, .18f, .23f, 2.38f);
     Place(NoticePanel, BoardX, BoardY, 174.f, 2.55f, .22f, 1.42f);
     Place(NoticeSheet, BoardX, BoardY - 13.f, 180.f, 1.78f, .045f, 1.12f);
-    // Shallow gable and lintel shelter the flyer. Their geometry cannot intercept E.
+    // Shallow gable and lintel shelter the flyer. No roof E interception.
     Place(NoticeRoof, BoardX, BoardY, 244.f, 2.65f, .32f, .16f);
     Place(NoticeRoof, BoardX, BoardY - 35.f, 260.f, 2.95f, .79f, .10f, 0.f, -25.f);
     Place(NoticeRoof, BoardX, BoardY + 35.f, 260.f, 2.95f, .79f, .10f, 0.f, 25.f);
-    auto* NoticeText = NewObject<UTextRenderComponent>(
-        Owner, TEXT("HilltoniaPostingFlyerPreview"));
-    NoticeText->SetMobility(EComponentMobility::Movable);
-    NoticeText->SetupAttachment(Root);
-    NoticeText->SetText(FText::FromString(TEXT("CAPTAIN IONIA\nENGINEER WANTED")));
-    NoticeText->SetWorldSize(22.f);
-    NoticeText->SetHorizontalAlignment(EHTA_Center);
-    NoticeText->SetVerticalAlignment(EVRTA_TextCenter);
-    NoticeText->SetTextRenderColor(FColor(45, 37, 28));
-    NoticeText->SetRelativeLocation(FVector(BoardX, BoardY - 18.f, 180.f));
-    NoticeText->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
-    NoticeText->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-    Owner->AddInstanceComponent(NoticeText);
-    NoticeText->RegisterComponent();
+    // Plaque faces the landward player approach. All adornments have
+    // NoCollision and lack the flyer interaction tag.
+    Place(NoticeHeader, BoardX, BoardY - 80.f, 269.f, 2.20f, .095f, .39f);
+    Place(NoticePlaqueTrim, BoardX, BoardY - 87.f, 249.f, 2.22f, .07f, .04f);
+    Place(NoticePlaqueTrim, BoardX, BoardY - 87.f, 288.f, 2.22f, .07f, .04f);
+    NoticeLettering(Owner, Root, TEXT("HilltoniaPostingBoardPlaqueText"),
+        TEXT("HILLTONIA\nPOSTING BOARD"),
+        FVector(BoardX, BoardY - 87.f, 269.f), 14.f, FColor(230, 202, 145));
+
+    // Guaranteed spelling is authored as native text rather than baked into
+    // concept-art pixels; the central headline is readable at walking range.
+    NoticeLettering(Owner, Root, TEXT("HilltoniaPostingFlyerPreview"),
+        TEXT("ENGINEER\nWANTED"),
+        FVector(BoardX, BoardY - 18.f, 202.f), 25.f, FColor(45, 37, 28));
+    NoticeLettering(Owner, Root, TEXT("HilltoniaPostingFlyerCaptain"),
+        TEXT("CAPTAIN IONIA"),
+        FVector(BoardX, BoardY - 18.f, 139.f), 14.f, FColor(58, 46, 34));
+    Place(NoticeSeal, BoardX, BoardY - 20.f, 165.f,
+          .17f, .17f, .04f, 0.f, 90.f);
+    for (const float SignX : {-80.f, 80.f})
+    {
+        for (const float SignZ : {132.f, 229.f})
+        {
+            Place(NoticeTacks, BoardX + SignX, BoardY - 19.f, SignZ,
+                  .055f, .04f, .055f);
+        }
+    }
+    // Layered smaller notices and ornamental printed rules, deliberately
+    // noninteractive. The single tagged panel still owns flyer discovery.
+    for (const float Side : {-1.f, 1.f})
+    {
+        const float SideX = BoardX + Side * 105.f;
+        Place(NoticePinnedPapers, SideX, BoardY - 13.f,
+              Side < 0.f ? 185.f : 176.f, .42f, .04f, .65f);
+        Place(NoticeTacks, SideX, BoardY - 18.f, 204.f, .05f, .04f, .05f);
+        for (int32 Rule = 0; Rule < 4; ++Rule)
+        {
+            Place(NoticePaperInk, SideX, BoardY - 17.f,
+                  192.f - Rule * 12.f, .22f - Rule * .02f, .013f, .012f);
+        }
+    }
+    // A small warm practical lantern and unobtrusive planters echo the
+    // approved lookdev, without adding quest triggers or solid obstacles.
+    Place(NoticeLantern, BoardX + 153.f, BoardY - 72.f,
+          226.f, .46f, .34f, .08f);
+    Place(NoticeLantern, BoardX + 166.f, BoardY - 89.f,
+          201.f, .22f, .22f, .37f);
+    Place(NoticeTacks, BoardX + 166.f, BoardY - 100.f,
+          202.f, .18f, .18f, .20f);
+    for (const float Side : {-1.f, 1.f})
+    {
+        const float FlowerX = BoardX + Side * 152.f;
+        Place(NoticePots, FlowerX, BoardY + 147.f, 27.f,
+              .47f, .47f, .53f);
+        Place(NoticeFlowers, FlowerX, BoardY + 147.f, 74.f,
+              .63f, .63f, .58f);
+    }
+    auto* LanternLight = NewObject<UPointLightComponent>(
+        Owner, TEXT("HilltoniaPostingBoardWarmLanternLight"));
+    LanternLight->SetMobility(EComponentMobility::Movable);
+    LanternLight->SetupAttachment(Root);
+    LanternLight->SetRelativeLocation(
+        FVector(BoardX + 166.f, BoardY - 103.f, 201.f));
+    LanternLight->SetIntensity(270.f);
+    LanternLight->SetAttenuationRadius(260.f);
+    LanternLight->SetLightColor(FLinearColor(1.f, .68f, .38f));
+    LanternLight->SetCastShadows(false);
+    Owner->AddInstanceComponent(LanternLight);
+    LanternLight->RegisterComponent();
 
     // The Green is a small open, decorative market landmark beside the
     // square, not an interactive market or a new quest authority.
