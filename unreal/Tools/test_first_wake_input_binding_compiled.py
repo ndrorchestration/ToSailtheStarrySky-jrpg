@@ -56,6 +56,30 @@ class FirstWakeInputBindingProbeContracts(unittest.TestCase):
         self.assertNotIn("SaveGames/", PREFIX + SUFFIX)
         self.assertIn("std::count(actions.begin()", SUFFIX)
 
+    def test_hilltonia_and_bokeh_actions_are_bounded_without_weakening_guard(self):
+        src=method_from(self.character)
+        for action in ("AcceptHilltoniaFlyer","DeclineHilltoniaFlyer",
+                       "FirstWakeBokehReview"):
+            self.assertEqual(src.count('BindAction(TEXT("'+action+'")'),1)
+        probe=PREFIX+SUFFIX
+        for term in ('"FirstWakeBokehReview", questBindings',
+                     'EWorldType::PIE ? 11u',
+                     'EWorldType::Game ? 8u',
+                     'hasExactly(noWorldInput.actions, "FirstWakeBokehReview", 0)',
+                     'hasExactly(noWorldInput.actions, "AcceptHilltoniaFlyer", 0)'):
+            self.assertIn(term,probe)
+        for action,key,bad in (("AcceptHilltoniaFlyer","Enter","E"),
+                               ("DeclineHilltoniaFlyer","BackSpace","Enter"),
+                               ("FirstWakeBokehReview","B","C")):
+            pattern='ActionName="'+action+'",Key='+key
+            self.assertIn(pattern,self.config)
+            with self.assertRaises(ValueError):
+                config_guard(self.config.replace(pattern,
+                    'ActionName="'+action+'",Key='+bad,1))
+            with self.assertRaises(ValueError):
+                config_guard(self.config+'\n+ActionMappings=(ActionName="'+action+
+                             '",Key='+key+')\n')
+
     def test_probe_checks_pie_game_editor_and_missing_world(self):
         for token in ("EWorldType::PIE", "EWorldType::Game", "EWorldType::Editor",
                       "missingWorld", "PIE illegally binds normal F5 QuickSave",

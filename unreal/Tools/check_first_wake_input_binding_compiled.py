@@ -105,6 +105,8 @@ int main() {
             verify(hasExactly(input.actions, "AcceptHilltoniaFlyer", questBindings) &&
                    hasExactly(input.actions, "DeclineHilltoniaFlyer", questBindings),
                    "Hilltonia choice bindings must be available in PIE and Game only");
+            verify(hasExactly(input.actions, "FirstWakeBokehReview", questBindings),
+                   "B cinematic lens binding must be present once in PIE/Game only");
             verify(hasExactly(input.actions, "ReviewShoreTravel", type == EWorldType::Editor ? 0 : 1),
                    "K review navigation incorrectly enabled or missing");
             verify(hasExactly(input.actions, "ReviewOpticalInspectionTravel", type == EWorldType::PIE ? 1 : 0),
@@ -137,7 +139,7 @@ int main() {
                 verify(hasExactly(input.actions, "EngineFocusPreview", 0),
                        "Editor world cannot bind PIE-only camera review");
             }
-            verify(input.actions.size() == (type == EWorldType::PIE ? 8u : (type == EWorldType::Game ? 5u : 3u)),
+            verify(input.actions.size() == (type == EWorldType::PIE ? 11u : (type == EWorldType::Game ? 8u : 3u)),
                    "Unexpected extra or duplicated action bindings");
         }
         ATSTSSExplorerCharacter missingWorld;
@@ -148,7 +150,10 @@ int main() {
                hasExactly(noWorldInput.actions, "ReviewContinue", 0) &&
                hasExactly(noWorldInput.actions, "EngineFocusPreview", 0) &&
                hasExactly(noWorldInput.actions, "ReviewOpticalInspectionTravel", 0) &&
-               hasExactly(noWorldInput.actions, "ReviewShoreTravel", 0),
+               hasExactly(noWorldInput.actions, "ReviewShoreTravel", 0) &&
+               hasExactly(noWorldInput.actions, "AcceptHilltoniaFlyer", 0) &&
+               hasExactly(noWorldInput.actions, "DeclineHilltoniaFlyer", 0) &&
+               hasExactly(noWorldInput.actions, "FirstWakeBokehReview", 0),
                "Null world must fail closed for save and review navigation");
         std::cout << "PASS: " << cases
                   << " actual-source input binding C++ cases; PIE F6 separated from Game F5\n";
@@ -171,7 +176,9 @@ def method_from(source: str) -> str:
                   "EWorldType::Game", 'TEXT("PIEReviewQuickSave")',
                   'TEXT("QuickSave")', 'TEXT("QuickLoad")', 'TEXT("ReviewContinue")',
                   'TEXT("ReviewShoreTravel")', 'TEXT("EngineFocusPreview")',
-                  'TEXT("ReviewOpticalInspectionTravel")'):
+                  'TEXT("ReviewOpticalInspectionTravel")',
+                   'TEXT("AcceptHilltoniaFlyer")', 'TEXT("DeclineHilltoniaFlyer")',
+                   'TEXT("FirstWakeBokehReview")'):
         if token not in method:
             raise ValueError("Source method missing expected selection: " + token)
     return method
@@ -184,17 +191,26 @@ def config_guard(config: str) -> None:
                 ("QuickLoad", "F9"), ("ReviewContinue", "F7"),
                 ("Interact", "E"), ("ReviewObjective", "J"),
                 ("ReviewShoreTravel", "K"), ("EngineFocusPreview", "C"),
-                ("ReviewOpticalInspectionTravel", "O")}
+                                 ("ReviewOpticalInspectionTravel", "O"),
+                 ("AcceptHilltoniaFlyer", "Enter"),
+                 ("DeclineHilltoniaFlyer", "BackSpace"),
+                 ("FirstWakeBokehReview", "B")}
     if len(mappings) != len(set(mappings)) or not required.issubset(mappings):
         raise ValueError("DefaultInput.ini lacks unique F6 PIE / F5 Game / F9 load")
-    if any(name in ("PIEReviewQuickSave", "QuickSave", "QuickLoad", "ReviewContinue", "ReviewShoreTravel", "EngineFocusPreview", "ReviewOpticalInspectionTravel") and (name, key) not in required
+    if any(name in ("PIEReviewQuickSave", "QuickSave", "QuickLoad", "ReviewContinue",
+                    "ReviewShoreTravel", "EngineFocusPreview", "ReviewOpticalInspectionTravel",
+                    "AcceptHilltoniaFlyer", "DeclineHilltoniaFlyer", "FirstWakeBokehReview") and (name, key) not in required
            for name, key in mappings):
         raise ValueError("Multiple or unsafe save/continue key declarations")
     if len({key for name, key in mappings if name in
             ("PIEReviewQuickSave", "QuickSave", "QuickLoad", "ReviewContinue",
-             "ReviewShoreTravel", "EngineFocusPreview", "ReviewOpticalInspectionTravel")}) != 7 or any(
+                           "ReviewShoreTravel", "EngineFocusPreview", "ReviewOpticalInspectionTravel",
+              "AcceptHilltoniaFlyer", "DeclineHilltoniaFlyer", "FirstWakeBokehReview")}) != 10 or any(
                  (key == "C" and name != "EngineFocusPreview") or
-                 (key == "O" and name != "ReviewOpticalInspectionTravel")
+                 (key == "O" and name != "ReviewOpticalInspectionTravel") or
+                  (key == "B" and name != "FirstWakeBokehReview") or
+                  (key == "Enter" and name != "AcceptHilltoniaFlyer") or
+                  (key == "BackSpace" and name != "DeclineHilltoniaFlyer")
                  for name, key in mappings):
         raise ValueError("Save/load/Continue/scene-travel/camera keyboard collision")
 
@@ -249,6 +265,9 @@ def main() -> int:
             ("Game mistakenly uses F6", 'TEXT("QuickSave")', 'TEXT("PIEReviewQuickSave")'),
             ("PIE C optic review action missing", 'TEXT("EngineFocusPreview")', 'TEXT("Interact")'),
             ("PIE O optional review handoff missing", 'TEXT("ReviewOpticalInspectionTravel")', 'TEXT("ReviewShoreTravel")'),
+            ("Hilltonia Accept action missing", 'TEXT("AcceptHilltoniaFlyer")', 'TEXT("ReviewObjective")'),
+            ("Hilltonia Decline action missing", 'TEXT("DeclineHilltoniaFlyer")', 'TEXT("ReviewObjective")'),
+            ("First Wake Bokeh action missing", 'TEXT("FirstWakeBokehReview")', 'TEXT("ReviewObjective")'),
         ):
             if original.count(old) != 1:
                 raise RuntimeError("Mutation anchor missing or ambiguous: " + name)
