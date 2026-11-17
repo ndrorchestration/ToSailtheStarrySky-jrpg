@@ -25,8 +25,15 @@ class EditorOnlyInteractionTelemetryTests(unittest.TestCase):
         self.assertIn("*FirstWakeState->GetReviewObjectiveText()",self.interact)
 
     def test_only_in_editor_pie_and_no_extra_mutation(self):
-        self.assertEqual(self.interact.count("#if WITH_EDITOR"),7)
-        self.assertEqual(self.interact.count("#endif"),7)
+        self.assertEqual(self.interact.count("#if WITH_EDITOR"),8)
+        self.assertEqual(self.interact.count("#endif"),8)
+        # The eighth editor block is the new flyer modal input guard, not telemetry.
+        modal = "#if WITH_EDITOR\n    // E opens the flyer once;"
+        self.assertIn(modal, self.interact)
+        self.assertLess(
+            self.interact.index("if (IsHilltoniaFlyerOpen()) return;"),
+            self.interact.index("LineTraceSingleByChannel("),
+        )
         self.assertEqual(self.interact.count("GetWorld()->WorldType == EWorldType::PIE"),5)
         self.assertEqual(self.interact.count("Milestone->TryActivate(FirstWakeState)"),1)
         self.assertEqual(self.interact.count("ShowFirstWakeReviewObjective(FirstWakeState)"),1)
