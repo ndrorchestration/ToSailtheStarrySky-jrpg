@@ -86,7 +86,11 @@ def validated(events):
     demand(preceding,"no native gauge sample preceding camera entry")
     sample=preceding[-1]
     ordered=[es[-1],k,arrivals[0],o,arrivals[1],sample,entered,restored,restoremarkers]
-    demand(all(a["ts"]<b["ts"] for a,b in zip(ordered,ordered[1:])),
+    # Unreal may log consecutive native events in the same millisecond.
+    # Compare timestamp AND original log line, never discard timestamp order.
+    # This preserves strict ordering for audit-before-restore-marker events.
+    demand(all((a["ts"],a["line"])<(b["ts"],b["line"])
+               for a,b in zip(ordered,ordered[1:])),
            "event sequence/order/camera restoration invalid")
     demand([x["ts"] for x in es]==sorted(x["ts"] for x in es),
            "E interactions reversed or duplicate timestamps")
