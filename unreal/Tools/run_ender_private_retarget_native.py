@@ -183,8 +183,7 @@ def run_native(mode):
     modes = {path: path.stat().st_mode for path in PROTECTED}
     # Guard against Unreal's observed automatic DefaultEngine/Input.ini rewrites.
     # Always restore original permission flags, never overwrite changed CONTENT.
-    for path in PROTECTED:
-        os.chmod(path, stat.S_IREAD)
+    prepared_readonly = []
     cmd = [
         str(EDITOR), str(UPROJECT), "-nullrhi", "-NoSound", "-unattended",
         "-nosplash", "-nop4", "-ExecCmds=py " + str(script),
@@ -207,8 +206,15 @@ def run_native(mode):
         receipt_path.write_text(json.dumps(receipt, indent=2), encoding="utf8")
     owned_child = None
     stop_reason = None
+    launched_at = None
     try:
+        # Keep permission changes inside the try/finally. Even if a single
+        # os.chmod or Popen fails, restore every file already touched.
+        for path in PROTECTED:
+            os.chmod(path, stat.S_IREAD)
+            prepared_readonly.append(path)
         with (record_dir / "stdout.log").open("w", encoding="utf8") as log:
+            launched_at = time.time()
             owned_child = subprocess.Popen(
                 cmd, cwd=str(PROJECT), stdin=subprocess.DEVNULL,
                 stdout=log, stderr=subprocess.STDOUT, env=env,
@@ -244,8 +250,8 @@ def run_native(mode):
                 time.sleep(2)
         receipt["exit_code"] = owned_child.returncode
     finally:
-        for path, original_mode in modes.items():
-            os.chmod(path, original_mode)
+        for path in reversed(prepared_readonly):
+            os.chmod(path, modes[path])
         receipt["protected_unchanged"] = all(
             Path(path).is_file() and sha(Path(path)) == old
             for path, old in before.items()
@@ -257,26 +263,58 @@ def run_native(mode):
         receipt["disk_end_gib"] = round(disk_gib(), 3)
         receipt["ram_end_gib"] = round(ram_gib(), 3)
         artifact = signed_native_evidence(mode)
+        receipt["native_report_fresh"] = bool(
+            launched_at is not None and artifact.is_file() and
+            artifact.stat().st_mtime >= launched_at - 1.0
+        )
         receipt["native_report"] = (
             json.loads(artifact.read_text(encoding="utf8"))
-            if artifact.is_file() else None
+            if receipt["native_report_fresh"] else None
         )
         wanted_status = (
             "NATIVE_RETARGET_INPUTS_VALIDATED_NOT_RETARGETED"
             if mode == "audit" else
             "PRIVATE_IK_RIGS_CREATED_REVIEW_ONLY_NO_ANIMATION"
         )
+        report = receipt["native_report"] or {}
+        saved = report.get("saved_assets", [])
+        names = (
+            "IK_Manny_EnderReview_NONCANONICAL",
+            "IK_Genesis9_EnderReview_NONCANONICAL",
+            "RTG_MannyToEnder_NONCANONICAL",
+        )
+        review_folder = PROJECT / (
+            "Content/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL"
+        )
+        rig_files_valid = (
+            mode == "audit" or (
+                isinstance(saved, list) and len(saved) == len(names) and
+                sorted(saved) == sorted([
+                    "/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/"
+                    + name + "." + name for name in names
+                ]) and
+                all(
+                    (review_folder / (name + ".uasset")).is_file() and
+                    (review_folder / (name + ".uasset")).stat().st_size > 0
+                    for name in names
+                )
+            )
+        )
+        receipt["rig_files_verified"] = rig_files_valid
+        proof_ok = all((
+            receipt.get("exit_code") == 0,
+            receipt["protected_unchanged"],
+            receipt["tracked_clean"],
+            receipt["head_unchanged"],
+            receipt["native_report_fresh"],
+            report.get("status") == wanted_status,
+            report.get("source_head") == head,
+            rig_files_valid,
+        ))
         receipt["status"] = (
             "HOLD_" + stop_reason if stop_reason else
             "NATIVE_" + mode.upper().replace("-", "_") + "_PASS"
-            if (receipt.get("exit_code") == 0 and
-                receipt["protected_unchanged"] and
-                receipt["tracked_clean"] and receipt["head_unchanged"] and
-                receipt["native_report"] is not None and
-                receipt["native_report"].get("status") == wanted_status and
-                (mode != "audit" or
-                 receipt["native_report"].get("source_head") == head))
-            else "HOLD_NARROW_NATIVE_EVIDENCE"
+            if proof_ok else "HOLD_NARROW_NATIVE_EVIDENCE"
         )
         save()
     print(json.dumps({
