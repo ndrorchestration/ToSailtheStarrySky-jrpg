@@ -212,6 +212,24 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
                                Cube, Canopy, false);
     auto* RollingHills = Make(Owner, Root, TEXT("HilltoniaWoodedSlopeBackdrop"),
                               Sphere, Canopy, false);
+    // Decorative civic landmark, adapted from PR #850 to the inland layout.
+    UMaterialInterface* Ocean = LoadObject<UMaterialInterface>(nullptr,
+        TEXT("/Game/TSTSS/Review/VerticalSlice/M_VS_Ocean.M_VS_Ocean"));
+    auto* FountainBasin = Make(Owner, Root, TEXT("HilltoniaRoundStoneFountain"),
+                               Cylinder, Stone, true);
+    auto* FountainRim = Make(Owner, Root, TEXT("HilltoniaFountainStoneRim"),
+                             Cube, Stone, true);
+    auto* FountainSpout = Make(Owner, Root, TEXT("HilltoniaFountainBrassSpout"),
+                               Cylinder, Brass, false);
+    auto* FountainWater = IsValid(Ocean)
+        ? Make(Owner, Root, TEXT("HilltoniaFountainDecorativeWater"),
+               Cylinder, Ocean, false) : nullptr;
+    auto* NoticePosts = Make(Owner, Root, TEXT("HilltoniaPostingBoardPosts"),
+                             Cube, Timber, true);
+    auto* NoticePanel = Make(Owner, Root, TEXT("HilltoniaPostingBoardPanel"),
+                             Cube, Timber, true);
+    auto* NoticeSheet = Make(Owner, Root, TEXT("HilltoniaPostingBoardFlyerPaper"),
+                             Cube, Stone, false);
 
     // Actual land mass, not houses hovering over the original ocean plane.
     // Grass/soil surface is Z=-10cm, ten centimeters below the road top.
@@ -275,8 +293,48 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
     Place(Buildings, -8150.f, 1110.f, 190.f, 9.2f, 6.3f, 3.8f);
     Place(Roofs, -8150.f, 930.f, 401.f, 10.f, 4.2f, .25f, 0.f, -25.f);
     Place(Roofs, -8150.f, 1290.f, 401.f, 10.f, 4.2f, .25f, 0.f, 25.f);
-    Place(Trim, -7700.f, 585.f, 100.f, 2.6f, 1.2f, .9f);
-    Place(Trim, -7700.f, 585.f, 222.f, 2.9f, 1.45f, .11f);
+    // Visual only: keep clear of the moved hall, homes and east-west road.
+    // The board has no quest authority; a future interaction owns acceptance.
+    constexpr float FountainX = -7770.f;
+    constexpr float FountainY = 500.f;
+    Place(FountainBasin, FountainX, FountainY, 18.f, 3.2f, 3.2f, .55f);
+    for (int32 Segment = 0; Segment < 12; ++Segment)
+    {
+        const float Angle = (2.f * PI * Segment) / 12.f;
+        Place(FountainRim, FountainX + 132.f * FMath::Cos(Angle),
+              FountainY + 132.f * FMath::Sin(Angle), 70.f,
+              .52f, .82f, .32f, FMath::RadiansToDegrees(Angle));
+    }
+    if (FountainWater)
+    {
+        Place(FountainWater, FountainX, FountainY, 61.f, 2.38f, 2.38f, .05f);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("TSTSS_HILLTONIA_FOUNTAIN_WATER_HOLD"));
+    }
+    Place(FountainSpout, FountainX, FountainY, 112.f, .27f, .27f, 1.02f);
+
+    constexpr float BoardX = -7380.f;
+    constexpr float BoardY = 440.f;
+    Place(NoticePosts, BoardX - 110.f, BoardY, 126.f, .18f, .23f, 2.52f);
+    Place(NoticePosts, BoardX + 110.f, BoardY, 126.f, .18f, .23f, 2.52f);
+    Place(NoticePanel, BoardX, BoardY, 221.f, 2.55f, .22f, 1.72f);
+    Place(NoticeSheet, BoardX, BoardY - 13.f, 227.f, 1.78f, .045f, 1.31f);
+    auto* NoticeText = NewObject<UTextRenderComponent>(
+        Owner, TEXT("HilltoniaPostingFlyerPreview"));
+    NoticeText->SetMobility(EComponentMobility::Movable);
+    NoticeText->SetupAttachment(Root);
+    NoticeText->SetText(FText::FromString(TEXT("CAPTAIN IONIA\nENGINEER WANTED")));
+    NoticeText->SetWorldSize(22.f);
+    NoticeText->SetHorizontalAlignment(EHTA_Center);
+    NoticeText->SetVerticalAlignment(EVRTA_TextCenter);
+    NoticeText->SetTextRenderColor(FColor(45, 37, 28));
+    NoticeText->SetRelativeLocation(FVector(BoardX, BoardY - 18.f, 227.f));
+    NoticeText->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
+    NoticeText->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    Owner->AddInstanceComponent(NoticeText);
+    NoticeText->RegisterComponent();
 
     // The Green is a small open, decorative market landmark beside the
     // square, not an interactive market or a new quest authority.
