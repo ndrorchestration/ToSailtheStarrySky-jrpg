@@ -249,7 +249,11 @@ def create_private_rigs(audit):
             == source_rig, "SOURCE_IK_BIND_FAILURE")
     require(controller.get_ik_rig(unreal.RetargetSourceOrTarget.TARGET)
             == target_rig, "TARGET_IK_BIND_FAILURE")
-    require(controller.get_num_retarget_ops() > 0,
+    # UE5.8 retargeters use an explicit operation stack; a new factory asset
+    # may start with no FK/IK mapping ops. Epic's controller adds the standard
+    # Pelvis Motion, FK Chains, IK Chains, IK Solve and Root Motion ops.
+    controller.add_default_ops()
+    require(controller.get_num_retarget_ops() >= 5,
             "RETARGETER_HAS_NO_FK_IK_CHAIN_OPS")
     for chain in CHAINS:
         require(controller.set_source_chain(chain, chain),
