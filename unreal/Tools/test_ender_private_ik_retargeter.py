@@ -20,8 +20,12 @@ class PrivateEnderIKBuilderContracts(unittest.TestCase):
         for token in (
             'os.environ.get("TSTSS_PRIVATE_IK_CREATE") == "1"',
             '"OWNER_OPT_IN_REQUIRED"',
-            '"RAM_RESERVE"',
-            '"DISK_RESERVE"',
+            '"HOST_STARTUP_RESERVE_UNPROVEN"',
+            '"MISSING_HOST_STARTUP_GATE"',
+            '"HOST_STARTUP_GATE_MISMATCH"',
+            '"HOST_STARTUP_GATE_STALE"',
+            '"RAM_RUNTIME_FLOOR"',
+            '"DISK_RUNTIME_FLOOR"',
             '"NATIVE_AUDIT_NOT_ACCEPTED"',
             '"NATIVE_AUDIT_STALE"',
             '"WRONG_PROJECT"',
@@ -33,6 +37,13 @@ class PrivateEnderIKBuilderContracts(unittest.TestCase):
         ):
             with self.subTest(token=token):
                 self.assertIn(token, CODE)
+
+    def test_two_stage_host_resource_admission_not_reflexive(self):
+        self.assertIn('STARTUP_GATE = PROJECT /', CODE)
+        self.assertIn('startup.get("mode") == "create-rigs"', CODE)
+        self.assertIn('available_ram_gib() >= 2.5', CODE)
+        self.assertNotIn('available_ram_gib() >= 6.0', CODE)
+        self.assertIn('shutil.disk_usage("C:\\\\").free >= 14.3 * 2**30', CODE)
 
     def test_never_overwrite_or_publish_rig_files(self):
         self.assertIn('FOLDER = "/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL"', CODE)
@@ -113,7 +124,10 @@ class PrivateEnderIKBuilderContracts(unittest.TestCase):
 
     def test_negative_mutations_to_owner_and_ancestry_gates(self):
         for required in (
-            '== "1",', 'available_ram_gib() >= 6.0',
+            '== "1",', 'available_ram_gib() >= 2.5',
+            'startup.get("ram_start_gib", 0) >= 6.5',
+            'startup.get("disk_start_gib", 0) >= 16.5',
+            'startup.get("run_id") == os.environ.get("TSTSS_PRIVATE_IK_RUN_ID")',
             'audit.get("source_head") == head',
             'not git("status", "--porcelain=v1", "--untracked-files=no")',
             'descends_from(source_mesh, *source)',
