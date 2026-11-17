@@ -165,6 +165,110 @@ class SeabourneWindSailSourceTests(unittest.TestCase):
             require_contract(mutated,(original,))
         self.assertIn("Same-frame opt-out plus revocation",self.native)
 
+    def test_four_inert_dorsal_support_pairs_are_new_and_noncolliding(self):
+        require_contract(self.header,(
+            "GetDorsalMastCount() const { return DorsalMasts.Num(); }",
+            "GetDorsalSwivelCount() const { return DorsalSwivels.Num(); }",
+            "TArray<TObjectPtr<UStaticMeshComponent>> DorsalMasts;",
+            "TArray<TObjectPtr<UStaticMeshComponent>> DorsalSwivels;",
+            "void UpdateDorsalMountTransforms();",
+        ))
+        ctor=self.cpp.split("AAureateWakePreviewActor::AAureateWakePreviewActor()",1)[1].split(
+            "\nvoid AAureateWakePreviewActor::OnConstruction",1)[0]
+        require_contract(ctor,(
+            'TEXT("DorsalMast_%d")',
+            'TEXT("DorsalSwivel_%d")',
+            "Mast->SetupAttachment(VesselRoot);",
+            "Swivel->SetupAttachment(VesselRoot);",
+            "SetupPreviewMesh(Mast, Shape);",
+            "SetupPreviewMesh(Swivel, Shape);",
+            "Mast->SetVisibility(false);",
+            "Swivel->SetVisibility(false);",
+            "DorsalMasts.Add(Mast);",
+            "DorsalSwivels.Add(Swivel);",
+        ))
+        assert ctor.count("for (int32 Index = 0; Index < 4; ++Index)") >= 4
+        self.assertEqual(ctor.count("DorsalMasts.Add(Mast);"),1)
+        self.assertEqual(ctor.count("DorsalSwivels.Add(Swivel);"),1)
+        self.assertIn("Component->SetCollisionEnabled(ECollisionEnabled::NoCollision);",self.cpp)
+
+    def test_settled_mount_geometry_attaches_to_sail_base_without_bridge_intrusion(self):
+        mount=self.cpp.split("void AAureateWakePreviewActor::UpdateDorsalMountTransforms()",1)[1].split(
+            "\nvoid AAureateWakePreviewActor::UpdateRootSupportTransforms()",1)[0]
+        require_contract(mount,(
+            "CurrentForm == EAureateWakeForm::Seaborne && !bTransitioning",
+            "Wings.Num() == 4 && Hydrofoils.Num() == 2 &&",
+            "DorsalMasts.Num() == 4 && DorsalSwivels.Num() == 4;",
+            "Mast->SetVisibility(false);",
+            "Swivel->SetVisibility(false);",
+            "if (!bReady || !IsValid(Wings[Index].Get())) continue;",
+            "FMath::Abs(WingRoot.Y) > 1.f",
+            "const float LowerEdge = bRootPivot ? WingRoot.Z :",
+            "WingRoot.Z - 140.f * FMath::Abs(",
+            "const float BaseZ = Index == 0 ? 150.f : 32.5f;",
+            "const float Height = LowerEdge - BaseZ;",
+            "if (!FMath::IsFinite(Height) || Height < 15.f) continue;",
+            "FVector(WingRoot.X, 0.f, BaseZ + 0.5f * Height)",
+            "FVector(0.20f, 0.20f, Height / 100.f)",
+            "FVector(WingRoot.X, 0.f, LowerEdge)",
+            "FVector(0.48f, 0.32f, 0.12f)",
+            "Mast->SetVisibility(true);",
+            "Swivel->SetVisibility(true);",
+        ))
+        # Proxy-only check, not real mesh clearance. First mast is over the
+        # cube bridge roof at z=150; other 3 touch the hull top at z=32.5.
+        import math
+        sail_base=365.0-140.0*abs(math.sin(math.radians(98.0)))
+        self.assertTrue(220.0 < sail_base < 230.0)
+        self.assertTrue(sail_base-150.0 > 15.0)
+        self.assertTrue(sail_base-32.5 > 15.0)
+        self.assertLess(mount.index("Mast->SetVisibility(false);"),
+                        mount.index("Mast->SetVisibility(true);"))
+        # No physics or wing-array replacement inside supports.
+        for forbidden in ("AddForce", "SetSimulatePhysics", "Wings.Add(", "SaveGame"):
+            self.assertNotIn(forbidden,mount)
+
+    def test_dorsal_mast_visibility_updates_and_native_failure_paths(self):
+        support=self.cpp.split("void AAureateWakePreviewActor::RefreshRootSupports()",1)[1].split(
+            "\nvoid AAureateWakePreviewActor::UpdateDorsalMountTransforms()",1)[0]
+        self.assertIn("UpdateDorsalMountTransforms();",support)
+        transition=self.cpp.split("bool AAureateWakePreviewActor::RequestForm",1)[1].split(
+            "\nvoid AAureateWakePreviewActor::Tick",1)[0]
+        require_contract(transition,(
+            "bTransitioning = true;",
+            "RefreshRootSupports();",
+        ))
+        require_contract(self.native,(
+            "Ship->GetDorsalMastCount(), 4",
+            "Ship->GetDorsalSwivelCount(), 4",
+            "DorsalMasts[Index]->IsVisible()",
+            "DorsalSwivels[Index]->IsVisible()",
+            "Mast physically touches its hinge collar at sail bottom",
+            "First dorsal hinge independently tracks sail 1 trim",
+            "Fourth dorsal swivel tracks independent opposing trim",
+            "Live opt-out hides former dorsal mast",
+            "Story revocation hides every dorsal mast",
+            "ECollisionEnabled::NoCollision",
+        ))
+        self.assertEqual(self.native.count("IMPLEMENT_SIMPLE_AUTOMATION_TEST("),1)
+
+    def test_dorsal_mount_negative_mutation_checks(self):
+        mount=self.cpp.split("void AAureateWakePreviewActor::UpdateDorsalMountTransforms()",1)[1].split(
+            "\nvoid AAureateWakePreviewActor::UpdateRootSupportTransforms()",1)[0]
+        originals=(
+            "CurrentForm == EAureateWakeForm::Seaborne && !bTransitioning",
+            "DorsalMasts.Num() == 4 && DorsalSwivels.Num() == 4;",
+            "const float BaseZ = Index == 0 ? 150.f : 32.5f;",
+            "Mast->SetVisibility(false);",
+            "Swivel->SetVisibility(false);",
+        )
+        for original in originals:
+            with self.subTest(original=original):
+                self.assertIn(original,mount)
+                changed=mount.replace(original,"/* UNSAFE DORSAL MUTATION */",1)
+                with self.assertRaisesRegex(ValueError,"WIND_SAIL_SOURCE_HOLD"):
+                    require_contract(changed,(original,))
+
     def test_negative_mutations_detect_unsafe_permission_and_geometry(self):
         originals=(
             "!bUseSeabourneWindSailReview || bTransitioning",
