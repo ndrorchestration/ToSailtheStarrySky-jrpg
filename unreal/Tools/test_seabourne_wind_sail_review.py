@@ -199,7 +199,7 @@ class SeabourneWindSailSourceTests(unittest.TestCase):
         require_contract(mount,(
             "CurrentForm == EAureateWakeForm::Seaborne && !bTransitioning",
             "Wings.Num() == 4 && Hydrofoils.Num() == 2 &&",
-            "DorsalMasts.Num() == 4 && DorsalSwivels.Num() == 4;",
+            "DorsalMasts.Num() == 4 && DorsalSwivels.Num() == 4 &&",
             "Mast->SetVisibility(false);",
             "Swivel->SetVisibility(false);",
             "if (!bReady || !IsValid(Wings[Index].Get())) continue;",
@@ -258,7 +258,7 @@ class SeabourneWindSailSourceTests(unittest.TestCase):
             "\nvoid AAureateWakePreviewActor::UpdateRootSupportTransforms()",1)[0]
         originals=(
             "CurrentForm == EAureateWakeForm::Seaborne && !bTransitioning",
-            "DorsalMasts.Num() == 4 && DorsalSwivels.Num() == 4;",
+            "DorsalMasts.Num() == 4 && DorsalSwivels.Num() == 4 &&",
             "const float BaseZ = Index == 0 ? 150.f : 32.5f;",
             "Mast->SetVisibility(false);",
             "Swivel->SetVisibility(false);",
