@@ -26,7 +26,9 @@ class PrivateEnderIKBuilderContracts(unittest.TestCase):
             '"NATIVE_AUDIT_STALE"',
             '"WRONG_PROJECT"',
             '"WRONG_UNREAL_VERSION"',
-            '"SOURCE_REVISION_DRIFT"',
+            '"SOURCE_NATIVE_ANCESTOR_DRIFT"',
+            '"NATIVE_AUDIT_HEAD_MISMATCH"',
+            '"PRIVATE_OR_TEMPLATE_FILE_HASH_DRIFT_"',
             '"TRACKED_WORKTREE_DIRTY"',
         ):
             with self.subTest(token=token):
@@ -60,6 +62,9 @@ class PrivateEnderIKBuilderContracts(unittest.TestCase):
         self.assertIn('unreal.IKRetargeterController.get_controller(retargeter)', CODE)
         self.assertIn('"SOURCE_SKELETON_DRIFT"', CODE)
         self.assertIn('"TARGET_SKELETON_DRIFT"', CODE)
+        self.assertIn('"RETARGETER_HAS_NO_FK_IK_CHAIN_OPS"', CODE)
+        self.assertIn('"RETARGET_CHAIN_SET_" + chain', CODE)
+        self.assertIn('"SOURCE_FILE_CHANGED_DURING_IK_CREATE"', CODE)
 
     def test_all_chains_mapped_with_parent_ancestry(self):
         for chain in ("Spine", "Head", "LeftArm", "RightArm", "LeftLeg", "RightLeg"):
@@ -86,10 +91,28 @@ class PrivateEnderIKBuilderContracts(unittest.TestCase):
         ):
             self.assertNotIn(forbidden, CODE)
 
+    def test_self_referential_git_hash_is_not_used(self):
+        self.assertNotIn('SHA = "2235f3a4283f93a12f5d3e85ce1a8039b2c865b3"', CODE)
+        self.assertIn('VALIDATED_NATIVE_ANCESTOR =', CODE)
+        self.assertIn('audit.get("source_head") == head', CODE)
+        self.assertIn('merge-base", "--is-ancestor"', CODE)
+
+    def test_all_source_and_private_inputs_rehashed(self):
+        for path in (
+            "SKM_Manny_Simple.uasset", "SK_Mannequin.uasset",
+            "MM_Idle.uasset", "MF_Unarmed_Walk_Fwd.uasset",
+            "MF_Unarmed_Jog_Fwd.uasset",
+            "Genesis9_BaseShirtShorts_MergedRig_REVIEW.uasset",
+            "Genesis9_BaseShirtShorts_MergedRig_REVIEW_Skeleton.uasset",
+        ):
+            self.assertIn(path, CODE)
+        self.assertIn('hash_file(file_path) == expected', CODE)
+        self.assertIn('SOURCE_FILE_CHANGED_DURING_IK_CREATE', CODE)
+
     def test_negative_mutations_to_owner_and_ancestry_gates(self):
         for required in (
             '== "1",', 'available_ram_gib() >= 6.0',
-            'git("rev-parse", "HEAD") == SHA',
+            'audit.get("source_head") == head',
             'not git("status", "--porcelain=v1", "--untracked-files=no")',
             'descends_from(source_mesh, *source)',
             'descends_from(target_mesh, *target)',
