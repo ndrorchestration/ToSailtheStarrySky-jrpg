@@ -19,6 +19,8 @@
 #include "Components/StaticMeshComponent.h"
 #if WITH_EDITOR
 #include "Components/SkeletalMeshComponent.h"
+#include "Engine/SkeletalMesh.h"
+#include "Animation/Skeleton.h"
 #include "Components/CapsuleComponent.h"
 #endif
 #include "Engine/StaticMesh.h"
@@ -647,6 +649,7 @@ void ATSTSSExplorerCharacter::BeginPlay()
 #if WITH_EDITOR
     ApplyOpticalReviewPlayerExposure(GetWorld(), FollowCamera);
     bTryHilltoniaOpening = ApplyV5HarborReviewLookdev(GetWorld());
+    ApplyEnderSliceReviewAppearance();
     SetupFirstWakeThirdPersonReview(GetWorld());
     StageDockedWakeReview(GetWorld());
     ApplyCoastalRecoveryReviewSignage(GetWorld());
@@ -1333,6 +1336,52 @@ void ATSTSSExplorerCharacter::RestoreEngineFocusPreview()
 #endif // WITH_EDITOR
 
 #if WITH_EDITOR
+void ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance()
+{
+    // Port the bounded, private Ender skeletal candidate from the earlier
+    // native PIE study. The property is blank for all ordinary characters.
+    // Only the spawned pawn is touched; no asset/map/save/gameplay mutation.
+    UWorld* World = GetWorld();
+    if (!World || World->WorldType != EWorldType::PIE ||
+        World->GetNetMode() != NM_Standalone ||
+        !World->GetOutermost() ||
+        !World->GetOutermost()->GetName().StartsWith(
+            TEXT("/Game/TSTSS/Review/")) ||
+        EnderSliceReviewBody.IsNull() || !IsValid(GetMesh()))
+    {
+        return;
+    }
+    const FString Scene = UGameplayStatics::GetCurrentLevelName(World, true);
+    if (Scene != TEXT("FirstWake_PreludeInteraction_V5_VisualReview") &&
+        Scene != TEXT("VS02_AureateInteriors"))
+    {
+        return;
+    }
+
+    USkeletalMesh* Candidate = EnderSliceReviewBody.LoadSynchronous();
+    if (!IsValid(Candidate) || !IsValid(Candidate->GetSkeleton()))
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_ENDER_SLICE_VISUAL_HOLD missing candidate/skeleton"));
+        return;
+    }
+    const FReferenceSkeleton& Bones = Candidate->GetRefSkeleton();
+    if (Bones.GetNum() < 80 || Bones.GetNum() > 450 ||
+        Bones.FindBoneIndex(FName(TEXT("head"))) == INDEX_NONE ||
+        Bones.FindBoneIndex(FName(TEXT("l_hand"))) == INDEX_NONE)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_ENDER_SLICE_VISUAL_HOLD invalid candidate bone hierarchy"));
+        return;
+    }
+    USkeletalMeshComponent* Body = GetMesh();
+    Body->SetSkeletalMeshAsset(Candidate);
+    Body->SetVisibility(true);
+    UE_LOG(LogTemp, Display,
+        TEXT("TSTSS_ENDER_SLICE_REVIEW_MESH_BOUND bones=%d animation_NOT_VERIFIED art_NOT_APPROVED"),
+        Bones.GetNum());
+}
+
 void ATSTSSExplorerCharacter::SetupFirstWakeThirdPersonReview(UWorld* World)
 {
     if (!World || !IsValid(FollowCamera) || !IsValid(CameraBoom) ||
