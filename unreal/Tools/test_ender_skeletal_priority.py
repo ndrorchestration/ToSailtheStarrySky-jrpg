@@ -52,7 +52,16 @@ class EnderSkeletalPriorityTests(unittest.TestCase):
         self.assertIn('StartsWith(TEXT("/Game/TSTSS/Review/"))', block)
         self.assertIn('Scene != TEXT("FirstWake_PreludeInteraction_V5_VisualReview")', block)
         self.assertIn('Scene != TEXT("VS02_AureateInteriors")', block)
-        self.assertIn('#if WITH_EDITOR\nvoid ATSTSSExplorerCharacter::SetupFirstWakeThirdPersonReview', SOURCE)
+        self.assertIn(
+            "#if WITH_EDITOR\\nvoid ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance()",
+            SOURCE,
+        )
+        editor_segment = SOURCE.split(
+            "void ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance()", 1
+        )[1].split(
+            "void ATSTSSExplorerCharacter::SetupFirstWakeThirdPersonReview(", 1
+        )[0]
+        self.assertNotIn("#endif", editor_segment)
 
     def test_fallback_retains_existing_provisional_static_lookdev(self):
         block = review_setup(SOURCE)
