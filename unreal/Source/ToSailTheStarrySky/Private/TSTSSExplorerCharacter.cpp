@@ -18,6 +18,7 @@
 #endif
 #include "Components/StaticMeshComponent.h"
 #if WITH_EDITOR
+#include "Components/SkeletalMeshComponent.h"
 #include "Components/CapsuleComponent.h"
 #endif
 #include "Engine/StaticMesh.h"
@@ -1358,6 +1359,22 @@ void ATSTSSExplorerCharacter::SetupFirstWakeThirdPersonReview(UWorld* World)
     CameraBoom->CameraLagMaxDistance = 55.f;
     FollowCamera->SetFieldOfView(bInteriors ? 70.f : 68.f);
     bFirstWakeThirdPersonReview = true;
+
+    // A possessed skeletal Ender review candidate takes precedence over the
+    // historical static V2 lookdev overlay. A separate Blueprint may already
+    // have bound the skeletal body; adding a second opaque static character
+    // would hide it and make actual locomotion/rig assessment impossible.
+    // This only selects presentation, never art admission or animation proof.
+    USkeletalMeshComponent* SkeletalBody = GetMesh();
+    if (IsValid(SkeletalBody) && SkeletalBody->IsRegistered() &&
+        IsValid(SkeletalBody->GetSkeletalMeshAsset()) &&
+        SkeletalBody->GetNumBones() > 0 && SkeletalBody->IsVisible())
+    {
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_ENDER_SKELETAL_REVIEW_PRESENT scene=%s bones=%d animation_NOT_VERIFIED art_NOT_APPROVED"),
+            *Scene, SkeletalBody->GetNumBones());
+        return;
+    }
 
     // Local Ender V2 look-development package. Keep the donor and its materials
     // at their original package paths, outside tracked Content on Neontic.
