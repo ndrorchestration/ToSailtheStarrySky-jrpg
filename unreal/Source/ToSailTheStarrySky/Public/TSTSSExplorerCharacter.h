@@ -5,6 +5,8 @@
 #include "TimerManager.h"
 #include "TSTSSExplorerCharacter.generated.h"
 
+class USkeletalMesh;
+
 UCLASS()
 class TOSAILTHESTARRYSKY_API ATSTSSExplorerCharacter : public ACharacter
 {
@@ -54,7 +56,16 @@ protected:
     TObjectPtr<UTSTSSFirstWakeState> FirstWakeState;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Interaction")
     float InteractionDistance = 300.f;
+#if WITH_EDITORONLY_DATA
+    // Explicitly assigned by a PRIVATE, editor-only review Blueprint.
+    // Unset by default; never points at a canonical or packaged character.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    TSoftObjectPtr<USkeletalMesh> EnderSliceReviewBody;
+#endif
 private:
+#if WITH_EDITOR
+    void ApplyEnderSliceReviewAppearance();
+#endif
 #if !UE_BUILD_SHIPPING
     bool HasSupportedReviewFooting(const UWorld* World, const FVector& PawnLocation) const;
     FVector LastSupportedReviewLocation = FVector::ZeroVector;
