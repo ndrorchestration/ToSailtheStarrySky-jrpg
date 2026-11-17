@@ -205,9 +205,22 @@ bool FTSTSSAureateSeabourneStoryGate::RunTest(const FString& Parameters)
     TestEqual(TEXT("Seabourne restriction persists beyond first shore"),
         Ship->GetCurrentForm(), EAureateWakeForm::Seaborne);
 
+    Ship->bUseSeabourneWindSailReview = true;
+    TestTrue(TEXT("Study yaw before story revocation"),
+        Ship->SetSeabourneWindTrimDegrees(3, 12.f));
     Story->Reset();
+    TestFalse(TEXT("Reset story immediately blocks wind trim"),
+        Ship->SetSeabourneWindTrimDegrees(3, 5.f));
+    TestEqual(TEXT("Unapproved stale trim not exposed after reset"),
+        Ship->GetSeabourneWindTrimDegrees(3), 0.f);
+    Ship->Tick(0.1f);
+    TestEqual(TEXT("Revocation snaps visual ship from study to Skybourne"),
+        Ship->GetCurrentForm(), EAureateWakeForm::Skyborne);
+    TestEqual(TEXT("Revocation clears ephemeral trim storage"),
+        Ship->GetSeabourneWindTrimDegrees(3), 0.f);
     TestFalse(TEXT("Reset story denies mode changes"),
         Ship->RequestForm(EAureateWakeForm::Skyborne));
+    Ship->bUseSeabourneWindSailReview = false;
     TestTrue(TEXT("Restore pre-splashdown story again"), Story->Restore(
         true, ETSTSSFirstWakeBeat::Launched, 0x07));
     TestTrue(TEXT("Rebind previous story snapshot"), Ship->BindReviewStory(Story));
