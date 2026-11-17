@@ -67,6 +67,27 @@ public:
     UFUNCTION(BlueprintCallable, Category="Aureate Wake|Preview|Review")
     bool ApplyEditorReviewPose();
 
+    /**
+     * OFF-by-default, review-only Seabourne dorsal wind-sail silhouette.
+     * The same four wings move to a fore/aft dorsal row, upright and aft-raked.
+     * Does NOT authorize physics, sailing, wing clearance, save changes or gameplay art.
+     * The older preview pose remains untouched unless an operator explicitly opts in.
+     */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Preview|Wind Sail Review")
+    bool bUseSeabourneWindSailReview = false;
+
+    /**
+     * Independently yaw a single deployed sail (one-based number 1..4).
+     * Only in a story-authorized, settled Seabourne review with opt-in enabled.
+     * +/-35 degrees is a provisional *input* bound, NOT a clearance proof.
+     * Refuses invalid/stale story, transition, NaN and unauthorized form.
+     */
+    UFUNCTION(BlueprintCallable, Category="Aureate Wake|Preview|Wind Sail Review")
+    bool SetSeabourneWindTrimDegrees(int32 WingNumber, float Degrees);
+
+    UFUNCTION(BlueprintPure, Category="Aureate Wake|Preview|Wind Sail Review")
+    float GetSeabourneWindTrimDegrees(int32 WingNumber) const;
+
     /** Optional creator-authored translucent/iridescent wing material; no material asset is included yet. */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Visuals")
     TObjectPtr<UMaterialInterface> WingMaterial;
@@ -175,6 +196,10 @@ private:
     TArray<FTransform> StartFoilTransforms;
     TArray<FTransform> TargetFoilTransforms;
 
+    // Transient preview angles only. Never serialized to player SaveGame.
+    float SeabourneWindTrimDegrees[4] = { 0.f, 0.f, 0.f, 0.f };
+
+    static FTransform SeabourneWindSailPose(int32 WingIndex, float TrimDegrees, bool bAuthoredRootPivot);
     static FTransform WingPose(EAureateWakeForm Form, int32 WingIndex);
     static FTransform RootPivotedWingPose(EAureateWakeForm Form, int32 WingIndex);
     FTransform WingPoseForMesh(EAureateWakeForm Form, int32 WingIndex) const;
