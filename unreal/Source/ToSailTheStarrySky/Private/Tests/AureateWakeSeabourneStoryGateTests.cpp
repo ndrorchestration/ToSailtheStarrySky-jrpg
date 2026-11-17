@@ -193,7 +193,15 @@ bool FTSTSSAureateSeabourneStoryGate::RunTest(const FString& Parameters)
         Ship->BindReviewStory(Story));
     TestEqual(TEXT("After story bind no stale sail 1 trim"),
         Ship->GetSeabourneWindTrimDegrees(1), 0.f);
+    TestTrue(TEXT("Run separate test trim before live opt-out"),
+        Ship->SetSeabourneWindTrimDegrees(2, 15.f));
     Ship->bUseSeabourneWindSailReview = false;
+    Ship->Tick(0.1f);
+    TestEqual(TEXT("Disabled live preview rolls back to legacy lateral wing"),
+        FourSails[1]->GetRelativeLocation().Y, 175.f);
+    TestEqual(TEXT("Live opt-out clears stale yaw"), Ship->GetSeabourneWindTrimDegrees(2), 0.f);
+    TestEqual(TEXT("Live opt-out retains authorized Seabourne form"),
+        Ship->GetCurrentForm(), EAureateWakeForm::Seaborne);
     TestTrue(TEXT("Restore original noncanonical default pose"),
         Ship->BindReviewStory(Story));
     TestFalse(TEXT("Disabled study refuses another trim"),
@@ -218,6 +226,22 @@ bool FTSTSSAureateSeabourneStoryGate::RunTest(const FString& Parameters)
         Ship->GetCurrentForm(), EAureateWakeForm::Skyborne);
     TestEqual(TEXT("Revocation clears ephemeral trim storage"),
         Ship->GetSeabourneWindTrimDegrees(3), 0.f);
+
+    // Additional adversarial ordering: disable the feature and reset the
+    // story in the same frame; revocation still has precedence over opt-out.
+    TestTrue(TEXT("Recreate authorized Seabourne for simultaneous opt-out test"),
+        Story->Restore(true, ETSTSSFirstWakeBeat::FlotationConfirmed, 0x07));
+    TestTrue(TEXT("Rebind legal Seabourne before simultaneous opt-out test"),
+        Ship->BindReviewStory(Story));
+    TestTrue(TEXT("Trim sail 4 before simultaneous opt-out and story reset"),
+        Ship->SetSeabourneWindTrimDegrees(4, 10.f));
+    Ship->bUseSeabourneWindSailReview = false;
+    Story->Reset();
+    Ship->Tick(0.1f);
+    TestEqual(TEXT("Same-frame opt-out plus revocation denies Seabourne presentation"),
+        Ship->GetCurrentForm(), EAureateWakeForm::Skyborne);
+    TestEqual(TEXT("Same-frame opt-out plus revocation masks stale sail trim"),
+        Ship->GetSeabourneWindTrimDegrees(4), 0.f);
     TestFalse(TEXT("Reset story denies mode changes"),
         Ship->RequestForm(EAureateWakeForm::Skyborne));
     Ship->bUseSeabourneWindSailReview = false;
