@@ -261,7 +261,10 @@ def make_ik(asset_tools, name, mesh, chain_index):
         rig_observations[name]["mapped"][chain] = {
             "mode": mode, "start": actual_start, "end": actual_end
         }
-        require(actual_start == start and actual_end == end,
+        # Bone names are also Unreal FNames: preserve the actual spellings
+        # in evidence, compare using the engine's case-insensitive semantics.
+        require(actual_start.casefold() == start.casefold() and
+                actual_end.casefold() == end.casefold(),
                 "RETARGET_CHAIN_BONES_MISMATCH_" + chain)
     return rig
 
