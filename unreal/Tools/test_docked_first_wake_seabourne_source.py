@@ -65,5 +65,17 @@ class DockedSeabourneSource(unittest.TestCase):
         self.assertIn("SnapToForm(EAureateWakeForm::Seaborne);", gate)
         self.assertNotIn("SnapToForm(EAureateWakeForm::Skyborne);", gate)
 
+    def test_unstarted_binding_snaps_before_first_tick_without_authority(self):
+        body = method_body(
+            ACTOR, "bool AAureateWakePreviewActor::BindReviewStory(",
+            "bool AAureateWakePreviewActor::RequestForm(")
+        self.assertIn("if (Active == NAME_None)", body)
+        early = body.split("if (Active == NAME_None)", 1)[1].split(
+            "// Restored saves", 1)[0]
+        self.assertIn("SnapToForm(EAureateWakeForm::Seaborne);", early)
+        self.assertIn("return true;", early)
+        self.assertNotIn("RequestForm(", early)
+        self.assertNotIn("AdvanceTo(", early)
+
 if __name__ == "__main__":
     unittest.main()
