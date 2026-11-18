@@ -226,13 +226,16 @@ def make_ik(asset_tools, name, mesh, chain_index):
     # UE 5.8 can auto-generate a retarget definition when the mesh is
     # assigned. Avoid adding Head_1 or other duplicate chains: reconcile the
     # existing name, then prove exact start/end after any update.
-    initial = {str(x.chain_name) for x in ctrl.get_retarget_chains()}
+    initial_names = [str(x.chain_name) for x in ctrl.get_retarget_chains()]
+    initial = {chain_name.casefold() for chain_name in initial_names}
     rig_observations = RECEIPT.setdefault("chain_observations", {})
-    rig_observations[name] = {"initial_chain_names": sorted(initial),
+    rig_observations[name] = {"initial_chain_names": sorted(initial_names),
                               "mapped": {}}
     for chain, pairs in CHAINS.items():
         start, end = pairs[chain_index]
-        if chain in initial:
+        # Unreal FName comparison is case-insensitive. The native engine can
+        # return "head" even when requested retarget chain is "Head".
+        if chain.casefold() in initial:
             require(ctrl.set_retarget_chain_start_bone(
                 unreal.Name(chain), unreal.Name(start)),
                 "EXISTING_CHAIN_START_" + chain)
@@ -248,7 +251,7 @@ def make_ik(asset_tools, name, mesh, chain_index):
             rig_observations[name]["mapped"][chain] = {
                 "created_return": str(name_added)
             }
-            require(str(name_added) == chain,
+            require(str(name_added).casefold() == chain.casefold(),
                     "RETARGET_CHAIN_CREATE_" + chain)
             mode = "CREATED"
         actual_start = str(ctrl.get_retarget_chain_start_bone(
@@ -308,8 +311,8 @@ def create_private_rigs(audit):
     for chain in CHAINS:
         require(controller.set_source_chain(chain, chain),
                 "RETARGET_CHAIN_SET_" + chain)
-        require(str(controller.get_source_chain(chain)) == chain,
-                "RETARGET_CHAIN_MAPPING_" + chain)
+        require(str(controller.get_source_chain(chain)).casefold() ==
+                chain.casefold(), "RETARGET_CHAIN_MAPPING_" + chain)
     # Save only the three newly-created review assets after all gates pass;
     # never use checkout or any broad directory operation.
     for asset in (source_rig, target_rig, retargeter):
