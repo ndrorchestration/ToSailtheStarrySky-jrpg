@@ -1007,8 +1007,8 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
             // PRIVATE D3D11 read-only bone chain telemetry. Headless
             // -nullrhi can return a static reference pose even after
             // animation requests. Log only in the real low-RAM rendered
-            // Game world, after 13 ticks in each animation band, and only
-            // with an additional explicit diagnostics flag.
+            // Game world, after 3 character Ticks (0.2 s each) in each
+            // animation band, and only with an explicit diagnostics flag.
             if (FParse::Param(FCommandLine::Get(),
                               TEXT("TSTSSPrivateEnderBoneAudit")))
             {
@@ -1022,7 +1022,7 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
                     ++EnderLowMemBoneAuditBandFrames;
                 }
                 const uint8 BandBit = static_cast<uint8>(1u << MotionBand);
-                if (EnderLowMemBoneAuditBandFrames >= 13 &&
+                if (EnderLowMemBoneAuditBandFrames >= 3 &&
                     (EnderLowMemBoneAuditSampledMask & BandBit) == 0)
                 {
                     const FReferenceSkeleton& Ref =

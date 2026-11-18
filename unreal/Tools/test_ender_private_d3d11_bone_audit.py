@@ -34,7 +34,8 @@ class PrivateBoneTelemetrySafetyTests(unittest.TestCase):
             with self.subTest(forbidden=forbidden):self.assertNotIn(forbidden,b)
     def test_sampling_bounded_once_per_band_and_post_update(self):
         b=block()
-        self.assertIn('EnderLowMemBoneAuditBandFrames >= 13',b)
+        self.assertIn('EnderLowMemBoneAuditBandFrames >= 3',b)
+        self.assertIn('PrimaryActorTick.TickInterval = 0.2f;',CPP)
         self.assertIn('(EnderLowMemBoneAuditSampledMask & BandBit) == 0',b)
         self.assertIn('EnderLowMemBoneAuditSampledMask |= BandBit',b)
         self.assertIn('EnderLowMemBoneAuditBandFrames < 60000',b)
@@ -45,7 +46,7 @@ class PrivateBoneTelemetrySafetyTests(unittest.TestCase):
         self.assertIn('TryEnderPIELocomotionPreview(MotionBand);',CPP)
     def test_mutated_guards_are_detected(self):
         b=block()
-        for t in ('EnderLowMemBoneAuditBandFrames >= 13',
+        for t in ('EnderLowMemBoneAuditBandFrames >= 3',
                   '(EnderLowMemBoneAuditSampledMask & BandBit) == 0',
                   'EnderLowMemBoneAuditSampledMask |= BandBit',
                   'GetParentIndex(Index)', 'TSTSS_ENDER_PRIVATE_BONE_AUDIT_SAMPLE'):
