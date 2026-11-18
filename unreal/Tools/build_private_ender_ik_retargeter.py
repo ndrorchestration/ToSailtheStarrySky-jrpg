@@ -223,13 +223,43 @@ def make_ik(asset_tools, name, mesh, chain_index):
     require(ctrl is not None and ctrl.set_skeletal_mesh(mesh),
             "IK_RIG_MESH_BIND")
     require(ctrl.set_retarget_root("pelvis"), "RETARGET_ROOT")
+    # UE 5.8 can auto-generate a retarget definition when the mesh is
+    # assigned. Avoid adding Head_1 or other duplicate chains: reconcile the
+    # existing name, then prove exact start/end after any update.
+    initial = {str(x.chain_name) for x in ctrl.get_retarget_chains()}
+    rig_observations = RECEIPT.setdefault("chain_observations", {})
+    rig_observations[name] = {"initial_chain_names": sorted(initial),
+                              "mapped": {}}
     for chain, pairs in CHAINS.items():
         start, end = pairs[chain_index]
-        name_added = ctrl.add_retarget_chain(
-            unreal.Name(chain), unreal.Name(start),
-            unreal.Name(end), unreal.Name("None")
-        )
-        require(str(name_added) == chain, "RETARGET_CHAIN_CREATE_" + chain)
+        if chain in initial:
+            require(ctrl.set_retarget_chain_start_bone(
+                unreal.Name(chain), unreal.Name(start)),
+                "EXISTING_CHAIN_START_" + chain)
+            require(ctrl.set_retarget_chain_end_bone(
+                unreal.Name(chain), unreal.Name(end)),
+                "EXISTING_CHAIN_END_" + chain)
+            mode = "RECONCILED_EXISTING"
+        else:
+            name_added = ctrl.add_retarget_chain(
+                unreal.Name(chain), unreal.Name(start),
+                unreal.Name(end), unreal.Name("None")
+            )
+            rig_observations[name]["mapped"][chain] = {
+                "created_return": str(name_added)
+            }
+            require(str(name_added) == chain,
+                    "RETARGET_CHAIN_CREATE_" + chain)
+            mode = "CREATED"
+        actual_start = str(ctrl.get_retarget_chain_start_bone(
+            unreal.Name(chain)))
+        actual_end = str(ctrl.get_retarget_chain_end_bone(
+            unreal.Name(chain)))
+        rig_observations[name]["mapped"][chain] = {
+            "mode": mode, "start": actual_start, "end": actual_end
+        }
+        require(actual_start == start and actual_end == end,
+                "RETARGET_CHAIN_BONES_MISMATCH_" + chain)
     return rig
 
 
