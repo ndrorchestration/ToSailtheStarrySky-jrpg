@@ -46,6 +46,11 @@ public:
     }
     UFUNCTION(BlueprintCallable, Category="TSTSS|Interaction")
     void Interact();
+    // Explicitly gated diagnostic for a PRIVATE editor PIE Ender pawn only.
+    // Invokes the same bound sprint handlers; not a keyboard, art, or input PASS.
+    // In any non-editor build this returns false without touching gameplay.
+    UFUNCTION(BlueprintCallable, Category="TSTSS|Ender|PrivatePIE", meta=(DevelopmentOnly))
+    bool ProbePrivatePIESprintEdge(bool bPressed);
     UFUNCTION(BlueprintCallable, Category="TSTSS|Save")
     bool SaveFirstWake(const FString& Slot);
     UFUNCTION(BlueprintCallable, Category="TSTSS|Save")

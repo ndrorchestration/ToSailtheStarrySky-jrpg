@@ -1427,6 +1427,55 @@ void ATSTSSExplorerCharacter::RestoreEngineFocusPreview()
 }
 #endif // WITH_EDITOR
 
+bool ATSTSSExplorerCharacter::ProbePrivatePIESprintEdge(bool bPressed)
+{
+#if WITH_EDITOR
+    // Explicit -TSTSSPrivateEnderSprintProbe opt-in is needed even on the
+    // exact private PIE pawn. Nothing about this helper proves real keyboard
+    // focus, rendered deformation, player art, or final gameplay acceptance.
+    // Production/shipping worlds never reach a sprint mutation here.
+    const UWorld* World = GetWorld();
+    const UCharacterMovementComponent* Movement = GetCharacterMovement();
+    const APlayerController* PC = Cast<APlayerController>(GetController());
+    if (!FParse::Param(FCommandLine::Get(),
+                       TEXT("TSTSSPrivateEnderSprintProbe")) ||
+        !World || World->WorldType != EWorldType::PIE ||
+        World->GetNetMode() != NM_Standalone ||
+        !World->GetOutermost() ||
+        !World->GetOutermost()->GetName().StartsWith(
+            TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/")) ||
+        UGameplayStatics::GetCurrentLevelName(World, true) !=
+            TEXT("FirstWake_PreludeInteraction_V5_VisualReview") ||
+        GetClass()->GetName() != TEXT("BP_EnderLocomotionPreview_NONCANONICAL_C") ||
+        !bEnableEnderPIEWalkRunControls || !bFirstWakeThirdPersonReview ||
+        !IsPlayerControlled() || !IsValid(PC) || PC->IsMoveInputIgnored() ||
+        IsHilltoniaFlyerOpen() || EngineFocusPreviewCamera.IsValid() ||
+        !IsValid(Movement) || !Movement->IsMovingOnGround() ||
+        !bEnderPIEWalkRunActive || bEnderPIESprintHeld == bPressed)
+    {
+        return false;
+    }
+    if (bPressed)
+    {
+        PressEnderPIEReviewSprint();
+    }
+    else
+    {
+        ReleaseEnderPIEReviewSprint();
+    }
+    const float Expected = bPressed ? 600.f : 260.f;
+    const bool bApplied = FMath::IsNearlyEqual(
+        Movement->MaxWalkSpeed, Expected, 0.1f);
+    UE_LOG(LogTemp, Display,
+        TEXT("TSTSS_ENDER_PRIVATE_SPRINT_EDGE pressed=%d applied=%d speed_cm_s=%.1f synthetic_action_not_keyboard=1 art_NOT_APPROVED"),
+        bPressed ? 1 : 0, bApplied ? 1 : 0, Movement->MaxWalkSpeed);
+    return bApplied;
+#else
+    (void)bPressed;
+    return false;
+#endif
+}
+
 #if WITH_EDITOR
 
 void ATSTSSExplorerCharacter::PressEnderPIEReviewSprint()
