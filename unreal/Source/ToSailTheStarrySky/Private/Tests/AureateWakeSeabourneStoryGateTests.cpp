@@ -41,6 +41,13 @@ bool FTSTSSAureateSeabourneStoryGate::RunTest(const FString& Parameters)
         World->DestroyWorld(false);
         return false;
     }
+    // A generic or production-world ship cannot impersonate the exact
+    // runtime docked proxy or silently select a sea pose without authority.
+    TestFalse(TEXT("Unscoped transient world refuses docked visual staging"),
+        Ship->StageDockedSeabourneReviewPose());
+    TestEqual(TEXT("Rejected visual staging keeps original geometry"),
+        Ship->GetCurrentForm(), EAureateWakeForm::Skyborne);
+
     const FVector SkyWingRoot = FirstWing->GetRelativeLocation();
     TestFalse(TEXT("Skybourne hydrofoil initially stowed"), FirstFoil->IsVisible());
     // Editor presentation may start folded for a disposable coastal review
