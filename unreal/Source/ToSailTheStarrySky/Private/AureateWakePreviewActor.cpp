@@ -510,12 +510,17 @@ void AAureateWakePreviewActor::Tick(float DeltaSeconds)
     if (IsValid(BoundReviewStory))
     {
         const FName Authorized = BoundReviewStory->GetReviewShipMode();
-        if (Authorized == NAME_None && bTransitioning)
+        if (Authorized == NAME_None)
         {
-            // Story reset revokes a pending transition immediately.
-            SnapToForm(EAureateWakeForm::Skyborne);
+            // Reset revokes flight authorization even after a completed
+            // transition. Keep the visual ship docked in its safe sea pose;
+            // this does not grant any request or advance the story.
+            if (bTransitioning || CurrentForm != EAureateWakeForm::Seaborne)
+            {
+                SnapToForm(EAureateWakeForm::Seaborne);
+            }
         }
-        if (Authorized != NAME_None)
+        else
         {
             const EAureateWakeForm Expected = Authorized == FName(TEXT("Seabourne"))
                 ? EAureateWakeForm::Seaborne : EAureateWakeForm::Skyborne;
