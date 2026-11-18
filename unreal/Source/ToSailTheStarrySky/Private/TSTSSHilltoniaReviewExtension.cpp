@@ -517,13 +517,106 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
                   1.0f, .8f, .9f);
         }
     }
-    // Layered low rolling slopes behind the woodland, purely visual;
-    // not a collision/terrain promise and not a world-latitude simulator.
-    for (int32 Ridge = 0; Ridge < 4; ++Ridge)
+    // The Cinemap reference steps inland from the shore. Use the existing
+    // Hilltonia material set for three scenic terraces behind the woodland
+    // shelf. These sit beyond the current playable forest lane.
+    auto* TerraceStone = Make(Owner, Root, TEXT("HilltoniaTerraceRetainingStone"),
+                              Cube, Stone, false);
+    auto* TerraceGrass = Make(Owner, Root, TEXT("HilltoniaTerraceGrass"),
+                              Cube, Canopy, false);
+    auto* TerraceWalls = Make(Owner, Root, TEXT("HilltoniaTerraceHouseWalls"),
+                              Cube, Timber, false);
+    auto* TerraceRoofs = Make(Owner, Root, TEXT("HilltoniaTerraceHouseRoofs"),
+                              Cube, Brass, false);
+
+    struct FTerrace
     {
-        Place(RollingHills, -5800.f - Ridge * 1250.f,
-              -5450.f, -185.f, 25.f, 18.f, 10.f);
+        float CenterX;
+        float FrontY;
+        float Width;
+        float Elevation;
+        int32 HouseCount;
+    };
+    constexpr float TerraceDepth = 1800.f;
+    constexpr FTerrace Terraces[] = {
+        {-7250.f, -5800.f, 5700.f, 220.f, 5},
+        {-6900.f, -7300.f, 5000.f, 610.f, 4},
+        {-6400.f, -8800.f, 3900.f, 1100.f, 3},
+    };
+    for (const FTerrace& Terrace : Terraces)
+    {
+        const float CenterY = Terrace.FrontY - TerraceDepth * .5f;
+        const float StoneHeight = Terrace.Elevation + 100.f;
+        Place(TerraceStone, Terrace.CenterX, CenterY,
+              Terrace.Elevation - 20.f - StoneHeight * .5f,
+              Terrace.Width / 100.f, TerraceDepth / 100.f, StoneHeight / 100.f);
+        Place(TerraceGrass, Terrace.CenterX, CenterY, Terrace.Elevation - 10.f,
+              (Terrace.Width + 20.f) / 100.f, TerraceDepth / 100.f, .2f);
+
+        for (int32 House = 0; House < Terrace.HouseCount; ++House)
+        {
+            // Keep roof overhangs well inside the shelf and stagger the
+            // street fronts so successive tiers read as separate rows.
+            const float Offset = (House + .5f) / Terrace.HouseCount - .5f;
+            const float X = Terrace.CenterX + Offset * (Terrace.Width - 560.f);
+            const float Y = Terrace.FrontY - 530.f - (House % 2) * 240.f;
+            const float WallHeight = 275.f + (House % 3) * 32.f;
+            Place(TerraceStone, X, Y, Terrace.Elevation + 14.f, 5.8f, 4.7f, .28f);
+            Place(TerraceWalls, X, Y, Terrace.Elevation + 28.f + WallHeight * .5f,
+                  5.4f, 4.2f, WallHeight / 100.f);
+            const float RoofZ = Terrace.Elevation + 60.f + WallHeight;
+            Place(TerraceRoofs, X, Y - 116.f, RoofZ, 6.0f, 2.7f, .20f, 0.f, -25.f);
+            Place(TerraceRoofs, X, Y + 116.f, RoofZ, 6.0f, 2.7f, .20f, 0.f, 25.f);
+        }
     }
+    // Rounded hills frame the upper rooftops from the harbor. Their front
+    // bounds stay behind the upper row so the terrace houses remain visible.
+    Place(RollingHills, -7800.f, -12000.f, 350.f, 62.f, 42.f, 33.f);
+    Place(RollingHills, -4900.f, -12300.f, 520.f, 66.f, 44.f, 42.f);
+    // The reference harbor has an open mouth, a curved outer breakwater,
+    // and a lighthouse at its tip. Set it against the coastal buffer on
+    // the far side of the water from the playable eastward dock.
+    auto* BreakwaterBase = Make(Owner, Root, TEXT("HilltoniaOuterBreakwaterBase"),
+                                Cube, Stone, false);
+    auto* BreakwaterCoping = Make(Owner, Root, TEXT("HilltoniaOuterBreakwaterCoping"),
+                                  Cube, Timber, false);
+    const FVector2D BreakwaterPath[] = {
+        FVector2D(-3800.f, 4380.f),
+        FVector2D(-2750.f, 4680.f),
+        FVector2D(-1450.f, 4900.f),
+        FVector2D(-50.f, 4900.f),
+        FVector2D(1230.f, 4650.f),
+        FVector2D(2270.f, 4140.f),
+        FVector2D(2940.f, 3420.f),
+        FVector2D(3220.f, 2600.f),
+    };
+    for (int32 Segment = 1; Segment < static_cast<int32>(UE_ARRAY_COUNT(BreakwaterPath)); ++Segment)
+    {
+        const FVector2D Start = BreakwaterPath[Segment - 1];
+        const FVector2D End = BreakwaterPath[Segment];
+        const FVector2D Direction = End - Start;
+        const FVector2D Center = (Start + End) * .5;
+        const float Yaw = FMath::RadiansToDegrees(FMath::Atan2(Direction.Y, Direction.X));
+        const float Length = (Direction.Size() + 185.f) / 100.f;
+        Place(BreakwaterBase, Center.X, Center.Y, -24.f, Length, 4.80f, 2.08f, Yaw);
+        Place(BreakwaterCoping, Center.X, Center.Y, 93.f, Length, 3.35f, .26f, Yaw);
+    }
+
+    auto* LighthouseStone = Make(Owner, Root, TEXT("HilltoniaLighthouseStone"),
+                                 Cylinder, Stone, false);
+    auto* LighthouseTrim = Make(Owner, Root, TEXT("HilltoniaLighthouseGallery"),
+                                Cylinder, Timber, false);
+    auto* LighthouseLantern = Make(Owner, Root, TEXT("HilltoniaLighthouseLantern"),
+                                   Cylinder, Brass, false);
+    auto* LighthouseCap = Make(Owner, Root, TEXT("HilltoniaLighthouseCap"),
+                               Sphere, Timber, false);
+    const FVector2D Lighthouse = BreakwaterPath[UE_ARRAY_COUNT(BreakwaterPath) - 1];
+    Place(LighthouseStone, Lighthouse.X, Lighthouse.Y, 41.f, 6.1f, 6.1f, 2.10f);
+    Place(LighthouseStone, Lighthouse.X, Lighthouse.Y, 422.f, 3.40f, 3.40f, 5.52f);
+    Place(LighthouseTrim, Lighthouse.X, Lighthouse.Y, 715.f, 4.25f, 4.25f, .40f);
+    Place(LighthouseLantern, Lighthouse.X, Lighthouse.Y, 803.f, 2.65f, 2.65f, 1.36f);
+    Place(LighthouseCap, Lighthouse.X, Lighthouse.Y, 875.f, 3.25f, 3.25f, 1.18f);
+
     // A visible landward threshold: sign is a preview wayfinder,
     // not a travel teleport, prompt or interactive progression marker.
     Place(TreeTrunks, -4280.f, -600.f, 155.f, .55f, .55f, 3.1f);
