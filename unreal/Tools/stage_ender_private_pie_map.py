@@ -39,6 +39,7 @@ REPORT = {
     "source_maps_saved": 0, "original_blueprint_modified": False,
     "actual_pie_started": False, "playback_verified": False,
     "art_approved": False, "production_approved": False,
+    "private_editor_reload_verified": False,
 }
 
 
