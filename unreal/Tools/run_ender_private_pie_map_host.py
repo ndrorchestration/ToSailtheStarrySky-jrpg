@@ -218,6 +218,7 @@ def execute() -> dict:
                                  receipt["report_fresh"] and
                                  report.get("status") == "PRIVATE_V5_PIE_REVIEW_LEVEL_STAGED_NOT_PLAYED" and
                                  report.get("source_head") == head and
+                                 report.get("private_editor_reload_verified") is True and
                                  receipt["private_outputs_verified"])
                              else "HOLD_PRIVATE_NATIVE_STAGE_EVIDENCE")
         save()
