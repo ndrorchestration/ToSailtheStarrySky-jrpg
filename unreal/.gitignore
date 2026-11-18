@@ -9,3 +9,10 @@ Saved/
 
 # Generated synthetic review-only audio/map packages. Never commit or ship.
 /Content/TSTSS/Audio/QAReview/
+
+# Local private Ender PIE retarget/animation staging: generated .umap/.uasset
+# files include licensed, non-distributable character/animation derivatives.
+# Never commit, publish or ship these assets through the source repository.
+# Keep narrowly scoped to the PRIVATE review folder; the original public
+# First Wake V5 level and review-only source remain tracked and auditable.
+/Content/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/
