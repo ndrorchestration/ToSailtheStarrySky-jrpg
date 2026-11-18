@@ -39,6 +39,20 @@ class PrivatePIEMapSourceTests(unittest.TestCase):
         self.assertIn('world.get_outermost().get_name() == PRIVATE_LEVEL and', SOURCE)
         self.assertIn('subsystem.save_current_level()', SOURCE)
 
+    def test_saved_private_level_reopened_and_bindings_rechecked(self):
+        # A pre-save CDO/world assertion alone may not describe the saved
+        # asset. Re-load the private map and verify both private bindings.
+        self.assertIn('subsystem.save_current_level()', SOURCE)
+        saved = SOURCE.index('subsystem.save_current_level()')
+        reopened = SOURCE.index('subsystem.load_level(PRIVATE_LEVEL)')
+        self.assertGreater(reopened, saved)
+        self.assertIn('"PRIVATE_SAVED_LEVEL_REOPEN"', SOURCE)
+        self.assertIn('reopened.get_outermost().get_name() == PRIVATE_LEVEL', SOURCE)
+        self.assertIn('"PRIVATE_REOPENED_GAME_MODE"', SOURCE)
+        self.assertIn('"PRIVATE_REOPENED_DEFAULT_PAWN"', SOURCE)
+        self.assertIn('REPORT["private_editor_reload_verified"] = True', SOURCE)
+        self.assertLess(reopened, SOURCE.index('REPORT["original_hashes_after"]'))
+
     def test_only_git_ignored_outputs_and_source_hashes(self):
         self.assertIn('"check-ignore", "-q", rel', SOURCE)
         self.assertIn('REPORT["original_hashes_after"] == original', SOURCE)
