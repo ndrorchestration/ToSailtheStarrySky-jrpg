@@ -153,8 +153,9 @@ $TitleURL = $TitlePackage + '?game=' + $TitleMode
 $Arguments = @(
     ('"{0}"' -f $Project),
     ('"{0}"' -f $TitleURL),
-    '-game', '-windowed', '-ResX=1280', '-ResY=720', '-log'
+    '-game', '-windowed', '-ResX=1280', '-ResY=720', '-log',
+    '-EnderReviewSprint'
 )
-Write-Output "Launching First Wake V5 title at exact HEAD $Head; no gameplay or visual acceptance implied."
+Write-Output "Launching First Wake V5 title at exact HEAD $Head with review-only Shift sprint flag; no gameplay or visual acceptance implied."
 $Child = Start-Process -FilePath $Editor -ArgumentList $Arguments -WorkingDirectory (Split-Path $Project) -PassThru
 Write-Output "Native review launched, process ID $($Child.Id); launcher made no save or asset changes."

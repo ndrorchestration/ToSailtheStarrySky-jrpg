@@ -5,6 +5,11 @@
 #include "TimerManager.h"
 #include "TSTSSExplorerCharacter.generated.h"
 
+class USkeletalMesh;
+class UAnimSequence;
+class UStaticMesh;
+class UStaticMeshComponent;
+
 UCLASS()
 class TOSAILTHESTARRYSKY_API ATSTSSExplorerCharacter : public ACharacter
 {
@@ -54,7 +59,86 @@ protected:
     TObjectPtr<UTSTSSFirstWakeState> FirstWakeState;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Interaction")
     float InteractionDistance = 300.f;
+#if WITH_EDITORONLY_DATA
+    // Explicitly assigned by a PRIVATE, editor-only review Blueprint.
+    // Unset by default; never points at a canonical or packaged character.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    TSoftObjectPtr<USkeletalMesh> EnderSliceReviewBody;
+    // Imported privately with proven game rights; never bundled or enabled by default.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    TSoftObjectPtr<UStaticMesh> EnderSliceReviewHair;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    TSoftObjectPtr<UStaticMesh> EnderSliceReviewGoggles;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    TSoftObjectPtr<UStaticMesh> EnderSliceReviewStaff;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    bool bShowEnderReviewHair = false;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    bool bShowEnderReviewGoggles = false;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    bool bShowEnderReviewStaff = false;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    FName EnderReviewHeadBone = TEXT("head");
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    FName EnderReviewGripBone = TEXT("l_hand");
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    FTransform EnderReviewHairLocalOffset = FTransform::Identity;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    FTransform EnderReviewGogglesLocalOffset = FTransform::Identity;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
+    FTransform EnderReviewStaffLocalOffset = FTransform::Identity;
+    // Three explicit PRIVATE, matching-skeleton clips (in-place or opt-in
+    // extract-and-discard root motion). None are
+    // assigned by default; preview is opt-in and never production locomotion.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview|Animation")
+    bool bEnableEnderPIELocomotionPreview = false;
+    // Explicit PRIVATE opt-in: extract-and-discard source root motion; never move capsule.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview|Animation")
+    bool bAllowEnderPIERootMotionExtractionReview = false;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview|Animation")
+    TSoftObjectPtr<UAnimSequence> EnderPIEIdleAnimation;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview|Animation")
+    TSoftObjectPtr<UAnimSequence> EnderPIEWalkAnimation;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview|Animation")
+    TSoftObjectPtr<UAnimSequence> EnderPIERunAnimation;
+    // Transient references survive PIE garbage collection but never persist.
+    UPROPERTY(Transient)
+    TObjectPtr<UAnimSequence> EnderPIEIdleLoaded;
+    UPROPERTY(Transient)
+    TObjectPtr<UAnimSequence> EnderPIEWalkLoaded;
+    UPROPERTY(Transient)
+    TObjectPtr<UAnimSequence> EnderPIERunLoaded;
+    // Opt-in, editor-only review input. Never changes shipping movement.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview|Movement")
+    bool bEnableEnderPIEWalkRunControls = false;
+#endif
 private:
+#if WITH_EDITORONLY_DATA
+    // Inert hidden review components; never production character equipment.
+    UPROPERTY(VisibleAnywhere, Category="TSTSS|Ender|SliceReview")
+    TObjectPtr<UStaticMeshComponent> EnderReviewHairComponent;
+    UPROPERTY(VisibleAnywhere, Category="TSTSS|Ender|SliceReview")
+    TObjectPtr<UStaticMeshComponent> EnderReviewGogglesComponent;
+    UPROPERTY(VisibleAnywhere, Category="TSTSS|Ender|SliceReview")
+    TObjectPtr<UStaticMeshComponent> EnderReviewStaffComponent;
+#endif
+#if WITH_EDITOR
+    void ApplyEnderSliceReviewAppearance();
+    void TryEnderPIELocomotionPreview(uint8 MotionBand);
+    void PressEnderPIEReviewSprint();
+    void ReleaseEnderPIEReviewSprint();
+    void TryEnderPIEWalkRunControls();
+    void RestoreEnderPIEWalkRunControls();
+    bool bEnderPIEWalkRunChecked = false;
+    bool bEnderPIEWalkRunActive = false;
+    bool bEnderPIESprintHeld = false;
+    float EnderPIEOriginalMaxWalkSpeed = 0.f;
+    float EnderPIELastAssignedMaxWalkSpeed = 0.f;
+    bool bEnderPIEAnimPreviewChecked = false;
+    bool bEnderPIEAnimPreviewActive = false;
+    bool bEnderPIERootMotionExtractionActive = false;
+    uint8 LastEnderPIEAnimBand = 255;
+#endif
 #if !UE_BUILD_SHIPPING
     bool HasSupportedReviewFooting(const UWorld* World, const FVector& PawnLocation) const;
     FVector LastSupportedReviewLocation = FVector::ZeroVector;
@@ -79,6 +163,9 @@ private:
     void ToggleFirstWakeBokehReview();
     void UpdateFirstWakeBokehReview(float DeltaSeconds);
     bool bFirstWakeThirdPersonReview = false;
+    // Runtime-only diagnostic state; never serialized or enabled in shipping.
+    bool bEnderPIEPossessionLogged = false;
+    uint8 LastEnderPIEMotionBand = 255;
     bool bFirstWakeBokehReview = false;
     float FirstWakeReviewFstop = 9.f;
     void AcceptHilltoniaFlyer();

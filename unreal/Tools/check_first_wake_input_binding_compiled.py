@@ -31,16 +31,18 @@ PREFIX = r"""
 #define check(expr) do { if (!(expr)) throw std::runtime_error("Unreal check failed"); } while (false)
 enum class EWorldType { PIE, Game, Editor };
 struct UWorld { EWorldType WorldType; };
-enum EInputEvent { IE_Pressed };
+enum EInputEvent { IE_Pressed, IE_Released };
 struct ATSTSSExplorerCharacter;
 struct UInputComponent {
-    std::vector<std::string> axes, actions;
+    std::vector<std::string> axes, actions, releasedActions;
     template <class Method>
     void BindAxis(const char* name, ATSTSSExplorerCharacter*, Method) { axes.emplace_back(name); }
     template <class Method>
     void BindAction(const char* name, EInputEvent event, ATSTSSExplorerCharacter*, Method) {
-        if (event != IE_Pressed) throw std::runtime_error("Action should be pressed");
+        if (event != IE_Pressed && event != IE_Released)
+            throw std::runtime_error("Unknown input event");
         actions.emplace_back(name);
+        if (event == IE_Released) releasedActions.emplace_back(name);
     }
 };
 struct TSTSSBaseCharacter {
@@ -56,6 +58,7 @@ struct ATSTSSExplorerCharacter : TSTSSBaseCharacter {
     void Interact(); void QuickSave(); void QuickLoad(); void ReviewContinue(); void ShowObjectiveReview(); void ReviewShoreTravel(); void ReviewOpticalInspectionTravel();
     // Stand-in only: actual C-key input method is declared in the production header.
     void ToggleEngineFocusPreview();
+    void PressEnderPIEReviewSprint(); void ReleaseEnderPIEReviewSprint();
     void AcceptHilltoniaFlyer(); void DeclineHilltoniaFlyer(); void ToggleFirstWakeBokehReview();
 };
 // The binder receives real member-function pointers; provide no-op implementations
@@ -72,6 +75,8 @@ void ATSTSSExplorerCharacter::ShowObjectiveReview() {}
 void ATSTSSExplorerCharacter::ReviewShoreTravel() {}
 void ATSTSSExplorerCharacter::ReviewOpticalInspectionTravel() {}
 void ATSTSSExplorerCharacter::ToggleEngineFocusPreview() {}
+void ATSTSSExplorerCharacter::PressEnderPIEReviewSprint() {}
+void ATSTSSExplorerCharacter::ReleaseEnderPIEReviewSprint() {}
 void ATSTSSExplorerCharacter::AcceptHilltoniaFlyer() {}
 void ATSTSSExplorerCharacter::DeclineHilltoniaFlyer() {}
 void ATSTSSExplorerCharacter::ToggleFirstWakeBokehReview() {}
@@ -111,6 +116,14 @@ int main() {
                    "K review navigation incorrectly enabled or missing");
             verify(hasExactly(input.actions, "ReviewOpticalInspectionTravel", type == EWorldType::PIE ? 1 : 0),
                    "O optional engine review handoff must be PIE-only");
+            // Two sprint edges in editor PIE and -game, never stuck Shift.
+            verify(hasExactly(input.actions, "EnderPIEReviewSprint", type == EWorldType::Editor ? 0 : 2),
+                   "Ender sprint needs pressed and released in PIE/Game");
+            verify(hasExactly(input.releasedActions, "EnderPIEReviewSprint",
+                              type == EWorldType::Editor ? 0 : 1),
+                   "Ender sprint release needs one edge in PIE/Game");
+            verify(input.releasedActions.size() == (type == EWorldType::Editor ? 0u : 1u),
+                   "Other input actions must be pressed-only");
             if (type == EWorldType::PIE) {
                 verify(hasExactly(input.actions, "PIEReviewQuickSave", 1),
                        "PIE must bind exactly one F6 action");
@@ -139,7 +152,7 @@ int main() {
                 verify(hasExactly(input.actions, "EngineFocusPreview", 0),
                        "Editor world cannot bind PIE-only camera review");
             }
-            verify(input.actions.size() == (type == EWorldType::PIE ? 11u : (type == EWorldType::Game ? 8u : 3u)),
+            verify(input.actions.size() == (type == EWorldType::PIE ? 13u : (type == EWorldType::Game ? 10u : 3u)),
                    "Unexpected extra or duplicated action bindings");
         }
         ATSTSSExplorerCharacter missingWorld;
@@ -149,6 +162,7 @@ int main() {
                hasExactly(noWorldInput.actions, "PIEReviewQuickSave", 0) &&
                hasExactly(noWorldInput.actions, "ReviewContinue", 0) &&
                hasExactly(noWorldInput.actions, "EngineFocusPreview", 0) &&
+                hasExactly(noWorldInput.actions, "EnderPIEReviewSprint", 0) &&
                hasExactly(noWorldInput.actions, "ReviewOpticalInspectionTravel", 0) &&
                hasExactly(noWorldInput.actions, "ReviewShoreTravel", 0) &&
                hasExactly(noWorldInput.actions, "AcceptHilltoniaFlyer", 0) &&
@@ -178,7 +192,8 @@ def method_from(source: str) -> str:
                   'TEXT("ReviewShoreTravel")', 'TEXT("EngineFocusPreview")',
                   'TEXT("ReviewOpticalInspectionTravel")',
                    'TEXT("AcceptHilltoniaFlyer")', 'TEXT("DeclineHilltoniaFlyer")',
-                   'TEXT("FirstWakeBokehReview")'):
+                   'TEXT("FirstWakeBokehReview")',
+                    'TEXT("EnderPIEReviewSprint")', 'IE_Released'):
         if token not in method:
             raise ValueError("Source method missing expected selection: " + token)
     return method
@@ -194,23 +209,25 @@ def config_guard(config: str) -> None:
                                  ("ReviewOpticalInspectionTravel", "O"),
                  ("AcceptHilltoniaFlyer", "Enter"),
                  ("DeclineHilltoniaFlyer", "BackSpace"),
-                 ("FirstWakeBokehReview", "B")}
+                 ("FirstWakeBokehReview", "B"),
+                 ("EnderPIEReviewSprint", "LeftShift")}
     if len(mappings) != len(set(mappings)) or not required.issubset(mappings):
         raise ValueError("DefaultInput.ini lacks unique F6 PIE / F5 Game / F9 load")
     if any(name in ("PIEReviewQuickSave", "QuickSave", "QuickLoad", "ReviewContinue",
                     "ReviewShoreTravel", "EngineFocusPreview", "ReviewOpticalInspectionTravel",
-                    "AcceptHilltoniaFlyer", "DeclineHilltoniaFlyer", "FirstWakeBokehReview") and (name, key) not in required
+                    "AcceptHilltoniaFlyer", "DeclineHilltoniaFlyer", "FirstWakeBokehReview", "EnderPIEReviewSprint") and (name, key) not in required
            for name, key in mappings):
         raise ValueError("Multiple or unsafe save/continue key declarations")
     if len({key for name, key in mappings if name in
             ("PIEReviewQuickSave", "QuickSave", "QuickLoad", "ReviewContinue",
                            "ReviewShoreTravel", "EngineFocusPreview", "ReviewOpticalInspectionTravel",
-              "AcceptHilltoniaFlyer", "DeclineHilltoniaFlyer", "FirstWakeBokehReview")}) != 10 or any(
+              "AcceptHilltoniaFlyer", "DeclineHilltoniaFlyer", "FirstWakeBokehReview", "EnderPIEReviewSprint")}) != 11 or any(
                  (key == "C" and name != "EngineFocusPreview") or
                  (key == "O" and name != "ReviewOpticalInspectionTravel") or
                   (key == "B" and name != "FirstWakeBokehReview") or
                   (key == "Enter" and name != "AcceptHilltoniaFlyer") or
-                  (key == "BackSpace" and name != "DeclineHilltoniaFlyer")
+                  (key == "BackSpace" and name != "DeclineHilltoniaFlyer") or
+                  (key == "LeftShift" and name != "EnderPIEReviewSprint")
                  for name, key in mappings):
         raise ValueError("Save/load/Continue/scene-travel/camera keyboard collision")
 
@@ -276,6 +293,25 @@ def main() -> int:
             if rejected.returncode == 0 or "FIRST_WAKE_INPUT_BINDING_FAILURE" not in rejected.stderr:
                 raise RuntimeError("Unsafe mutation not detected: " + name)
             print("PASS: rejected unsafe " + name)
+        release_before = 'BindAction(TEXT("EnderPIEReviewSprint"), IE_Released'
+        release_after = 'BindAction(TEXT("EnderPIEReviewSprint"), IE_Pressed'
+        if original.count(release_before) != 1:
+            raise RuntimeError("Ender sprint release missing/ambiguous")
+        missing_release = compile_and_run(
+            compiler, original.replace(release_before, release_after, 1))
+        if missing_release.returncode == 0 or (
+                "FIRST_WAKE_INPUT_BINDING_FAILURE" not in missing_release.stderr):
+            raise RuntimeError("Pressed-only Ender sprint was accepted")
+        print("PASS: rejected missing Ender sprint release")
+        invalid_sprint = CONFIG.read_text(encoding="utf-8").replace(
+            'ActionName="EnderPIEReviewSprint",Key=LeftShift',
+            'ActionName="EnderPIEReviewSprint",Key=E', 1)
+        try:
+            config_guard(invalid_sprint)
+        except ValueError:
+            print("PASS: rejected Ender sprint-to-interact collision")
+        else:
+            raise RuntimeError("Unsafe Ender sprint mapping accepted")
         invalid = CONFIG.read_text(encoding="utf-8").replace(
             'ActionName="PIEReviewQuickSave",Key=F6',
             'ActionName="PIEReviewQuickSave",Key=F5', 1)

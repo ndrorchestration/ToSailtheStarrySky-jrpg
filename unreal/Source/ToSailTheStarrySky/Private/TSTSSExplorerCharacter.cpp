@@ -18,6 +18,13 @@
 #endif
 #include "Components/StaticMeshComponent.h"
 #if WITH_EDITOR
+#include "Components/SkeletalMeshComponent.h"
+#include "Engine/SkeletalMesh.h"
+#include "Animation/Skeleton.h"
+#include "Animation/AnimSequence.h"
+#include "Animation/AnimSingleNodeInstance.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 #include "Components/CapsuleComponent.h"
 #endif
 #include "Engine/StaticMesh.h"
@@ -637,6 +644,25 @@ ATSTSSExplorerCharacter::ATSTSSExplorerCharacter()
     FollowCamera->bUsePawnControlRotation = false;
     bUseControllerRotationYaw = false;
     GetCharacterMovement()->bOrientRotationToMovement = true;
+#if WITH_EDITOR
+    // Reuse the established PR #812 private visual-bridge pattern. No asset
+    // references are installed on the default object; PIE opt-in is required.
+    EnderReviewHairComponent = CreateDefaultSubobject<UStaticMeshComponent>(
+        TEXT("EnderSliceHair_REVIEW_ONLY"));
+    EnderReviewGogglesComponent = CreateDefaultSubobject<UStaticMeshComponent>(
+        TEXT("EnderSliceGoggles_REVIEW_ONLY"));
+    EnderReviewStaffComponent = CreateDefaultSubobject<UStaticMeshComponent>(
+        TEXT("EnderSliceStaff_REVIEW_ONLY"));
+    for (UStaticMeshComponent* Part : {EnderReviewHairComponent.Get(),
+                                        EnderReviewGogglesComponent.Get(),
+                                        EnderReviewStaffComponent.Get()})
+    {
+        Part->SetupAttachment(GetMesh());
+        Part->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        Part->SetGenerateOverlapEvents(false);
+        Part->SetVisibility(false);
+    }
+#endif
 }
 
 void ATSTSSExplorerCharacter::BeginPlay()
@@ -646,6 +672,7 @@ void ATSTSSExplorerCharacter::BeginPlay()
 #if WITH_EDITOR
     ApplyOpticalReviewPlayerExposure(GetWorld(), FollowCamera);
     bTryHilltoniaOpening = ApplyV5HarborReviewLookdev(GetWorld());
+    ApplyEnderSliceReviewAppearance();
     SetupFirstWakeThirdPersonReview(GetWorld());
     StageDockedWakeReview(GetWorld());
     ApplyCoastalRecoveryReviewSignage(GetWorld());
@@ -846,6 +873,64 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
     {
         DeclineHilltoniaFlyer();
     }
+    // Explicitly flagged editor-built -game title preview: movement speed
+    // only, never the separate skeletal/animation PIE preview.
+    if (bReviewNamespace && World->WorldType == EWorldType::Game &&
+        World->GetNetMode() == NM_Standalone && bFirstWakeThirdPersonReview &&
+        (Scene == TEXT("FirstWake_PreludeInteraction_V5_VisualReview") ||
+         Scene == TEXT("VS02_AureateInteriors")))
+    {
+        TryEnderPIEWalkRunControls();
+    }
+    // Ender v0.1 PIE locomotion observation: record the real possessed pawn,
+    // and only its velocity bands. A visible mesh and moving capsule do NOT
+    // establish an animated pose, correct likeness, or artistic approval.
+    // Read-only: no asset/animation assignment, story, save, or map changes.
+    if (bReviewNamespace && World->WorldType == EWorldType::PIE &&
+        World->GetNetMode() == NM_Standalone && bFirstWakeThirdPersonReview &&
+        (Scene == TEXT("FirstWake_PreludeInteraction_V5_VisualReview") ||
+         Scene == TEXT("VS02_AureateInteriors")))
+    {
+        // Independent of private animation assets: allow opt-in physical
+        // walk and held-Shift sprint testing on the actual possessed pawn.
+        TryEnderPIEWalkRunControls();
+        USkeletalMeshComponent* SkeletalBody = GetMesh();
+        const bool bSkeletalVisible = IsValid(SkeletalBody) &&
+            SkeletalBody->IsRegistered() &&
+            IsValid(SkeletalBody->GetSkeletalMeshAsset()) &&
+            SkeletalBody->GetNumBones() > 0 && SkeletalBody->IsVisible();
+        if (!bEnderPIEPossessionLogged)
+        {
+            UE_LOG(LogTemp, Display,
+                TEXT("TSTSS_ENDER_PIE_POSSESSION_SAMPLE map=%s possessed=1 skeletal_visible=%d bones=%d anim_instance_present=%d animation_NOT_VERIFIED art_NOT_APPROVED"),
+                *Scene, bSkeletalVisible ? 1 : 0,
+                bSkeletalVisible ? SkeletalBody->GetNumBones() : 0,
+                bSkeletalVisible && SkeletalBody->GetAnimInstance() != nullptr ? 1 : 0);
+            bEnderPIEPossessionLogged = true;
+        }
+        if (bSkeletalVisible)
+        {
+            const float SpeedCmS = GetVelocity().Size2D();
+            const uint8 MotionBand = SpeedCmS < 10.f ? 0 : (SpeedCmS < 300.f ? 1 : 2);
+            if (MotionBand != LastEnderPIEMotionBand)
+            {
+                const TCHAR* BandName = MotionBand == 0 ? TEXT("stationary") :
+                    (MotionBand == 1 ? TEXT("walking_speed") : TEXT("running_speed"));
+                UE_LOG(LogTemp, Display,
+                    TEXT("TSTSS_ENDER_PIE_VELOCITY_BAND band=%s speed_cm_s=%.1f grounded=%d animation_NOT_VERIFIED art_NOT_APPROVED"),
+                    BandName, SpeedCmS,
+                    GetCharacterMovement() && GetCharacterMovement()->IsMovingOnGround() ? 1 : 0);
+                LastEnderPIEMotionBand = MotionBand;
+            }
+            // Only legitimate grounded speed bands can request a private
+            // animation preview; airborne clips are deliberately unimplemented.
+            if (GetCharacterMovement() &&
+                GetCharacterMovement()->IsMovingOnGround())
+            {
+                TryEnderPIELocomotionPreview(MotionBand);
+            }
+        }
+    }
     // Only scoped review worlds advertise live interaction. Visual refresh
     // reads the authoritative state; it cannot advance or save a story beat.
     if (bReviewNamespace && World->GetNetMode() == NM_Standalone &&
@@ -979,6 +1064,7 @@ static void ShowOptionalEngineFocusHint(const UWorld* World, bool bInspection)
 void ATSTSSExplorerCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 #if WITH_EDITOR
+    RestoreEnderPIEWalkRunControls();
     RestoreEngineFocusPreview();
 #endif
     Super::EndPlay(EndPlayReason);
@@ -1332,6 +1418,222 @@ void ATSTSSExplorerCharacter::RestoreEngineFocusPreview()
 #endif // WITH_EDITOR
 
 #if WITH_EDITOR
+
+void ATSTSSExplorerCharacter::PressEnderPIEReviewSprint()
+{
+    bEnderPIESprintHeld = true;
+    TryEnderPIEWalkRunControls(); // immediate response, not 0.2s later
+}
+
+void ATSTSSExplorerCharacter::ReleaseEnderPIEReviewSprint()
+{
+    bEnderPIESprintHeld = false;
+    TryEnderPIEWalkRunControls();
+}
+
+void ATSTSSExplorerCharacter::RestoreEnderPIEWalkRunControls()
+{
+    if (!bEnderPIEWalkRunActive)
+    {
+        return;
+    }
+    UCharacterMovementComponent* Movement = GetCharacterMovement();
+    if (IsValid(Movement) &&
+        FMath::IsNearlyEqual(Movement->MaxWalkSpeed,
+                            EnderPIELastAssignedMaxWalkSpeed, 0.1f))
+    {
+        Movement->MaxWalkSpeed = EnderPIEOriginalMaxWalkSpeed;
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_ENDER_PIE_WALKRUN_RESTORED original_speed_cm_s=%.1f"),
+            EnderPIEOriginalMaxWalkSpeed);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_ENDER_PIE_WALKRUN_HOLD movement_owner_changed_no_restore"));
+    }
+    bEnderPIEWalkRunActive = false;
+    bEnderPIESprintHeld = false;
+}
+
+void ATSTSSExplorerCharacter::TryEnderPIEWalkRunControls()
+{
+    // Optional only; preserve the game's original locomotion authority.
+    // Other review components, save/quest state, input axes and transforms
+    // are never touched. This can be tested before private clips exist.
+    const UWorld* World = GetWorld();
+    // PIE private Blueprint and editor-built -game command-line admissions
+    // are separate: neither can authorize shipping or production-map play.
+    const bool bPIEOptIn = World &&
+        World->WorldType == EWorldType::PIE &&
+        bEnableEnderPIEWalkRunControls;
+    const bool bGameOptIn = World &&
+        World->WorldType == EWorldType::Game &&
+        FParse::Param(FCommandLine::Get(), TEXT("EnderReviewSprint"));
+    const bool bAllowed =
+        (bPIEOptIn || bGameOptIn) &&
+        bFirstWakeThirdPersonReview && IsPlayerControlled() &&
+        World && (World->WorldType == EWorldType::PIE ||
+                  World->WorldType == EWorldType::Game) &&
+        World->GetNetMode() == NM_Standalone &&
+        World->GetOutermost() &&
+        World->GetOutermost()->GetName().StartsWith(
+            TEXT("/Game/TSTSS/Review/"));
+    if (!bAllowed)
+    {
+        RestoreEnderPIEWalkRunControls();
+        return;
+    }
+    const FString Scene = UGameplayStatics::GetCurrentLevelName(World, true);
+    if (Scene != TEXT("FirstWake_PreludeInteraction_V5_VisualReview") &&
+        Scene != TEXT("VS02_AureateInteriors"))
+    {
+        RestoreEnderPIEWalkRunControls();
+        return;
+    }
+    UCharacterMovementComponent* Movement = GetCharacterMovement();
+    if (!IsValid(Movement))
+    {
+        RestoreEnderPIEWalkRunControls();
+        return;
+    }
+    if (!bEnderPIEWalkRunChecked)
+    {
+        bEnderPIEWalkRunChecked = true;
+        const float PriorSpeed = Movement->MaxWalkSpeed;
+        if (!FMath::IsFinite(PriorSpeed) ||
+            PriorSpeed < 180.f || PriorSpeed > 900.f)
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("TSTSS_ENDER_PIE_WALKRUN_HOLD unsuitable_existing_speed_cm_s=%.1f"),
+                PriorSpeed);
+            return;
+        }
+        EnderPIEOriginalMaxWalkSpeed = PriorSpeed;
+        EnderPIELastAssignedMaxWalkSpeed = PriorSpeed;
+        bEnderPIEWalkRunActive = true;
+    }
+    if (!bEnderPIEWalkRunActive)
+    {
+        return; // One admission per PIE instance, never retry a held owner.
+    }
+    if (!FMath::IsNearlyEqual(Movement->MaxWalkSpeed,
+                              EnderPIELastAssignedMaxWalkSpeed, 0.1f))
+    {
+        bEnderPIEWalkRunActive = false;
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_ENDER_PIE_WALKRUN_HOLD movement_owner_changed"));
+        return; // Another system changed speed: do not wrest it back.
+    }
+    const APlayerController* PC = Cast<APlayerController>(GetController());
+    const bool bCanSprint = bEnderPIESprintHeld && IsValid(PC) &&
+        !PC->IsMoveInputIgnored() && !IsHilltoniaFlyerOpen() &&
+        !EngineFocusPreviewCamera.IsValid();
+    constexpr float WalkSpeedCmS = 260.f; // below 300 cm/s telemetry cutoff
+    constexpr float RunSpeedCmS = 600.f;  // above 300 cm/s telemetry cutoff; distinct sprint
+    const float TargetSpeed = bCanSprint ? RunSpeedCmS : WalkSpeedCmS;
+    if (!FMath::IsNearlyEqual(TargetSpeed,
+                              EnderPIELastAssignedMaxWalkSpeed, 0.1f))
+    {
+        Movement->MaxWalkSpeed = TargetSpeed;
+        EnderPIELastAssignedMaxWalkSpeed = TargetSpeed;
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_ENDER_PIE_WALKRUN_APPLIED band=%s max_speed_cm_s=%.1f animation_NOT_VERIFIED"),
+            bCanSprint ? TEXT("run") : TEXT("walk"), TargetSpeed);
+    }
+}
+
+void ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance()
+{
+    // Port the bounded, private Ender skeletal candidate from the earlier
+    // native PIE study. The property is blank for all ordinary characters.
+    // Only the spawned pawn is touched; no asset/map/save/gameplay mutation.
+    UWorld* World = GetWorld();
+    if (!World || World->WorldType != EWorldType::PIE ||
+        World->GetNetMode() != NM_Standalone ||
+        !World->GetOutermost() ||
+        !World->GetOutermost()->GetName().StartsWith(
+            TEXT("/Game/TSTSS/Review/")) ||
+        EnderSliceReviewBody.IsNull() || !IsValid(GetMesh()))
+    {
+        return;
+    }
+    const FString Scene = UGameplayStatics::GetCurrentLevelName(World, true);
+    if (Scene != TEXT("FirstWake_PreludeInteraction_V5_VisualReview") &&
+        Scene != TEXT("VS02_AureateInteriors"))
+    {
+        return;
+    }
+
+    USkeletalMesh* Candidate = EnderSliceReviewBody.LoadSynchronous();
+    if (!IsValid(Candidate) || !IsValid(Candidate->GetSkeleton()))
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_ENDER_SLICE_VISUAL_HOLD missing candidate/skeleton"));
+        return;
+    }
+    const FReferenceSkeleton& Bones = Candidate->GetRefSkeleton();
+    if (Bones.GetNum() < 80 || Bones.GetNum() > 450 ||
+        Bones.FindBoneIndex(FName(TEXT("head"))) == INDEX_NONE ||
+        Bones.FindBoneIndex(FName(TEXT("l_hand"))) == INDEX_NONE)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_ENDER_SLICE_VISUAL_HOLD invalid candidate bone hierarchy"));
+        return;
+    }
+    USkeletalMeshComponent* Body = GetMesh();
+    Body->SetSkeletalMeshAsset(Candidate);
+    Body->SetVisibility(true);
+    UE_LOG(LogTemp, Display,
+        TEXT("TSTSS_ENDER_SLICE_REVIEW_MESH_BOUND bones=%d animation_NOT_VERIFIED art_NOT_APPROVED"),
+        Bones.GetNum());
+
+    // Prior PR #812 visual bridge, deliberately opt-in and private. Attach
+    // only to a valid bone/socket on the bound skeletal pawn. An invalid
+    // asset or missing bone must never create a floating prop or partial rig.
+    // Accessory fit and licensing still require independent creator review.
+    const auto AttachEnderReviewPart = [Body](UStaticMeshComponent* Preview,
+        const TSoftObjectPtr<UStaticMesh>& Asset, bool bEnabled, FName Bone,
+        const FTransform& Offset, const TCHAR* Label)
+    {
+        if (!bEnabled) return;
+        if (!IsValid(Preview) || Asset.IsNull() || !IsValid(Body) ||
+            Bone.IsNone() || !Body->DoesSocketExist(Bone) ||
+            Offset.ContainsNaN())
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("TSTSS_ENDER_ACCESSORY_HOLD kind=%s invalid_candidate_or_socket"),
+                Label);
+            return;
+        }
+        UStaticMesh* Part = Asset.LoadSynchronous();
+        if (!IsValid(Part))
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("TSTSS_ENDER_ACCESSORY_HOLD kind=%s failed_private_asset"),
+                Label);
+            return;
+        }
+        Preview->AttachToComponent(Body,
+            FAttachmentTransformRules::SnapToTargetNotIncludingScale, Bone);
+        Preview->SetStaticMesh(Part);
+        Preview->SetRelativeTransform(Offset);
+        Preview->SetVisibility(true);
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_ENDER_ACCESSORY_REVIEW_ATTACHED kind=%s fit_NOT_VERIFIED art_NOT_APPROVED"),
+            Label);
+    };
+    AttachEnderReviewPart(EnderReviewHairComponent, EnderSliceReviewHair,
+        bShowEnderReviewHair, EnderReviewHeadBone,
+        EnderReviewHairLocalOffset, TEXT("HAIR"));
+    AttachEnderReviewPart(EnderReviewGogglesComponent, EnderSliceReviewGoggles,
+        bShowEnderReviewGoggles, EnderReviewHeadBone,
+        EnderReviewGogglesLocalOffset, TEXT("GOGGLES"));
+    AttachEnderReviewPart(EnderReviewStaffComponent, EnderSliceReviewStaff,
+        bShowEnderReviewStaff, EnderReviewGripBone,
+        EnderReviewStaffLocalOffset, TEXT("STAFF"));
+}
+
 void ATSTSSExplorerCharacter::SetupFirstWakeThirdPersonReview(UWorld* World)
 {
     if (!World || !IsValid(FollowCamera) || !IsValid(CameraBoom) ||
@@ -1358,6 +1660,22 @@ void ATSTSSExplorerCharacter::SetupFirstWakeThirdPersonReview(UWorld* World)
     CameraBoom->CameraLagMaxDistance = 55.f;
     FollowCamera->SetFieldOfView(bInteriors ? 70.f : 68.f);
     bFirstWakeThirdPersonReview = true;
+
+    // A possessed skeletal Ender review candidate takes precedence over the
+    // historical static V2 lookdev overlay. A separate Blueprint may already
+    // have bound the skeletal body; adding a second opaque static character
+    // would hide it and make actual locomotion/rig assessment impossible.
+    // This only selects presentation, never art admission or animation proof.
+    USkeletalMeshComponent* SkeletalBody = GetMesh();
+    if (IsValid(SkeletalBody) && SkeletalBody->IsRegistered() &&
+        IsValid(SkeletalBody->GetSkeletalMeshAsset()) &&
+        SkeletalBody->GetNumBones() > 0 && SkeletalBody->IsVisible())
+    {
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_ENDER_SKELETAL_REVIEW_PRESENT scene=%s bones=%d animation_NOT_VERIFIED art_NOT_APPROVED"),
+            *Scene, SkeletalBody->GetNumBones());
+        return;
+    }
 
     // Local Ender V2 look-development package. Keep the donor and its materials
     // at their original package paths, outside tracked Content on Neontic.
@@ -1406,6 +1724,170 @@ void ATSTSSExplorerCharacter::SetupFirstWakeThirdPersonReview(UWorld* World)
     Visual->RegisterComponent();
     UE_LOG(LogTemp, Display, TEXT("TSTSS_ENDER_THIRD_PERSON_READY scene=%s source_height_cm=%.1f review_height_cm=176 static_lookdev=1"),
         *Scene, Height);
+}
+
+void ATSTSSExplorerCharacter::TryEnderPIELocomotionPreview(uint8 MotionBand)
+{
+    // This is an isolated, deliberately abrupt three-clip pose preview,
+    // not a production locomotion state machine or native proof of playback.
+    if (!bEnableEnderPIELocomotionPreview || MotionBand > 2 ||
+        !bFirstWakeThirdPersonReview || !IsPlayerControlled())
+    {
+        return;
+    }
+    const UWorld* World = GetWorld();
+    if (!World || World->WorldType != EWorldType::PIE ||
+        World->GetNetMode() != NM_Standalone || !World->GetOutermost() ||
+        !World->GetOutermost()->GetName().StartsWith(
+            TEXT("/Game/TSTSS/Review/")))
+    {
+        return;
+    }
+    const FString Scene = UGameplayStatics::GetCurrentLevelName(World, true);
+    if (Scene != TEXT("FirstWake_PreludeInteraction_V5_VisualReview") &&
+        Scene != TEXT("VS02_AureateInteriors"))
+    {
+        return;
+    }
+    USkeletalMeshComponent* Body = GetMesh();
+    if (!IsValid(Body) || !Body->IsRegistered() || !Body->IsVisible() ||
+        !IsValid(Body->GetSkeletalMeshAsset()) ||
+        EnderSliceReviewBody.IsNull() ||
+        Body->GetSkeletalMeshAsset() != EnderSliceReviewBody.Get())
+    {
+        return; // Never animate a stock, absent or unrelated body.
+    }
+    if (!GetCharacterMovement() ||
+        !GetCharacterMovement()->IsMovingOnGround())
+    {
+        return; // No implicit jumping or falling animation.
+    }
+    if (!bEnderPIEAnimPreviewChecked)
+    {
+        bEnderPIEAnimPreviewChecked = true; // Report each HOLD only once per PIE.
+        if (Body->GetAnimClass() != nullptr ||
+            Body->GetAnimInstance() != nullptr ||
+            Body->GetAnimationMode() != EAnimationMode::AnimationBlueprint)
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("TSTSS_ENDER_PIE_ANIM_HOLD existing_animation_owner"));
+            return; // Preserve Blueprint, custom AND prior single-node owners.
+        }
+        if (EnderPIEIdleAnimation.IsNull() ||
+            EnderPIEWalkAnimation.IsNull() ||
+            EnderPIERunAnimation.IsNull())
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("TSTSS_ENDER_PIE_ANIM_HOLD incomplete_private_triplet"));
+            return;
+        }
+        UAnimSequence* Idle = EnderPIEIdleAnimation.LoadSynchronous();
+        UAnimSequence* Walk = EnderPIEWalkAnimation.LoadSynchronous();
+        UAnimSequence* Run = EnderPIERunAnimation.LoadSynchronous();
+        const USkeleton* BoundSkeleton =
+            Body->GetSkeletalMeshAsset()->GetSkeleton();
+        if (!IsValid(Idle) || !IsValid(Walk) || !IsValid(Run))
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("TSTSS_ENDER_PIE_ANIM_HOLD invalid_private_animation_asset"));
+            return;
+        }
+        const bool bAnyRootMotion = Idle->bEnableRootMotion ||
+            Walk->bEnableRootMotion || Run->bEnableRootMotion;
+        // Match only the actual private, noncanonical retargeted triplet. An
+        // explicit Blueprint flag alone must never admit arbitrary root clips.
+        const FString ReviewAnimRoot =
+            TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/Animations/");
+        const bool bPrivateExtractAndDiscard =
+            bAllowEnderPIERootMotionExtractionReview &&
+            !Idle->bEnableRootMotion && Walk->bEnableRootMotion &&
+            Run->bEnableRootMotion &&
+            Idle->GetPathName() == ReviewAnimRoot +
+                TEXT("MM_Idle_EnderPreview_NONCANONICAL.MM_Idle_EnderPreview_NONCANONICAL") &&
+            Walk->GetPathName() == ReviewAnimRoot +
+                TEXT("MF_Unarmed_Walk_Fwd_EnderPreview_NONCANONICAL.MF_Unarmed_Walk_Fwd_EnderPreview_NONCANONICAL") &&
+            Run->GetPathName() == ReviewAnimRoot +
+                TEXT("MF_Unarmed_Jog_Fwd_EnderPreview_NONCANONICAL.MF_Unarmed_Jog_Fwd_EnderPreview_NONCANONICAL");
+        if (!BoundSkeleton || !IsValid(Idle) || !IsValid(Walk) ||
+            !IsValid(Run) ||
+            Idle->GetSkeleton() != BoundSkeleton ||
+            Walk->GetSkeleton() != BoundSkeleton ||
+            Run->GetSkeleton() != BoundSkeleton ||
+            (bAnyRootMotion && !bPrivateExtractAndDiscard))
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("TSTSS_ENDER_PIE_ANIM_HOLD incompatible_skeleton_or_root_motion"));
+            return; // No partial bindings or unapproved root-motion drift.
+        }
+        bEnderPIERootMotionExtractionActive = bAnyRootMotion;
+        EnderPIEIdleLoaded = Idle;
+        EnderPIEWalkLoaded = Walk;
+        EnderPIERunLoaded = Run;
+        bEnderPIEAnimPreviewActive = true;
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_ENDER_PIE_ANIM_TRIPLET_STAGED clips=3 render_NOT_VERIFIED deformation_NOT_VERIFIED"));
+    }
+    if (!bEnderPIEAnimPreviewActive)
+    {
+        return;
+    }
+    // Protect the exact single-node asset we most recently requested. Merely
+    // observing SingleNode mode is insufficient: another system can replace
+    // the asset without changing the mode. Never wrest control back.
+    if (LastEnderPIEAnimBand != 255)
+    {
+        UAnimSequence* PreviouslyRequested =
+            LastEnderPIEAnimBand == 0 ? EnderPIEIdleLoaded.Get() :
+            (LastEnderPIEAnimBand == 1 ? EnderPIEWalkLoaded.Get() :
+                                           EnderPIERunLoaded.Get());
+        UAnimSingleNodeInstance* CurrentNode = Body->GetSingleNodeInstance();
+        if (Body->GetAnimationMode() != EAnimationMode::AnimationSingleNode ||
+            Body->GetAnimClass() != nullptr || !IsValid(CurrentNode) ||
+            CurrentNode->GetCurrentAsset() != PreviouslyRequested)
+        {
+            bEnderPIEAnimPreviewActive = false;
+            UE_LOG(LogTemp, Warning,
+                TEXT("TSTSS_ENDER_PIE_ANIM_HOLD animation_owner_changed"));
+            return;
+        }
+    }
+    if (LastEnderPIEAnimBand == MotionBand)
+    {
+        return;
+    }
+    UAnimSequence* Next = MotionBand == 0 ? EnderPIEIdleLoaded.Get() :
+        (MotionBand == 1 ? EnderPIEWalkLoaded.Get() : EnderPIERunLoaded.Get());
+    if (!IsValid(Next))
+    {
+        bEnderPIEAnimPreviewActive = false;
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_ENDER_PIE_ANIM_HOLD loaded_clip_unavailable"));
+        return;
+    }
+    // UE 5.8 transient single-node playback; no asset, map, or capsule write.
+    Body->PlayAnimation(Next, true);
+    if (bEnderPIERootMotionExtractionActive)
+    {
+        UAnimSingleNodeInstance* NewNode = Body->GetSingleNodeInstance();
+        if (!IsValid(NewNode) || NewNode->GetCurrentAsset() != Next)
+        {
+            bEnderPIEAnimPreviewActive = false;
+            UE_LOG(LogTemp, Warning,
+                TEXT("TSTSS_ENDER_PIE_ANIM_HOLD transient_single_node_missing"));
+            return;
+        }
+        // IgnoreRootMotion strips root travel without driving CharacterMovement.
+        // Visual gait, slide and extracted-root behavior are NOT yet proven.
+        NewNode->SetRootMotionMode(ERootMotionMode::IgnoreRootMotion);
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_ENDER_PIE_ROOT_EXTRACTION_REQUESTED root_mode=IgnoreRootMotion capsule_motion_unchanged=1 runtime_NOT_VERIFIED"));
+    }
+    LastEnderPIEAnimBand = MotionBand;
+    UE_LOG(LogTemp, Display,
+        TEXT("TSTSS_ENDER_PIE_ANIM_REQUESTED band=%s clip=%s root_motion_policy_review_only=1 playback_NOT_VERIFIED"),
+        MotionBand == 0 ? TEXT("idle") :
+            (MotionBand == 1 ? TEXT("walk") : TEXT("run")),
+        *Next->GetName());
 }
 
 void ATSTSSExplorerCharacter::ToggleFirstWakeBokehReview()
@@ -1565,6 +2047,15 @@ void ATSTSSExplorerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
     }
     PlayerInputComponent->BindAction(TEXT("QuickLoad"), IE_Pressed, this, &ATSTSSExplorerCharacter::QuickLoad);
 #if WITH_EDITOR
+    // Input edges are inert without an explicit authorized review opt-in.
+    if (InputWorld && (InputWorld->WorldType == EWorldType::PIE ||
+                       InputWorld->WorldType == EWorldType::Game))
+    {
+        PlayerInputComponent->BindAction(TEXT("EnderPIEReviewSprint"), IE_Pressed,
+            this, &ATSTSSExplorerCharacter::PressEnderPIEReviewSprint);
+        PlayerInputComponent->BindAction(TEXT("EnderPIEReviewSprint"), IE_Released,
+            this, &ATSTSSExplorerCharacter::ReleaseEnderPIEReviewSprint);
+    }
     if (InputWorld && InputWorld->WorldType == EWorldType::PIE)
     {
         PlayerInputComponent->BindAction(TEXT("ReviewContinue"), IE_Pressed, this, &ATSTSSExplorerCharacter::ReviewContinue);
@@ -1595,6 +2086,11 @@ void ATSTSSExplorerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
 
 void ATSTSSExplorerCharacter::MoveForward(float Value)
 {
+#if WITH_EDITOR
+    // The flyer is a focused quest decision: do not walk or look away
+    // while Accept / Not now is displayed. Only those actions dismiss it.
+    if (IsHilltoniaFlyerOpen()) return;
+#endif
     if (Controller && !FMath::IsNearlyZero(Value))
     {
         const FRotator Yaw(0.f, Controller->GetControlRotation().Yaw, 0.f);
@@ -1603,14 +2099,35 @@ void ATSTSSExplorerCharacter::MoveForward(float Value)
 }
 void ATSTSSExplorerCharacter::MoveRight(float Value)
 {
+#if WITH_EDITOR
+    // The flyer is a focused quest decision: do not walk or look away
+    // while Accept / Not now is displayed. Only those actions dismiss it.
+    if (IsHilltoniaFlyerOpen()) return;
+#endif
     if (Controller && !FMath::IsNearlyZero(Value))
     {
         const FRotator Yaw(0.f, Controller->GetControlRotation().Yaw, 0.f);
         AddMovementInput(FRotationMatrix(Yaw).GetUnitAxis(EAxis::Y), Value);
     }
 }
-void ATSTSSExplorerCharacter::Turn(float Value) { AddControllerYawInput(Value); }
-void ATSTSSExplorerCharacter::LookUp(float Value) { AddControllerPitchInput(Value); }
+void ATSTSSExplorerCharacter::Turn(float Value)
+{
+#if WITH_EDITOR
+    // The flyer is a focused quest decision: do not walk or look away
+    // while Accept / Not now is displayed. Only those actions dismiss it.
+    if (IsHilltoniaFlyerOpen()) return;
+#endif
+    AddControllerYawInput(Value);
+}
+void ATSTSSExplorerCharacter::LookUp(float Value)
+{
+#if WITH_EDITOR
+    // The flyer is a focused quest decision: do not walk or look away
+    // while Accept / Not now is displayed. Only those actions dismiss it.
+    if (IsHilltoniaFlyerOpen()) return;
+#endif
+    AddControllerPitchInput(Value);
+}
 
 #if !UE_BUILD_SHIPPING
 FString ATSTSSExplorerCharacter::GetReviewAimStatus() const
@@ -1665,6 +2182,11 @@ FString ATSTSSExplorerCharacter::GetReviewAimStatus() const
 
 void ATSTSSExplorerCharacter::Interact()
 {
+#if WITH_EDITOR
+    // E opens the flyer once; it cannot interact with another target
+    // while the explicit Enter / Backspace decision is pending.
+    if (IsHilltoniaFlyerOpen()) return;
+#endif
     if (!FirstWakeState || !FollowCamera || !GetWorld()) return;
     const FVector Start = FollowCamera->GetComponentLocation();
     const FVector PawnLocation = GetActorLocation();
@@ -1704,6 +2226,12 @@ void ATSTSSExplorerCharacter::Interact()
                 HilltoniaFlyerHit = Hit.ImpactPoint;
                 HilltoniaFlyerGeneration = FirstWakeState->GetRestoreGeneration();
                 bHilltoniaFlyerRead = true;
+                // Prevent residual WASD velocity carrying Ender out of
+                // interaction reach while the flyer modal is on screen.
+                if (UCharacterMovementComponent* Movement = GetCharacterMovement())
+                {
+                    Movement->StopMovementImmediately();
+                }
                 UE_LOG(LogTemp, Display, TEXT("TSTSS_HILLTONIA_FLYER_READ"));
             }
             return;
