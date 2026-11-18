@@ -1786,18 +1786,40 @@ void ATSTSSExplorerCharacter::TryEnderPIELocomotionPreview(uint8 MotionBand)
         UAnimSequence* Run = EnderPIERunAnimation.LoadSynchronous();
         const USkeleton* BoundSkeleton =
             Body->GetSkeletalMeshAsset()->GetSkeleton();
+        if (!IsValid(Idle) || !IsValid(Walk) || !IsValid(Run))
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("TSTSS_ENDER_PIE_ANIM_HOLD invalid_private_animation_asset"));
+            return;
+        }
+        const bool bAnyRootMotion = Idle->bEnableRootMotion ||
+            Walk->bEnableRootMotion || Run->bEnableRootMotion;
+        // Match only the actual private, noncanonical retargeted triplet. An
+        // explicit Blueprint flag alone must never admit arbitrary root clips.
+        const FString ReviewAnimRoot =
+            TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/Animations/");
+        const bool bPrivateExtractAndDiscard =
+            bAllowEnderPIERootMotionExtractionReview &&
+            !Idle->bEnableRootMotion && Walk->bEnableRootMotion &&
+            Run->bEnableRootMotion &&
+            Idle->GetPathName() == ReviewAnimRoot +
+                TEXT("MM_Idle_EnderPreview_NONCANONICAL.MM_Idle_EnderPreview_NONCANONICAL") &&
+            Walk->GetPathName() == ReviewAnimRoot +
+                TEXT("MF_Unarmed_Walk_Fwd_EnderPreview_NONCANONICAL.MF_Unarmed_Walk_Fwd_EnderPreview_NONCANONICAL") &&
+            Run->GetPathName() == ReviewAnimRoot +
+                TEXT("MF_Unarmed_Jog_Fwd_EnderPreview_NONCANONICAL.MF_Unarmed_Jog_Fwd_EnderPreview_NONCANONICAL");
         if (!BoundSkeleton || !IsValid(Idle) || !IsValid(Walk) ||
             !IsValid(Run) ||
             Idle->GetSkeleton() != BoundSkeleton ||
             Walk->GetSkeleton() != BoundSkeleton ||
             Run->GetSkeleton() != BoundSkeleton ||
-            Idle->bEnableRootMotion || Walk->bEnableRootMotion ||
-            Run->bEnableRootMotion)
+            (bAnyRootMotion && !bPrivateExtractAndDiscard))
         {
             UE_LOG(LogTemp, Warning,
                 TEXT("TSTSS_ENDER_PIE_ANIM_HOLD incompatible_skeleton_or_root_motion"));
-            return; // No partial bindings or root-motion drift.
+            return; // No partial bindings or unapproved root-motion drift.
         }
+        bEnderPIERootMotionExtractionActive = bAnyRootMotion;
         EnderPIEIdleLoaded = Idle;
         EnderPIEWalkLoaded = Walk;
         EnderPIERunLoaded = Run;
@@ -1842,11 +1864,27 @@ void ATSTSSExplorerCharacter::TryEnderPIELocomotionPreview(uint8 MotionBand)
             TEXT("TSTSS_ENDER_PIE_ANIM_HOLD loaded_clip_unavailable"));
         return;
     }
-    // UE 5.8 transient single-node playback; intentionally no asset or map write.
+    // UE 5.8 transient single-node playback; no asset, map, or capsule write.
     Body->PlayAnimation(Next, true);
+    if (bEnderPIERootMotionExtractionActive)
+    {
+        UAnimSingleNodeInstance* NewNode = Body->GetSingleNodeInstance();
+        if (!IsValid(NewNode) || NewNode->GetCurrentAsset() != Next)
+        {
+            bEnderPIEAnimPreviewActive = false;
+            UE_LOG(LogTemp, Warning,
+                TEXT("TSTSS_ENDER_PIE_ANIM_HOLD transient_single_node_missing"));
+            return;
+        }
+        // IgnoreRootMotion strips root travel without driving CharacterMovement.
+        // Visual gait, slide and extracted-root behavior are NOT yet proven.
+        NewNode->SetRootMotionMode(ERootMotionMode::IgnoreRootMotion);
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_ENDER_PIE_ROOT_EXTRACTION_REQUESTED root_mode=IgnoreRootMotion capsule_motion_unchanged=1 runtime_NOT_VERIFIED"));
+    }
     LastEnderPIEAnimBand = MotionBand;
     UE_LOG(LogTemp, Display,
-        TEXT("TSTSS_ENDER_PIE_ANIM_REQUESTED band=%s clip=%s in_place=1 playback_NOT_VERIFIED"),
+        TEXT("TSTSS_ENDER_PIE_ANIM_REQUESTED band=%s clip=%s root_motion_policy_review_only=1 playback_NOT_VERIFIED"),
         MotionBand == 0 ? TEXT("idle") :
             (MotionBand == 1 ? TEXT("walk") : TEXT("run")),
         *Next->GetName());

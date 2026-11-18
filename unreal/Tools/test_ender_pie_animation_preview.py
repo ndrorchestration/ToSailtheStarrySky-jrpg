@@ -44,6 +44,10 @@ def guarded(src):
         "Idle->bEnableRootMotion",
         "Walk->bEnableRootMotion",
         "Run->bEnableRootMotion",
+        "bAllowEnderPIERootMotionExtractionReview",
+        "bPrivateExtractAndDiscard",
+        "ERootMotionMode::IgnoreRootMotion",
+        "NewNode->GetCurrentAsset() != Next",
         "Body->GetAnimationMode() != EAnimationMode::AnimationSingleNode",
         "Body->GetSingleNodeInstance()",
         "CurrentNode->GetCurrentAsset() != PreviouslyRequested",
@@ -57,6 +61,8 @@ class EnderPIELocomotionPreviewTests(unittest.TestCase):
     def test_default_denied_and_editor_only_transient_fields(self):
         self.assertIn("class UAnimSequence;", HDR)
         self.assertIn("bool bEnableEnderPIELocomotionPreview = false;", HDR)
+        self.assertIn("bool bAllowEnderPIERootMotionExtractionReview = false;", HDR)
+        self.assertIn("bool bEnderPIERootMotionExtractionActive = false;", HDR)
         self.assertIn("#if WITH_EDITORONLY_DATA", HDR)
         self.assertIn("UPROPERTY(Transient)", HDR)
         for name in ("Idle", "Walk", "Run"):
@@ -107,6 +113,10 @@ class EnderPIELocomotionPreviewTests(unittest.TestCase):
             "Idle->bEnableRootMotion",
             "Walk->bEnableRootMotion",
             "Run->bEnableRootMotion",
+            "bAllowEnderPIERootMotionExtractionReview",
+            "bPrivateExtractAndDiscard",
+            "ERootMotionMode::IgnoreRootMotion",
+            "NewNode->GetCurrentAsset() != Next",
             "Body->GetAnimationMode() != EAnimationMode::AnimationSingleNode",
             "CurrentNode->GetCurrentAsset() != PreviouslyRequested",
             "Body->PlayAnimation(Next, true)",

@@ -87,10 +87,14 @@ protected:
     FTransform EnderReviewGogglesLocalOffset = FTransform::Identity;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview")
     FTransform EnderReviewStaffLocalOffset = FTransform::Identity;
-    // Three explicit PRIVATE, in-place, matching-skeleton clips. None are
+    // Three explicit PRIVATE, matching-skeleton clips (in-place or opt-in
+    // extract-and-discard root motion). None are
     // assigned by default; preview is opt-in and never production locomotion.
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview|Animation")
     bool bEnableEnderPIELocomotionPreview = false;
+    // Explicit PRIVATE opt-in: extract-and-discard source root motion; never move capsule.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview|Animation")
+    bool bAllowEnderPIERootMotionExtractionReview = false;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview|Animation")
     TSoftObjectPtr<UAnimSequence> EnderPIEIdleAnimation;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="TSTSS|Ender|SliceReview|Animation")
@@ -132,6 +136,7 @@ private:
     float EnderPIELastAssignedMaxWalkSpeed = 0.f;
     bool bEnderPIEAnimPreviewChecked = false;
     bool bEnderPIEAnimPreviewActive = false;
+    bool bEnderPIERootMotionExtractionActive = false;
     uint8 LastEnderPIEAnimBand = 255;
 #endif
 #if !UE_BUILD_SHIPPING
