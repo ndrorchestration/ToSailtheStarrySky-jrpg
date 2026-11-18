@@ -130,6 +130,7 @@ def audit():
     REVIEW["target_skeleton"] = target_skeleton.get_path_name()
 
     REVIEW["clip_properties"] = {}
+    REVIEW["source_root_motion_roles"] = []
     for role, path in SOURCE_CLIPS.items():
         clip = unreal.load_asset(path)
         require(isinstance(clip, unreal.AnimSequence),
@@ -144,7 +145,12 @@ def audit():
             "root_motion_enabled": root_motion,
             "duration_s": float(clip.get_play_length()),
         }
-        require(not root_motion, "ROOT_MOTION_ENABLED_" + role)
+        # Source root motion is not automatically disqualifying for *rig*
+        # construction. It DOES disqualify direct gameplay clip assignment.
+        # Preserve the observation and require a separate private in-place
+        # conversion and post-retarget root-translation measurement.
+        if root_motion:
+            REVIEW["source_root_motion_roles"].append(role)
 
     # UE mesh bone-parent queries: evidence of actual hierarchy, not asset
     # filename strings or assumptions about Genesis9 vs Manny naming.
@@ -171,8 +177,17 @@ def audit():
     require(all(hasattr(unreal, name) for name in (
         "IKRigController", "IKRetargeterController", "IKRetargetBatchOperation",
     )), "IK_RIG_EDITOR_PLUGIN_MISSING")
-    REVIEW["status"] = "NATIVE_RETARGET_INPUTS_VALIDATED_NOT_RETARGETED"
-    REVIEW["in_place_root_translation"] = "NOT_YET_MEASURED"
+    source_motion_requires_conversion = bool(REVIEW["source_root_motion_roles"])
+    REVIEW["status"] = (
+        "NATIVE_RETARGET_RIG_INPUTS_VALIDATED_SOURCE_MOTION_CONVERSION_REQUIRED"
+        if source_motion_requires_conversion else
+        "NATIVE_RETARGET_INPUTS_VALIDATED_NOT_RETARGETED"
+    )
+    REVIEW["in_place_root_translation"] = (
+        "PRIVATE_CONVERSION_AND_MEASUREMENT_REQUIRED"
+        if source_motion_requires_conversion else "NOT_YET_MEASURED"
+    )
+    REVIEW["direct_source_clip_assignment_allowed"] = False
     REVIEW["pose_alignment_and_foot_contact"] = "REVIEW_REQUIRED"
 
 
