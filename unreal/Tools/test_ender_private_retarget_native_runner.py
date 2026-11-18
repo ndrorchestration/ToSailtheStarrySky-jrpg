@@ -83,6 +83,26 @@ class PrivateEnderNativeHostContracts(unittest.TestCase):
         self.assertIn('env["TSTSS_PRIVATE_IK_RUN_ID"] = run_id', HOST)
         self.assertIn('env.pop("TSTSS_PRIVATE_IK_CREATE", None)', HOST)
 
+    def test_private_batch_retarget_mode_requires_exact_reopen_and_no_files(self):
+        for gate in (
+            'choice.add_argument("--retarget-clips", action="store_true")',
+            'os.environ.get("TSTSS_PRIVATE_ANIM_RETARGET") == "1"',
+            '"NO_EXPLICIT_ANIMATION_OPT_IN"',
+            '"RIG_REOPEN_OR_MOTION_HOLD_NOT_CURRENT"',
+            '"RIG_REOPEN_AUDIT_STALE"',
+            '"PRIVATE_ANIMATION_NOT_GIT_EXCLUDED"',
+            '"PRIVATE_ANIMATION_ALREADY_EXISTS"',
+            '"retarget-clips": "animation_candidate_receipt.json"',
+            '"retarget-clips": "retarget_private_ender_locomotion_candidates.py"',
+            '"retarget-clips":',
+            'env.pop("TSTSS_PRIVATE_ANIM_RETARGET", None)',
+            'receipt["clip_files_verified"] = clip_files_valid',
+            'clip_files_valid,',
+            '"PRIVATE_RETARGET_CLIP_CANDIDATES_CREATED_NOT_PLAYBACK_ACCEPTED"',
+        ):
+            with self.subTest(gate=gate):
+                self.assertIn(gate, HOST)
+
     def test_no_stale_success_or_missing_ik_asset_success(self):
         self.assertIn('artifact.stat().st_mtime >= launched_at - 1.0', HOST)
         self.assertIn('receipt["native_report_fresh"]', HOST)
