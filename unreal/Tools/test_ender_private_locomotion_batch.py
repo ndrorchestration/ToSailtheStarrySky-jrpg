@@ -49,6 +49,10 @@ class PrivateAnimationCandidateContracts(unittest.TestCase):
         self.assertIn("SOURCE_SKELETON_DRIFT", SCRIPT)
         self.assertIn("TARGET_SKELETON_DRIFT", SCRIPT)
 
+    def test_unreal_asset_data_path_is_constructed_from_package_and_name(self):
+        self.assertIn('str(data.package_name) + "." + str(data.asset_name)', SCRIPT)
+        self.assertNotIn('data.get_soft_object_path()', SCRIPT)
+
     def test_zero_overwrite_and_no_source_asset_mutation(self):
         for rule in (
             'overwrite_existing_files=False',
