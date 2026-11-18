@@ -37,3 +37,14 @@ Official API references: [UE5.8 LevelEditorSubsystem](https://dev.epicgames.com/
 ## Current blocker
 
 Neontic's Remote Desktop Commander monthly tool usage limit has been reached. The device remains connected, but no additional local Unreal execution or file inspection could be performed through that connection. Do not claim this new branch produced the private map or live animation; it is SOURCE PREPARED. The original PR #853 stays draft/unmerged, and the verified native evidence at c4576432 remains intact.
+
+
+## Guarded host command prepared (not executed)
+
+The companion source-only host is at unreal/Tools/run_ender_private_pie_map_host.py. Once Neontic is available and the new branch's exact HEAD has passed a real native Win64 Editor build and all 38 native automations, use:
+
+    python unreal\Tools\run_ender_private_pie_map_host.py --stage
+
+The host refuses to run if another Unreal process owns the machine; it does not terminate unrelated applications. It launches a single owned UnrealEditor-Cmd subprocess, protects original .uproject/.ini/V5 .umap/original and cloned Blueprint source files with readonly flags and before/after SHA256 custody checks, checks Git exclusion on both intended private outputs, applies RAM/disk startup and runtime floors, stops ONLY its own child if resources fall below safety limits, and records a unique, nonoverwriting receipt. A successful result is PRIVATE_PIE_MAP_STAGE_PASS_NOT_PLAYBACK_ACCEPTED, which means the new private GameMode and private V5 clone were saved and the originals remained intact. It is not evidence that PIE movement or root-motion extraction looks or behaves correctly.
+
+If either private output already exists or a partial failed receipt exists, do not delete or overwrite it automatically. Inspect the local native error, assess reversible correction, and decide whether a new isolated lane is necessary. Keep all assets private.
