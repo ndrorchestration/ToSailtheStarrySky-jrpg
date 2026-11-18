@@ -573,6 +573,50 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
     // bounds stay behind the upper row so the terrace houses remain visible.
     Place(RollingHills, -7800.f, -12000.f, 350.f, 62.f, 42.f, 33.f);
     Place(RollingHills, -4900.f, -12300.f, 520.f, 66.f, 44.f, 42.f);
+    // The reference harbor has an open mouth, a curved outer breakwater,
+    // and a lighthouse at its tip. Set it against the coastal buffer on
+    // the far side of the water from the playable eastward dock.
+    auto* BreakwaterBase = Make(Owner, Root, TEXT("HilltoniaOuterBreakwaterBase"),
+                                Cube, Stone, false);
+    auto* BreakwaterCoping = Make(Owner, Root, TEXT("HilltoniaOuterBreakwaterCoping"),
+                                  Cube, Timber, false);
+    const FVector2D BreakwaterPath[] = {
+        FVector2D(-3800.f, 4380.f),
+        FVector2D(-2750.f, 4680.f),
+        FVector2D(-1450.f, 4900.f),
+        FVector2D(-50.f, 4900.f),
+        FVector2D(1230.f, 4650.f),
+        FVector2D(2270.f, 4140.f),
+        FVector2D(2940.f, 3420.f),
+        FVector2D(3220.f, 2600.f),
+    };
+    for (int32 Segment = 1; Segment < static_cast<int32>(UE_ARRAY_COUNT(BreakwaterPath)); ++Segment)
+    {
+        const FVector2D Start = BreakwaterPath[Segment - 1];
+        const FVector2D End = BreakwaterPath[Segment];
+        const FVector2D Direction = End - Start;
+        const FVector2D Center = (Start + End) * .5;
+        const float Yaw = FMath::RadiansToDegrees(FMath::Atan2(Direction.Y, Direction.X));
+        const float Length = (Direction.Size() + 185.f) / 100.f;
+        Place(BreakwaterBase, Center.X, Center.Y, -24.f, Length, 4.80f, 2.08f, Yaw);
+        Place(BreakwaterCoping, Center.X, Center.Y, 93.f, Length, 3.35f, .26f, Yaw);
+    }
+
+    auto* LighthouseStone = Make(Owner, Root, TEXT("HilltoniaLighthouseStone"),
+                                 Cylinder, Stone, false);
+    auto* LighthouseTrim = Make(Owner, Root, TEXT("HilltoniaLighthouseGallery"),
+                                Cylinder, Timber, false);
+    auto* LighthouseLantern = Make(Owner, Root, TEXT("HilltoniaLighthouseLantern"),
+                                   Cylinder, Brass, false);
+    auto* LighthouseCap = Make(Owner, Root, TEXT("HilltoniaLighthouseCap"),
+                               Sphere, Timber, false);
+    const FVector2D Lighthouse = BreakwaterPath[UE_ARRAY_COUNT(BreakwaterPath) - 1];
+    Place(LighthouseStone, Lighthouse.X, Lighthouse.Y, 41.f, 6.1f, 6.1f, 2.10f);
+    Place(LighthouseStone, Lighthouse.X, Lighthouse.Y, 422.f, 3.40f, 3.40f, 5.52f);
+    Place(LighthouseTrim, Lighthouse.X, Lighthouse.Y, 715.f, 4.25f, 4.25f, .40f);
+    Place(LighthouseLantern, Lighthouse.X, Lighthouse.Y, 803.f, 2.65f, 2.65f, 1.36f);
+    Place(LighthouseCap, Lighthouse.X, Lighthouse.Y, 875.f, 3.25f, 3.25f, 1.18f);
+
     // A visible landward threshold: sign is a preview wayfinder,
     // not a travel teleport, prompt or interactive progression marker.
     Place(TreeTrunks, -4280.f, -600.f, 155.f, .55f, .55f, 3.1f);
