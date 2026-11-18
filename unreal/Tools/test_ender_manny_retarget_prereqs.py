@@ -27,7 +27,9 @@ class EnderRetargetPrerequisiteContracts(unittest.TestCase):
         self.assertIn('source_root_motion_roles', SOURCE)
         self.assertIn('"direct_source_clip_assignment_allowed"] = False', SOURCE)
         self.assertIn('PRIVATE_CONVERSION_AND_MEASUREMENT_REQUIRED', SOURCE)
-        self.assertIn('NATIVE_RETARGET_RIG_INPUTS_VALIDATED_SOURCE_MOTION_CONVERSION_REQUIRED', SOURCE)
+        self.assertIn('"NATIVE_RETARGET_INPUTS_VALIDATED_NOT_RETARGETED"', SOURCE)
+        self.assertIn('"source_clip_conversion_required"] = source_motion_requires_conversion', SOURCE)
+        self.assertIn('"rig_compatibility_validated"] = True', SOURCE)
         self.assertNotIn('require(not root_motion,', SOURCE)
 
     def test_source_package_root_matches_epic_template_internal_references(self):
