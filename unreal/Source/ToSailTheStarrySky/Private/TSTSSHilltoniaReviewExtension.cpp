@@ -203,6 +203,13 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
                       Cube, Stone, true);
     auto* WestRoad = Make(Owner, Root, TEXT("HilltoniaWestForestRoad"),
                           Cube, Stone, true);
+    // The quay collision ends at Y=700, but the docked ship E target sits
+    // near (-900,790). Existing V5 plank and rail art is noncolliding and
+    // a Visibility trace on that art does not establish capsule support.
+    // Add ONE bounded WorldStatic deck in this transient V5 review owner.
+    auto* BoardingGangway = Make(
+        Owner, Root, TEXT("HilltoniaSeawardWakeBoardingWorldStatic"),
+        Cube, Timber, true);
     auto* CoastalBuffer = Make(Owner, Root, TEXT("HilltoniaCoastalBuffer"),
                                Cube, Canopy, true);
     auto* WesternGround = Make(Owner, Root, TEXT("HilltoniaWesternGround"),
@@ -310,6 +317,11 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
         Place(WestRoad, -9650.f - 600.f * Step, RoadCenterY, -30.f,
               6.2f, 7.8f, .6f);
     }
+    // Engine cube = 100 cm; top Z=0, spanning X [-1350,-750],
+    // Y [590,1010]. The deck overlaps 110 cm of the original quay,
+    // supporting both tested X approaches at the earned boarding E.
+    // Does not stage/enable the ship marker or mutate story or save/map.
+    Place(BoardingGangway, -1050.f, 800.f, -30.f, 6.f, 4.2f, .6f);
     // A perpendicular accessible woodland lane joins the village square.
     // The landward end is a forest-edge vista, not a new quest gate.
     for (int32 Step = 0; Step < 6; ++Step)
@@ -542,6 +554,9 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
     WayfindingSign(Owner, Root, TEXT("HilltoniaWestForestSign"),
         TEXT("GREENWOOD  |  HARBOR EAST"),
         FVector(-15000.f, -690.f, 310.f), 0.f, Cube, Timber);
+
+    UE_LOG(LogTemp, Display,
+        TEXT("TSTSS_HILLTONIA_BOARDING_GANGWAY_STAGED deck_worldstatic=1 overlap_original_quay_cm=110 x_min=-1350 x_max=-750 y_min=590 y_max=1010 deck_top_z=0 original_map_unchanged=1 story_granted=0"));
 
     UE_LOG(LogTemp, Display,
         TEXT("TSTSS_HILLTONIA_REVIEW_APPLIED coastal_buffer=1 western_ground=1 western_road_segments=11 west_forest_trees=%d land_ground_sections=2 road_segments=%d homes=%d hall=1 wayfinding_signs=8 deciduous_trees=%d town=Hilltonia forest=temperate world_north_latitude_provisional=1 road_collision=WorldStatic seven_firstwake_markers_unchanged=1 saved_map_unchanged=1"),
