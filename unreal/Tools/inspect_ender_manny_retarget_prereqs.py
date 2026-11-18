@@ -88,6 +88,81 @@ def trace_ancestry(mesh, start, end):
     return None
 
 
+def inspect_saved_private_ik(source_mesh, target_mesh):
+    """Reopen saved private assets in a NEW editor process; no writes."""
+    package = "/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL"
+    folder = ROOT / "TSTSS/Review/Characters/EnderRetarget_NONCANONICAL"
+    names = (
+        "IK_Manny_EnderReview_NONCANONICAL",
+        "IK_Genesis9_EnderReview_NONCANONICAL",
+        "RTG_MannyToEnder_NONCANONICAL",
+    )
+    files = [folder / (name + ".uasset") for name in names]
+    if not any(path.is_file() for path in files):
+        REVIEW["saved_private_ik"] = "NONE_YET"
+        return
+    require(all(path.is_file() for path in files),
+            "PARTIAL_PRIVATE_IK_OUTPUT")
+    source_rig, target_rig, retargeter = [
+        unreal.load_asset(package + "/" + name) for name in names
+    ]
+    require(isinstance(source_rig, unreal.IKRigDefinition) and
+            isinstance(target_rig, unreal.IKRigDefinition) and
+            isinstance(retargeter, unreal.IKRetargeter),
+            "PRIVATE_IK_SAVED_ASSET_CLASS")
+    details = {
+        "status": "PENDING",
+        "sha256": {name: sha256(path)
+                   for name, path in zip(names, files)},
+        "chain_checks": {},
+    }
+    for name, rig, expected_mesh, i in (
+        (names[0], source_rig, source_mesh, 0),
+        (names[1], target_rig, target_mesh, 1),
+    ):
+        controller = unreal.IKRigController.get_controller(rig)
+        require(controller is not None, "REOPEN_IK_CONTROLLER_" + name)
+        rig_mesh = controller.get_skeletal_mesh()
+        require(rig_mesh and
+                rig_mesh.get_path_name() == expected_mesh.get_path_name(),
+                "REOPEN_IK_MESH_MISMATCH_" + name)
+        require(str(controller.get_retarget_root()).casefold() == "pelvis",
+                "REOPEN_IK_ROOT_" + name)
+        existing = {str(chain.chain_name).casefold()
+                    for chain in controller.get_retarget_chains()}
+        require(len(existing) >= len(BONE_CHAIN_PROPOSALS),
+                "REOPEN_IK_CHAIN_COUNT_" + name)
+        details["chain_checks"][name] = {}
+        for chain, mapping in BONE_CHAIN_PROPOSALS.items():
+            require(chain.casefold() in existing,
+                    "REOPEN_IK_CHAIN_MISSING_" + chain)
+            start, end = mapping[i]
+            got_start = str(controller.get_retarget_chain_start_bone(
+                unreal.Name(chain)))
+            got_end = str(controller.get_retarget_chain_end_bone(
+                unreal.Name(chain)))
+            require(got_start.casefold() == start.casefold() and
+                    got_end.casefold() == end.casefold(),
+                    "REOPEN_IK_CHAIN_ENDPOINT_" + chain)
+            details["chain_checks"][name][chain] = [got_start, got_end]
+    rtg = unreal.IKRetargeterController.get_controller(retargeter)
+    require(rtg is not None, "REOPEN_RETARGETER_CONTROLLER")
+    for mode, rig in ((unreal.RetargetSourceOrTarget.SOURCE, source_rig),
+                      (unreal.RetargetSourceOrTarget.TARGET, target_rig)):
+        assigned = rtg.get_ik_rig(mode)
+        require(assigned and
+                assigned.get_path_name() == rig.get_path_name(),
+                "REOPEN_IK_RIG_ASSOCIATION")
+    require(rtg.get_num_retarget_ops() >= 5,
+            "REOPEN_RETARGET_OP_STACK")
+    for chain in BONE_CHAIN_PROPOSALS:
+        require(str(rtg.get_source_chain(unreal.Name(chain))).casefold() ==
+                chain.casefold(), "REOPEN_RETARGET_CHAIN_MAP_" + chain)
+    details["retarget_operations"] = rtg.get_num_retarget_ops()
+    details["status"] = "REOPENED_SOURCE_AND_TARGET_IK_AND_RTG_PASS_NO_ANIM"
+    REVIEW["saved_private_ik"] = details
+
+
 def audit():
     require(str(PROJECT).lower() == "c:\\tstss_civicintegration_20261116\\unreal",
             "WRONG_PROJECT")
@@ -177,6 +252,7 @@ def audit():
     require(all(hasattr(unreal, name) for name in (
         "IKRigController", "IKRetargeterController", "IKRetargetBatchOperation",
     )), "IK_RIG_EDITOR_PLUGIN_MISSING")
+    inspect_saved_private_ik(source, target)
     source_motion_requires_conversion = bool(REVIEW["source_root_motion_roles"])
     # This status admits **IK rig authoring only**, not animation playback:
     # the 2 motion flags are carried as explicit independent acceptance holds.
