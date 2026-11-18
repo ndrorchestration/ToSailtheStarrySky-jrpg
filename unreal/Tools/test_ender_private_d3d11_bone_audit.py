@@ -15,7 +15,9 @@ class PrivateBoneTelemetrySafetyTests(unittest.TestCase):
         self.assertIn('World->GetNetMode() == NM_Standalone',t)
         self.assertIn('Scene == TEXT("FirstWake_PreludeInteraction_V5_VisualReview")',t)
         self.assertIn('TEXT("TSTSSPrivateEnderBoneAudit")',t)
-        self.assertEqual(CPP.count('TEXT("TSTSSPrivateEnderBoneAudit")'),1)
+        self.assertEqual(CPP.count('TEXT("TSTSSPrivateEnderBoneAudit")'),2)
+        self.assertIn("TSTSS_ENDER_PRIVATE_BONE_AUDIT_FLAG",t)
+        self.assertIn('TEXT("-TSTSSPrivateEnderBoneAudit")',t)
         self.assertIn('GetCharacterMovement()->IsMovingOnGround()',t)
         self.assertIn('#if WITH_EDITOR\n// The full Unreal Editor GUI',CPP)
     def test_all_152_bones_parent_edges_read_without_writes(self):

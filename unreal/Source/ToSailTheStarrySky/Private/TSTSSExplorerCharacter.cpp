@@ -992,6 +992,15 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
                 UE_LOG(LogTemp, Display,
                     TEXT("TSTSS_ENDER_LOWMEM_GAME_MOTION band=%d speed_cm_s=%.1f grounded=1 animation_NOT_VERIFIED"),
                     static_cast<int32>(MotionBand), GroundSpeedCmS);
+                UE_LOG(LogTemp, Display,
+                    TEXT("TSTSS_ENDER_PRIVATE_BONE_AUDIT_FLAG band=%d parse_param=%d raw_cmdline_flag=%d sampled_mask=%d frames=%d"),
+                    static_cast<int32>(MotionBand),
+                    FParse::Param(FCommandLine::Get(),
+                                  TEXT("TSTSSPrivateEnderBoneAudit")) ? 1 : 0,
+                    FString(FCommandLine::Get()).Contains(
+                        TEXT("-TSTSSPrivateEnderBoneAudit")) ? 1 : 0,
+                    static_cast<int32>(EnderLowMemBoneAuditSampledMask),
+                    static_cast<int32>(EnderLowMemBoneAuditBandFrames));
                 LastEnderPIEMotionBand = MotionBand;
             }
             TryEnderPIELocomotionPreview(MotionBand);
