@@ -19,12 +19,18 @@ class EnderRetargetPrerequisiteContracts(unittest.TestCase):
         ast.parse(SOURCE)
 
     def test_all_three_distinct_locomotion_roles(self):
-        self.assertIn('"idle": "/Game/Mannequins/Anims/Unarmed/MM_Idle"', SOURCE)
-        self.assertIn('"walk": "/Game/Mannequins/Anims/Unarmed/Walk/MF_Unarmed_Walk_Fwd"', SOURCE)
-        self.assertIn('"run_candidate": "/Game/Mannequins/Anims/Unarmed/Jog/MF_Unarmed_Jog_Fwd"', SOURCE)
+        self.assertIn('"idle": "/Game/Characters/Mannequins/Anims/Unarmed/MM_Idle"', SOURCE)
+        self.assertIn('"walk": "/Game/Characters/Mannequins/Anims/Unarmed/Walk/MF_Unarmed_Walk_Fwd"', SOURCE)
+        self.assertIn('"run_candidate": "/Game/Characters/Mannequins/Anims/Unarmed/Jog/MF_Unarmed_Jog_Fwd"', SOURCE)
         self.assertIn('SOURCE_TARGET_SKELETON_COLLISION', SOURCE)
         self.assertIn('CLIP_NOT_SOURCE_SKELETON_', SOURCE)
         self.assertIn('ROOT_MOTION_ENABLED_', SOURCE)
+
+    def test_source_package_root_matches_epic_template_internal_references(self):
+        self.assertNotIn('/Game/Mannequins/', SOURCE)
+        self.assertIn('"/Game/Characters/Mannequins/Meshes/SKM_Manny_Simple"', SOURCE)
+        self.assertIn('"Characters/Mannequins/Meshes/SK_Mannequin.uasset"', SOURCE)
+        self.assertIn('"Characters/Mannequins/Anims/Unarmed/MM_Idle.uasset"', SOURCE)
 
     def test_fingerprint_all_local_inputs_without_commit(self):
         hashes = re.findall(r'": "([a-f0-9]{64})"', SOURCE)
