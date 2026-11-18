@@ -158,7 +158,9 @@ private:
     void ShowObjectiveReview();
 #if WITH_EDITOR
     void ReviewContinue();
-    void StartHilltoniaOpening(UWorld* World);
+    // Retry only while the runtime-instanced WorldStatic road settles;
+    // a failed admission never grants a story beat or a player teleport.
+    bool StartHilltoniaOpening(UWorld* World);
     void SetupFirstWakeThirdPersonReview(UWorld* World);
     void ToggleFirstWakeBokehReview();
     void UpdateFirstWakeBokehReview(float DeltaSeconds);
@@ -172,6 +174,7 @@ private:
     void DeclineHilltoniaFlyer();
     bool IsHilltoniaFlyerHit(const FHitResult& Hit) const;
     bool bTryHilltoniaOpening = false;
+    uint8 HilltoniaOpeningAttemptCount = 0;
     bool bHilltoniaOpeningActive = false;
     bool bHilltoniaFlyerRead = false;
     uint64 HilltoniaFlyerGeneration = 0;
