@@ -110,6 +110,12 @@ class PrivateEnderIKBuilderContracts(unittest.TestCase):
         self.assertIn('audit.get("source_head") == head', CODE)
         self.assertIn('merge-base", "--is-ancestor"', CODE)
 
+    def test_manny_package_root_is_exact_internal_ue_template_root(self):
+        self.assertIn('MANNY = "/Game/Characters/Mannequins/Meshes/SKM_Manny_Simple"', CODE)
+        self.assertIn('"Characters/Mannequins/Meshes/SK_Mannequin.uasset"', CODE)
+        self.assertIn('"Characters/Mannequins/Anims/Unarmed/MM_Idle.uasset"', CODE)
+        self.assertNotIn('"/Game/Mannequins/', CODE)
+
     def test_all_source_and_private_inputs_rehashed(self):
         for path in (
             "SKM_Manny_Simple.uasset", "SK_Mannequin.uasset",
