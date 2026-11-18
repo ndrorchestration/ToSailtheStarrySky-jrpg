@@ -448,8 +448,14 @@ bool AAureateWakePreviewActor::BindReviewStory(UTSTSSFirstWakeState* InStory)
     if (!IsValid(InStory)) return false;
     BoundReviewStory = InStory;
     const FName Active = InStory->GetReviewShipMode();
-    // An unstarted story retains an inert visual pose, not mode authority.
-    if (Active == NAME_None) return true;
+    // New Game / reset has no ship-mode authority. Reconcile the geometry
+    // immediately on binding, before the first Tick can expose a stale
+    // Skybourne pose; do not grant a mode request or modify story state.
+    if (Active == NAME_None)
+    {
+        SnapToForm(EAureateWakeForm::Seaborne);
+        return true;
+    }
     // Restored saves and level arrivals never expose unauthorized flight.
     SnapToForm(Active == FName(TEXT("Seabourne"))
         ? EAureateWakeForm::Seaborne : EAureateWakeForm::Skyborne);
