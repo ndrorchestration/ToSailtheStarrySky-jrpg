@@ -89,6 +89,8 @@ class PrivateEnderIKBuilderContracts(unittest.TestCase):
         self.assertIn("ctrl.set_retarget_chain_end_bone(", CODE)
         self.assertIn('"RECONCILED_EXISTING"', CODE)
         self.assertIn('"RETARGET_CHAIN_BONES_MISMATCH_" + chain', CODE)
+        self.assertIn("actual_start.casefold() == start.casefold()", CODE)
+        self.assertIn("actual_end.casefold() == end.casefold()", CODE)
         self.assertIn("ctrl.get_retarget_chain_start_bone(", CODE)
         self.assertIn("ctrl.get_retarget_chain_end_bone(", CODE)
         self.assertIn('"chain_observations"', CODE)
