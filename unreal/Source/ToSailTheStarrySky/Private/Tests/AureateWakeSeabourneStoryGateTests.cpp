@@ -98,8 +98,39 @@ bool FTSTSSAureateSeabourneStoryGate::RunTest(const FString& Parameters)
         Story->GetReviewShipMode(), FName(TEXT("Skybourne")));
     Ship->Tick(0.1f);
     TestTrue(TEXT("Actual launch begins wing transformation"), Ship->IsTransitioning());
+
+    // A story reset revokes flight during an active transition. The ship
+    // must never visibly remain Skybourne while the story is unstarted.
+    Story->Reset();
+    Ship->Tick(0.1f);
+    TestFalse(TEXT("Story reset cancels pending ascent"), Ship->IsTransitioning());
+    TestEqual(TEXT("Reset mid-ascent returns docked Seabourne pose"),
+        Ship->GetCurrentForm(), EAureateWakeForm::Seaborne);
+    TestTrue(TEXT("Reset mid-ascent deploys sea hydrofoil"), FirstFoil->IsVisible());
+    TestFalse(TEXT("Reset story denies another flight request"),
+        Ship->RequestForm(EAureateWakeForm::Skyborne));
+    TestTrue(TEXT("Restore earned launch after reset"), Story->Restore(
+        true, ETSTSSFirstWakeBeat::Launched, 0x07));
+    Ship->Tick(0.1f);
+    TestTrue(TEXT("Restored launch starts ascent anew"), Ship->IsTransitioning());
     Ship->Tick(5.f);
     TestEqual(TEXT("Launched review ship completes Skybourne form"),
+        Ship->GetCurrentForm(), EAureateWakeForm::Skyborne);
+
+    // Reset after flight completes must also remove the now-unauthorized
+    // airborne form. This is distinct from the in-transition reset above.
+    Story->Reset();
+    Ship->Tick(0.1f);
+    TestFalse(TEXT("Reset completed flight leaves no pending transition"),
+        Ship->IsTransitioning());
+    TestEqual(TEXT("Reset after completed ascent returns docked Seabourne"),
+        Ship->GetCurrentForm(), EAureateWakeForm::Seaborne);
+    TestTrue(TEXT("Reset after completed ascent shows hydrofoil"), FirstFoil->IsVisible());
+    TestTrue(TEXT("Restore launch for subsequent splashdown assertions"), Story->Restore(
+        true, ETSTSSFirstWakeBeat::Launched, 0x07));
+    Ship->Tick(0.1f);
+    Ship->Tick(5.f);
+    TestEqual(TEXT("Restored launch returns Skybourne before sea contact"),
         Ship->GetCurrentForm(), EAureateWakeForm::Skyborne);
     TestTrue(TEXT("Restore sea contact before stable flotation"), Story->Restore(
         true, ETSTSSFirstWakeBeat::SeaContact, 0x07));
