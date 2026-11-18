@@ -51,12 +51,12 @@ def source_problems(pawn, header, town):
          "five-point footing check missing")
     need("!TeleportTo(Spawn, FRotator::ZeroRotator)" in start,
          "real pawn teleport not verified")
-    need(start.index("HasSupportedReviewFooting(World, Spawn)") <
-         start.index("TeleportTo(Spawn, FRotator::ZeroRotator)"),
+    support = start.find("HasSupportedReviewFooting(World, Spawn)")
+    teleport = start.find("TeleportTo(Spawn, FRotator::ZeroRotator)")
+    retirement = start.find("OldFlyer->SetActorHiddenInGame(true)")
+    need(support >= 0 and teleport >= 0 and support < teleport,
          "teleport before footing validation")
-    need("OldFlyer->SetActorHiddenInGame(true)" in start and
-         start.index("TeleportTo(Spawn, FRotator::ZeroRotator)") <
-         start.index("OldFlyer->SetActorHiddenInGame(true)"),
+    need(teleport >= 0 and retirement > teleport,
          "legacy marker retired before valid spawn")
     need("return true;" in start and
          "AdvanceTo(" not in start and
