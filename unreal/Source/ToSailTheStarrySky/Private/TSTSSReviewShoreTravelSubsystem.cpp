@@ -258,7 +258,8 @@ bool UTSTSSReviewShoreTravelSubsystem::TryResumePrivateEnderInShipRoom(
     if (!World || World->WorldType != EWorldType::PIE ||
         World->GetNetMode() != NM_Standalone ||
         !World->GetOutermost() ||
-        World->GetOutermost()->GetName() != ShipPackage ||
+        !World->GetOutermost()->GetName().StartsWith(
+            TEXT("/Game/TSTSS/Review/VerticalSlice/")) ||
         UGameplayStatics::GetCurrentLevelName(World, true) != ShipName ||
         !IsValid(PC) || PC->GetPawn() != DefaultPawn ||
         DefaultPawn->GetClass() != ATSTSSExplorerCharacter::StaticClass() ||
