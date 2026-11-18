@@ -23,6 +23,7 @@
 #include "Animation/Skeleton.h"
 #include "Animation/AnimSequence.h"
 #include "Animation/AnimSingleNodeInstance.h"
+#include "ReferenceSkeleton.h"
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
 #include "Components/CapsuleComponent.h"
@@ -994,6 +995,64 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
                 LastEnderPIEMotionBand = MotionBand;
             }
             TryEnderPIELocomotionPreview(MotionBand);
+            // PRIVATE D3D11 read-only bone chain telemetry. Headless
+            // -nullrhi can return a static reference pose even after
+            // animation requests. Log only in the real low-RAM rendered
+            // Game world, after 13 ticks in each animation band, and only
+            // with an additional explicit diagnostics flag.
+            if (FParse::Param(FCommandLine::Get(),
+                              TEXT("TSTSSPrivateEnderBoneAudit")))
+            {
+                if (EnderLowMemBoneAuditTrackedBand != MotionBand)
+                {
+                    EnderLowMemBoneAuditTrackedBand = MotionBand;
+                    EnderLowMemBoneAuditBandFrames = 0;
+                }
+                if (EnderLowMemBoneAuditBandFrames < 60000)
+                {
+                    ++EnderLowMemBoneAuditBandFrames;
+                }
+                const uint8 BandBit = static_cast<uint8>(1u << MotionBand);
+                if (EnderLowMemBoneAuditBandFrames >= 13 &&
+                    (EnderLowMemBoneAuditSampledMask & BandBit) == 0)
+                {
+                    const FReferenceSkeleton& Ref =
+                        Body->GetSkeletalMeshAsset()->GetRefSkeleton();
+                    const int32 Count = FMath::Min(Ref.GetNum(),
+                                                   Body->GetNumBones());
+                    UE_LOG(LogTemp, Display,
+                        TEXT("TSTSS_ENDER_PRIVATE_BONE_AUDIT_BEGIN band=%d bones=%d grounded=1 render_eval=1 art_NOT_APPROVED"),
+                        static_cast<int32>(MotionBand), Count);
+                    float MaxEdge = 0.f;
+                    for (int32 Index = 1; Index < Count; ++Index)
+                    {
+                        const int32 ParentIndex = Ref.GetParentIndex(Index);
+                        if (ParentIndex < 0 || ParentIndex >= Count)
+                        {
+                            continue;
+                        }
+                        const FVector A =
+                            Body->GetBoneTransform(Index).GetLocation();
+                        const FVector B =
+                            Body->GetBoneTransform(ParentIndex).GetLocation();
+                        const float EdgeCm = FVector::Distance(A, B);
+                        const float RefCm =
+                            Ref.GetRefBonePose()[Index].GetTranslation().Size();
+                        MaxEdge = FMath::Max(MaxEdge, EdgeCm);
+                        UE_LOG(LogTemp, Display,
+                            TEXT("TSTSS_ENDER_PRIVATE_BONE_AUDIT_SAMPLE band=%d bone=%s parent=%s edge_cm=%.3f reference_edge_cm=%.3f bone_pos_cm=%.2f,%.2f,%.2f parent_pos_cm=%.2f,%.2f,%.2f"),
+                            static_cast<int32>(MotionBand),
+                            *Ref.GetBoneName(Index).ToString(),
+                            *Ref.GetBoneName(ParentIndex).ToString(),
+                            EdgeCm, RefCm,
+                            A.X, A.Y, A.Z, B.X, B.Y, B.Z);
+                    }
+                    UE_LOG(LogTemp, Display,
+                        TEXT("TSTSS_ENDER_PRIVATE_BONE_AUDIT_END band=%d bones=%d max_edge_cm=%.3f animation_REQUEST_ONLY art_NOT_APPROVED"),
+                        static_cast<int32>(MotionBand), Count, MaxEdge);
+                    EnderLowMemBoneAuditSampledMask |= BandBit;
+                }
+            }
         }
     }
     // Only scoped review worlds advertise live interaction. Visual refresh

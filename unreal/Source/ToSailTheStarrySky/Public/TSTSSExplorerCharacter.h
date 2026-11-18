@@ -171,6 +171,11 @@ private:
     // Runtime-only diagnostic state; never serialized or enabled in shipping.
     bool bEnderPIEPossessionLogged = false;
     uint8 LastEnderPIEMotionBand = 255;
+    // Exact-private-scene D3D11 pose audit, transient and off by default.
+    // Each band is sampled once after pose evaluation has settled.
+    uint8 EnderLowMemBoneAuditTrackedBand = 255;
+    uint16 EnderLowMemBoneAuditBandFrames = 0;
+    uint8 EnderLowMemBoneAuditSampledMask = 0;
     bool bFirstWakeBokehReview = false;
     float FirstWakeReviewFstop = 9.f;
     void AcceptHilltoniaFlyer();
