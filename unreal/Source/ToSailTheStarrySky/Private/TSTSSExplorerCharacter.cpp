@@ -940,6 +940,22 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
         World->GetOutermost()->GetName().StartsWith(TEXT("/Game/TSTSS/Review/"));
     const FString Scene = UGameplayStatics::GetCurrentLevelName(World, true);
 #if WITH_EDITOR
+    // When the genuine V5 E-boarding ticket restored shipboard story in
+    // BeginPlay, let a private one-use GameInstance class ticket replace the
+    // default VS02 pawn on its first possessed Tick. A successful swap
+    // destroys THIS pawn, so do not touch its fields afterward.
+    if (bReviewNamespace && World->WorldType == EWorldType::PIE &&
+        World->GetNetMode() == NM_Standalone &&
+        Scene == TEXT("VS02_AureateInteriors"))
+    {
+        UGameInstance* Instance = World->GetGameInstance();
+        UTSTSSReviewShoreTravelSubsystem* Travel = Instance
+            ? Instance->GetSubsystem<UTSTSSReviewShoreTravelSubsystem>() : nullptr;
+        if (Travel && Travel->TryResumePrivateEnderInShipRoom(this))
+        {
+            return;
+        }
+    }
     if (bTryHilltoniaOpening)
     {
         bTryHilltoniaOpening = false;
