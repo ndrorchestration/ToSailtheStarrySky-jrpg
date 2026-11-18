@@ -86,7 +86,7 @@ class OpeningDockSourceContract(unittest.TestCase):
         self.assertIn("World->FindTeleportSpot", PLAYER)
         self.assertIn("TeleportTo(Candidate", PLAYER)
         tick = PLAYER.split("void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)", 1)[1].split(
-            "void ATSTSSExplorerCharacter::StartHilltoniaOpening", 1)[0]
+            "bool ATSTSSExplorerCharacter::StartHilltoniaOpening", 1)[0]
         self.assertNotIn("FirstWakeState->AdvanceTo(", tick)
         self.assertNotIn("SaveProgress(", tick)
         self.assertNotIn("OpenLevel(", tick)
