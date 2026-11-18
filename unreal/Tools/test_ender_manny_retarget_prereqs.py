@@ -24,7 +24,11 @@ class EnderRetargetPrerequisiteContracts(unittest.TestCase):
         self.assertIn('"run_candidate": "/Game/Characters/Mannequins/Anims/Unarmed/Jog/MF_Unarmed_Jog_Fwd"', SOURCE)
         self.assertIn('SOURCE_TARGET_SKELETON_COLLISION', SOURCE)
         self.assertIn('CLIP_NOT_SOURCE_SKELETON_', SOURCE)
-        self.assertIn('ROOT_MOTION_ENABLED_', SOURCE)
+        self.assertIn('source_root_motion_roles', SOURCE)
+        self.assertIn('"direct_source_clip_assignment_allowed"] = False', SOURCE)
+        self.assertIn('PRIVATE_CONVERSION_AND_MEASUREMENT_REQUIRED', SOURCE)
+        self.assertIn('NATIVE_RETARGET_RIG_INPUTS_VALIDATED_SOURCE_MOTION_CONVERSION_REQUIRED', SOURCE)
+        self.assertNotIn('require(not root_motion,', SOURCE)
 
     def test_source_package_root_matches_epic_template_internal_references(self):
         self.assertNotIn('/Game/Mannequins/', SOURCE)
