@@ -101,8 +101,13 @@ def ue_processes():
     })
 
 def signed_native_evidence(mode):
-    return EVIDENCE / ("prerequisite_report.json" if mode == "audit"
-                       else "rig_build_receipt.json")
+    reports = {
+        "audit": "prerequisite_report.json",
+        "create-rigs": "rig_build_receipt.json",
+        "retarget-clips": "animation_candidate_receipt.json",
+    }
+    require(mode in reports, "UNKNOWN_NATIVE_MODE")
+    return EVIDENCE / reports[mode]
 
 def preflight(mode):
     require(sys.platform == "win32", "WINDOWS_REQUIRED")
@@ -126,6 +131,7 @@ def preflight(mode):
     for script in (
         TOOLS / "inspect_ender_manny_retarget_prereqs.py",
         TOOLS / "build_private_ender_ik_retargeter.py",
+        TOOLS / "retarget_private_ender_locomotion_candidates.py",
     ):
         require(script.is_file(), "TOOLS_MISSING")
     if mode == "create-rigs":
@@ -157,6 +163,36 @@ def preflight(mode):
             require(not (PROJECT / "Content/TSTSS/Review/Characters/"
                          "EnderRetarget_NONCANONICAL" / asset).exists(),
                     "REVIEW_RIG_ALREADY_PRESENT")
+    if mode == "retarget-clips":
+        require(os.environ.get("TSTSS_PRIVATE_ANIM_RETARGET") == "1",
+                "NO_EXPLICIT_ANIMATION_OPT_IN")
+        prior = signed_native_evidence("audit")
+        require(prior.is_file(), "MISSING_NATIVE_RIG_REOPEN_AUDIT")
+        native = json.loads(prior.read_text(encoding="utf8"))
+        require(native.get("source_head") == head and
+                native.get("status") ==
+                "NATIVE_RETARGET_INPUTS_VALIDATED_NOT_RETARGETED" and
+                native.get("saved_private_ik", {}).get("status") ==
+                "REOPENED_SOURCE_AND_TARGET_IK_AND_RTG_PASS_NO_ANIM" and
+                native.get("source_clip_conversion_required") is True and
+                native.get("direct_source_clip_assignment_allowed") is False,
+                "RIG_REOPEN_OR_MOTION_HOLD_NOT_CURRENT")
+        checked_time = datetime.datetime.fromisoformat(native["created_utc"])
+        require(checked_time.tzinfo is not None and
+                abs((datetime.datetime.now(datetime.timezone.utc) -
+                     checked_time).total_seconds()) < 6 * 3600,
+                "RIG_REOPEN_AUDIT_STALE")
+        clips = "unreal/Content/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/Animations/"
+        for item in ("MM_Idle", "MF_Unarmed_Walk_Fwd", "MF_Unarmed_Jog_Fwd"):
+            filename = item + "_EnderPreview_NONCANONICAL.uasset"
+            check = subprocess.run(
+                ["git", "-C", str(ROOT), "check-ignore", "-q",
+                 clips + filename], timeout=15, check=False
+            )
+            require(check.returncode == 0, "PRIVATE_ANIMATION_NOT_GIT_EXCLUDED")
+            require(not (PROJECT / "Content/TSTSS/Review/Characters/"
+                         "EnderRetarget_NONCANONICAL/Animations"/filename).exists(),
+                    "PRIVATE_ANIMATION_ALREADY_EXISTS")
     return head
 
 def run_native(mode):
@@ -175,10 +211,12 @@ def run_native(mode):
             gate["disk_start_gib"] >= STARTUP_DISK_GIB,
             "SECOND_STARTUP_RESOURCE_CHECK")
     STARTUP_GATE.write_text(json.dumps(gate, indent=2), encoding="utf8")
-    script = TOOLS / (
-        "inspect_ender_manny_retarget_prereqs.py" if mode == "audit"
-        else "build_private_ender_ik_retargeter.py"
-    )
+    filename = {
+        "audit": "inspect_ender_manny_retarget_prereqs.py",
+        "create-rigs": "build_private_ender_ik_retargeter.py",
+        "retarget-clips": "retarget_private_ender_locomotion_candidates.py",
+    }[mode]
+    script = TOOLS / filename
     before = {str(path): sha(path) for path in PROTECTED}
     modes = {path: path.stat().st_mode for path in PROTECTED}
     # Guard against Unreal's observed automatic DefaultEngine/Input.ini rewrites.
@@ -193,6 +231,8 @@ def run_native(mode):
     env["TSTSS_PRIVATE_IK_RUN_ID"] = run_id
     if mode != "create-rigs":
         env.pop("TSTSS_PRIVATE_IK_CREATE", None)
+    if mode != "retarget-clips":
+        env.pop("TSTSS_PRIVATE_ANIM_RETARGET", None)
     receipt = {
         "status": "STARTING", "mode": mode, "run_id": run_id,
         "source_head": head, "admission": gate,
@@ -235,7 +275,8 @@ def run_native(mode):
                     stop_reason = "DISK_SAFETY_STOP"
                 elif receipt["ram_last_gib"] < RUNTIME_RAM_FLOOR_GIB:
                     stop_reason = "RAM_SAFETY_STOP"
-                elif elapsed > (240 if mode == "create-rigs" else 180):
+                elif elapsed > (360 if mode == "retarget-clips" else
+                                240 if mode == "create-rigs" else 180):
                     stop_reason = "NATIVE_TIMEOUT"
                 if stop_reason:
                     if owned_child.poll() is None:
@@ -271,11 +312,12 @@ def run_native(mode):
             json.loads(artifact.read_text(encoding="utf8"))
             if receipt["native_report_fresh"] else None
         )
-        wanted_status = (
-            "NATIVE_RETARGET_INPUTS_VALIDATED_NOT_RETARGETED"
-            if mode == "audit" else
-            "PRIVATE_IK_RIGS_CREATED_REVIEW_ONLY_NO_ANIMATION"
-        )
+        wanted_status = {
+            "audit": "NATIVE_RETARGET_INPUTS_VALIDATED_NOT_RETARGETED",
+            "create-rigs": "PRIVATE_IK_RIGS_CREATED_REVIEW_ONLY_NO_ANIMATION",
+            "retarget-clips":
+                "PRIVATE_RETARGET_CLIP_CANDIDATES_CREATED_NOT_PLAYBACK_ACCEPTED",
+        }[mode]
         report = receipt["native_report"] or {}
         saved = report.get("saved_assets", [])
         names = (
@@ -301,6 +343,29 @@ def run_native(mode):
             )
         )
         receipt["rig_files_verified"] = rig_files_valid
+        clips = ("MM_Idle", "MF_Unarmed_Walk_Fwd", "MF_Unarmed_Jog_Fwd")
+        clip_dir = review_folder / "Animations"
+        clip_suffix = "_EnderPreview_NONCANONICAL"
+        clip_files_valid = (
+            mode != "retarget-clips" or (
+                report.get("saved_assets") == 3 and
+                isinstance(report.get("output_animations"), list) and
+                len(report["output_animations"]) == 3 and
+                sorted([
+                    a.get("asset") for a in report["output_animations"]
+                    if isinstance(a, dict)
+                ]) == sorted([
+                    "/Game/TSTSS/Review/Characters/"
+                    "EnderRetarget_NONCANONICAL/Animations/"
+                    + name + clip_suffix + "." + name + clip_suffix
+                    for name in clips
+                ]) and
+                all((clip_dir / (name + clip_suffix + ".uasset")).is_file()
+                    and (clip_dir / (name + clip_suffix + ".uasset")).stat().st_size > 0
+                    for name in clips)
+            )
+        )
+        receipt["clip_files_verified"] = clip_files_valid
         proof_ok = all((
             receipt.get("exit_code") == 0,
             receipt["protected_unchanged"],
@@ -310,6 +375,7 @@ def run_native(mode):
             report.get("status") == wanted_status,
             report.get("source_head") == head,
             rig_files_valid,
+            clip_files_valid,
         ))
         receipt["status"] = (
             "HOLD_" + stop_reason if stop_reason else
@@ -333,10 +399,13 @@ if __name__ == "__main__":
     choice = parser.add_mutually_exclusive_group(required=True)
     choice.add_argument("--audit", action="store_true")
     choice.add_argument("--create-rigs", action="store_true")
+    choice.add_argument("--retarget-clips", action="store_true")
     args = parser.parse_args()
     try:
-        sys.exit(0 if run_native(
-            "audit" if args.audit else "create-rigs") else 3)
+        selected = ("audit" if args.audit else
+                    "create-rigs" if args.create_rigs else
+                    "retarget-clips")
+        sys.exit(0 if run_native(selected) else 3)
     except Exception as exc:
         print("HOLD_GUARDED_NATIVE_HOST: " + str(exc), file=sys.stderr)
         sys.exit(4)
