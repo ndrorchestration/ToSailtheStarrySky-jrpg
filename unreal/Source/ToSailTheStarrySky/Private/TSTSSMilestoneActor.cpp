@@ -301,6 +301,22 @@ void ATSTSSMilestoneActor::UpdateReviewBeacon(const UTSTSSFirstWakeState* State)
     }
     bReviewBeaconInitialized = true;
     bReviewBeaconAvailable = bAvailable;
+    // In the real shipboard route the *final* E marker must not become
+    // a camera-ray obstruction before all three individual inspections are
+    // earned. It becomes hittable only when the authoritative state allows
+    // signoff, and releases the ray again after success. The other marker
+    // classes retain their existing collision policy.
+    const bool bShipboardFinalSignoff =
+        GetActorLabel() == TEXT("TSTSS_ENGINEROOM_REVIEW_EngineeringApproval") &&
+        !bIsInspectionStation &&
+        Milestone == ETSTSSFirstWakeBeat::EngineeringChecked &&
+        UGameplayStatics::GetCurrentLevelName(GetWorld(), true) ==
+            TEXT("VS02_AureateInteriors");
+    if (bShipboardFinalSignoff && IsValid(InteractionMesh))
+    {
+        InteractionMesh->SetCollisionResponseToChannel(
+            ECC_Visibility, bAvailable ? ECR_Block : ECR_Ignore);
+    }
     // Consumed review markers cannot visually occlude later objectives.
     // Cosmetic visibility only: the existing collision/story gates stay intact.
     const bool bConsumed = bIsInspectionStation
@@ -319,7 +335,7 @@ void ATSTSSMilestoneActor::UpdateReviewBeacon(const UTSTSSFirstWakeState* State)
             !bIsInspectionStation &&
             (Milestone == ETSTSSFirstWakeBeat::IoniaHired ||
              Milestone == ETSTSSFirstWakeBeat::BoardedAureateWake);
-        if (bHarborCharacterOrShip)
+        if (bHarborCharacterOrShip || bShipboardFinalSignoff && !bAvailable)
         {
             InteractionMesh->SetVisibility(false, false);
         }
@@ -457,6 +473,15 @@ void ATSTSSMilestoneActor::ReconcileReviewCollisionAfterRestore(
         bAlreadyConsumed = State->HasStarted() &&
             static_cast<uint8>(State->GetCurrentBeat()) >=
             static_cast<uint8>(Milestone);
+    }
+    // An unearned shipboard signoff is just as non-hittable as one already
+    // consumed. Restore must never resurrect an opaque, premature E target.
+    if (Label == TEXT("TSTSS_ENGINEROOM_REVIEW_EngineeringApproval") &&
+        !bIsInspectionStation &&
+        Milestone == ETSTSSFirstWakeBeat::EngineeringChecked &&
+        !IsReviewActionable(State))
+    {
+        bAlreadyConsumed = true;
     }
     const ECollisionResponse ReviewResponse =
         bAlreadyConsumed ? ECR_Ignore : ECR_Block;
