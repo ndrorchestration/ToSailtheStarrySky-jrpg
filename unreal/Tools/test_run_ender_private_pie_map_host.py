@@ -21,6 +21,15 @@ class HostTests(unittest.TestCase):
         self.assertNotIn("taskkill /IM", S)
         self.assertIn('"-nullrhi"', S)
 
+    def test_python_map_stage_waits_for_full_editor_world(self):
+        # This authoring script uses LevelEditorSubsystem; never run it as
+        # an early startup ExecCmd or as the level-less Python commandlet.
+        self.assertIn('"-ExecutePythonScript=" + str(SCRIPT)', S)
+        self.assertNotIn('"-ExecCmds=py " + str(SCRIPT)', S)
+        self.assertNotIn('"-run=pythonscript"', S)
+        self.assertIn('"-nullrhi"', S)
+        self.assertIn('"-abslog=" + str(folder / "engine.log")', S)
+
     def test_release_not_claimed(self):
         for token in ('"pie_playback_verified": False', '"creator_approved": False',
                       '"PRIVATE_PIE_MAP_STAGE_PASS_NOT_PLAYBACK_ACCEPTED"'):
