@@ -153,8 +153,12 @@ def execute() -> dict:
     modes = {str(p): p.stat().st_mode for p in PROTECTED}
     env = os.environ.copy()
     env["TSTSS_PRIVATE_ENDER_PIE_MAP"] = "1"
+    # This script edits a LevelEditorSubsystem world: use the full-editor
+    # Python execution mode, which waits for the startup map/editor context.
+    # A startup -ExecCmds=py or lean -run=pythonscript commandlet is unsafe
+    # here because the private map clone needs an initialized level editor.
     cmd = [str(EDITOR), str(UPROJECT), "-nullrhi", "-NoSound", "-unattended",
-           "-nosplash", "-nop4", "-ExecCmds=py " + str(SCRIPT),
+           "-nosplash", "-nop4", "-ExecutePythonScript=" + str(SCRIPT),
            "-abslog=" + str(folder / "engine.log")]
     child = None
     launched_at = None
