@@ -84,7 +84,7 @@ class PrivateEnderIKBuilderContracts(unittest.TestCase):
         self.assertIn("if chain.casefold() in initial:", CODE)
         self.assertIn("str(name_added).casefold() == chain.casefold()", CODE)
         self.assertIn("str(controller.get_source_chain(chain)).casefold()", CODE)
-        self.assertIn("if chain in initial:", CODE)
+        self.assertIn("if chain.casefold() in initial:", CODE)
         self.assertIn("ctrl.set_retarget_chain_start_bone(", CODE)
         self.assertIn("ctrl.set_retarget_chain_end_bone(", CODE)
         self.assertIn('"RECONCILED_EXISTING"', CODE)
