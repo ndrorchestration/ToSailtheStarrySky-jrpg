@@ -329,7 +329,7 @@ def run_native(mode):
             "Content/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL"
         )
         rig_files_valid = (
-            mode == "audit" or (
+            mode != "create-rigs" or (
                 isinstance(saved, list) and len(saved) == len(names) and
                 sorted(saved) == sorted([
                     "/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/"
