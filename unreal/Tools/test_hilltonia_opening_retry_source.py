@@ -4,7 +4,6 @@ This neither launches Unreal nor proves that a runtime WorldStatic instance
 is registered, that the human can traverse the road, or that E/Enter works.
 """
 from pathlib import Path
-import re
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1] / "Source/ToSailTheStarrySky"
@@ -74,23 +73,18 @@ def source_problems(pawn, header, town):
 
 
 def west_road_supports_spawn(town):
-    # Exact visible instancing constants, NOT a substitute for a physics ray.
-    center = re.search(r"constexpr float RoadCenterY = ([-.\\d]+)f;", town)
-    span = re.search(
-        r"Place\\(WestRoad,\\s*(-?\\d+\\.?\\d*)f - (\\d+\\.?\\d*)f \\* Step, "
-        r"RoadCenterY, -30\\.f,\\s*([\\d.]+)f, ([\\d.]+)f, \\.6f\\);", town)
-    if not center or not span:
+    # Source-locked constants, not a claim about registered physics bodies.
+    flat = " ".join(town.split())
+    if ("constexpr float RoadCenterY = -150.f;" not in flat or
+        "Place(WestRoad, -9650.f - 600.f * Step, RoadCenterY, -30.f, 6.2f, 7.8f, .6f);" not in flat):
         return False
-    y = float(center.group(1))
-    x0, step, scale_x, scale_y = map(float, span.groups())
-    x = -14650.0
+    x, y = -14650.0, -150.0
     points = [(x, y), (x + 35, y), (x - 35, y),
               (x, y + 35), (x, y - 35)]
     return all(any(
-        abs(px - (x0 - k * step)) < (50.0 * scale_x) and
-        abs(py - y) < 50.0 * scale_y
+        abs(px - (-9650.0 - k * 600.0)) < 310.0 and
+        abs(py - y) < 390.0
         for k in range(11)) for px, py in points)
-
 
 class HilltoniaSpawnAdmission(unittest.TestCase):
     def test_source_contract(self):
@@ -133,8 +127,10 @@ class HilltoniaSpawnAdmission(unittest.TestCase):
 
     def test_negative_no_spawning_story_progress(self):
         begin = PAWN.index("bool ATSTSSExplorerCharacter::StartHilltoniaOpening(")
-        end = PAWN.index("bool ATSTSSExplorerCharacter::IsHilltoniaFlyerHit(", begin)
-        broken = PAWN[:end] + "    FirstWakeState->AdvanceTo(ETSTSSFirstWakeBeat::FlyerDiscovered);\\n" + PAWN[end:]
+        ret = PAWN.index("    return true;", begin)
+        broken = (PAWN[:ret] +
+                  "    FirstWakeState->AdvanceTo(ETSTSSFirstWakeBeat::FlyerDiscovered);\\n" +
+                  PAWN[ret:])
         self.assertTrue(source_problems(broken, HEADER, TOWN))
 
 
