@@ -7,6 +7,8 @@
 #include "Materials/MaterialInterface.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Math/RotationMatrix.h"
+#include "Engine/World.h"
+#include "Kismet/GameplayStatics.h"
 
 namespace
 {
@@ -107,6 +109,32 @@ bool AAureateWakePreviewActor::ApplyEditorReviewPose()
     // Cosmetic scene authoring only; all mode-change APIs still fail closed.
     SnapToForm(EditorReviewPose == EAureateWakeForm::Seaborne
         ? EAureateWakeForm::Seaborne : EAureateWakeForm::Skyborne);
+    return true;
+#else
+    return false;
+#endif
+}
+bool AAureateWakePreviewActor::StageDockedSeabourneReviewPose()
+{
+#if WITH_EDITOR
+    // The noncanonical V5 harbor ship must visibly be in sea configuration
+    // before the player has even read the flyer. The story remains unstarted
+    // and cannot issue any mode request. No editor map/package is modified.
+    const UWorld* World = GetWorld();
+    if (!World || (World->WorldType != EWorldType::PIE &&
+                   World->WorldType != EWorldType::Game) ||
+        World->GetNetMode() != NM_Standalone || !World->GetOutermost() ||
+        !World->GetOutermost()->GetName().StartsWith(TEXT("/Game/TSTSS/Review/")) ||
+        UGameplayStatics::GetCurrentLevelName(World, true) !=
+            TEXT("FirstWake_PreludeInteraction_V5_VisualReview") ||
+        GetActorLabel() != TEXT("TSTSS_DOCKED_WAKE_REVIEW_SHIP_PROXY") ||
+        IsValid(BoundReviewStory.Get()) || bTransitioning)
+    {
+        return false;
+    }
+    SnapToForm(EAureateWakeForm::Seaborne);
+    UE_LOG(LogTemp, Display,
+        TEXT("TSTSS_DOCKED_WAKE_REVIEW_SEABOURNE_VISIBLE mode_authority=0 saved_map_unchanged=1"));
     return true;
 #else
     return false;
