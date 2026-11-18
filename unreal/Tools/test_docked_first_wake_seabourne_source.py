@@ -52,5 +52,18 @@ class DockedSeabourneSource(unittest.TestCase):
         self.assertIn('FName(TEXT("Skybourne"))', body)
         self.assertIn("IsSeabourneRecoveryLocked()", body)
 
+    def test_unstarted_story_reset_retracts_unauthorized_flight_geometry(self):
+        # A reset can arrive both during ascent and after ascent completes.
+        # This source guard is not a substitute for the existing Unreal test.
+        tick = ACTOR.split(
+            "void AAureateWakePreviewActor::Tick(float DeltaSeconds)", 1)[1]
+        gate = tick.split("    if (!bTransitioning)", 1)[0]
+        self.assertIn("if (Authorized == NAME_None)", gate)
+        self.assertIn(
+            "if (bTransitioning || CurrentForm != EAureateWakeForm::Seaborne)",
+            gate)
+        self.assertIn("SnapToForm(EAureateWakeForm::Seaborne);", gate)
+        self.assertNotIn("SnapToForm(EAureateWakeForm::Skyborne);", gate)
+
 if __name__ == "__main__":
     unittest.main()
