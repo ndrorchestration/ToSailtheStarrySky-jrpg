@@ -40,4 +40,24 @@ protected:
     float HullDraftCm = 120.f;
     UPROPERTY(EditAnywhere, Category="TSTSS|Buoyancy")
     bool bEnablePrototypeBuoyancy = false;
+
+    // Opt-in, noncanonical review lab: keep the hull physically dry until
+    // a real player story reaches Launched; defaults off in every other map.
+    UPROPERTY(EditAnywhere, Category="TSTSS|Water|Review")
+    bool bArmPrototypePhysicsOnLaunch = false;
+
+    FTransform InitialPrototypeHullTransform = FTransform::Identity;
+    bool bHasPrototypeInitialTransform = false;
+    bool bPrototypeTimelineObserved = false;
+    uint64 PrototypeRestoreGeneration = 0;
+    UPROPERTY(Transient)
+    TWeakObjectPtr<UTSTSSFirstWakeState> PrototypeObservedStory;
+
+#if WITH_EDITOR
+    // Bounded, opt-in review-only observations. Never serialized or used
+    // as story or physics authority, including after Reset/Restore.
+    uint32 DryReviewTraceSamples = 0;
+    uint32 PhysicalReviewTraceSamples = 0;
+    float LastDryReviewTraceWorldSeconds = -10000.f;
+#endif
 };

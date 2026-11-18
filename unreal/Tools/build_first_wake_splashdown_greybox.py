@@ -187,7 +187,11 @@ def build_in_unreal() -> dict:
     water.set_actor_scale3d(unreal.Vector(*WATER_SCALE))
     water_mesh.set_collision_profile_name("OverlapAllDynamic")
     water_mesh.set_collision_enabled(unreal.CollisionEnabled.QUERY_ONLY)
-    water_mesh.set_generate_overlap_events(True)
+    # UE 5.8 Python exposes overlap generation as a reflected read/write
+    # property, not a set_generate_overlap_events() component method.
+    water_mesh.set_editor_property("generate_overlap_events", True)
+    if not water_mesh.get_editor_property("generate_overlap_events"):
+        raise RuntimeError("HOLD: water overlap events were not enabled")
     water.set_editor_property("tags", [unreal.Name("TSTSSWaterVolume")])
 
     hull = spawn(hull_class, "LAB_AureateHullPhysicsProxy_NotCanon", HULL_LOCATION)
@@ -198,8 +202,14 @@ def build_in_unreal() -> dict:
     hull.set_actor_scale3d(unreal.Vector(*HULL_SCALE))
     hull_mesh.set_collision_profile_name("PhysicsActor")
     hull_mesh.set_collision_enabled(unreal.CollisionEnabled.QUERY_AND_PHYSICS)
-    hull_mesh.set_generate_overlap_events(True)
-    hull_mesh.set_simulate_physics(True)
+    hull_mesh.set_editor_property("generate_overlap_events", True)
+    if not hull_mesh.get_editor_property("generate_overlap_events"):
+        raise RuntimeError("HOLD: hull overlap events were not enabled")
+    hull_mesh.set_mobility(unreal.ComponentMobility.MOVABLE)
+    # The player must authorize launch before gravity can drop the hull.
+    # Runtime opt-in arms this exact dry pose on the real Launched story beat.
+    hull_mesh.set_simulate_physics(False)
+    hull.set_editor_property("arm_prototype_physics_on_launch", True)
     hull.set_editor_property("enable_prototype_buoyancy", True)
     # Native bAutoBindPlayerStory defaults true: story authority still requires
     # First Wake launch, actual overlap, finite velocity and two stable seconds.

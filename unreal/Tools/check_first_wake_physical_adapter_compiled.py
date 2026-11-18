@@ -25,6 +25,8 @@ API = r"""
 #include <string>
 #include <vector>
 #define TEXT(v) v
+using uint8 = unsigned char;
+using uint64 = unsigned long long;
 using FName = std::string;
 template <class T> using TArray = std::vector<T>;
 template <class T> struct TNumericLimits {
@@ -36,6 +38,13 @@ struct FVector {
     FVector(float x, float y, float z):X(x),Y(y),Z(z){}
 };
 struct FBoxSphereBounds { FVector Origin, BoxExtent; };
+struct FTransform { float Z=0; };
+enum class ETeleportType { TeleportPhysics };
+template<class T> struct WeakStoryPointer {
+    T* Value=nullptr;
+    T* Get() const { return Value; }
+    WeakStoryPointer& operator=(T* p) { Value=p; return *this; }
+};
 struct FMath {
     static bool IsFinite(float v) { return std::isfinite(v); }
     static float Max(float a,float b) { return std::max(a,b); }
@@ -51,7 +60,11 @@ struct AActor {
 template<class T> bool IsValid(const T* p) { return p != nullptr; }
 struct UTSTSSFirstWakeState {
     enum Beat { Other, Launched, SeaContact, FlotationConfirmed } CurrentBeat=Launched;
+    bool Started=true;
+    uint64 Generation=0;
     Beat GetCurrentBeat() const { return CurrentBeat; }
+    bool HasStarted() const { return Started; }
+    uint64 GetRestoreGeneration() const { return Generation; }
 };
 using ETSTSSFirstWakeBeat = UTSTSSFirstWakeState::Beat;
 struct ATSTSSExplorerCharacter : AActor {
@@ -78,6 +91,9 @@ struct UStaticMeshComponent {
     int Forces=0;
     float LastForceZ=0;
     bool IsSimulatingPhysics() const { return Physics; }
+    void SetSimulatePhysics(bool value) { Physics=value; }
+    FTransform GetComponentTransform() const { return {Location.Z}; }
+    void SetWorldTransform(const FTransform& t,bool,void*,ETeleportType) { Location.Z=t.Z; }
     void GetOverlappingActors(TArray<AActor*>& out,int) const { out=Overlaps; }
     FBoxSphereBounds GetBounds() const { return {Location,Extent}; }
     FVector GetPhysicsLinearVelocity() const { return Velocity; }
@@ -100,6 +116,12 @@ struct ATSTSSWaterContactAdapter : AActor {
     UTSTSSWaterLandingGate* Gate=nullptr;
     bool bAutoBindPlayerStory=false;
     bool bEnablePrototypeBuoyancy=false;
+    bool bArmPrototypePhysicsOnLaunch=false;
+    bool bHasPrototypeInitialTransform=false;
+    bool bPrototypeTimelineObserved=false;
+    uint64 PrototypeRestoreGeneration=0;
+    FTransform InitialPrototypeHullTransform;
+    WeakStoryPointer<UTSTSSFirstWakeState> PrototypeObservedStory;
     FName WaterVolumeTag="TSTSSWaterVolume";
     float HullDraftCm=120.f;
     float MaxBuoyantAccelerationCms2=1800.f;
@@ -181,6 +203,37 @@ int main() {
         replacement.CurrentBeat=UTSTSSFirstWakeState::Other;
         adapter.Tick(0.1f);
         require(gate.Samples==8,"invalid_story_beat_not_held");
+
+        // Opt-in review hull must not have landed before the player's launch.
+        UTSTSSFirstWakeState launchStory;
+        launchStory.Started=false;
+        launchStory.CurrentBeat=UTSTSSFirstWakeState::Other;
+        UTSTSSWaterLandingGate launchGate;
+        UStaticMeshComponent launchHull;
+        launchHull.Physics=false;
+        launchHull.Location.Z=500.f;
+        ATSTSSWaterContactAdapter launchAdapter;
+        launchAdapter.Gate=&launchGate;
+        launchAdapter.Story=&launchStory;
+        launchAdapter.Hull=&launchHull;
+        launchAdapter.bArmPrototypePhysicsOnLaunch=true;
+        launchAdapter.bHasPrototypeInitialTransform=true;
+        launchAdapter.InitialPrototypeHullTransform={500.f};
+        launchAdapter.Tick(0.1f);
+        require(!launchHull.Physics && launchGate.Samples==0,
+                "prelaunch_hull_physics_armed");
+        launchStory.Started=true;
+        launchStory.CurrentBeat=UTSTSSFirstWakeState::Launched;
+        launchAdapter.Tick(0.1f);
+        require(launchHull.Physics,"launch_did_not_arm_real_hull_physics");
+        // A story rewind must not inherit old hull position or water contact.
+        launchHull.Location.Z=100.f;
+        launchStory.Generation++;
+        launchStory.CurrentBeat=UTSTSSFirstWakeState::Other;
+        launchAdapter.Tick(0.1f);
+        require(!launchHull.Physics && launchHull.Location.Z==500.f,
+                "rewind_reused_old_water_contact");
+
         std::cout<<"PASS: "<<checks<<" compiled real water adapter Tick checks (API doubles; not UE collision/PIE)\n";
         return 0;
     } catch(const std::exception& e) {
@@ -239,6 +292,14 @@ def main() -> None:
             ("|| !Hull->IsSimulatingPhysics()","", "non_physics_hull_allowed"),
             ("Other->ActorHasTag(WaterVolumeTag)","true","untagged_volume_allowed"),
             ("bBelowSurface && Submersion > 0.01f","Submersion > 0.01f","false_waterline_allowed"),
+            # The optional review logger now sits inside this guarded body.
+            # Mutate only the condition; never assume the exact body layout.
+            ("if (!bAfterLaunch)\n            {",
+             "if (false)\n            {",
+             "prelaunch_hull_physics_armed"),
+            ("Hull->SetWorldTransform(InitialPrototypeHullTransform, false, nullptr,\n"
+             "                                    ETeleportType::TeleportPhysics);",
+             "(void)InitialPrototypeHullTransform;", "rewind_reused_old_water_contact"),
         ]
         for original, replacement, failure in mutations:
             if method.count(original)!=1:
