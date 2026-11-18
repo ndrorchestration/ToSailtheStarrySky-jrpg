@@ -67,6 +67,10 @@ public:
     UFUNCTION(BlueprintCallable, Category="Aureate Wake|Preview|Review")
     bool ApplyEditorReviewPose();
 
+    // Visible sea pose for the one noncanonical docked V5 runtime proxy.
+    // Cosmetic only: does not grant, advance or persist a ship-form request.
+    bool StageDockedSeabourneReviewPose();
+
     /** Optional creator-authored translucent/iridescent wing material; no material asset is included yet. */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Aureate Wake|Visuals")
     TObjectPtr<UMaterialInterface> WingMaterial;
