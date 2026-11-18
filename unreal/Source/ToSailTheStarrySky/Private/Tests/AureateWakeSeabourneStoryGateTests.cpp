@@ -78,6 +78,14 @@ bool FTSTSSAureateSeabourneStoryGate::RunTest(const FString& Parameters)
         Story->GetReviewShipMode(), NAME_None);
     TestFalse(TEXT("Unstarted story cannot authorize Skybourne"),
         Story->IsReviewShipModeAuthorized(FName(TEXT("Skybourne"))));
+    // Binding before the first Tick must never allow a default airborne frame.
+    TestTrue(TEXT("Bind unstarted story before first Tick"),
+        Ship->BindReviewStory(Story));
+    TestEqual(TEXT("Unstarted binding immediately shows docked Seabourne"),
+        Ship->GetCurrentForm(), EAureateWakeForm::Seaborne);
+    TestTrue(TEXT("Unstarted binding shows deployed hydrofoil"), FirstFoil->IsVisible());
+    TestFalse(TEXT("Unstarted binding grants no flight request"),
+        Ship->RequestForm(EAureateWakeForm::Skyborne));
     TestTrue(TEXT("Restore earned engineering signoff"), Story->Restore(
         true, ETSTSSFirstWakeBeat::EngineeringChecked, 0x07));
     TestEqual(TEXT("Signed-off but docked ship remains Seabourne"),
