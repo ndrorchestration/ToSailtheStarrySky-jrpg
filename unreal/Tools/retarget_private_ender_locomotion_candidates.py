@@ -188,7 +188,9 @@ def run():
     require(len(result) == 3, "BATCH_RETURN_COUNT")
     retargeted = []
     for data in result:
-        path = str(data.get_soft_object_path())
+        # UE5.8 returned AssetData has package_name and asset_name, but no
+        # get_soft_object_path() helper. Reconstruct a fully qualified path.
+        path = str(data.package_name) + "." + str(data.asset_name)
         require(path.startswith(OUTPUT + "/"), "OUTPUT_PACKAGE_ESCAPE")
         asset = unreal.load_asset(path)
         require(isinstance(asset, unreal.AnimSequence),
