@@ -11,9 +11,9 @@ ROUTE = (ROOT / "Private/TSTSSReviewShoreTravelSubsystem.cpp").read_text(encodin
 HEADER = (ROOT / "Public/TSTSSReviewShoreTravelSubsystem.h").read_text(encoding="utf8")
 PAWN = (ROOT / "Private/TSTSSExplorerCharacter.cpp").read_text(encoding="utf8")
 
-PRIVATE_CLASS = (
-    'BP_EnderLocomotionPreview_NONCANONICAL.'
-    '"BP_EnderLocomotionPreview_NONCANONICAL_C'
+PRIVATE_CLASS_SOURCE = (
+    '"BP_EnderLocomotionPreview_NONCANONICAL."'
+    '\n    "BP_EnderLocomotionPreview_NONCANONICAL_C"'
 )
 SUBSYSTEM_CALL = "Travel->TryResumePrivateEnderInShipRoom(this)"
 
@@ -41,7 +41,7 @@ def checks(header, route, pawn):
     need("UPROPERTY(Transient)" in header and
          "TSubclassOf<ATSTSSExplorerCharacter> PendingPrivateEnderClass" in header,
          "transient strong pawn class custody")
-    need(PRIVATE_CLASS in route and
+    need(PRIVATE_CLASS_SOURCE in route and
          "SourcePawn->GetClass()->GetPathName() == PrivateEnderPawnClassPath" in queue,
          "source-class exact match")
     for token in ('World->WorldType == EWorldType::PIE',
@@ -74,9 +74,9 @@ def checks(header, route, pawn):
                   'TSTSS_PRIVATE_ENDER_VS02_REBIND_OK',
                   'save_mutation=0 map_unchanged=1'):
         need(token in resume, "rebind gate/rollback: " + token)
-    need(resume.index("bPrivateEnderArrivalReady = false") <
-         resume.index("World->SpawnActor<ATSTSSExplorerCharacter>"),
-         "ticket consumed before reentrant spawn")
+    consume = resume.find("bPrivateEnderArrivalReady = false")
+    spawn = resume.find("World->SpawnActor<ATSTSSExplorerCharacter>")
+    need(0 <= consume < spawn, "ticket consumed before reentrant spawn")
     need(resume.index("Ender->GetFirstWakeState()->Restore(") <
          resume.index("PC->Possess(Ender)") <
          resume.index("DefaultPawn->Destroy()"),
