@@ -127,6 +127,22 @@ void ShowFirstWakeReviewObjective(const UTSTSSFirstWakeState* State)
 }
 
 #if WITH_EDITOR
+// The full Unreal Editor GUI exhausted this laptop's RAM review reserve.
+// Admit only the exact privately staged V5 scene to a lower-memory -game
+// editor build with a *separate* explicit launch flag. Shipping cannot call
+// this helper, production maps are rejected and no save/asset is modified.
+bool IsPrivateEnderLowMemGameReview(const UWorld* World)
+{
+    return World &&
+        World->WorldType == EWorldType::Game &&
+        World->GetNetMode() == NM_Standalone &&
+        FParse::Param(FCommandLine::Get(),
+                      TEXT("TSTSSPrivateEnderLowMemReview")) &&
+        World->GetOutermost() &&
+        World->GetOutermost()->GetName() ==
+            TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/FirstWake_PreludeInteraction_V5_VisualReview");
+}
+
 void ApplyCoastalRecoveryReviewSignage(UWorld* World)
 {
     if (!World || (World->WorldType != EWorldType::PIE &&
@@ -941,6 +957,45 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
             }
         }
     }
+    // Lower-RAM graphical fallback for the exact PRIVATE Ender review map.
+    // This is not a replacement for physical WASD/Shift, GPU image inspection
+    // or art acceptance, and never alters production or packaged scenes.
+    if (bReviewNamespace && IsPrivateEnderLowMemGameReview(World) &&
+        GetClass()->GetName() == TEXT("BP_EnderLocomotionPreview_NONCANONICAL_C") &&
+        bFirstWakeThirdPersonReview && World->GetNetMode() == NM_Standalone &&
+        Scene == TEXT("FirstWake_PreludeInteraction_V5_VisualReview"))
+    {
+        // The existing editor-built Game branch has already applied its
+        // single walk/run lease update earlier in this Tick.
+        USkeletalMeshComponent* Body = GetMesh();
+        const bool bPrivateBodyVisible = IsValid(Body) && Body->IsRegistered() &&
+            IsValid(Body->GetSkeletalMeshAsset()) && Body->GetNumBones() > 0 &&
+            Body->IsVisible() && !EnderSliceReviewBody.IsNull() &&
+            Body->GetSkeletalMeshAsset() == EnderSliceReviewBody.Get();
+        if (!bEnderPIEPossessionLogged)
+        {
+            UE_LOG(LogTemp, Display,
+                TEXT("TSTSS_ENDER_LOWMEM_GAME_READY private_pawn=1 skeletal_visible=%d bones=%d third_person=1 render_NOT_VERIFIED art_NOT_APPROVED"),
+                bPrivateBodyVisible ? 1 : 0,
+                bPrivateBodyVisible ? Body->GetNumBones() : 0);
+            bEnderPIEPossessionLogged = true;
+        }
+        if (bPrivateBodyVisible && GetCharacterMovement() &&
+            GetCharacterMovement()->IsMovingOnGround())
+        {
+            const float GroundSpeedCmS = GetVelocity().Size2D();
+            const uint8 MotionBand = GroundSpeedCmS < 10.f ? 0 :
+                (GroundSpeedCmS < 300.f ? 1 : 2);
+            if (MotionBand != LastEnderPIEMotionBand)
+            {
+                UE_LOG(LogTemp, Display,
+                    TEXT("TSTSS_ENDER_LOWMEM_GAME_MOTION band=%d speed_cm_s=%.1f grounded=1 animation_NOT_VERIFIED"),
+                    static_cast<int32>(MotionBand), GroundSpeedCmS);
+                LastEnderPIEMotionBand = MotionBand;
+            }
+            TryEnderPIELocomotionPreview(MotionBand);
+        }
+    }
     // Only scoped review worlds advertise live interaction. Visual refresh
     // reads the authoritative state; it cannot advance or save a story beat.
     if (bReviewNamespace && World->GetNetMode() == NM_Standalone &&
@@ -1608,7 +1663,11 @@ void ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance()
     // native PIE study. The property is blank for all ordinary characters.
     // Only the spawned pawn is touched; no asset/map/save/gameplay mutation.
     UWorld* World = GetWorld();
-    if (!World || World->WorldType != EWorldType::PIE ||
+    const bool bPrivateGame =
+        IsPrivateEnderLowMemGameReview(World) &&
+        GetClass()->GetName() == TEXT("BP_EnderLocomotionPreview_NONCANONICAL_C");
+    if (!World ||
+        (World->WorldType != EWorldType::PIE && !bPrivateGame) ||
         World->GetNetMode() != NM_Standalone ||
         !World->GetOutermost() ||
         !World->GetOutermost()->GetName().StartsWith(
@@ -1795,7 +1854,11 @@ void ATSTSSExplorerCharacter::TryEnderPIELocomotionPreview(uint8 MotionBand)
         return;
     }
     const UWorld* World = GetWorld();
-    if (!World || World->WorldType != EWorldType::PIE ||
+    const bool bPrivateGame =
+        IsPrivateEnderLowMemGameReview(World) &&
+        GetClass()->GetName() == TEXT("BP_EnderLocomotionPreview_NONCANONICAL_C");
+    if (!World ||
+        (World->WorldType != EWorldType::PIE && !bPrivateGame) ||
         World->GetNetMode() != NM_Standalone || !World->GetOutermost() ||
         !World->GetOutermost()->GetName().StartsWith(
             TEXT("/Game/TSTSS/Review/")))
