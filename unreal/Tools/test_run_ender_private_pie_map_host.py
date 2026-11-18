@@ -42,6 +42,13 @@ class HostTests(unittest.TestCase):
                       '"PRIVATE_OUTPUT_COLLISION"', '"report_fresh"'):
             self.assertIn(token, S)
 
+    def test_stage_pass_requires_private_saved_level_readback(self):
+        # The host must not promote a child exit code + files alone into
+        # staged acceptance without the native script's in-editor readback.
+        self.assertIn('report.get("private_editor_reload_verified") is True', S)
+        self.assertIn('report.get("status") == "PRIVATE_V5_PIE_REVIEW_LEVEL_STAGED_NOT_PLAYED"', S)
+        self.assertIn('report.get("source_head") == head', S)
+
     def test_bound_startup_runtime_resources(self):
         self.assertEqual((mod.START_RAM, mod.START_DISK), (6.5, 16.5))
         self.assertEqual((mod.RUN_RAM, mod.RUN_DISK), (2.5, 14.3))
