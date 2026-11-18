@@ -1,5 +1,7 @@
 #include "TSTSSReviewShoreTravelSubsystem.h"
+#include "TSTSSExplorerCharacter.h"
 #include "UObject/Package.h"
+#include "GameFramework/PlayerController.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 #include "Misc/PackageName.h"
@@ -13,6 +15,13 @@ inline bool IsPreludeScene(const FString& Name)
     return Name == PreludeName || Name == VisualReviewPreludeName;
 }
 constexpr const TCHAR* ShipName = TEXT("VS02_AureateInteriors");
+// Only locally licensed editor-staged Ender; never a public content dependency.
+constexpr const TCHAR* PrivateEnderPawnClassPath = TEXT(
+    "/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/"
+    "BP_EnderLocomotionPreview_NONCANONICAL."
+    "BP_EnderLocomotionPreview_NONCANONICAL_C");
+constexpr const TCHAR* ShipPackage =
+    TEXT("/Game/TSTSS/Review/VerticalSlice/VS02_AureateInteriors");
 // A separately built nonshipping optical-review scene. Entry must be explicit
 // from the already-authorized ship interior; K launch still follows the sky.
 constexpr const TCHAR* OpticalName = TEXT("M_EnginePresentationReview");
@@ -120,6 +129,25 @@ bool UTSTSSReviewShoreTravelSubsystem::QueueShore(
     {
         return false;
     }
+    // Record only an *already possessed*, exact private Ender pawn on the
+    // V5->VS02 boarding ticket. No asset path loading, arbitrary Blueprint,
+    // production scene, save slot or authoring-map mutation.
+    PendingPrivateEnderClass = nullptr;
+    bPrivateEnderArrivalReady = false;
+    if (World->WorldType == EWorldType::PIE &&
+        SourceMap == VisualReviewPreludeName && Destination == ShipPackage)
+    {
+        APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0);
+        ATSTSSExplorerCharacter* SourcePawn = PC
+            ? Cast<ATSTSSExplorerCharacter>(PC->GetPawn()) : nullptr;
+        if (IsValid(SourcePawn) && SourcePawn->IsPlayerControlled() &&
+            SourcePawn->GetClass()->GetPathName() == PrivateEnderPawnClassPath)
+        {
+            PendingPrivateEnderClass = SourcePawn->GetClass();
+            UE_LOG(LogTemp, Display,
+                TEXT("TSTSS_PRIVATE_ENDER_REVIEW_BOARDING_CLASS_CUSTODY staged=1 private_only=1"));
+        }
+    }
     PendingBeat = State->GetCurrentBeat();
     PendingInspectionMask = State->GetInspectionMask();
     PendingMapPackage = Destination;
@@ -154,6 +182,8 @@ bool UTSTSSReviewShoreTravelSubsystem::QueueOpticalInspection(
     }
     // Same one-use in-memory ticket that restores REAL earned story state on
     // arrival. No synthetic progression and no save-slot write.
+    PendingPrivateEnderClass = nullptr;
+    bPrivateEnderArrivalReady = false;
     PendingBeat = State->GetCurrentBeat();
     PendingInspectionMask = State->GetInspectionMask();
     PendingMapPackage = OpticalPackage;
@@ -173,9 +203,10 @@ bool UTSTSSReviewShoreTravelSubsystem::ConsumeShoreArrival(
     const FString Target = PendingMapPackage;
     const ETSTSSFirstWakeBeat Beat = PendingBeat;
     const uint8 Mask = PendingInspectionMask;
-    // Always consume, even if the next level or pawn is wrong.
+    // Always consume the travel ticket, including an invalid destination.
     bPending = false;
     PendingMapPackage.Reset();
+    bPrivateEnderArrivalReady = false;
 #if WITH_EDITOR
     if (bHadTicket && World &&
         (World->WorldType == EWorldType::PIE || World->WorldType == EWorldType::Game) &&
@@ -185,8 +216,18 @@ bool UTSTSSReviewShoreTravelSubsystem::ConsumeShoreArrival(
         UGameplayStatics::GetCurrentLevelName(World, true) == FPackageName::GetShortName(Target) &&
         IsValid(State))
     {
-        return State->Restore(true, Beat, Mask);
+        const bool bRestored = State->Restore(true, Beat, Mask);
+        bPrivateEnderArrivalReady =
+            bRestored && World->WorldType == EWorldType::PIE &&
+            Target == ShipPackage && IsValid(PendingPrivateEnderClass.Get()) &&
+            PendingPrivateEnderClass.Get()->GetPathName() == PrivateEnderPawnClassPath;
+        if (!bPrivateEnderArrivalReady)
+        {
+            PendingPrivateEnderClass = nullptr;
+        }
+        return bRestored;
     }
+    PendingPrivateEnderClass = nullptr;
 #else
     (void)World;
     (void)State;
@@ -195,4 +236,77 @@ bool UTSTSSReviewShoreTravelSubsystem::ConsumeShoreArrival(
     (void)Mask;
 #endif
     return false;
+}
+
+bool UTSTSSReviewShoreTravelSubsystem::TryResumePrivateEnderInShipRoom(
+    ATSTSSExplorerCharacter* DefaultPawn)
+{
+#if WITH_EDITOR
+    if (!bPrivateEnderArrivalReady)
+    {
+        return false;
+    }
+    // Consume the one-use class ticket BEFORE spawn, preventing reentrant
+    // BeginPlay, a failed resume, or a second player from replaying it.
+    UClass* PrivateClass = PendingPrivateEnderClass.Get();
+    bPrivateEnderArrivalReady = false;
+    PendingPrivateEnderClass = nullptr;
+    UWorld* World = IsValid(DefaultPawn) ? DefaultPawn->GetWorld() : nullptr;
+    APlayerController* PC = World ? UGameplayStatics::GetPlayerController(World, 0) : nullptr;
+    UTSTSSFirstWakeState* State = IsValid(DefaultPawn)
+        ? DefaultPawn->GetFirstWakeState() : nullptr;
+    if (!World || World->WorldType != EWorldType::PIE ||
+        World->GetNetMode() != NM_Standalone ||
+        !World->GetOutermost() ||
+        !World->GetOutermost()->GetName().StartsWith(
+            TEXT("/Game/TSTSS/Review/VerticalSlice/")) ||
+        UGameplayStatics::GetCurrentLevelName(World, true) != ShipName ||
+        !IsValid(PC) || PC->GetPawn() != DefaultPawn ||
+        DefaultPawn->GetClass() != ATSTSSExplorerCharacter::StaticClass() ||
+        !IsValid(State) || !State->HasStarted() ||
+        (State->GetCurrentBeat() != ETSTSSFirstWakeBeat::BoardedAureateWake &&
+         State->GetCurrentBeat() != ETSTSSFirstWakeBeat::EngineeringChecked) ||
+        !PrivateClass || PrivateClass->GetPathName() != PrivateEnderPawnClassPath ||
+        !PrivateClass->IsChildOf(ATSTSSExplorerCharacter::StaticClass()))
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_PRIVATE_ENDER_VS02_REBIND_HOLD scope_or_source_state"));
+        return false;
+    }
+    // The existing map spawned its ordinary pawn and already restored story
+    // and staged real E targets. Replace ONLY that transient PIE pawn; keep
+    // GameMode, level assets, script authority, and the original map unchanged.
+    FActorSpawnParameters Params;
+    Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+    ATSTSSExplorerCharacter* Ender = World->SpawnActor<ATSTSSExplorerCharacter>(
+        PrivateClass, DefaultPawn->GetActorTransform(), Params);
+    if (!IsValid(Ender) || Ender->GetClass() != PrivateClass ||
+        !IsValid(Ender->GetFirstWakeState()) ||
+        !Ender->GetFirstWakeState()->Restore(
+            true, State->GetCurrentBeat(), State->GetInspectionMask()))
+    {
+        if (IsValid(Ender)) Ender->Destroy();
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_PRIVATE_ENDER_VS02_REBIND_HOLD spawn_or_story_restore"));
+        return false;
+    }
+    PC->Possess(Ender);
+    if (PC->GetPawn() != Ender)
+    {
+        PC->Possess(DefaultPawn);
+        Ender->Destroy();
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_PRIVATE_ENDER_VS02_REBIND_HOLD possess"));
+        return false;
+    }
+    DefaultPawn->Destroy();
+    UE_LOG(LogTemp, Display,
+        TEXT("TSTSS_PRIVATE_ENDER_VS02_REBIND_OK possessed=1 class_exact=1 beat=%d mask=%u save_mutation=0 map_unchanged=1 art_NOT_APPROVED"),
+        static_cast<int32>(Ender->GetFirstWakeState()->GetCurrentBeat()),
+        Ender->GetFirstWakeState()->GetInspectionMask());
+    return true;
+#else
+    (void)DefaultPawn;
+    return false;
+#endif
 }
