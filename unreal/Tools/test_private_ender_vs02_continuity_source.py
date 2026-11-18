@@ -100,8 +100,11 @@ class ScopedPrivateEnderContinuity(unittest.TestCase):
         self.assertTrue(checks(HEADER, damaged, PAWN))
 
     def test_mutation_unsafe_editor_scope(self):
-        damaged = ROUTE.replace(
-            "World->WorldType != EWorldType::PIE", "false", 1)
+        # Mutate the rebind decision, not an unrelated earlier travel guard.
+        start = ROUTE.index(
+            "bool UTSTSSReviewShoreTravelSubsystem::TryResumePrivateEnderInShipRoom(")
+        damaged = (ROUTE[:start] + ROUTE[start:].replace(
+            "World->WorldType != EWorldType::PIE", "false", 1))
         self.assertTrue(checks(HEADER, damaged, PAWN))
 
     def test_mutation_unearned_ticket(self):
