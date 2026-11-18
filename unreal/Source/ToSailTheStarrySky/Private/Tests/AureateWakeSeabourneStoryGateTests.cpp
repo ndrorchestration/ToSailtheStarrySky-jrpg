@@ -65,6 +65,40 @@ bool FTSTSSAureateSeabourneStoryGate::RunTest(const FString& Parameters)
     TestFalse(TEXT("Legacy Orbiter preview flag cannot bypass missing story"),
         Ship->RequestForm(EAureateWakeForm::Orbiter));
 
+    // Creator-corrected sequence: the docked ship and preflight interior
+    // remain Seabourne. Only the earned launch beat permits transformation.
+    TestEqual(TEXT("Unstarted story has no authorized ship form"),
+        Story->GetReviewShipMode(), NAME_None);
+    TestFalse(TEXT("Unstarted story cannot authorize Skybourne"),
+        Story->IsReviewShipModeAuthorized(FName(TEXT("Skybourne"))));
+    TestTrue(TEXT("Restore earned engineering signoff"), Story->Restore(
+        true, ETSTSSFirstWakeBeat::EngineeringChecked, 0x07));
+    TestEqual(TEXT("Signed-off but docked ship remains Seabourne"),
+        Story->GetReviewShipMode(), FName(TEXT("Seabourne")));
+    TestTrue(TEXT("Prelaunch sea form is authorized"),
+        Story->IsReviewShipModeAuthorized(FName(TEXT("Seabourne"))));
+    TestFalse(TEXT("Signoff does not grant flight"),
+        Story->IsReviewShipModeAuthorized(FName(TEXT("Skybourne"))));
+    TestTrue(TEXT("Bind ship before captain's launch command"),
+        Ship->BindReviewStory(Story));
+    TestEqual(TEXT("Bound prelaunch ship shows deployed sea form"),
+        Ship->GetCurrentForm(), EAureateWakeForm::Seaborne);
+    TestFalse(TEXT("Prelaunch ship cannot request Skybourne"),
+        Ship->RequestForm(EAureateWakeForm::Skyborne));
+    TestTrue(TEXT("Earned launch changes story authority"), Story->Restore(
+        true, ETSTSSFirstWakeBeat::Launched, 0x07));
+    TestEqual(TEXT("Launched story now authorizes Skybourne"),
+        Story->GetReviewShipMode(), FName(TEXT("Skybourne")));
+    Ship->Tick(0.1f);
+    TestTrue(TEXT("Actual launch begins wing transformation"), Ship->IsTransitioning());
+    Ship->Tick(5.f);
+    TestEqual(TEXT("Launched review ship completes Skybourne form"),
+        Ship->GetCurrentForm(), EAureateWakeForm::Skyborne);
+    TestTrue(TEXT("Restore sea contact before stable flotation"), Story->Restore(
+        true, ETSTSSFirstWakeBeat::SeaContact, 0x07));
+    TestEqual(TEXT("Sea contact alone does not forge stable recovery"),
+        Story->GetReviewShipMode(), FName(TEXT("Skybourne")));
+
     TestTrue(TEXT("Restore launched Prelude"), Story->Restore(
         true, ETSTSSFirstWakeBeat::Launched, 0x07));
     TestTrue(TEXT("Bind live pre-splashdown story"), Ship->BindReviewStory(Story));
