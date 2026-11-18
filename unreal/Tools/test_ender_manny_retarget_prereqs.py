@@ -100,6 +100,23 @@ class EnderRetargetPrerequisiteContracts(unittest.TestCase):
         )
         self.assertIsNone(trace(too_deep, "pelvis", "b0"))
 
+    def test_saved_private_ik_assets_reopened_readonly_with_exact_chains(self):
+        for required in (
+            "def inspect_saved_private_ik(source_mesh, target_mesh):",
+            '"PARTIAL_PRIVATE_IK_OUTPUT"',
+            "get_skeletal_mesh()",
+            "get_retarget_root()",
+            "get_retarget_chains()",
+            "get_retarget_chain_start_bone(",
+            "get_retarget_chain_end_bone(",
+            "get_num_retarget_ops() >= 5",
+            "get_source_chain(unreal.Name(chain))",
+            "REOPENED_SOURCE_AND_TARGET_IK_AND_RTG_PASS_NO_ANIM",
+            "inspect_saved_private_ik(source, target)",
+        ):
+            with self.subTest(required=required):
+                self.assertIn(required, SOURCE)
+
     def test_does_not_create_or_bind_any_animation(self):
         for forbidden in ("create_asset(", "set_editor_property(",
                           "save_loaded_asset(", "duplicate_and_retarget(",
