@@ -517,13 +517,62 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
                   1.0f, .8f, .9f);
         }
     }
-    // Layered low rolling slopes behind the woodland, purely visual;
-    // not a collision/terrain promise and not a world-latitude simulator.
-    for (int32 Ridge = 0; Ridge < 4; ++Ridge)
+    // The Cinemap reference steps inland from the shore. Use the existing
+    // Hilltonia material set for three scenic terraces behind the woodland
+    // shelf. These sit beyond the current playable forest lane.
+    auto* TerraceStone = Make(Owner, Root, TEXT("HilltoniaTerraceRetainingStone"),
+                              Cube, Stone, false);
+    auto* TerraceGrass = Make(Owner, Root, TEXT("HilltoniaTerraceGrass"),
+                              Cube, Canopy, false);
+    auto* TerraceWalls = Make(Owner, Root, TEXT("HilltoniaTerraceHouseWalls"),
+                              Cube, Timber, false);
+    auto* TerraceRoofs = Make(Owner, Root, TEXT("HilltoniaTerraceHouseRoofs"),
+                              Cube, Brass, false);
+
+    struct FTerrace
     {
-        Place(RollingHills, -5800.f - Ridge * 1250.f,
-              -5450.f, -185.f, 25.f, 18.f, 10.f);
+        float CenterX;
+        float FrontY;
+        float Width;
+        float Elevation;
+        int32 HouseCount;
+    };
+    constexpr float TerraceDepth = 1800.f;
+    constexpr FTerrace Terraces[] = {
+        {-7250.f, -5800.f, 5700.f, 220.f, 5},
+        {-6900.f, -7300.f, 5000.f, 610.f, 4},
+        {-6400.f, -8800.f, 3900.f, 1100.f, 3},
+    };
+    for (const FTerrace& Terrace : Terraces)
+    {
+        const float CenterY = Terrace.FrontY - TerraceDepth * .5f;
+        const float StoneHeight = Terrace.Elevation + 100.f;
+        Place(TerraceStone, Terrace.CenterX, CenterY,
+              Terrace.Elevation - 20.f - StoneHeight * .5f,
+              Terrace.Width / 100.f, TerraceDepth / 100.f, StoneHeight / 100.f);
+        Place(TerraceGrass, Terrace.CenterX, CenterY, Terrace.Elevation - 10.f,
+              (Terrace.Width + 20.f) / 100.f, TerraceDepth / 100.f, .2f);
+
+        for (int32 House = 0; House < Terrace.HouseCount; ++House)
+        {
+            // Keep roof overhangs well inside the shelf and stagger the
+            // street fronts so successive tiers read as separate rows.
+            const float Offset = (House + .5f) / Terrace.HouseCount - .5f;
+            const float X = Terrace.CenterX + Offset * (Terrace.Width - 560.f);
+            const float Y = Terrace.FrontY - 530.f - (House % 2) * 240.f;
+            const float WallHeight = 275.f + (House % 3) * 32.f;
+            Place(TerraceStone, X, Y, Terrace.Elevation + 14.f, 5.8f, 4.7f, .28f);
+            Place(TerraceWalls, X, Y, Terrace.Elevation + 28.f + WallHeight * .5f,
+                  5.4f, 4.2f, WallHeight / 100.f);
+            const float RoofZ = Terrace.Elevation + 60.f + WallHeight;
+            Place(TerraceRoofs, X, Y - 116.f, RoofZ, 6.0f, 2.7f, .20f, 0.f, -25.f);
+            Place(TerraceRoofs, X, Y + 116.f, RoofZ, 6.0f, 2.7f, .20f, 0.f, 25.f);
+        }
     }
+    // Rounded hills frame the upper rooftops from the harbor. Their front
+    // bounds stay behind the upper row so the terrace houses remain visible.
+    Place(RollingHills, -7800.f, -12000.f, 350.f, 62.f, 42.f, 33.f);
+    Place(RollingHills, -4900.f, -12300.f, 520.f, 66.f, 44.f, 42.f);
     // A visible landward threshold: sign is a preview wayfinder,
     // not a travel teleport, prompt or interactive progression marker.
     Place(TreeTrunks, -4280.f, -600.f, 155.f, .55f, .55f, 3.1f);
