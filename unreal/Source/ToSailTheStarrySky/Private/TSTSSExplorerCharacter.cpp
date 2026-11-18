@@ -448,6 +448,16 @@ void StageDockedWakeReview(UWorld* World)
         return;
     }
     Ship->SetActorLabel(TEXT("TSTSS_DOCKED_WAKE_REVIEW_SHIP_PROXY"));
+    // The sea configuration is visible before the flyer is read; this
+    // cosmetic staging grants no story/mode authorization or player control.
+    if (!Ship->StageDockedSeabourneReviewPose())
+    {
+        Ship->Destroy();
+        CaptainVisual->Destroy();
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_DOCKED_WAKE_REVIEW_HOLD ship_seabourne_pose"));
+        return;
+    }
     Ship->SetActorScale3D(FVector(2.f));
     Ship->SetActorEnableCollision(false);
     CaptainVisual->SetActorLabel(TEXT("TSTSS_DOCKED_WAKE_REVIEW_IONIA_PROXY"));

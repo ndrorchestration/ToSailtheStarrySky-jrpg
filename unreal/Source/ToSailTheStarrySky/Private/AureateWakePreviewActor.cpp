@@ -7,6 +7,8 @@
 #include "Materials/MaterialInterface.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Math/RotationMatrix.h"
+#include "Engine/World.h"
+#include "Kismet/GameplayStatics.h"
 
 namespace
 {
@@ -107,6 +109,32 @@ bool AAureateWakePreviewActor::ApplyEditorReviewPose()
     // Cosmetic scene authoring only; all mode-change APIs still fail closed.
     SnapToForm(EditorReviewPose == EAureateWakeForm::Seaborne
         ? EAureateWakeForm::Seaborne : EAureateWakeForm::Skyborne);
+    return true;
+#else
+    return false;
+#endif
+}
+bool AAureateWakePreviewActor::StageDockedSeabourneReviewPose()
+{
+#if WITH_EDITOR
+    // The noncanonical V5 harbor ship must visibly be in sea configuration
+    // before the player has even read the flyer. The story remains unstarted
+    // and cannot issue any mode request. No editor map/package is modified.
+    const UWorld* World = GetWorld();
+    if (!World || (World->WorldType != EWorldType::PIE &&
+                   World->WorldType != EWorldType::Game) ||
+        World->GetNetMode() != NM_Standalone || !World->GetOutermost() ||
+        !World->GetOutermost()->GetName().StartsWith(TEXT("/Game/TSTSS/Review/")) ||
+        UGameplayStatics::GetCurrentLevelName(World, true) !=
+            TEXT("FirstWake_PreludeInteraction_V5_VisualReview") ||
+        GetActorLabel() != TEXT("TSTSS_DOCKED_WAKE_REVIEW_SHIP_PROXY") ||
+        IsValid(BoundReviewStory.Get()) || bTransitioning)
+    {
+        return false;
+    }
+    SnapToForm(EAureateWakeForm::Seaborne);
+    UE_LOG(LogTemp, Display,
+        TEXT("TSTSS_DOCKED_WAKE_REVIEW_SEABOURNE_VISIBLE mode_authority=0 saved_map_unchanged=1"));
     return true;
 #else
     return false;
@@ -420,8 +448,14 @@ bool AAureateWakePreviewActor::BindReviewStory(UTSTSSFirstWakeState* InStory)
     if (!IsValid(InStory)) return false;
     BoundReviewStory = InStory;
     const FName Active = InStory->GetReviewShipMode();
-    // An unstarted story retains an inert visual pose, not mode authority.
-    if (Active == NAME_None) return true;
+    // New Game / reset has no ship-mode authority. Reconcile the geometry
+    // immediately on binding, before the first Tick can expose a stale
+    // Skybourne pose; do not grant a mode request or modify story state.
+    if (Active == NAME_None)
+    {
+        SnapToForm(EAureateWakeForm::Seaborne);
+        return true;
+    }
     // Restored saves and level arrivals never expose unauthorized flight.
     SnapToForm(Active == FName(TEXT("Seabourne"))
         ? EAureateWakeForm::Seaborne : EAureateWakeForm::Skyborne);
@@ -482,12 +516,17 @@ void AAureateWakePreviewActor::Tick(float DeltaSeconds)
     if (IsValid(BoundReviewStory))
     {
         const FName Authorized = BoundReviewStory->GetReviewShipMode();
-        if (Authorized == NAME_None && bTransitioning)
+        if (Authorized == NAME_None)
         {
-            // Story reset revokes a pending transition immediately.
-            SnapToForm(EAureateWakeForm::Skyborne);
+            // Reset revokes flight authorization even after a completed
+            // transition. Keep the visual ship docked in its safe sea pose;
+            // this does not grant any request or advance the story.
+            if (bTransitioning || CurrentForm != EAureateWakeForm::Seaborne)
+            {
+                SnapToForm(EAureateWakeForm::Seaborne);
+            }
         }
-        if (Authorized != NAME_None)
+        else
         {
             const EAureateWakeForm Expected = Authorized == FName(TEXT("Seabourne"))
                 ? EAureateWakeForm::Seaborne : EAureateWakeForm::Skyborne;

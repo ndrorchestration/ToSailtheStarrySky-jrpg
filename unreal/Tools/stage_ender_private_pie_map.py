@@ -39,6 +39,7 @@ REPORT = {
     "source_maps_saved": 0, "original_blueprint_modified": False,
     "actual_pie_started": False, "playback_verified": False,
     "art_approved": False, "production_approved": False,
+    "private_editor_reload_verified": False,
 }
 
 
@@ -171,6 +172,24 @@ def run():
             subsystem.save_current_level(), "PRIVATE_MAP_SAVE")
     require(LEVEL_FILE.is_file() and GAMEMODE_FILE.is_file(),
             "PRIVATE_FILES_MISSING")
+    # Validate the private saved level through a fresh editor-level load rather
+    # than trusting the pre-save world settings. This is an in-session readback,
+    # not a separate-process load or visual PIE acceptance.
+    require(subsystem.load_level(PRIVATE_LEVEL), "PRIVATE_SAVED_LEVEL_REOPEN")
+    reopened = editor.get_editor_world()
+    require(reopened and reopened.get_outermost().get_name() == PRIVATE_LEVEL,
+            "PRIVATE_REOPENED_WORLD_PACKAGE")
+    reopened_settings = reopened.get_world_settings()
+    require(reopened_settings and
+            reopened_settings.get_outermost().get_name() == PRIVATE_LEVEL and
+            reopened_settings.get_editor_property("default_game_mode") == mode_class,
+            "PRIVATE_REOPENED_GAME_MODE")
+    loaded_mode = unreal.EditorAssetLibrary.load_blueprint_class(PRIVATE_GAMEMODE)
+    require(loaded_mode and
+            unreal.get_default_object(loaded_mode).get_editor_property(
+                "default_pawn_class") == clone_class,
+            "PRIVATE_REOPENED_DEFAULT_PAWN")
+    REPORT["private_editor_reload_verified"] = True
     REPORT["original_hashes_after"] = {str(p): sha(p) for p in guarded}
     require(REPORT["original_hashes_after"] == original, "SOURCE_MAP_OR_BP_CHANGED")
     REPORT["private_outputs_sha256"] = {str(p): sha(p) for p in (GAMEMODE_FILE, LEVEL_FILE)}

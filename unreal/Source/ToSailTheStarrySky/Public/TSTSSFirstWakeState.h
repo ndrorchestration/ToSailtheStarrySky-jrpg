@@ -70,8 +70,13 @@ public:
     FName GetReviewShipMode() const
     {
         if (!bStarted) return NAME_None;
-        return IsSeabourneRecoveryLocked()
-            ? FName(TEXT("Seabourne")) : FName(TEXT("Skybourne"));
+        // The Aureate Wake is docked in its sea form until the Captain's
+        // launch command earns the Launched beat. Engineering signoff alone
+        // does not transform the vessel. Post-flotation remains sea-locked.
+        const bool bInFlight = static_cast<uint8>(CurrentBeat) >=
+                static_cast<uint8>(ETSTSSFirstWakeBeat::Launched) &&
+            !IsSeabourneRecoveryLocked();
+        return bInFlight ? FName(TEXT("Skybourne")) : FName(TEXT("Seabourne"));
     }
 
     UFUNCTION(BlueprintPure, Category="TSTSS|Ship|Review")

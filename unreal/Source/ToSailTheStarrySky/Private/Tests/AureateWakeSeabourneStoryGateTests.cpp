@@ -41,6 +41,13 @@ bool FTSTSSAureateSeabourneStoryGate::RunTest(const FString& Parameters)
         World->DestroyWorld(false);
         return false;
     }
+    // A generic or production-world ship cannot impersonate the exact
+    // runtime docked proxy or silently select a sea pose without authority.
+    TestFalse(TEXT("Unscoped transient world refuses docked visual staging"),
+        Ship->StageDockedSeabourneReviewPose());
+    TestEqual(TEXT("Rejected visual staging keeps original geometry"),
+        Ship->GetCurrentForm(), EAureateWakeForm::Skyborne);
+
     const FVector SkyWingRoot = FirstWing->GetRelativeLocation();
     TestFalse(TEXT("Skybourne hydrofoil initially stowed"), FirstFoil->IsVisible());
     // Editor presentation may start folded for a disposable coastal review
@@ -64,6 +71,79 @@ bool FTSTSSAureateSeabourneStoryGate::RunTest(const FString& Parameters)
     Ship->bAllowOrbiterPreview = true;
     TestFalse(TEXT("Legacy Orbiter preview flag cannot bypass missing story"),
         Ship->RequestForm(EAureateWakeForm::Orbiter));
+
+    // Creator-corrected sequence: the docked ship and preflight interior
+    // remain Seabourne. Only the earned launch beat permits transformation.
+    TestEqual(TEXT("Unstarted story has no authorized ship form"),
+        Story->GetReviewShipMode(), NAME_None);
+    TestFalse(TEXT("Unstarted story cannot authorize Skybourne"),
+        Story->IsReviewShipModeAuthorized(FName(TEXT("Skybourne"))));
+    // Binding before the first Tick must never allow a default airborne frame.
+    TestTrue(TEXT("Bind unstarted story before first Tick"),
+        Ship->BindReviewStory(Story));
+    TestEqual(TEXT("Unstarted binding immediately shows docked Seabourne"),
+        Ship->GetCurrentForm(), EAureateWakeForm::Seaborne);
+    TestTrue(TEXT("Unstarted binding shows deployed hydrofoil"), FirstFoil->IsVisible());
+    TestFalse(TEXT("Unstarted binding grants no flight request"),
+        Ship->RequestForm(EAureateWakeForm::Skyborne));
+    TestTrue(TEXT("Restore earned engineering signoff"), Story->Restore(
+        true, ETSTSSFirstWakeBeat::EngineeringChecked, 0x07));
+    TestEqual(TEXT("Signed-off but docked ship remains Seabourne"),
+        Story->GetReviewShipMode(), FName(TEXT("Seabourne")));
+    TestTrue(TEXT("Prelaunch sea form is authorized"),
+        Story->IsReviewShipModeAuthorized(FName(TEXT("Seabourne"))));
+    TestFalse(TEXT("Signoff does not grant flight"),
+        Story->IsReviewShipModeAuthorized(FName(TEXT("Skybourne"))));
+    TestTrue(TEXT("Bind ship before captain's launch command"),
+        Ship->BindReviewStory(Story));
+    TestEqual(TEXT("Bound prelaunch ship shows deployed sea form"),
+        Ship->GetCurrentForm(), EAureateWakeForm::Seaborne);
+    TestFalse(TEXT("Prelaunch ship cannot request Skybourne"),
+        Ship->RequestForm(EAureateWakeForm::Skyborne));
+    TestTrue(TEXT("Earned launch changes story authority"), Story->Restore(
+        true, ETSTSSFirstWakeBeat::Launched, 0x07));
+    TestEqual(TEXT("Launched story now authorizes Skybourne"),
+        Story->GetReviewShipMode(), FName(TEXT("Skybourne")));
+    Ship->Tick(0.1f);
+    TestTrue(TEXT("Actual launch begins wing transformation"), Ship->IsTransitioning());
+
+    // A story reset revokes flight during an active transition. The ship
+    // must never visibly remain Skybourne while the story is unstarted.
+    Story->Reset();
+    Ship->Tick(0.1f);
+    TestFalse(TEXT("Story reset cancels pending ascent"), Ship->IsTransitioning());
+    TestEqual(TEXT("Reset mid-ascent returns docked Seabourne pose"),
+        Ship->GetCurrentForm(), EAureateWakeForm::Seaborne);
+    TestTrue(TEXT("Reset mid-ascent deploys sea hydrofoil"), FirstFoil->IsVisible());
+    TestFalse(TEXT("Reset story denies another flight request"),
+        Ship->RequestForm(EAureateWakeForm::Skyborne));
+    TestTrue(TEXT("Restore earned launch after reset"), Story->Restore(
+        true, ETSTSSFirstWakeBeat::Launched, 0x07));
+    Ship->Tick(0.1f);
+    TestTrue(TEXT("Restored launch starts ascent anew"), Ship->IsTransitioning());
+    Ship->Tick(5.f);
+    TestEqual(TEXT("Launched review ship completes Skybourne form"),
+        Ship->GetCurrentForm(), EAureateWakeForm::Skyborne);
+
+    // Reset after flight completes must also remove the now-unauthorized
+    // airborne form. This is distinct from the in-transition reset above.
+    Story->Reset();
+    Ship->Tick(0.1f);
+    TestFalse(TEXT("Reset completed flight leaves no pending transition"),
+        Ship->IsTransitioning());
+    TestEqual(TEXT("Reset after completed ascent returns docked Seabourne"),
+        Ship->GetCurrentForm(), EAureateWakeForm::Seaborne);
+    TestTrue(TEXT("Reset after completed ascent shows hydrofoil"), FirstFoil->IsVisible());
+    TestTrue(TEXT("Restore launch for subsequent splashdown assertions"), Story->Restore(
+        true, ETSTSSFirstWakeBeat::Launched, 0x07));
+    Ship->Tick(0.1f);
+    Ship->Tick(5.f);
+    TestEqual(TEXT("Restored launch returns Skybourne before sea contact"),
+        Ship->GetCurrentForm(), EAureateWakeForm::Skyborne);
+    TestTrue(TEXT("Restore sea contact before stable flotation"), Story->Restore(
+        true, ETSTSSFirstWakeBeat::SeaContact, 0x07));
+    TestEqual(TEXT("Sea contact alone does not forge stable recovery"),
+        Story->GetReviewShipMode(), FName(TEXT("Skybourne")));
 
     TestTrue(TEXT("Restore launched Prelude"), Story->Restore(
         true, ETSTSSFirstWakeBeat::Launched, 0x07));

@@ -21,6 +21,15 @@ class HostTests(unittest.TestCase):
         self.assertNotIn("taskkill /IM", S)
         self.assertIn('"-nullrhi"', S)
 
+    def test_python_map_stage_waits_for_full_editor_world(self):
+        # This authoring script uses LevelEditorSubsystem; never run it as
+        # an early startup ExecCmd or as the level-less Python commandlet.
+        self.assertIn('"-ExecutePythonScript=" + str(SCRIPT)', S)
+        self.assertNotIn('"-ExecCmds=py " + str(SCRIPT)', S)
+        self.assertNotIn('"-run=pythonscript"', S)
+        self.assertIn('"-nullrhi"', S)
+        self.assertIn('"-abslog=" + str(folder / "engine.log")', S)
+
     def test_release_not_claimed(self):
         for token in ('"pie_playback_verified": False', '"creator_approved": False',
                       '"PRIVATE_PIE_MAP_STAGE_PASS_NOT_PLAYBACK_ACCEPTED"'):
@@ -32,6 +41,13 @@ class HostTests(unittest.TestCase):
                       '"protected_hashes_unchanged"', '"PRIVATE_NOT_GIT_IGNORED"',
                       '"PRIVATE_OUTPUT_COLLISION"', '"report_fresh"'):
             self.assertIn(token, S)
+
+    def test_stage_pass_requires_private_saved_level_readback(self):
+        # The host must not promote a child exit code + files alone into
+        # staged acceptance without the native script's in-editor readback.
+        self.assertIn('report.get("private_editor_reload_verified") is True', S)
+        self.assertIn('report.get("status") == "PRIVATE_V5_PIE_REVIEW_LEVEL_STAGED_NOT_PLAYED"', S)
+        self.assertIn('report.get("source_head") == head', S)
 
     def test_bound_startup_runtime_resources(self):
         self.assertEqual((mod.START_RAM, mod.START_DISK), (6.5, 16.5))
