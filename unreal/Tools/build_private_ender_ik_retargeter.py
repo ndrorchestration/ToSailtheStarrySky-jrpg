@@ -31,7 +31,7 @@ FOLDER = "/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL"
 LOCAL_FOLDER = PROJECT / "Content/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL"
 OUTPUT = PROJECT / "Saved/MigrationEvidence/EnderRetargetPrivate/rig_build_receipt.json"
 STARTUP_GATE = PROJECT / "Saved/MigrationEvidence/EnderRetargetPrivate/startup_gate.json"
-MANNY = "/Game/Mannequins/Meshes/SKM_Manny_Simple"
+MANNY = "/Game/Characters/Mannequins/Meshes/SKM_Manny_Simple"
 ENDER = (
     "/Game/ArtLookdev/Characters/Genesis9MergedFBXRigReview_20261109_NONCANONICAL/"
     "Genesis9_BaseShirtShorts_MergedRig_REVIEW"
@@ -44,11 +44,11 @@ NAMES = (
 # Rehash all private and Epic template binaries at execution time. The native
 # prerequisite report alone is not sufficient if files changed between runs.
 SHA256_INPUTS = {
-    "Mannequins/Meshes/SKM_Manny_Simple.uasset": "be9f011191ee1887b97cd13bce09886a6066c2fd62c619991070ec142184e1bf",
-    "Mannequins/Meshes/SK_Mannequin.uasset": "22029d47455f24471195b26a0e04a1e1389f27d6a924e88c9f46a0f600c9a530",
-    "Mannequins/Anims/Unarmed/MM_Idle.uasset": "11ee7fdeb84db89c1a66785b43b9bfc1415782122b8ac229517f4c5125d9cb0d",
-    "Mannequins/Anims/Unarmed/Walk/MF_Unarmed_Walk_Fwd.uasset": "c74b2fc0cb651c4924804b364e534856a1b44dee818127c408dc055e4bda5ed9",
-    "Mannequins/Anims/Unarmed/Jog/MF_Unarmed_Jog_Fwd.uasset": "0ccbe851f85a6d4cd7c6438c219cb6af8e281784107b5be8e9b052e4df3069cb",
+    "Characters/Mannequins/Meshes/SKM_Manny_Simple.uasset": "be9f011191ee1887b97cd13bce09886a6066c2fd62c619991070ec142184e1bf",
+    "Characters/Mannequins/Meshes/SK_Mannequin.uasset": "22029d47455f24471195b26a0e04a1e1389f27d6a924e88c9f46a0f600c9a530",
+    "Characters/Mannequins/Anims/Unarmed/MM_Idle.uasset": "11ee7fdeb84db89c1a66785b43b9bfc1415782122b8ac229517f4c5125d9cb0d",
+    "Characters/Mannequins/Anims/Unarmed/Walk/MF_Unarmed_Walk_Fwd.uasset": "c74b2fc0cb651c4924804b364e534856a1b44dee818127c408dc055e4bda5ed9",
+    "Characters/Mannequins/Anims/Unarmed/Jog/MF_Unarmed_Jog_Fwd.uasset": "0ccbe851f85a6d4cd7c6438c219cb6af8e281784107b5be8e9b052e4df3069cb",
     "ArtLookdev/Characters/Genesis9MergedFBXRigReview_20261109_NONCANONICAL/Genesis9_BaseShirtShorts_MergedRig_REVIEW.uasset": "6cd1b68e0e326e53ca40e984a7663b48dabbede7f213118c14544000861c462b",
     "ArtLookdev/Characters/Genesis9MergedFBXRigReview_20261109_NONCANONICAL/Genesis9_BaseShirtShorts_MergedRig_REVIEW_Skeleton.uasset": "73050dbe498b85e2ec922c9e53ede68da88dfdd3af24e2894209c1e30978157c",
 }
