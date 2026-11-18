@@ -752,6 +752,7 @@ void ATSTSSExplorerCharacter::BeginPlay()
 #if WITH_EDITOR
     ApplyOpticalReviewPlayerExposure(GetWorld(), FollowCamera);
     bTryHilltoniaOpening = ApplyV5HarborReviewLookdev(GetWorld());
+    HilltoniaOpeningAttemptCount = 0;
     ApplyEnderSliceReviewAppearance();
     SetupFirstWakeThirdPersonReview(GetWorld());
     StageDockedWakeReview(GetWorld());
@@ -958,8 +959,25 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
     }
     if (bTryHilltoniaOpening)
     {
-        bTryHilltoniaOpening = false;
-        StartHilltoniaOpening(World);
+        // Runtime-instanced WorldStatic road bodies may not be query-ready
+        // on the *first* pawn tick. Retain the same fail-closed five-point
+        // grounding gate but give registration a bounded settling window.
+        // Never teleport, unlock flyer, or retire the legacy marker early.
+        constexpr uint8 MaxForestSpawnAttempts = 90;
+        if (StartHilltoniaOpening(World))
+        {
+            bTryHilltoniaOpening = false;
+            UE_LOG(LogTemp, Display,
+                TEXT("TSTSS_HILLTONIA_OPENING_ADMISSION_READY retries=%u grounded_five_point=1 story_granted=0"),
+                HilltoniaOpeningAttemptCount);
+        }
+        else if (++HilltoniaOpeningAttemptCount >= MaxForestSpawnAttempts)
+        {
+            bTryHilltoniaOpening = false;
+            UE_LOG(LogTemp, Warning,
+                TEXT("TSTSS_HILLTONIA_OPENING_HOLD bounded_attempts=%u reason=worldstatic_footing_or_marker_or_controller story_granted=0 no_teleport=1"),
+                HilltoniaOpeningAttemptCount);
+        }
     }
     if (bFirstWakeBokehReview)
     {
@@ -2032,11 +2050,12 @@ void ATSTSSExplorerCharacter::UpdateFirstWakeBokehReview(float DeltaSeconds)
     Lens.DepthOfFieldFstop = FirstWakeReviewFstop;
 }
 
-void ATSTSSExplorerCharacter::StartHilltoniaOpening(UWorld* World)
+bool ATSTSSExplorerCharacter::StartHilltoniaOpening(UWorld* World)
 {
-    if (!IsValid(FirstWakeState) || FirstWakeState->HasStarted() || !Controller)
+    if (!World || !IsValid(FirstWakeState) ||
+        FirstWakeState->HasStarted() || !Controller)
     {
-        return;
+        return false;
     }
     ATSTSSMilestoneActor* OldFlyer = nullptr;
     ATSTSSMilestoneActor* Captain = nullptr;
@@ -2044,12 +2063,12 @@ void ATSTSSExplorerCharacter::StartHilltoniaOpening(UWorld* World)
     {
         if (It->GetActorLabel() == TEXT("TSTSS_PRELUDE_REVIEW_FlyerDiscovery"))
         {
-            if (OldFlyer) return;
+            if (OldFlyer) return false;
             OldFlyer = *It;
         }
         if (It->GetActorLabel() == TEXT("TSTSS_PRELUDE_REVIEW_IoniaHiring"))
         {
-            if (Captain) return;
+            if (Captain) return false;
             Captain = *It;
         }
     }
@@ -2057,10 +2076,15 @@ void ATSTSSExplorerCharacter::StartHilltoniaOpening(UWorld* World)
     const FVector Spawn(-14650.f, -150.f,
         GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + 8.f);
     if (!IsValid(OldFlyer) || !IsValid(Captain) ||
-        !HasSupportedReviewFooting(World, Spawn) || !TeleportTo(Spawn, FRotator::ZeroRotator))
+        !HasSupportedReviewFooting(World, Spawn))
     {
-        UE_LOG(LogTemp, Warning, TEXT("TSTSS_HILLTONIA_OPENING_HOLD spawn or marker inventory"));
-        return;
+        // Do not change the player position if even one footing sample is
+        // absent or the authoring marker inventory is ambiguous.
+        return false;
+    }
+    if (!TeleportTo(Spawn, FRotator::ZeroRotator))
+    {
+        return false;
     }
     GetCharacterMovement()->StopMovementImmediately();
     Controller->SetControlRotation(FRotator(-8.f, 0.f, 0.f));
@@ -2071,6 +2095,7 @@ void ATSTSSExplorerCharacter::StartHilltoniaOpening(UWorld* World)
     OldFlyer->SetActorEnableCollision(false);
     UE_LOG(LogTemp, Display, TEXT("TSTSS_HILLTONIA_OPENING_READY location=%s"),
         *GetActorLocation().ToCompactString());
+    return true;
 }
 
 bool ATSTSSExplorerCharacter::IsHilltoniaFlyerHit(const FHitResult& Hit) const
