@@ -178,11 +178,11 @@ def audit():
         "IKRigController", "IKRetargeterController", "IKRetargetBatchOperation",
     )), "IK_RIG_EDITOR_PLUGIN_MISSING")
     source_motion_requires_conversion = bool(REVIEW["source_root_motion_roles"])
-    REVIEW["status"] = (
-        "NATIVE_RETARGET_RIG_INPUTS_VALIDATED_SOURCE_MOTION_CONVERSION_REQUIRED"
-        if source_motion_requires_conversion else
-        "NATIVE_RETARGET_INPUTS_VALIDATED_NOT_RETARGETED"
-    )
+    # This status admits **IK rig authoring only**, not animation playback:
+    # the 2 motion flags are carried as explicit independent acceptance holds.
+    REVIEW["status"] = "NATIVE_RETARGET_INPUTS_VALIDATED_NOT_RETARGETED"
+    REVIEW["rig_compatibility_validated"] = True
+    REVIEW["source_clip_conversion_required"] = source_motion_requires_conversion
     REVIEW["in_place_root_translation"] = (
         "PRIVATE_CONVERSION_AND_MEASUREMENT_REQUIRED"
         if source_motion_requires_conversion else "NOT_YET_MEASURED"
