@@ -110,7 +110,9 @@ def native_38_verified(head: str) -> bool:
             (report.get("succeeded"), report.get("failed"), report.get("notRun")) == (38, 0, 0) and
             isinstance(entries, list) and len(entries) == 38 and
             len({row.get("fullTestPath") for row in entries if isinstance(row, dict)}) == 38 and
-            all(isinstance(row, dict) and row.get("state") == "Success" for row in entries)):
+            all(isinstance(row, dict) and isinstance(row.get("fullTestPath"), str) and
+                row["fullTestPath"].startswith("TSTSS.") and row.get("state") == "Success"
+                for row in entries)):
             return True
     return False
 
