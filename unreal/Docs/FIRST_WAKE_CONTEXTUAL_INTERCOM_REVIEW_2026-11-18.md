@@ -61,7 +61,11 @@ inspection order all three bits were present, but the signoff visibility ray
 response remained Ignore. Collision restoration and the beacon's visual cache
 had drifted; the cached-availability fast path could skip collision repair.
 The follow-up synchronizes the story-gated signoff collision **before** the
-cosmetic early return. It does not broaden interaction reach or grant a beat.
+cosmetic early return. A further rapid replay showed that the pawn's 0.2-second
+cosmetic tick can also delay eligibility after the final inspection. The real
+accepted inspection handler now immediately refreshes the existing gated
+signoff beacon once all three checks are complete. It does not broaden
+interaction reach or grant a beat.
 An executable regression probes both collision drift directions and repeated
 replays; restoring the old ordering must fail. Native results above belong to
 the earlier head; the corrective head requires fresh build/automation/replay

@@ -2412,6 +2412,27 @@ void ATSTSSExplorerCharacter::Interact()
                     ShowFirstWakeReviewObjective(FirstWakeState);
                     ShowOptionalEngineFocusHint(GetWorld(), Milestone->bIsInspectionStation);
 #if WITH_EDITOR
+                    // The cosmetic pawn tick runs every 0.2 seconds. Do not
+                    // leave earned signoff unhittable until that next tick:
+                    // refresh its existing state/map-gated beacon immediately
+                    // after the final real inspection E was accepted.
+                    if (Milestone->bIsInspectionStation &&
+                        FirstWakeState->AreInspectionsComplete() &&
+                        FirstWakeState->GetCurrentBeat() ==
+                            ETSTSSFirstWakeBeat::BoardedAureateWake &&
+                        GetWorld()->GetNetMode() == NM_Standalone &&
+                        UGameplayStatics::GetCurrentLevelName(GetWorld(), true) ==
+                            TEXT("VS02_AureateInteriors"))
+                    {
+                        for (TActorIterator<ATSTSSMilestoneActor> It(GetWorld()); It; ++It)
+                        {
+                            if (It->GetActorLabel() ==
+                                TEXT("TSTSS_ENGINEROOM_REVIEW_EngineeringApproval"))
+                            {
+                                It->UpdateReviewBeacon(FirstWakeState);
+                            }
+                        }
+                    }
                     // The captain replies only to an accepted, real [E] hit
                     // in VS02. Never emit dialogue for blocked or proxy E.
                     ShowEarnedFirstWakeEngineeringIntercom(
