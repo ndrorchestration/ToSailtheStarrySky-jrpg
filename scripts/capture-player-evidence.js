@@ -99,7 +99,7 @@ async function pressEnter(page, count = 1) {
   const captures = [];
   const browserErrors = [];
   const verification = {
-    repository: 'ndrorchestration/aetherwake-jrpg',
+    repository: 'ndrorchestration/ToSailtheStarrySky-jrpg',
     sourceCommit: commit,
     capturedAt: new Date().toISOString(),
     viewport: VIEWPORT,

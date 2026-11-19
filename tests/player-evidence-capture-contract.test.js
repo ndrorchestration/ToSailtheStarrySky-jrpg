@@ -71,6 +71,7 @@ for (const required of [
   'visualAcceptance: \'PENDING\'',
   'gameplayCaptureInspected: false',
   'git rev-parse HEAD',
+  "repository: 'ndrorchestration/ToSailtheStarrySky-jrpg'",
   'index-embedded.html',
   'arrival_horizon',
   'lyra_join',
