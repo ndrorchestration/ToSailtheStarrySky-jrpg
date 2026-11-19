@@ -3,11 +3,13 @@ extends Node2D
 ## Reuses native Ender movement and Chapter I input. Art remains provisional.
 const Actor = preload("res://scripts/pilot_actor.gd")
 const InputPolicy = preload("res://scripts/first_wake_chapter1_input_policy.gd")
+const Seascape = preload("res://scripts/first_wake_cinematic_seascape.gd")
 const BOUNDS := Rect2(Vector2(112, 404), Vector2(736, 122))
 const RESERVE_STATION := Vector2(420, 467)
 const INTERACT_DISTANCE := 82.0
 
 var session
+var cinematic_seascape
 var ender: CharacterBody2D
 var ionia: CharacterBody2D
 var objective: Label
@@ -37,6 +39,11 @@ func configure(the_session) -> bool:
 
 func _ready() -> void:
     InputPolicy.ensure_defaults()
+    # Presentation-only stage, attached behind actors. Source physics and story
+    # admission already occurred before this scene is reachable in normal Play.
+    cinematic_seascape = Seascape.new()
+    cinematic_seascape.name = "CinematicOpenWaterAfterSplashdown"
+    add_child(cinematic_seascape)
     var actors := Node2D.new()
     actors.name = "LocalShipboardActors"
     actors.y_sort_enabled = true
@@ -81,27 +88,20 @@ func _label(parent: Node, at: Vector2, font_size: int) -> Label:
     parent.add_child(out)
     return out
 
-func _draw() -> void:
-    draw_rect(Rect2(0, 0, 960, 640), Color("#1a3446"))
-    draw_rect(Rect2(0, 178, 960, 222), Color("#2e4855"))
-    draw_rect(Rect2(0, 400, 960, 135), Color("#705947"))
-    for k in range(8):
-        draw_line(Vector2(0, 404 + k * 18), Vector2(960, 404 + k * 18),
-            Color("#99816b"), 1.0)
-    for x in [88.0, 320.0, 662.0, 883.0]:
-        draw_line(Vector2(x, 205), Vector2(x, 395), Color("#c2a57b"), 4.0)
-    draw_rect(Rect2(335, 278, 176, 116), Color("#182d39"))
-    draw_rect(Rect2(350, 290, 144, 89), Color("#31525b"))
-    draw_arc(RESERVE_STATION + Vector2(0, -116), 38, 0, TAU, 48,
-        Color("#c37b60") if not inspected_station else Color("#88b9ad"), 4.0)
-    draw_line(Vector2(372, 355), Vector2(472, 355), Color("#d5b68b"), 2.0)
-    draw_rect(Rect2(0, 0, 960, 112), Color(0.04, 0.08, 0.14, 0.92))
-    draw_rect(Rect2(0, 537, 960, 103), Color(0.04, 0.08, 0.14, 0.96))
-
 func _unhandled_input(event: InputEvent) -> void:
+    if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_M:
+        # Accessible player toggle: visual water motion is never a quest clock.
+        set_reduced_motion(not cinematic_seascape.reduced_motion)
+        get_viewport().set_input_as_handled()
+        return
     if event.is_action_pressed(InputPolicy.INTERACT) and not event.is_echo():
         if interact_reserve():
             get_viewport().set_input_as_handled()
+
+func set_reduced_motion(enabled: bool) -> void:
+    if cinematic_seascape != null:
+        cinematic_seascape.set_reduced_motion(enabled)
+    _sync_ui()
 
 func interact_reserve() -> bool:
     if session == null:
@@ -141,7 +141,9 @@ func _sync_ui() -> void:
     if objective == null:
         return
     var done: bool = session != null and session.can_checkpoint()
-    objective.text = "FIRST WAKE / POST-SPLASHDOWN — ENDER + IONIA\n" + (
+    if cinematic_seascape != null:
+        cinematic_seascape.set_reserve_inspected(inspected_station)
+    objective.text = "FIRST WAKE  /  OPEN WATER — ENDER + IONIA\n" + (
         "Reserve inspected. F5: save  |  F9: resume checkpoint" if done else
         "Ship stable. Examine the depleted engine reserve (E).")
     if reserve_dialogue_open:
@@ -150,6 +152,6 @@ func _sync_ui() -> void:
         text_label.visible = true
     else:
         hint.text = checkpoint_message if not checkpoint_message.is_empty() else (
-            "Arrows: move  |  E: inspect  |  F5: save after inspection  |  F9: load")
+            "Arrows: move  |  E: inspect  |  M: still sea  |  F5: save  |  F9: load")
         text_label.visible = false
     queue_redraw()
