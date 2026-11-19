@@ -10,6 +10,8 @@ class TOSAILTHESTARRYSKY_API ATSTSSMilestoneActor : public AActor
     GENERATED_BODY()
 public:
     ATSTSSMilestoneActor();
+    // Fail-closed whitelist; no direct interaction may certify physical sea events.
+    static bool IsManualBeatAllowed(ETSTSSFirstWakeBeat Beat);
     UFUNCTION(BlueprintCallable, Category="TSTSS|First Wake")
     bool TryActivate(UTSTSSFirstWakeState* State);
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="TSTSS|First Wake")

@@ -10,12 +10,27 @@ ATSTSSMilestoneActor::ATSTSSMilestoneActor()
     InteractionMesh->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 }
 
+bool ATSTSSMilestoneActor::IsManualBeatAllowed(const ETSTSSFirstWakeBeat Beat)
+{
+    switch (Beat)
+    {
+    case ETSTSSFirstWakeBeat::FlyerDiscovered:
+    case ETSTSSFirstWakeBeat::IoniaHired:
+    case ETSTSSFirstWakeBeat::BoardedAureateWake:
+    case ETSTSSFirstWakeBeat::EngineeringChecked:
+    case ETSTSSFirstWakeBeat::Launched:
+    case ETSTSSFirstWakeBeat::EmptyReserveInspected:
+    case ETSTSSFirstWakeBeat::ReturnedToBerth:
+        return true;
+    default:
+        return false;
+    }
+}
+
 bool ATSTSSMilestoneActor::TryActivate(UTSTSSFirstWakeState* State)
 {
     if (!IsValid(State)) return false;
-    // Only physics observations may establish sea contact and stable flotation.
-    if (!bIsInspectionStation && (Milestone == ETSTSSFirstWakeBeat::SeaContact ||
-        Milestone == ETSTSSFirstWakeBeat::FlotationConfirmed)) return false;
+    if (!bIsInspectionStation && !IsManualBeatAllowed(Milestone)) return false;
     const bool bSucceeded = bIsInspectionStation
         ? State->InspectStation(InspectionStation)
         : State->AdvanceTo(Milestone);
