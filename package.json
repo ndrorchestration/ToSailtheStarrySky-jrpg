@@ -56,6 +56,7 @@
     "test:non-elemental-spell-trees": "node tests/non-elemental-spell-trees-contract.test.js",
     "test:magic-spell-access": "node tests/magic-spell-access-contract.test.js",
     "test:magic-study": "node tests/magic-study-contract.test.js",
+    "test:job-progression": "node tests/job-progression-contract.test.js",
     "test:longform-progression": "node tests/longform-progression.test.js",
     "test:encounter-scaling": "node tests/encounter-scaling.test.js",
     "test:party-capacity": "node tests/party-capacity.test.js",

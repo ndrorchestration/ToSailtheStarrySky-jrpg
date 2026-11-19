@@ -117,6 +117,9 @@ jobs:
       - name: Verify explicit magic study transactions
         run: npm run test:magic-study
 
+      - name: Verify hybrid job identity and transfer gates
+        run: npm run test:job-progression
+
       - name: Verify air-navigation foundation
         run: npm run test:air-navigation
 
