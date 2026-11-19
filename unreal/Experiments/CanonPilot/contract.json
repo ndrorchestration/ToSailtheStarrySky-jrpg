@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "authority": "creator-approved statements reported in active project coordination; PUBLIC-SAFE ADVISORY TEST CONTRACT ONLY",
+  "provenance": [
+    {
+      "subject": "height_order",
+      "source": "creator instruction 2026-11-01; supersedes older women's-height-open wording",
+      "status": "CREATOR_CANON"
+    },
+    {
+      "subject": "starting_mp_top_two",
+      "source": "creator instruction 2026-10-30",
+      "status": "CREATOR_CANON"
+    },
+    {
+      "subject": "starting_hp_bottom_two",
+      "source": "creator instruction 2026-10-30",
+      "status": "CREATOR_CANON"
+    },
+    {
+      "subject": "ship",
+      "source": "creator-approved ship direction and PR #656 review contracts; orbiter hold",
+      "status": "REVIEW_CONSTRAINT"
+    }
+  ],
+  "assertions": {
+    "height_order": [
+      "Reson",
+      "Aepex",
+      "Ender",
+      "Ionia",
+      "Lyra"
+    ],
+    "starting_mp_top_two": [
+      "Ender",
+      "Lyra"
+    ],
+    "starting_hp_bottom_two": [
+      "Lyra",
+      "Ender"
+    ],
+    "skyborne_wings": 4,
+    "seaborne_hydrofoils": 2,
+    "submersible_folded_wings_visible": true,
+    "orbiter_request_permitted": false
+  },
+  "limitations": "No invented numerical heights, HP, MP, gameplay integration, artistic signoff, or hidden plot unlock."
+}

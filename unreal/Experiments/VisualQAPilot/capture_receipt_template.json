@@ -1,0 +1,16 @@
+{
+  "source_sha": "77ee249f8a0d734eab165dcafcd16870f12f07a7",
+  "build_sha": "77ee249f8a0d734eab165dcafcd16870f12f07a7",
+  "capture_path": "",
+  "capture_sha256": "",
+  "engine_version": "5.8.4",
+  "renderer": "D3D12",
+  "map": "/Game/TSTSS/Review/Scenes/AureateWakeSeaborne_ReviewV2",
+  "camera": "",
+  "capture_utc": "",
+  "form": "Seaborne",
+  "pixel_width": 1280,
+  "pixel_height": 720,
+  "post_strut_build": false,
+  "receipt_state": "TEMPLATE_NOT_CAPTURED__UPDATE_HEAD_BEFORE_USE"
+}
