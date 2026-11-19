@@ -39,6 +39,23 @@ class ApprovedBoardSourceContract(unittest.TestCase):
             self.assertRegex(SOURCE, pattern, component + " must have no collision")
         self.assertIn('Text->SetCollisionEnabled(ECollisionEnabled::NoCollision);', SOURCE)
 
+    def test_physical_flyer_contrast_bands_are_decorative_and_forward_facing(self):
+        # Both strips are inset over paper, but cannot steal an E hit.
+        for suffix, component, height in (
+                ("Headline", "NoticeHeadlineBacking", "202"),
+                ("Captain", "NoticeCaptainBacking", "139")):
+            self.assertIn('TEXT("HilltoniaFlyer' + suffix + 'ContrastBacking")', SOURCE)
+            self.assertRegex(
+                SOURCE,
+                re.compile(r'auto\* ' + component + r' = Make\([^;]+?, false\);', re.S))
+            self.assertIn(
+                'Place(' + component + ', BoardX, BoardY - 16.5f, ' + height + '.f,',
+                SOURCE)
+        self.assertIn('Place(NoticeSheet, BoardX, BoardY - 13.f,', SOURCE)
+        self.assertIn('FVector(BoardX, BoardY - 18.f, 202.f), 25.f, FColor(244, 226, 177)', SOURCE)
+        self.assertIn('FVector(BoardX, BoardY - 18.f, 139.f), 14.f, FColor(245, 234, 204)', SOURCE)
+        self.assertEqual(SOURCE.count('ComponentTags.Add(TEXT("TSTSS_HILLTONIA_FLYER"))'), 1)
+
     def test_lantern_is_review_only_shadow_free(self):
         self.assertIn('HilltoniaPostingBoardWarmLanternLight', SOURCE)
         self.assertIn('LanternLight->SetCastShadows(false);', SOURCE)
