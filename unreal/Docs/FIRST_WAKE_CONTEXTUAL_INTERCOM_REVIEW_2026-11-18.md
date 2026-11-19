@@ -45,3 +45,24 @@ gameplay framing require GPU review.
 
 This improves the existing review engineering flow; it does not establish an
 enclosed finished engine room, full-route playability or creator acceptance.
+
+## Native replay finding and corrective follow-up
+
+On `5210967ff0aba0b1a1b4043c0bbc693253763abb`, UE5.8.4 Editor build and
+38/38 native automations passed. A scripted private-Ender PIE probe reached
+VS02 through the actual Ionia and ship interaction rays. Reserve-first and
+normal inspection sequences passed. Native D3D11 1326×924 captures showed
+“Reserve check received” with the still-missing Lift objective, then no caption
+after 9.52 game seconds. The pawn/art and room remain unfinished review assets;
+synthetic positioning and flyer seeding do not constitute a human playthrough.
+
+A repeated save/load test exposed a separate signoff defect: after the third
+inspection order all three bits were present, but the signoff visibility ray
+response remained Ignore. Collision restoration and the beacon's visual cache
+had drifted; the cached-availability fast path could skip collision repair.
+The follow-up synchronizes the story-gated signoff collision **before** the
+cosmetic early return. It does not broaden interaction reach or grant a beat.
+An executable regression probes both collision drift directions and repeated
+replays; restoring the old ordering must fail. Native results above belong to
+the earlier head; the corrective head requires fresh build/automation/replay
+evidence before inheriting any acceptance.

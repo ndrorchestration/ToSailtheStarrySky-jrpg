@@ -295,12 +295,6 @@ void ATSTSSMilestoneActor::UpdateReviewBeacon(const UTSTSSFirstWakeState* State)
     }
     const bool bAvailable = IsReviewActionable(State);
     EnsureV5ReviewObjectProxy();
-    if (bReviewBeaconInitialized && bReviewBeaconAvailable == bAvailable)
-    {
-        return;
-    }
-    bReviewBeaconInitialized = true;
-    bReviewBeaconAvailable = bAvailable;
     // In the real shipboard route the *final* E marker must not become
     // a camera-ray obstruction before all three individual inspections are
     // earned. It becomes hittable only when the authoritative state allows
@@ -317,6 +311,15 @@ void ATSTSSMilestoneActor::UpdateReviewBeacon(const UTSTSSFirstWakeState* State)
         InteractionMesh->SetCollisionResponseToChannel(
             ECC_Visibility, bAvailable ? ECR_Block : ECR_Ignore);
     }
+    // LoadFirstWake reconciles collision independently of the cosmetic cache.
+    // Always synchronize the earned signoff ray before the visual fast path:
+    // a rapid restore/recheck can return to the same cached availability.
+    if (bReviewBeaconInitialized && bReviewBeaconAvailable == bAvailable)
+    {
+        return;
+    }
+    bReviewBeaconInitialized = true;
+    bReviewBeaconAvailable = bAvailable;
     // Consumed review markers cannot visually occlude later objectives.
     // Cosmetic visibility only: the existing collision/story gates stay intact.
     const bool bConsumed = bIsInspectionStation
