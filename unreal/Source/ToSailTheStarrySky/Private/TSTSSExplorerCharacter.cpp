@@ -313,7 +313,8 @@ bool ApplyV5HarborReviewLookdev(UWorld* World)
             if (IsValid(Canopy))
             {
                 bTownReady = TSTSSHilltoniaReviewExtension::Apply(
-                    World, PBRLoaded[0], PBRLoaded[2], PBRLoaded[3], Canopy);
+                    World, PBRLoaded[0], PBRLoaded[2], PBRLoaded[3], Canopy,
+                    Found[1]->GetStaticMeshComponent());
             }
             else
             {
