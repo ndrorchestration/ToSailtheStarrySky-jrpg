@@ -298,7 +298,7 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
     auto* NoticeRoof = Make(Owner, Root, TEXT("HilltoniaPostingBoardGable"),
                             Cube, Timber, false);
     auto* NoticeSheet = Make(Owner, Root, TEXT("HilltoniaPostingBoardFlyerPaper"),
-                             Cube, Stone, false);
+                             Cube, Brass, false);
     // Approved concept study: low gabled noticeboard, visible readable flyer,
     // wooden name plaque, layered paper notices, brass fittings and warm lamp.
     // These are geometry-only preview accents, NOT imported concept pixels.
@@ -494,19 +494,21 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
     Owner->AddInstanceComponent(LanternLight);
     LanternLight->RegisterComponent();
 
+    // Exact-head D3D11 visual QA found dark ink unreadable on the blue Stone sheet.
+    // Keep the approved short gable and illuminate only the sheet locally.
     // Soft fill reveals the printed sheet beneath the gable. The narrow cone
     // and short attenuation keep the surrounding square on its existing light.
     auto* FlyerFill = NewObject<USpotLightComponent>(Owner, TEXT("HilltoniaPostingFlyerFill"));
     FlyerFill->SetMobility(EComponentMobility::Movable);
     FlyerFill->SetupAttachment(Root);
-    const FVector FillPosition(BoardX, BoardY - 173.f, 229.f);
+    const FVector FillPosition(BoardX, BoardY - 115.f, 220.f);
     const FVector FlyerCenter(BoardX, BoardY - 13.f, 180.f);
     FlyerFill->SetRelativeLocation(FillPosition);
     FlyerFill->SetRelativeRotation((FlyerCenter - FillPosition).Rotation());
     FlyerFill->SetInnerConeAngle(30.f);
     FlyerFill->SetOuterConeAngle(38.f);
-    FlyerFill->SetAttenuationRadius(215.f);
-    FlyerFill->SetIntensity(560.f);
+    FlyerFill->SetAttenuationRadius(190.f);
+    FlyerFill->SetIntensity(1350.f);
     FlyerFill->SetLightColor(FLinearColor(1.f, .91f, .78f));
     FlyerFill->SetCastShadows(false);
     Owner->AddInstanceComponent(FlyerFill);
