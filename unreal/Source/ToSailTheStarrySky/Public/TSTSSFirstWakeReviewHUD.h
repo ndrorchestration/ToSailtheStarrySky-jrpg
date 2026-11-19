@@ -17,6 +17,7 @@ public:
 private:
 #if WITH_EDITOR
     bool DrawHilltoniaOpening(const class ATSTSSExplorerCharacter& Explorer);
+    void DrawEngineeringIntercom(const class ATSTSSExplorerCharacter& Explorer);
     bool bTriedHilltoniaIcon = false;
 #endif
     UPROPERTY(Transient)

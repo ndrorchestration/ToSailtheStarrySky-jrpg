@@ -27,6 +27,7 @@ public:
     bool HasHilltoniaOpening() const { return bHilltoniaOpeningActive; }
     bool IsHilltoniaFlyerOpen() const;
     bool GetHilltoniaCaptainWaypoint(FVector& Location) const;
+    bool GetEngineeringIntercomCaption(FString& Subtitle, FString& NextCheck) const;
 #endif
 #endif
     UFUNCTION(BlueprintCallable, Category="TSTSS|First Wake")
@@ -180,6 +181,14 @@ private:
     uint64 HilltoniaFlyerGeneration = 0;
     FVector HilltoniaFlyerHit = FVector::ZeroVector;
     TWeakObjectPtr<class ATSTSSMilestoneActor> HilltoniaCaptain;
+    // Cosmetic, current-pawn caption only. Never serialized or story authority.
+    FString FirstWakeIntercomSubtitle;
+    FString FirstWakeIntercomNextCheck;
+    float FirstWakeIntercomStartedSeconds = 0.f;
+    float FirstWakeIntercomExpiresSeconds = 0.f;
+    uint64 FirstWakeIntercomGeneration = 0;
+    ETSTSSFirstWakeBeat FirstWakeIntercomBeat = ETSTSSFirstWakeBeat::FlyerDiscovered;
+    uint8 FirstWakeIntercomMask = 0;
     void ReviewShoreTravel();
     void ReviewOpticalInspectionTravel();
     void ToggleEngineFocusPreview();

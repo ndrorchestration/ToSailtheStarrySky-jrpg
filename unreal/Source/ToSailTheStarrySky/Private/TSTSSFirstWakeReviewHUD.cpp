@@ -13,7 +13,7 @@
 #endif
 
 // Draw only in non-shipping review builds. The story state remains the
-// authority; no separate HUD progression, timers or persistent cache.
+// authority; cosmetic captions expire independently and never grant progress.
 void ATSTSSFirstWakeReviewHUD::DrawHUD()
 {
     Super::DrawHUD();
@@ -63,6 +63,7 @@ void ATSTSSFirstWakeReviewHUD::DrawHUD()
 
 #if WITH_EDITOR
     if (DrawHilltoniaOpening(*Explorer)) return;
+    DrawEngineeringIntercom(*Explorer);
 #endif
     const float Margin = 24.f;
     const float PanelWidth = FMath::Max(0.f, FMath::Min(780.f, Canvas->ClipX - Margin * 2.f));
@@ -210,6 +211,28 @@ void ATSTSSFirstWakeReviewHUD::DrawHUD()
 }
 
 #if WITH_EDITOR
+void ATSTSSFirstWakeReviewHUD::DrawEngineeringIntercom(
+    const ATSTSSExplorerCharacter& Explorer)
+{
+    // Leave the top objective, center aim point and bottom [E] prompt clear.
+    // Below this size, omit the panel instead of clipping or shrinking text.
+    if (!Canvas || !GEngine || Canvas->ClipX < 640.f || Canvas->ClipY < 480.f) return;
+    FString Subtitle, NextCheck;
+    if (!Explorer.GetEngineeringIntercomCaption(Subtitle, NextCheck)) return;
+    const float Width = FMath::Min(780.f, Canvas->ClipX - 48.f);
+    const float Left = (Canvas->ClipX - Width) * .5f;
+    const float Top = Canvas->ClipY - 210.f;
+    const FLinearColor Teal(.35f, .90f, .93f, 1.f);
+    DrawRect(FLinearColor(.012f, .024f, .035f, .94f), Left, Top, Width, 100.f);
+    DrawRect(Teal, Left, Top, 4.f, 100.f);
+    DrawText(TEXT("IONIA  /  BRIDGE INTERCOM"), Teal,
+             Left + 18.f, Top + 12.f, GEngine->GetSmallFont(), .90f);
+    DrawText(Subtitle, FLinearColor::White,
+             Left + 18.f, Top + 39.f, GEngine->GetSmallFont(), .95f);
+    DrawText(NextCheck, FLinearColor(.96f, .81f, .48f, 1.f),
+             Left + 18.f, Top + 68.f, GEngine->GetSmallFont(), .85f);
+}
+
 bool ATSTSSFirstWakeReviewHUD::DrawHilltoniaOpening(const ATSTSSExplorerCharacter& Explorer)
 {
     if (!Explorer.HasHilltoniaOpening()) return false;
