@@ -299,6 +299,13 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
                             Cube, Timber, false);
     auto* NoticeSheet = Make(Owner, Root, TEXT("HilltoniaPostingBoardFlyerPaper"),
                              Cube, Stone, false);
+    // Dark inset title strips on the physical sheet preserve contrast under
+    // the gable even when the town square is in deep shade. These do not
+    // intercept the existing tagged panel or claim any quest authority.
+    auto* NoticeHeadlineBacking = Make(Owner, Root,
+        TEXT("HilltoniaFlyerHeadlineContrastBacking"), Cube, Timber, false);
+    auto* NoticeCaptainBacking = Make(Owner, Root,
+        TEXT("HilltoniaFlyerCaptainContrastBacking"), Cube, Timber, false);
     // Approved concept study: low gabled noticeboard, visible readable flyer,
     // wooden name plaque, layered paper notices, brass fittings and warm lamp.
     // These are geometry-only preview accents, NOT imported concept pixels.
@@ -420,6 +427,12 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
     Place(NoticePosts, BoardX + 110.f, BoardY, 119.f, .18f, .23f, 2.38f);
     Place(NoticePanel, BoardX, BoardY, 174.f, 2.55f, .22f, 1.42f);
     Place(NoticeSheet, BoardX, BoardY - 13.f, 180.f, 1.78f, .045f, 1.12f);
+    // Place inset strips just ahead of the sheet face and behind the 3D
+    // glyph planes (text at Y-18); avoid coplanar Z-fighting.
+    Place(NoticeHeadlineBacking, BoardX, BoardY - 16.5f, 202.f,
+          1.72f, .020f, .60f);
+    Place(NoticeCaptainBacking, BoardX, BoardY - 16.5f, 139.f,
+          1.50f, .020f, .24f);
     // Shallow gable and lintel shelter the flyer. No roof E interception.
     Place(NoticeRoof, BoardX, BoardY, 244.f, 2.65f, .32f, .16f);
     Place(NoticeRoof, BoardX, BoardY - 35.f, 260.f, 2.95f, .79f, .10f, 0.f, -25.f);
@@ -437,10 +450,10 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
     // concept-art pixels; the central headline is readable at walking range.
     NoticeLettering(Owner, Root, TEXT("HilltoniaPostingFlyerPreview"),
         TEXT("ENGINEER\nWANTED"),
-        FVector(BoardX, BoardY - 18.f, 202.f), 25.f, FColor(45, 37, 28));
+        FVector(BoardX, BoardY - 18.f, 202.f), 25.f, FColor(244, 226, 177));
     NoticeLettering(Owner, Root, TEXT("HilltoniaPostingFlyerCaptain"),
         TEXT("CAPTAIN IONIA"),
-        FVector(BoardX, BoardY - 18.f, 139.f), 14.f, FColor(58, 46, 34));
+        FVector(BoardX, BoardY - 18.f, 139.f), 14.f, FColor(245, 234, 204));
     Place(NoticeSeal, BoardX, BoardY - 20.f, 165.f,
           .17f, .17f, .04f, 0.f, 90.f);
     for (const float SignX : {-80.f, 80.f})
