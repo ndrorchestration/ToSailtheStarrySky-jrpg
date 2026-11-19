@@ -1,0 +1,41 @@
+name: Godot Native First Wake Pilot (review only)
+on:
+  push:
+    branches: [pilot/godot-4-7-2-first-wake-20261021]
+    paths:
+      - 'godot/**'
+      - '.github/workflows/godot-first-wake-pilot.yml'
+  pull_request:
+    paths:
+      - 'godot/**'
+      - '.github/workflows/godot-first-wake-pilot.yml'
+permissions:
+  contents: read
+jobs:
+  godot-native-headless:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout isolated Godot pilot without persisted credentials
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          persist-credentials: false
+      - name: Fetch digest-verified official Godot 4.7.2 Standard binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --retry 3 -fsSL "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip" -o godot-editor.zip
+          echo "cadd3204e728a35d3f13adb7fd0d7902636b79f6b95c40c265eb73b6c35329e4  godot-editor.zip" | sha256sum -c -
+          mkdir -p godot-editor
+          unzip -q godot-editor.zip -d godot-editor
+          chmod +x godot-editor/Godot_v4.7.2-stable_linux.x86_64
+      - name: Import/check real GDScript scenes with Godot headless editor
+        shell: bash
+        run: |
+          set -euo pipefail
+          godot-editor/Godot_v4.7.2-stable_linux.x86_64 --headless --path godot --editor --quit
+      - name: Execute real native SceneTree smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          godot-editor/Godot_v4.7.2-stable_linux.x86_64 --headless --path godot --script res://tests/smoke_test.gd
