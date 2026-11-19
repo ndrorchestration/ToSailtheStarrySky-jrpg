@@ -2,6 +2,10 @@ Binaries/
 DerivedDataCache/
 Intermediate/
 Saved/
+
+# Locally generated Seabourne model intake and editable review map.
+# Reproduce from source; never stage incidental Editor asset writes.
+/Content/TSTSS/Review/SharedHullRigV*/
 .vs/
 *.sln
 *.VC.db
