@@ -1,0 +1,25 @@
+name: Celestial Arc public/private source boundary
+on:
+  pull_request:
+    paths:
+      - 'godot/celestial_arc/**'
+      - 'tools/check_celestial_private_boundary.sh'
+      - '.github/workflows/celestial-private-source-boundary.yml'
+  push:
+    paths:
+      - 'godot/celestial_arc/**'
+      - 'tools/check_celestial_private_boundary.sh'
+      - '.github/workflows/celestial-private-source-boundary.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public-private-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure no private checkout, archive or key is tracked
+        shell: bash
+        run: bash tools/check_celestial_private_boundary.sh

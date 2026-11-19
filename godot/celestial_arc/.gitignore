@@ -1,0 +1,12 @@
+# Public repository: NEVER stage the owner-private native checkout or evidence
+/private_native/
+/private_source/
+/private_artifacts/
+/private_evidence/
+/.local_private/
+/secrets/
+/keys/
+/*.bundle
+/*.age
+/*.enc
+/*_PRIVATE*.zip
