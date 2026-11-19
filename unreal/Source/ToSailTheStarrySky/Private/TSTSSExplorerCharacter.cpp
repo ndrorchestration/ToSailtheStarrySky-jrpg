@@ -647,8 +647,10 @@ void StageEarnedEngineRoomReview(UWorld* World, UTSTSSFirstWakeState* State,
 // music/voice file, camera cut, save write, or launch/helm authorization.
 void ShowEarnedFirstWakeEngineeringIntercom(
     const UWorld* World, const ATSTSSMilestoneActor* Marker,
-    const UTSTSSFirstWakeState* State)
+    const UTSTSSFirstWakeState* State, FString& OutSubtitle, FString& OutNextCheck)
 {
+    OutSubtitle.Empty();
+    OutNextCheck.Empty();
     if (!World || (World->WorldType != EWorldType::PIE &&
                    World->WorldType != EWorldType::Game) ||
         World->GetNetMode() != NM_Standalone || !World->GetOutermost() ||
@@ -669,15 +671,15 @@ void ShowEarnedFirstWakeEngineeringIntercom(
         {
         case ETSTSSInspectionStation::Lift:
             Cue = TEXT("lift");
-            Subtitle = TEXT("IONIA / BRIDGE: Copy, Ender. Levitation channels are responding.");
+            Subtitle = TEXT("Copy, Ender. Levitation channels are responding.");
             break;
         case ETSTSSInspectionStation::Pressure:
             Cue = TEXT("pressure");
-            Subtitle = TEXT("IONIA / BRIDGE: Pressure is holding. Check the reserve feed.");
+            Subtitle = TEXT("Pressure is holding.");
             break;
         case ETSTSSInspectionStation::Reserve:
             Cue = TEXT("reserve");
-            Subtitle = TEXT("IONIA / BRIDGE: Reserve check received. Complete the final signoff.");
+            Subtitle = TEXT("Reserve check received.");
             break;
         default:
             return;
@@ -689,16 +691,16 @@ void ShowEarnedFirstWakeEngineeringIntercom(
              State->AreInspectionsComplete())
     {
         Cue = TEXT("signoff");
-        Subtitle = TEXT("IONIA / BRIDGE: Engineering signoff received. Await my launch order.");
+        Subtitle = TEXT("Engineering signoff received. Await my launch order.");
     }
     if (!Cue || !Subtitle) return;
-    // Review subtitle only: no human voice is available and the Captain has
-    // NOT yet released clamps, established heading or activated Skybourne.
-    if (GEngine)
-    {
-        GEngine->AddOnScreenDebugMessage(
-            -1, 9.f, FColor::Cyan, FString(Subtitle));
-    }
+    // Inspections can be completed in any order. Read the next missing check
+    // from the same state as the objective instead of assuming Reserve is last.
+    OutSubtitle = Subtitle;
+    OutNextCheck = State->GetCurrentBeat() == ETSTSSFirstWakeBeat::BoardedAureateWake
+        ? State->GetReviewObjectiveText() : TEXT("Await Captain Ionia's launch order.");
+    // The HUD owns subtitle presentation, independent of debug-screen messages.
+    // No voice, clamp release, heading or Skybourne activation is granted here.
     UE_LOG(LogTemp, Display,
         TEXT("TSTSS_FIRSTWAKE_INTERCOM_SUBTITLE_REVIEW cue=%s accepted_E=1 audio=NOT_VERIFIED launch=NOT_GRANTED"),
         Cue);
@@ -2142,6 +2144,37 @@ bool ATSTSSExplorerCharacter::GetHilltoniaCaptainWaypoint(FVector& Location) con
     Location = HilltoniaCaptain->GetActorLocation() + FVector(0.f, 0.f, 175.f);
     return !Location.ContainsNaN();
 }
+
+bool ATSTSSExplorerCharacter::GetEngineeringIntercomCaption(
+    FString& Subtitle, FString& NextCheck) const
+{
+    Subtitle.Empty();
+    NextCheck.Empty();
+    const UWorld* World = GetWorld();
+    if (!World || (World->WorldType != EWorldType::PIE &&
+                   World->WorldType != EWorldType::Game) ||
+        World->GetNetMode() != NM_Standalone || !World->GetOutermost() ||
+        !World->GetOutermost()->GetName().StartsWith(TEXT("/Game/TSTSS/Review/")) ||
+        UGameplayStatics::GetCurrentLevelName(World, true) != TEXT("VS02_AureateInteriors") ||
+        !IsValid(FirstWakeState) || FirstWakeIntercomSubtitle.IsEmpty() ||
+        FirstWakeState->GetRestoreGeneration() != FirstWakeIntercomGeneration ||
+        FirstWakeState->GetCurrentBeat() != FirstWakeIntercomBeat ||
+        FirstWakeState->GetInspectionMask() != FirstWakeIntercomMask)
+    {
+        return false;
+    }
+    const float Now = World->GetTimeSeconds();
+    if (!FMath::IsFinite(Now) || !FMath::IsFinite(FirstWakeIntercomStartedSeconds) ||
+        !FMath::IsFinite(FirstWakeIntercomExpiresSeconds) ||
+        Now < FirstWakeIntercomStartedSeconds ||
+        Now >= FirstWakeIntercomExpiresSeconds)
+    {
+        return false;
+    }
+    Subtitle = FirstWakeIntercomSubtitle;
+    NextCheck = FirstWakeIntercomNextCheck;
+    return true;
+}
 #endif
 
 void ATSTSSExplorerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -2382,7 +2415,16 @@ void ATSTSSExplorerCharacter::Interact()
                     // The captain replies only to an accepted, real [E] hit
                     // in VS02. Never emit dialogue for blocked or proxy E.
                     ShowEarnedFirstWakeEngineeringIntercom(
-                        GetWorld(), Milestone, FirstWakeState);
+                        GetWorld(), Milestone, FirstWakeState,
+                        FirstWakeIntercomSubtitle, FirstWakeIntercomNextCheck);
+                    if (!FirstWakeIntercomSubtitle.IsEmpty())
+                    {
+                        FirstWakeIntercomStartedSeconds = GetWorld()->GetTimeSeconds();
+                        FirstWakeIntercomExpiresSeconds = FirstWakeIntercomStartedSeconds + 9.f;
+                        FirstWakeIntercomGeneration = FirstWakeState->GetRestoreGeneration();
+                        FirstWakeIntercomBeat = FirstWakeState->GetCurrentBeat();
+                        FirstWakeIntercomMask = FirstWakeState->GetInspectionMask();
+                    }
                     // An earned click on the docked ship is the boarding action.
                     // Reuse the existing one-use, gated in-memory scene ticket.
                     if (GetWorld()->GetNetMode() == NM_Standalone &&
