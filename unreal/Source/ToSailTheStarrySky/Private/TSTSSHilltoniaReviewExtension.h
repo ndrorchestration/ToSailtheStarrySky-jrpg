@@ -6,6 +6,7 @@
 
 class UWorld;
 class UMaterialInterface;
+class UStaticMeshComponent;
 
 namespace TSTSSHilltoniaReviewExtension
 {
@@ -15,6 +16,6 @@ namespace TSTSSHilltoniaReviewExtension
 // Returns false on a wrong map, a duplicate actor, or missing materials.
 bool Apply(UWorld* World, UMaterialInterface* Timber,
            UMaterialInterface* Stone, UMaterialInterface* Brass,
-           UMaterialInterface* Canopy);
+           UMaterialInterface* Canopy, const UStaticMeshComponent* HarborWater);
 #endif
 }

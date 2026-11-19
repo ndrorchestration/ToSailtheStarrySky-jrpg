@@ -5,6 +5,7 @@
 #include "Components/InstancedStaticMeshComponent.h"
 #include "Components/SceneComponent.h"
 #include "Components/PointLightComponent.h"
+#include "Components/SpotLightComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/TextRenderComponent.h"
 #include "Engine/StaticMesh.h"
@@ -76,6 +77,45 @@ void Place(UInstancedStaticMeshComponent* Component,
     Component->AddInstance(FTransform(
         FRotator(0.f, Yaw, Roll), FVector(X, Y, Z),
         FVector(SX, SY, SZ)));
+}
+
+void ExtendHarborWater(AActor* Owner, USceneComponent* Root,
+                       const UStaticMeshComponent* Source)
+{
+    if (!IsValid(Source) || !IsValid(Source->GetStaticMesh()) ||
+        !IsValid(Source->GetMaterial(0)) ||
+        !Source->GetComponentQuat().Equals(FQuat::Identity))
+    {
+        return;
+    }
+
+    // Repeat the authored plane at its original texel density. The V5
+    // ocean material is authored for ordinary static mesh components.
+    const FVector Scale = Source->GetComponentTransform().GetScale3D();
+    const FVector FullSize = Source->GetStaticMesh()->GetBounds().BoxExtent * Scale * 2.0;
+    if (FullSize.ContainsNaN() || FullSize.X <= 0.0 || FullSize.Y <= 0.0) return;
+
+    constexpr int32 RingRadius = 2;
+    for (int32 Y = -RingRadius; Y <= RingRadius; ++Y)
+    {
+        for (int32 X = -RingRadius; X <= RingRadius; ++X)
+        {
+            if (X == 0 && Y == 0) continue;
+            auto* Tile = NewObject<UStaticMeshComponent>(Owner, NAME_None, RF_Transient);
+            Tile->SetMobility(EComponentMobility::Movable);
+            Tile->SetupAttachment(Root);
+            Tile->SetStaticMesh(Source->GetStaticMesh());
+            Tile->SetMaterial(0, Source->GetMaterial(0));
+            Tile->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+            Tile->SetGenerateOverlapEvents(false);
+            Tile->SetCastShadow(false);
+            Tile->SetRelativeScale3D(Scale);
+            Tile->SetRelativeLocation(Source->GetComponentLocation() +
+                FVector(X * FullSize.X, Y * FullSize.Y, 0.0));
+            Owner->AddInstanceComponent(Tile);
+            Tile->RegisterComponent();
+        }
+    }
 }
 
 void WayfindingSign(AActor* Owner, USceneComponent* Root,
@@ -169,7 +209,7 @@ namespace TSTSSHilltoniaReviewExtension
 {
 bool Apply(UWorld* World, UMaterialInterface* Timber,
            UMaterialInterface* Stone, UMaterialInterface* Brass,
-           UMaterialInterface* Canopy)
+           UMaterialInterface* Canopy, const UStaticMeshComponent* HarborWater)
 {
     if (!Eligible(World) || !IsValid(Timber) || !IsValid(Stone) ||
         !IsValid(Brass) || !IsValid(Canopy)) return false;
@@ -236,6 +276,8 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
                                Cube, Canopy, false);
     auto* RollingHills = Make(Owner, Root, TEXT("HilltoniaWoodedSlopeBackdrop"),
                               Sphere, Canopy, false);
+    auto* ShoreSlopes = Make(Owner, Root, TEXT("HilltoniaSubmergedShoreSlopes"),
+                             Sphere, Canopy, false);
     // Decorative civic landmark, adapted from PR #850 to the inland layout.
     UMaterialInterface* Ocean = LoadObject<UMaterialInterface>(nullptr,
         TEXT("/Game/TSTSS/Review/VerticalSlice/M_VS_Ocean.M_VS_Ocean"));
@@ -293,6 +335,13 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
     // dock and its markers continue east over water. All are review shelves.
     Place(CoastalBuffer, -7000.f, 3250.f, -90.f, 70.f, 37.f, 1.6f);
     Place(WesternGround, -14000.f, -1300.f, -90.f, 80.f, 70.f, 1.6f);
+    // The shallow banks meet the water below the walkable shelves. They
+    // dress the coast without changing dock footing or blocking E traces.
+    Place(ShoreSlopes, -7850.f, 4550.f, -110.f, 98.f, 39.f, 1.8f);
+    Place(ShoreSlopes, -12550.f, 1790.f, -105.f, 101.f, 30.f, 1.7f);
+    Place(ShoreSlopes, -16300.f, -1000.f, -116.f, 51.f, 86.f, 1.9f);
+    Place(ShoreSlopes, -12200.f, -4310.f, -110.f, 107.f, 34.f, 1.8f);
+    ExtendHarborWater(Owner, Root, HarborWater);
 
     // Dock-to-town road: 10 overlapping 620-cm ground sections, full top
     // surface at Z=0. Its first 310 cm overlap the original dock floor,
@@ -445,6 +494,24 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
     Owner->AddInstanceComponent(LanternLight);
     LanternLight->RegisterComponent();
 
+    // Soft fill reveals the printed sheet beneath the gable. The narrow cone
+    // and short attenuation keep the surrounding square on its existing light.
+    auto* FlyerFill = NewObject<USpotLightComponent>(Owner, TEXT("HilltoniaPostingFlyerFill"));
+    FlyerFill->SetMobility(EComponentMobility::Movable);
+    FlyerFill->SetupAttachment(Root);
+    const FVector FillPosition(BoardX, BoardY - 173.f, 229.f);
+    const FVector FlyerCenter(BoardX, BoardY - 13.f, 180.f);
+    FlyerFill->SetRelativeLocation(FillPosition);
+    FlyerFill->SetRelativeRotation((FlyerCenter - FillPosition).Rotation());
+    FlyerFill->SetInnerConeAngle(30.f);
+    FlyerFill->SetOuterConeAngle(38.f);
+    FlyerFill->SetAttenuationRadius(215.f);
+    FlyerFill->SetIntensity(560.f);
+    FlyerFill->SetLightColor(FLinearColor(1.f, .91f, .78f));
+    FlyerFill->SetCastShadows(false);
+    Owner->AddInstanceComponent(FlyerFill);
+    FlyerFill->RegisterComponent();
+
     // The Green is a small open, decorative market landmark beside the
     // square, not an interactive market or a new quest authority.
     Place(GreenBorder, -7480.f, 1400.f, -9.f, 3.0f, 3.0f, .04f);
@@ -569,10 +636,13 @@ bool Apply(UWorld* World, UMaterialInterface* Timber,
             Place(TerraceRoofs, X, Y + 116.f, RoofZ, 6.0f, 2.7f, .20f, 0.f, 25.f);
         }
     }
-    // Rounded hills frame the upper rooftops from the harbor. Their front
-    // bounds stay behind the upper row so the terrace houses remain visible.
-    Place(RollingHills, -7800.f, -12000.f, 350.f, 62.f, 42.f, 33.f);
-    Place(RollingHills, -4900.f, -12300.f, 520.f, 66.f, 44.f, 42.f);
+    // A broad low base runs into the back of the retaining walls. Overlapping
+    // crests sit farther inland and their lower halves are submerged or buried.
+    Place(RollingHills, -7200.f, -11000.f, -1310.f, 121.f, 110.f, 40.f);
+    Place(RollingHills, -10200.f, -11150.f, -930.f, 80.f, 92.f, 27.f);
+    Place(RollingHills, -4800.f, -11500.f, -960.f, 85.f, 100.f, 29.f);
+    Place(RollingHills, -8400.f, -13500.f, -1280.f, 102.f, 81.f, 55.f);
+    Place(RollingHills, -5200.f, -13950.f, -1420.f, 94.f, 84.f, 56.f);
     // The reference harbor has an open mouth, a curved outer breakwater,
     // and a lighthouse at its tip. Set it against the coastal buffer on
     // the far side of the water from the playable eastward dock.
