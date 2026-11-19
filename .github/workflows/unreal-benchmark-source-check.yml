@@ -1,0 +1,36 @@
+name: Unreal First Wake Benchmark Source Gate
+
+on:
+  push:
+    branches:
+      - feat/unreal-first-wake-cinematic-benchmark-v1
+    paths:
+      - "unreal/Tools/build_first_wake_benchmark.py"
+      - "unreal/Tools/validate_cast_glb.py"
+      - "unreal/Tests/test_first_wake_benchmark_spec.py"
+      - "unreal/Tests/test_cast_glb_intake.py"
+      - "unreal/Docs/FIRST_WAKE_CINEMATIC_BENCHMARK_V1.md"
+      - ".github/workflows/unreal-benchmark-source-check.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-stage-data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Check Python syntax
+        run: python -m py_compile unreal/Tools/build_first_wake_benchmark.py unreal/Tests/test_first_wake_benchmark_spec.py unreal/Tools/validate_cast_glb.py unreal/Tests/test_cast_glb_intake.py
+      - name: Validate declarative stage
+        run: python unreal/Tools/build_first_wake_benchmark.py --validate
+      - name: Check review safety invariants
+        run: python -m unittest discover -s unreal/Tests -p "test_first_wake_benchmark_spec.py" -v
+
+      - name: Check source hashes, rig and early-story import restrictions
+        run: python -m unittest discover -s unreal/Tests -p "test_cast_glb_intake.py" -v
