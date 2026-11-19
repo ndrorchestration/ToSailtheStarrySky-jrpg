@@ -516,6 +516,53 @@ void StageDockedWakeReview(UWorld* World)
         return;
     }
     Target->SetWorldScale3D(FVector(5.f, 2.6f, 1.6f));
+    // V5-only: turn the saved, deliberately non-colliding gangway review
+    // placeholder into a walkable runtime footing, without modifying the map.
+    // The authored harbor floor ends at Y=700; the separate boarding marker
+    // is at Y=790, beyond its edge. This bridge has top Z=0 like the harbor
+    // floor, covers Y=600..900, and preserves the marker's X footprint.
+    AStaticMeshActor* GangwayVisual = nullptr;
+    int32 GangwayCount = 0;
+    for (TActorIterator<AStaticMeshActor> It(World); It; ++It)
+    {
+        if (It->GetActorLabel() == TEXT("TSTSS_PRELUDE_REVIEW_GangwayVisualMarker"))
+        {
+            GangwayVisual = *It;
+            ++GangwayCount;
+        }
+    }
+    UStaticMeshComponent* GangwayDeck = IsValid(GangwayVisual)
+        ? GangwayVisual->GetStaticMeshComponent() : nullptr;
+    if (GangwayCount != 1 || !IsValid(GangwayDeck) ||
+        !IsValid(GangwayDeck->GetStaticMesh()) ||
+        !GangwayVisual->GetActorLocation().Equals(FVector(-1050.f, 800.f, 35.f), 2.f) ||
+        !GangwayVisual->GetActorScale3D().Equals(FVector(6.f, 3.f, .7f), .02f))
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_DOCK_GANGWAY_FOOTING_HOLD missing_or_changed_review_marker"));
+    }
+    else
+    {
+        // Temporary PIE transform only; no editor map save or asset authoring.
+        GangwayDeck->SetMobility(EComponentMobility::Movable);
+        const bool bPlaced = GangwayVisual->SetActorLocation(
+            FVector(-1050.f, 750.f, -35.f), false, nullptr, ETeleportType::TeleportPhysics);
+        if (bPlaced)
+        {
+            GangwayVisual->SetActorEnableCollision(true);
+            GangwayDeck->SetCollisionProfileName(TEXT("BlockAll"));
+            GangwayDeck->SetCollisionObjectType(ECC_WorldStatic);
+            GangwayDeck->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+            GangwayDeck->SetGenerateOverlapEvents(false);
+            UE_LOG(LogTemp, Display,
+                TEXT("TSTSS_DOCK_GANGWAY_FOOTING_STAGED top_z=0 y_min=600 y_max=900 collision=WorldStatic source_map_unchanged=1"));
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("TSTSS_DOCK_GANGWAY_FOOTING_HOLD runtime_position_failed"));
+        }
+    }
     Captain->Tags.AddUnique(TEXT("TSTSS_DOCKED_WAKE_STAGED"));
     Board->Tags.AddUnique(TEXT("TSTSS_DOCKED_WAKE_STAGED"));
     UE_LOG(LogTemp, Display,
