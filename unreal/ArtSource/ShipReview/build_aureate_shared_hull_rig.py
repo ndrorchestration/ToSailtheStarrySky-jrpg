@@ -22,8 +22,8 @@ from build_aureate_fidelity_v2 import deterministic_payloads
 
 STATUS = 'NONCANONICAL_EDITABLE_SEABOURNE_REVIEW'
 STATIONS = (105., -25., -155., -285.)
-ROOT_Z = 115.
-DECK_Z = 33.
+ROOT_Z = 113.
+DECK_Z = 31.
 PITCH = 98.
 FILES = {'hull': 'AureateWake_WhiteGoldHull_V2_REVIEW.glb',
          'bridge': 'AureateWake_BlueGlassBridge_V2_REVIEW.glb',

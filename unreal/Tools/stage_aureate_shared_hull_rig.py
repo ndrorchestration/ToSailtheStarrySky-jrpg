@@ -15,11 +15,11 @@ import unreal
 project=Path(unreal.Paths.project_dir()).resolve()
 repo=project.parent
 sys.path.insert(0,str(project/'ArtSource/ShipReview'))
-from build_aureate_shared_hull_rig import build, FILES, STATIONS, ROOT_Z, PITCH
+from build_aureate_shared_hull_rig import build, FILES, STATIONS, ROOT_Z, DECK_Z, PITCH
 
-DEST='/Game/TSTSS/Review/SharedHullRigV1'
+DEST='/Game/TSTSS/Review/SharedHullRigV2'
 MAP=DEST+'/L_AureateWake_Seabourne_EditableReview'
-out=project/'Saved/SharedHullRigV1'
+out=project/'Saved/SharedHullRigV2'
 generated=out/'Generated'
 
 
@@ -72,7 +72,8 @@ if not world or not sub: hold('no isolated Editor world')
 
 
 def spawn(key,label,pos=(0,0,0),rot=(0,0,0),parent=None):
-    actor=sub.spawn_actor_from_class(unreal.StaticMeshActor,unreal.Vector(*pos),unreal.Rotator(*rot))
+    actor=sub.spawn_actor_from_class(unreal.StaticMeshActor,unreal.Vector(*pos),
+                 unreal.Rotator(pitch=rot[0],yaw=rot[1],roll=rot[2]))
     if not actor: hold('failed spawn '+label)
     actor.set_actor_label(label)
     component=actor.get_component_by_class(unreal.StaticMeshComponent)
@@ -109,11 +110,21 @@ def snapshot():
 
 
 before=snapshot()
+for wing in wings:
+    axis=wing.get_actor_forward_vector()
+    if axis.z < .98 or not (-.15 < axis.x < -.12):
+        hold('wing is not upright and aft-raked '+str(vec(axis)))
+for foil_actor in foils:
+    if foil_actor.get_actor_up_vector().z < .999:
+        hold('foil assembly is inverted')
 trim_tests=[]
 for index,mast in enumerate(masts):
     # Native attachment propagation, each direction, each persistent wing.
     for angle in (-35.,35.):
-        mast.set_actor_rotation(unreal.Rotator(0,angle,0),False)
+        mast.set_actor_rotation(unreal.Rotator(pitch=0,yaw=angle,roll=0),False)
+        rotation=mast.get_actor_rotation()
+        if abs(rotation.yaw-angle)>.001 or abs(rotation.pitch)>.001 or abs(rotation.roll)>.001:
+            hold('trim must change azimuth yaw only')
         now=snapshot()
         changed=[name for name in before if before[name]!=now[name]]
         expected={mast.get_actor_label(),wings[index].get_actor_label()}
@@ -121,16 +132,16 @@ for index,mast in enumerate(masts):
         if vec(wings[index].get_actor_location())!=vec(mast.get_actor_location()):
             hold('wing pivot lost attachment')
         trim_tests.append({'sail':index+1,'yaw':angle,'changed':changed})
-    mast.set_actor_rotation(unreal.Rotator(0,0,0),False)
+    mast.set_actor_rotation(unreal.Rotator(pitch=0,yaw=0,roll=0),False)
 if snapshot()!=before: hold('neutral rig failed exact restoration')
 
 # Fixed geometry/contact datums; these are not a swept physical clearance test.
 for mast in masts:
-    if abs(mast.get_actor_location().z-82.-33.)>.001: hold('mast foot datum')
+    if abs(mast.get_actor_location().z-82.-DECK_Z)>.001: hold('mast foot datum')
 if len(wings)!=4 or len(foils)!=2: hold('persistent wing/foil identity count')
 
 # Reproducible native light rig; no ocean image concealing attachment fit.
-sun=sub.spawn_actor_from_class(unreal.DirectionalLight,unreal.Vector(0,0,1500),unreal.Rotator(-40,-35,0))
+sun=sub.spawn_actor_from_class(unreal.DirectionalLight,unreal.Vector(0,0,1500),unreal.Rotator(pitch=-40,yaw=-35,roll=0))
 sun.get_component_by_class(unreal.DirectionalLightComponent).set_editor_property('intensity',5.)
 for name,pos,intensity in [('Key',(350,-600,900),45000.),('Rim',(-400,600,650),35000.)]:
     light=sub.spawn_actor_from_class(unreal.PointLight,unreal.Vector(*pos),unreal.Rotator())
@@ -164,6 +175,11 @@ cc.set_editor_property('capture_every_frame',False)
 cc.set_editor_property('capture_on_movement',False)
 cc.set_editor_property('fov_angle',48.)
 cc.set_editor_property('capture_source',unreal.SceneCaptureSource.SCS_FINAL_COLOR_LDR)
+pp=cc.get_editor_property('post_process_settings')
+for key,value in {'override_auto_exposure_bias':True,'auto_exposure_bias':-4.,
+                  'override_bloom_intensity':True,'bloom_intensity':0.}.items():
+    pp.set_editor_property(key,value)
+cc.set_editor_property('post_process_settings',pp)
 views=[]
 for name,pos in [('hero',(1100,-1400,720)),('side',(0,-1700,420)),('front',(1400,-360,400))]:
     camera_pos=unreal.Vector(*pos)

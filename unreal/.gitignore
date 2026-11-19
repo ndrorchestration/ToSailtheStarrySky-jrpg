@@ -5,7 +5,7 @@ Saved/
 
 # Locally generated Seabourne model intake and editable review map.
 # Reproduce from source; never stage incidental Editor asset writes.
-/Content/TSTSS/Review/SharedHullRigV1/
+/Content/TSTSS/Review/SharedHullRigV*/
 .vs/
 *.sln
 *.VC.db

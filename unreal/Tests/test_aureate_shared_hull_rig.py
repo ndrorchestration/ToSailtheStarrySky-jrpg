@@ -1,5 +1,6 @@
 """Decode actual exported binary geometry and hierarchy, independent of UE."""
 import copy
+import ast
 import importlib.util
 import math
 from pathlib import Path
@@ -81,6 +82,14 @@ class SharedHullRigTests(unittest.TestCase):
         self.assertEqual(len([n for n in direct if n.startswith('Hydrofoil_')]),2)
         self.assertEqual(len(doc['meshes']),5)
         self.assertFalse(self.manifest['starbourne_unlocked'])
+
+    def test_native_rotations_never_use_ambiguous_positional_arguments(self):
+        source=Path(__file__).resolve().parents[1]/'Tools/stage_aureate_shared_hull_rig.py'
+        rotations=[node for node in ast.walk(ast.parse(source.read_text()))
+                   if isinstance(node,ast.Call) and isinstance(node.func,ast.Attribute)
+                   and node.func.attr=='Rotator']
+        self.assertGreaterEqual(len(rotations),6)
+        self.assertTrue(all(not node.args for node in rotations))
 
 
 if __name__=='__main__': unittest.main()
