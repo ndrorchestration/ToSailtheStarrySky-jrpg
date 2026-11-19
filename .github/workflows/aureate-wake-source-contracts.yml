@@ -1,0 +1,25 @@
+name: Aureate Wake source contracts (engine-free)
+on:
+  pull_request:
+    paths:
+      - 'unreal/**'
+      - '.github/workflows/aureate-wake-source-contracts.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ship-source-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check Aureate Wake form identities
+        run: python3 unreal/Tests/check_aureate_preview_source.py
+      - name: Check physical landing versus visual authority
+        run: python3 unreal/Tests/check_aureate_water_observer_source.py
+      - name: Declare verification scope
+        run: echo "Static source checks only; no Unreal compile, runtime, physics, art acceptance or release."

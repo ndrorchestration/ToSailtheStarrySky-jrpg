@@ -1,0 +1,33 @@
+name: Unreal Root-Pivoted Wing Source Guard
+
+on:
+  push:
+    branches:
+      - feat/unreal-aureate-root-wing-pose-adapter-v1
+    paths:
+      - "unreal/Source/ToSailTheStarrySky/Public/AureateWakePreviewActor.h"
+      - "unreal/Source/ToSailTheStarrySky/Private/AureateWakePreviewActor.cpp"
+      - "unreal/Tests/test_root_wing_pose_source.py"
+      - ".github/workflows/unreal-root-wing-adapter-source.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Python syntax and source-shape checks
+        run: |
+          python -m py_compile unreal/Tests/test_root_wing_pose_source.py
+          python -m unittest discover -s unreal/Tests -p "test_root_wing_pose_source.py" -v
+      - name: Check source patch whitespace
+        run: git diff --check HEAD~1 HEAD

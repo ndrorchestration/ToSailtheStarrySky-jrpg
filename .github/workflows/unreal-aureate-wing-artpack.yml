@@ -1,0 +1,54 @@
+name: Unreal Aureate Wing 3D Asset Source Gate
+
+on:
+  push:
+    branches:
+      - feat/unreal-aureate-wing-glb-artpack-v1
+      - feat/unreal-aureate-root-wing-pose-adapter-v1
+    paths:
+      - "unreal/Tools/author_aureate_wing_glb.py"
+      - "unreal/Tests/test_author_aureate_wing_glb.py"
+      - "unreal/Tools/import_aureate_wing_review.py"
+      - "unreal/Tests/test_import_aureate_wing_review.py"
+      - "unreal/Tools/audit_aureate_wing_clearance.py"
+      - "unreal/Tests/test_aureate_wing_clearance.py"
+      - "unreal/Source/ToSailTheStarrySky/Public/AureateWakePreviewActor.h"
+      - "unreal/Source/ToSailTheStarrySky/Private/AureateWakePreviewActor.cpp"
+      - ".github/workflows/unreal-aureate-wing-artpack.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  geometry-and-gltf:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Syntax verification
+        run: python -m py_compile unreal/Tools/author_aureate_wing_glb.py unreal/Tests/test_author_aureate_wing_glb.py unreal/Tools/import_aureate_wing_review.py unreal/Tests/test_import_aureate_wing_review.py unreal/Tools/audit_aureate_wing_clearance.py unreal/Tests/test_aureate_wing_clearance.py
+      - name: Determinism, mesh manifold and glTF material QA
+        run: python -m unittest discover -s unreal/Tests -p "test_author_aureate_wing_glb.py" -v
+      - name: Validate corrected GLB review-import preflight
+        run: python -m unittest discover -s unreal/Tests -p "test_import_aureate_wing_review.py" -v
+      - name: Check real GLB wing geometry and source parity (offline)
+        run: python -m unittest discover -s unreal/Tests -p "test_aureate_wing_clearance.py" -v
+      - name: Create scratch-only asset and review manifest
+        run: |
+          python unreal/Tools/author_aureate_wing_glb.py --output-dir "$RUNNER_TEMP/aureate-wing-artpack"
+          test -s "$RUNNER_TEMP/aureate-wing-artpack/AureateWake_Wing_Lookdev.glb"
+          test -s "$RUNNER_TEMP/aureate-wing-artpack/AureateWake_Wing_Albedo.png"
+          test -s "$RUNNER_TEMP/aureate-wing-artpack/AureateWake_Wing_Manifest.json"
+          python unreal/Tools/import_aureate_wing_review.py --glb "$RUNNER_TEMP/aureate-wing-artpack/AureateWake_Wing_Lookdev.glb" --manifest "$RUNNER_TEMP/aureate-wing-artpack/AureateWake_Wing_Manifest.json" --check
+          python unreal/Tools/audit_aureate_wing_clearance.py --glb "$RUNNER_TEMP/aureate-wing-artpack/AureateWake_Wing_Lookdev.glb" --manifest "$RUNNER_TEMP/aureate-wing-artpack/AureateWake_Wing_Manifest.json" --cpp unreal/Source/ToSailTheStarrySky/Private/AureateWakePreviewActor.cpp --header unreal/Source/ToSailTheStarrySky/Public/AureateWakePreviewActor.h --samples-per-primitive 900 --steps 20 | tee "$RUNNER_TEMP/aureate-wing-artpack/AureateWake_Wing_Clearance.json"
+      - name: Upload review-only corrected GLB files (not an approved asset)
+        uses: actions/upload-artifact@v4
+        with:
+          name: AureateWake-Wing-GLB-CORRECTED-ReviewOnly
+          path: ${{ runner.temp }}/aureate-wing-artpack/*
+          if-no-files-found: error
+          retention-days: 30
