@@ -22,3 +22,7 @@
 **Combined Unreal handoff:** [Integrated review gate](unreal/Docs/INTEGRATION_GATE_2026-11-02.md), [dependency handoff](unreal/Docs/FIRST_WAKE_DEPENDENCY_HANDOFF_2026-11-02.md), [production verification matrix](unreal/Docs/PRODUCTION_VERIFICATION_MATRIX.md). Preserve Ionia-before-Lyra recruitment, roster-bearing save refusal and the distinct Prelude/Chapter 1 gate. Source CI is not Win64 native or PIE evidence.
 
 Start: [Docs & agent handoff index](docs/AGENT_HANDOFF_INDEX.md). Existing main-branch docs may include older Aetherwake/JS-first statements: treat as historical where superseded above.
+
+## SpriteCook / Codex free artwork pilot (2026-10-30, REVIEW ONLY)
+
+When using the SpriteCook Codex plugin, first read [the free setup and zero-cost task](docs/SPRITECOOK_FREE_CODEX_RUNBOOK.md) and [the provenance intake](docs/SPRITECOOK_FREE_ASSET_INTAKE.md). Use **only verified available free credits**; never buy credits, enable paid exports, upload private reference art, replace creator-approved images, or claim generated files are production-approved. Validate each imported PNG at native Godot 4.7.2 gameplay scale. The official plugin requires separate browser account authorization; this documentation is not proof of authentication, generation or release.

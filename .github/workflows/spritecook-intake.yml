@@ -1,0 +1,21 @@
+name: SpriteCook free asset intake (offline)
+
+on:
+  pull_request:
+    paths:
+      - "scripts/spritecook_intake.py"
+      - "tests/test_spritecook_intake.py"
+      - ".github/workflows/spritecook-intake.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-intake-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run standard-library intake validation
+        run: python3 -m unittest discover -s tests -p 'test_spritecook_intake.py' -v
