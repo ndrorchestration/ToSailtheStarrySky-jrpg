@@ -166,6 +166,8 @@ private:
     void ToggleFirstWakeBokehReview();
     void UpdateFirstWakeBokehReview(float DeltaSeconds);
     bool bFirstWakeThirdPersonReview = false;
+    float EnderCameraSweepElapsed = 0.f;
+    bool bEnderCameraSweepLogged = false;
     // Runtime-only diagnostic state; never serialized or enabled in shipping.
     bool bEnderPIEPossessionLogged = false;
     uint8 LastEnderPIEMotionBand = 255;

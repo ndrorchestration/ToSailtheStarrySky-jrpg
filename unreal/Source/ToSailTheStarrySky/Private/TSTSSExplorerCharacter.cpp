@@ -1047,8 +1047,9 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
     // BeginPlay, let a private one-use GameInstance class ticket replace the
     // default VS02 pawn on its first possessed Tick. A successful swap
     // destroys THIS pawn, so do not touch its fields afterward.
+    const bool bPrivateStandaloneShipWorld = IsPrivateEnderStandaloneShip(World);
     if (bReviewNamespace && (World->WorldType == EWorldType::PIE ||
-        IsPrivateEnderStandaloneShip(World)) &&
+        bPrivateStandaloneShipWorld) &&
         World->GetNetMode() == NM_Standalone &&
         Scene == TEXT("VS02_AureateInteriors"))
     {
@@ -1058,6 +1059,46 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
         if (Travel && Travel->TryResumePrivateEnderInShipRoom(this))
         {
             return;
+        }
+    }
+    // Measure the private standalone ship camera with the spring arm's own
+    // collision state and a same-channel/radius sphere sweep. This is opt-in
+    // diagnostics ONLY: no camera change, no teleport, no saved-map edit.
+    if (!bEnderCameraSweepLogged && bReviewNamespace &&
+        Scene == TEXT("VS02_AureateInteriors") &&
+        bPrivateStandaloneShipWorld &&
+        FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderCameraSweep")) &&
+        GetClass()->GetPathName() ==
+            TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/BP_EnderLocomotionPreview_NONCANONICAL.BP_EnderLocomotionPreview_NONCANONICAL_C") &&
+        IsValid(CameraBoom) && IsValid(FollowCamera))
+    {
+        EnderCameraSweepElapsed += DeltaSeconds;
+        if (EnderCameraSweepElapsed >= 3.f)
+        {
+            bEnderCameraSweepLogged = true;
+            const FVector BoomStart =
+                CameraBoom->GetComponentLocation() + CameraBoom->TargetOffset;
+            const FVector Unfixed = CameraBoom->GetUnfixedCameraPosition();
+            const FVector Camera = FollowCamera->GetComponentLocation();
+            const FCollisionQueryParams Query(
+                SCENE_QUERY_STAT(TSTSSPrivateEnderCameraSweep), false, this);
+            FHitResult Hit;
+            const bool bSphereHit = CameraBoom->bDoCollisionTest &&
+                World->SweepSingleByChannel(
+                    Hit, BoomStart, Unfixed, FQuat::Identity,
+                    CameraBoom->ProbeChannel,
+                    FCollisionShape::MakeSphere(CameraBoom->ProbeSize), Query);
+            UE_LOG(LogTemp, Display,
+                TEXT("TSTSS_PRIVATE_ENDER_CAMERA_SWEEP collision_fix=%d boom_start=%s unfixed=%s camera=%s requested_arm=%.2f actual_distance=%.2f probe_radius=%.2f probe_channel=%d sphere_hit=%d hit_actor=%s hit_component=%s hit_distance=%.2f diagnosis_ONLY=1"),
+                CameraBoom->IsCollisionFixApplied() ? 1 : 0,
+                *BoomStart.ToCompactString(), *Unfixed.ToCompactString(),
+                *Camera.ToCompactString(), CameraBoom->TargetArmLength,
+                FVector::Distance(Camera, BoomStart), CameraBoom->ProbeSize,
+                static_cast<int32>(CameraBoom->ProbeChannel),
+                bSphereHit ? 1 : 0,
+                bSphereHit && IsValid(Hit.GetActor()) ? *Hit.GetActor()->GetName() : TEXT("none"),
+                bSphereHit && IsValid(Hit.GetComponent()) ? *Hit.GetComponent()->GetName() : TEXT("none"),
+                bSphereHit ? Hit.Distance : -1.f);
         }
     }
     if (bTryHilltoniaOpening)
