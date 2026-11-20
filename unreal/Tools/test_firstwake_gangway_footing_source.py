@@ -21,7 +21,7 @@ class DockedGangwaySourceContract(unittest.TestCase):
         self.assertIn("FLOOR_LOCATION = (-600.0, 0.0, -100.0)", AUTHOR)
         self.assertIn("FLOOR_SCALE = (63.0, 14.0, 2.0)", AUTHOR)
         self.assertIn('("GangwayVisualMarker", (-1050, 800, 35), (6, 3, .7))', AUTHOR)
-        self.assertIn('Board->SetActorLocation(FVector(-900.f, 600.f, 90.f))', STAGE)
+        self.assertIn('Board->SetActorLocation(FVector(-900.f, 300.f, 90.f))', STAGE)
 
     def test_review_only_and_one_existing_visual_marker(self):
         for token in (

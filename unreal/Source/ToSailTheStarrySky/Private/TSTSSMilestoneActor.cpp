@@ -370,11 +370,12 @@ void ATSTSSMilestoneActor::UpdateReviewBeacon(const UTSTSSFirstWakeState* State)
         // The boarding trace box is enlarged independently of its label. Keep
         // this V5-only sign readable from the dock rather than inheriting the
         // root's scale and facing along the wrong axis for this approach.
-        if (Tags.Contains(TEXT("TSTSS_DOCKED_WAKE_STAGED")) &&
+        const bool bDockedBoarding = Tags.Contains(TEXT("TSTSS_DOCKED_WAKE_STAGED")) &&
             !bIsInspectionStation &&
             Milestone == ETSTSSFirstWakeBeat::BoardedAureateWake &&
             UGameplayStatics::GetCurrentLevelName(GetWorld(), true) ==
-                TEXT("FirstWake_PreludeInteraction_V5_VisualReview"))
+                TEXT("FirstWake_PreludeInteraction_V5_VisualReview");
+        if (bDockedBoarding)
         {
             const FRotator ShoreFacing(0.f, -90.f, 0.f);
             ReviewBeacon->SetWorldRotation(ShoreFacing);
@@ -389,7 +390,8 @@ void ATSTSSMilestoneActor::UpdateReviewBeacon(const UTSTSSFirstWakeState* State)
         }
         ReviewBeacon->SetText(FText::FromString(
             FString::Printf(TEXT("[E]  %s"), *GetReviewDisplayName())));
-        ReviewBeacon->SetTextRenderColor(FColor(255, 239, 177));
+        ReviewBeacon->SetTextRenderColor(bDockedBoarding
+            ? FColor(25, 28, 31) : FColor(255, 239, 177));
     }
 
     // Reuse existing local review-material assets; this changes only the
