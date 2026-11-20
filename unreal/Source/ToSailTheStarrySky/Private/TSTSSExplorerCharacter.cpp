@@ -166,6 +166,19 @@ bool IsPrivateEnderShipBinding(const UWorld* World, const ATSTSSExplorerCharacte
     return Travel && Travel->IsPrivateEnderShipSpawnInProgress();
 }
 
+
+// Explicit, private, editor-built standalone animation study. This adds no
+// production-world admission and does not relax the animation-owner lease.
+bool IsPrivateEnderStandaloneAnimation(const UWorld* World, const ATSTSSExplorerCharacter* Pawn)
+{
+    return World && IsValid(Pawn) &&
+        FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderAnimationReview")) &&
+        (IsPrivateEnderStandaloneBinding(World, Pawn) ||
+         (IsPrivateEnderStandaloneShip(World) &&
+          Pawn->GetClass()->GetPathName() ==
+            TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/BP_EnderLocomotionPreview_NONCANONICAL.BP_EnderLocomotionPreview_NONCANONICAL_C")));
+}
+
 void ApplyCoastalRecoveryReviewSignage(UWorld* World)
 {
     if (!World || (World->WorldType != EWorldType::PIE &&
@@ -1135,6 +1148,16 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
             }
         }
     }
+    // Private standalone Ender animation observation: the explicit flag and
+    // exact private pawn/map admission are separate from ordinary sprint.
+    if (IsPrivateEnderStandaloneAnimation(World, this) &&
+        bFirstWakeThirdPersonReview && IsPlayerControlled() &&
+        GetCharacterMovement() && GetCharacterMovement()->IsMovingOnGround())
+    {
+        const float SpeedCmS = GetVelocity().Size2D();
+        const uint8 MotionBand = SpeedCmS < 10.f ? 0 : (SpeedCmS < 300.f ? 1 : 2);
+        TryEnderPIELocomotionPreview(MotionBand);
+    }
     // Only scoped review worlds advertise live interaction. Visual refresh
     // reads the authoritative state; it cannot advance or save a story beat.
     if (bReviewNamespace && World->GetNetMode() == NM_Standalone &&
@@ -1973,7 +1996,8 @@ void ATSTSSExplorerCharacter::TryEnderPIELocomotionPreview(uint8 MotionBand)
         return;
     }
     const UWorld* World = GetWorld();
-    if (!World || World->WorldType != EWorldType::PIE ||
+    if (!World || (World->WorldType != EWorldType::PIE &&
+                   !IsPrivateEnderStandaloneAnimation(World, this)) ||
         World->GetNetMode() != NM_Standalone || !World->GetOutermost() ||
         !World->GetOutermost()->GetName().StartsWith(
             TEXT("/Game/TSTSS/Review/")))
@@ -2029,6 +2053,33 @@ void ATSTSSExplorerCharacter::TryEnderPIELocomotionPreview(uint8 MotionBand)
                 TEXT("TSTSS_ENDER_PIE_ANIM_HOLD invalid_private_animation_asset"));
             return;
         }
+        // Private spine-fix candidate comparison: select locally without
+        // mutating the Blueprint, source clips, maps, or production worlds.
+        const bool bSpineFixCandidate =
+            IsPrivateEnderStandaloneAnimation(World, this) &&
+            FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderSpineFixV1"));
+        if (bSpineFixCandidate)
+        {
+            if (!bAllowEnderPIERootMotionExtractionReview ||
+                Walk->GetPathName() != TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/Animations/MF_Unarmed_Walk_Fwd_EnderPreview_NONCANONICAL.MF_Unarmed_Walk_Fwd_EnderPreview_NONCANONICAL") ||
+                Run->GetPathName() != TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/Animations/MF_Unarmed_Jog_Fwd_EnderPreview_NONCANONICAL.MF_Unarmed_Jog_Fwd_EnderPreview_NONCANONICAL"))
+            {
+                UE_LOG(LogTemp, Warning, TEXT("TSTSS_ENDER_SPINE_FIX_HOLD original_triplet_or_root_opt_in"));
+                return;
+            }
+            UAnimSequence* CandidateWalk = LoadObject<UAnimSequence>(nullptr,
+                TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/Animations_SpineFixV1_PRIVATE/MF_Unarmed_Walk_Fwd_EnderSpineFixV1_PRIVATE.MF_Unarmed_Walk_Fwd_EnderSpineFixV1_PRIVATE"));
+            UAnimSequence* CandidateRun = LoadObject<UAnimSequence>(nullptr,
+                TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/Animations_SpineFixV1_PRIVATE/MF_Unarmed_Jog_Fwd_EnderSpineFixV1_PRIVATE.MF_Unarmed_Jog_Fwd_EnderSpineFixV1_PRIVATE"));
+            if (!IsValid(CandidateWalk) || !IsValid(CandidateRun))
+            {
+                UE_LOG(LogTemp, Warning, TEXT("TSTSS_ENDER_SPINE_FIX_HOLD missing_candidate"));
+                return;
+            }
+            Walk = CandidateWalk;
+            Run = CandidateRun;
+            UE_LOG(LogTemp, Display, TEXT("TSTSS_ENDER_SPINE_FIX_CANDIDATE_SELECTED visual_NOT_VERIFIED art_NOT_APPROVED"));
+        }
         const bool bAnyRootMotion = Idle->bEnableRootMotion ||
             Walk->bEnableRootMotion || Run->bEnableRootMotion;
         // Match only the actual private, noncanonical retargeted triplet. An
@@ -2041,10 +2092,13 @@ void ATSTSSExplorerCharacter::TryEnderPIELocomotionPreview(uint8 MotionBand)
             Run->bEnableRootMotion &&
             Idle->GetPathName() == ReviewAnimRoot +
                 TEXT("MM_Idle_EnderPreview_NONCANONICAL.MM_Idle_EnderPreview_NONCANONICAL") &&
-            Walk->GetPathName() == ReviewAnimRoot +
+            ((Walk->GetPathName() == ReviewAnimRoot +
                 TEXT("MF_Unarmed_Walk_Fwd_EnderPreview_NONCANONICAL.MF_Unarmed_Walk_Fwd_EnderPreview_NONCANONICAL") &&
-            Run->GetPathName() == ReviewAnimRoot +
-                TEXT("MF_Unarmed_Jog_Fwd_EnderPreview_NONCANONICAL.MF_Unarmed_Jog_Fwd_EnderPreview_NONCANONICAL");
+              Run->GetPathName() == ReviewAnimRoot +
+                TEXT("MF_Unarmed_Jog_Fwd_EnderPreview_NONCANONICAL.MF_Unarmed_Jog_Fwd_EnderPreview_NONCANONICAL")) ||
+             (bSpineFixCandidate &&
+              Walk->GetPathName() == TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/Animations_SpineFixV1_PRIVATE/MF_Unarmed_Walk_Fwd_EnderSpineFixV1_PRIVATE.MF_Unarmed_Walk_Fwd_EnderSpineFixV1_PRIVATE") &&
+              Run->GetPathName() == TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/Animations_SpineFixV1_PRIVATE/MF_Unarmed_Jog_Fwd_EnderSpineFixV1_PRIVATE.MF_Unarmed_Jog_Fwd_EnderSpineFixV1_PRIVATE")));
         if (!BoundSkeleton || !IsValid(Idle) || !IsValid(Walk) ||
             !IsValid(Run) ||
             Idle->GetSkeleton() != BoundSkeleton ||
