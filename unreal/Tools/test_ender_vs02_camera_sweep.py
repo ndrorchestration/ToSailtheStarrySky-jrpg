@@ -16,7 +16,7 @@ def admitted(src: str) -> bool:
         'bPrivateStandaloneShipWorld || bPrivateEditorCameraWorld',
         'FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderCameraSweep"))',
         'BP_EnderLocomotionPreview_NONCANONICAL_C', 'IsValid(CameraBoom)',
-        'IsValid(FollowCamera)', 'EnderCameraSweepElapsed >= (bPrivateEditorCameraWorld ? 0.1f : 3.f)'))
+        'IsValid(FollowCamera)', 'EnderCameraSweepElapsed >= (bPrivateEditorCameraWorld ? 0.4f : 3.f)'))
 
 class CameraSweepSourceTest(unittest.TestCase):
     def test_private_admission(self):
