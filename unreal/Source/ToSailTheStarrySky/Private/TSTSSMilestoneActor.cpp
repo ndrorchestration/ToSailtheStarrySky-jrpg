@@ -380,18 +380,24 @@ void ATSTSSMilestoneActor::UpdateReviewBeacon(const UTSTSSFirstWakeState* State)
             const FRotator ShoreFacing(0.f, -90.f, 0.f);
             ReviewBeacon->SetWorldRotation(ShoreFacing);
             ReviewBeacon->SetWorldScale3D(FVector(.5f));
+            // Keep the displayed label inside the E target's vertical extent.
+            ReviewBeacon->SetWorldLocation(GetActorLocation() + FVector(0.f, 0.f, 45.f));
             if (IsValid(ReviewBeaconBackdrop))
             {
                 ReviewBeaconBackdrop->SetWorldRotation(ShoreFacing);
                 ReviewBeaconBackdrop->SetWorldScale3D(FVector(.09f, 3.6f, .45f));
                 ReviewBeaconBackdrop->SetWorldLocation(
                     ReviewBeacon->GetComponentLocation() + FVector(0.f, 8.f, 0.f));
+                if (UMaterialInterface* HighContrast = LoadObject<UMaterialInterface>(
+                    nullptr, TEXT("/Engine/EngineDebugMaterials/BlackUnlitMaterial.BlackUnlitMaterial")))
+                {
+                    ReviewBeaconBackdrop->SetMaterial(0, HighContrast);
+                }
             }
         }
         ReviewBeacon->SetText(FText::FromString(
             FString::Printf(TEXT("[E]  %s"), *GetReviewDisplayName())));
-        ReviewBeacon->SetTextRenderColor(bDockedBoarding
-            ? FColor(25, 28, 31) : FColor(255, 239, 177));
+        ReviewBeacon->SetTextRenderColor(FColor(255, 239, 177));
     }
 
     // Reuse existing local review-material assets; this changes only the
