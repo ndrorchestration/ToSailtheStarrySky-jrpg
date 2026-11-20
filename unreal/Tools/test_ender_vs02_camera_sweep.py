@@ -7,26 +7,28 @@ CPP = (ROOT / "Source/ToSailTheStarrySky/Private/TSTSSExplorerCharacter.cpp").re
 HEADER = (ROOT / "Source/ToSailTheStarrySky/Public/TSTSSExplorerCharacter.h").read_text(encoding="utf-8")
 
 def diagnostic(src: str) -> str:
-    return src.split("// Measure the private standalone ship camera", 1)[1].split(
+    return src.split("// Measure only the exact private Ender ship pawn.", 1)[1].split(
         "    if (bTryHilltoniaOpening)", 1)[0]
 
 def admitted(src: str) -> bool:
     return all(token in diagnostic(src) for token in (
         '!bEnderCameraSweepLogged', 'Scene == TEXT("VS02_AureateInteriors")',
-        'bPrivateStandaloneShipWorld',
+        'bPrivateStandaloneShipWorld || bPrivateEditorCameraWorld',
         'FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderCameraSweep"))',
         'BP_EnderLocomotionPreview_NONCANONICAL_C', 'IsValid(CameraBoom)',
-        'IsValid(FollowCamera)', 'EnderCameraSweepElapsed >= 3.f'))
+        'IsValid(FollowCamera)', 'EnderCameraSweepElapsed >= (bPrivateEditorCameraWorld ? 1.f : 3.f)'))
 
 class CameraSweepSourceTest(unittest.TestCase):
     def test_private_admission(self):
         self.assertTrue(admitted(CPP))
         self.assertIn('const bool bPrivateStandaloneShipWorld = IsPrivateEnderStandaloneShip(World);', CPP)
+        self.assertIn('World->WorldType == EWorldType::PIE', diagnostic(CPP))
+        self.assertIn('TEXT("/Game/TSTSS/Review/VerticalSlice/VS02_AureateInteriors")', diagnostic(CPP))
         self.assertIn('float EnderCameraSweepElapsed = 0.f;', HEADER)
         self.assertIn('bool bEnderCameraSweepLogged = false;', HEADER)
 
     def test_negative_scope_mutation(self):
-        for token in ('bPrivateStandaloneShipWorld',
+        for token in ('bPrivateStandaloneShipWorld || bPrivateEditorCameraWorld',
                       'TSTSSPrivateEnderCameraSweep',
                       'Scene == TEXT("VS02_AureateInteriors")'):
             with self.subTest(token=token):

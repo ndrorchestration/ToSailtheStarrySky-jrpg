@@ -1061,19 +1061,25 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
             return;
         }
     }
-    // Measure the private standalone ship camera with the spring arm's own
-    // collision state and a same-channel/radius sphere sweep. This is opt-in
-    // diagnostics ONLY: no camera change, no teleport, no saved-map edit.
+    // Measure only the exact private Ender ship pawn. Allow an independent
+    // PIE-native scripted route as well as the original standalone diagnostic.
+    // Both remain opt-in, nonshipping and read-only; never alter camera or story.
+    const bool bPrivateEditorCameraWorld =
+        World->WorldType == EWorldType::PIE &&
+        World->GetNetMode() == NM_Standalone &&
+        World->GetOutermost() &&
+        World->GetOutermost()->GetName() ==
+            TEXT("/Game/TSTSS/Review/VerticalSlice/VS02_AureateInteriors");
     if (!bEnderCameraSweepLogged && bReviewNamespace &&
         Scene == TEXT("VS02_AureateInteriors") &&
-        bPrivateStandaloneShipWorld &&
+        (bPrivateStandaloneShipWorld || bPrivateEditorCameraWorld) &&
         FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderCameraSweep")) &&
         GetClass()->GetPathName() ==
             TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/BP_EnderLocomotionPreview_NONCANONICAL.BP_EnderLocomotionPreview_NONCANONICAL_C") &&
         IsValid(CameraBoom) && IsValid(FollowCamera))
     {
         EnderCameraSweepElapsed += DeltaSeconds;
-        if (EnderCameraSweepElapsed >= 3.f)
+        if (EnderCameraSweepElapsed >= (bPrivateEditorCameraWorld ? 1.f : 3.f))
         {
             bEnderCameraSweepLogged = true;
             const FVector BoomStart =
@@ -1089,7 +1095,8 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
                     CameraBoom->ProbeChannel,
                     FCollisionShape::MakeSphere(CameraBoom->ProbeSize), Query);
             UE_LOG(LogTemp, Display,
-                TEXT("TSTSS_PRIVATE_ENDER_CAMERA_SWEEP collision_fix=%d boom_start=%s unfixed=%s camera=%s requested_arm=%.2f actual_distance=%.2f probe_radius=%.2f probe_channel=%d sphere_hit=%d hit_actor=%s hit_component=%s hit_distance=%.2f diagnosis_ONLY=1"),
+                TEXT("TSTSS_PRIVATE_ENDER_CAMERA_SWEEP world_type=%d collision_fix=%d boom_start=%s unfixed=%s camera=%s requested_arm=%.2f actual_distance=%.2f probe_radius=%.2f probe_channel=%d sphere_hit=%d hit_actor=%s hit_component=%s hit_distance=%.2f diagnosis_ONLY=1"),
+                static_cast<int32>(World->WorldType),
                 CameraBoom->IsCollisionFixApplied() ? 1 : 0,
                 *BoomStart.ToCompactString(), *Unfixed.ToCompactString(),
                 *Camera.ToCompactString(), CameraBoom->TargetArmLength,
