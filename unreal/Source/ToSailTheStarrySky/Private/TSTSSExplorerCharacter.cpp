@@ -1082,7 +1082,7 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
         IsValid(CameraBoom) && IsValid(FollowCamera))
     {
         EnderCameraSweepElapsed += DeltaSeconds;
-        if (EnderCameraSweepElapsed >= (bPrivateEditorCameraWorld ? 1.f : 3.f))
+        if (EnderCameraSweepElapsed >= (bPrivateEditorCameraWorld ? 0.1f : 3.f))
         {
             bEnderCameraSweepLogged = true;
             const FVector BoomStart =
