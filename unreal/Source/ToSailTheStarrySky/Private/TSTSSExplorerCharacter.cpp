@@ -1794,6 +1794,37 @@ void ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance()
         TEXT("TSTSS_ENDER_SLICE_REVIEW_MESH_BOUND bones=%d animation_NOT_VERIFIED art_NOT_APPROVED"),
         Bones.GetNum());
 
+    // Ground only the exact opt-in standalone private body. This candidate
+    // has a floor-origin mesh while Character's capsule origin is centered.
+    // Do not override an already-authored offset or a differently scaled body.
+    if (bPrivateStandalone && IsValid(GetCapsuleComponent()) &&
+        Body->GetAttachParent() == GetCapsuleComponent() &&
+        Body->GetRelativeLocation().IsNearlyZero(0.1f) &&
+        Body->GetComponentScale().Equals(FVector(1.f), 0.01f))
+    {
+        Body->UpdateBounds();
+        const float HeightCm = 2.f * Body->Bounds.BoxExtent.Z;
+        const float MeshBottom = Body->Bounds.Origin.Z - Body->Bounds.BoxExtent.Z;
+        const float CapsuleBottom = GetActorLocation().Z -
+            GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+        const float Correction = CapsuleBottom - MeshBottom;
+        if (FMath::IsFinite(HeightCm) && FMath::IsFinite(Correction) &&
+            HeightCm >= 140.f && HeightCm <= 220.f &&
+            Correction >= -120.f && Correction <= -45.f)
+        {
+            Body->AddWorldOffset(FVector(0.f, 0.f, Correction));
+            UE_LOG(LogTemp, Display,
+                TEXT("TSTSS_PRIVATE_ENDER_GROUNDING_REVIEW height_cm=%.2f correction_cm=%.2f foot_contact_NOT_VERIFIED art_NOT_APPROVED"),
+                HeightCm, Correction);
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("TSTSS_PRIVATE_ENDER_GROUNDING_HOLD unexpected_mesh_bounds height_cm=%.2f correction_cm=%.2f"),
+                HeightCm, Correction);
+        }
+    }
+
     // Prior PR #812 visual bridge, deliberately opt-in and private. Attach
     // only to a valid bone/socket on the bound skeletal pawn. An invalid
     // asset or missing bone must never create a floating prop or partial rig.
