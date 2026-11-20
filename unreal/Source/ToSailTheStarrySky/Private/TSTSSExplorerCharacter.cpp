@@ -142,6 +142,30 @@ bool IsPrivateEnderStandaloneBinding(const UWorld* World, const ATSTSSExplorerCh
             TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/BP_EnderLocomotionPreview_NONCANONICAL.BP_EnderLocomotionPreview_NONCANONICAL_C");
 }
 
+bool IsPrivateEnderStandaloneShip(const UWorld* World)
+{
+    return World && World->WorldType == EWorldType::Game &&
+        World->GetNetMode() == NM_Standalone &&
+        FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderLowMemReview")) &&
+        World->GetOutermost() &&
+        World->GetOutermost()->GetName() ==
+            TEXT("/Game/TSTSS/Review/VerticalSlice/VS02_AureateInteriors");
+}
+
+bool IsPrivateEnderShipBinding(const UWorld* World, const ATSTSSExplorerCharacter* Pawn)
+{
+    if (!IsPrivateEnderStandaloneShip(World) || !IsValid(Pawn) ||
+        Pawn->GetClass()->GetPathName() !=
+            TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/BP_EnderLocomotionPreview_NONCANONICAL.BP_EnderLocomotionPreview_NONCANONICAL_C"))
+    {
+        return false;
+    }
+    UGameInstance* Instance = World->GetGameInstance();
+    const UTSTSSReviewShoreTravelSubsystem* Travel = Instance
+        ? Instance->GetSubsystem<UTSTSSReviewShoreTravelSubsystem>() : nullptr;
+    return Travel && Travel->IsPrivateEnderShipSpawnInProgress();
+}
+
 void ApplyCoastalRecoveryReviewSignage(UWorld* World)
 {
     if (!World || (World->WorldType != EWorldType::PIE &&
@@ -1010,7 +1034,8 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
     // BeginPlay, let a private one-use GameInstance class ticket replace the
     // default VS02 pawn on its first possessed Tick. A successful swap
     // destroys THIS pawn, so do not touch its fields afterward.
-    if (bReviewNamespace && World->WorldType == EWorldType::PIE &&
+    if (bReviewNamespace && (World->WorldType == EWorldType::PIE ||
+        IsPrivateEnderStandaloneShip(World)) &&
         World->GetNetMode() == NM_Standalone &&
         Scene == TEXT("VS02_AureateInteriors"))
     {
@@ -1728,7 +1753,8 @@ void ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance()
     // native PIE study. The property is blank for all ordinary characters.
     // Only the spawned pawn is touched; no asset/map/save/gameplay mutation.
     UWorld* World = GetWorld();
-    const bool bPrivateStandalone = IsPrivateEnderStandaloneBinding(World, this);
+    const bool bPrivateStandalone = IsPrivateEnderStandaloneBinding(World, this) ||
+        IsPrivateEnderShipBinding(World, this);
     if (!World || (World->WorldType != EWorldType::PIE && !bPrivateStandalone) ||
         World->GetNetMode() != NM_Standalone ||
         !World->GetOutermost() ||

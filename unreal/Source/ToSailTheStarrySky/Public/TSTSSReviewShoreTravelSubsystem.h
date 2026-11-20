@@ -23,6 +23,10 @@ public:
     // One-shot private pawn continuity for a REAL V5 -> VS02 PIE boarding ticket.
     // Never authorizes travel, story beats, save writes, or production assets.
     bool TryResumePrivateEnderInShipRoom(ATSTSSExplorerCharacter* DefaultPawn);
+#if WITH_EDITOR
+    // True only during the synchronous spawn after an earned one-use ticket.
+    bool IsPrivateEnderShipSpawnInProgress() const { return bPrivateEnderShipSpawnInProgress; }
+#endif
     const FString& GetPendingMapPackage() const { return PendingMapPackage; }
 
 private:
@@ -32,6 +36,9 @@ private:
     UPROPERTY(Transient)
     TSubclassOf<ATSTSSExplorerCharacter> PendingPrivateEnderClass;
     bool bPrivateEnderArrivalReady = false;
+#if WITH_EDITOR
+    bool bPrivateEnderShipSpawnInProgress = false;
+#endif
     bool bPending = false;
     FString PendingMapPackage;
     ETSTSSFirstWakeBeat PendingBeat = ETSTSSFirstWakeBeat::FlyerDiscovered;

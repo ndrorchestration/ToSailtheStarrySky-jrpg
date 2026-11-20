@@ -53,7 +53,7 @@ def checks(header, route, pawn):
     for token in ('bPending = false', 'PendingMapPackage.Reset()',
                   'bPrivateEnderArrivalReady = false',
                   'const bool bRestored = State->Restore(true, Beat, Mask)',
-                  'bRestored && World->WorldType == EWorldType::PIE',
+                  'bRestored && (World->WorldType == EWorldType::PIE',
                   'Target == ShipPackage'):
         need(token in arrive, "one-use restored ticket: " + token)
     for token in ('bPrivateEnderArrivalReady = false',

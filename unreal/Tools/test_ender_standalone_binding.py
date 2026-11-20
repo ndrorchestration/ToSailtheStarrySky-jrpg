@@ -10,7 +10,7 @@ def block(src, start, end):
 
 def admitted(src):
     try:
-        h = block(src, "bool IsPrivateEnderStandaloneBinding(", "\nvoid ApplyCoastalRecoveryReviewSignage")
+        h = block(src, "bool IsPrivateEnderStandaloneBinding(", "\nbool IsPrivateEnderStandaloneShip")
         b = block(src, "void ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance()", "\nvoid ATSTSSExplorerCharacter::SetupFirstWakeThirdPersonReview")
     except IndexError:
         return False
@@ -42,10 +42,16 @@ class StandaloneBindingTests(unittest.TestCase):
                       "Pawn->GetClass()->GetPathName() ==",
                       "IsPrivateEnderStandaloneBinding(World, this)"):
             with self.subTest(token=token):
-                self.assertFalse(admitted(CPP.replace(token, "REMOVED_GATE", 1)))
+                if token == "IsPrivateEnderStandaloneBinding(World, this)":
+                    damaged = CPP.replace(token, "REMOVED_GATE", 1)
+                else:
+                    h = block(CPP, "bool IsPrivateEnderStandaloneBinding(", "\nbool IsPrivateEnderStandaloneShip")
+                    self.assertIn(token, h)
+                    damaged = CPP.replace(h, h.replace(token, "REMOVED_GATE", 1), 1)
+                self.assertFalse(admitted(damaged))
 
     def test_does_not_enable_animation_or_change_story(self):
-        h = block(CPP, "bool IsPrivateEnderStandaloneBinding(", "\nvoid ApplyCoastalRecoveryReviewSignage")
+        h = block(CPP, "bool IsPrivateEnderStandaloneBinding(", "\nbool IsPrivateEnderStandaloneShip")
         for forbidden in ("PlayAnimation(", "OpenLevel(", "SaveGameToSlot(", "SetActorLocation(", "AdvanceTo("):
             self.assertNotIn(forbidden, h)
         preview = block(CPP, "void ATSTSSExplorerCharacter::TryEnderPIELocomotionPreview", "\nvoid ATSTSSExplorerCharacter::ToggleFirstWakeBokehReview")
