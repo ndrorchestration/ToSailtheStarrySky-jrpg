@@ -166,6 +166,19 @@ bool IsPrivateEnderShipBinding(const UWorld* World, const ATSTSSExplorerCharacte
     return Travel && Travel->IsPrivateEnderShipSpawnInProgress();
 }
 
+
+// Explicit, private, editor-built standalone animation study. This adds no
+// production-world admission and does not relax the animation-owner lease.
+bool IsPrivateEnderStandaloneAnimation(const UWorld* World, const ATSTSSExplorerCharacter* Pawn)
+{
+    return World && IsValid(Pawn) &&
+        FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderAnimationReview")) &&
+        (IsPrivateEnderStandaloneBinding(World, Pawn) ||
+         (IsPrivateEnderStandaloneShip(World) &&
+          Pawn->GetClass()->GetPathName() ==
+            TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/BP_EnderLocomotionPreview_NONCANONICAL.BP_EnderLocomotionPreview_NONCANONICAL_C")));
+}
+
 void ApplyCoastalRecoveryReviewSignage(UWorld* World)
 {
     if (!World || (World->WorldType != EWorldType::PIE &&
@@ -1135,6 +1148,16 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
             }
         }
     }
+    // Private standalone Ender animation observation: the explicit flag and
+    // exact private pawn/map admission are separate from ordinary sprint.
+    if (IsPrivateEnderStandaloneAnimation(World, this) &&
+        bFirstWakeThirdPersonReview && IsPlayerControlled() &&
+        GetCharacterMovement() && GetCharacterMovement()->IsMovingOnGround())
+    {
+        const float SpeedCmS = GetVelocity().Size2D();
+        const uint8 MotionBand = SpeedCmS < 10.f ? 0 : (SpeedCmS < 300.f ? 1 : 2);
+        TryEnderPIELocomotionPreview(MotionBand);
+    }
     // Only scoped review worlds advertise live interaction. Visual refresh
     // reads the authoritative state; it cannot advance or save a story beat.
     if (bReviewNamespace && World->GetNetMode() == NM_Standalone &&
@@ -1973,7 +1996,8 @@ void ATSTSSExplorerCharacter::TryEnderPIELocomotionPreview(uint8 MotionBand)
         return;
     }
     const UWorld* World = GetWorld();
-    if (!World || World->WorldType != EWorldType::PIE ||
+    if (!World || (World->WorldType != EWorldType::PIE &&
+                   !IsPrivateEnderStandaloneAnimation(World, this)) ||
         World->GetNetMode() != NM_Standalone || !World->GetOutermost() ||
         !World->GetOutermost()->GetName().StartsWith(
             TEXT("/Game/TSTSS/Review/")))
