@@ -17,11 +17,11 @@ BRIDGE = STAGE.split("// V5-only: turn the saved, deliberately non-colliding gan
 
 
 class DockedGangwaySourceContract(unittest.TestCase):
-    def test_existing_authored_floor_stops_before_boarding_target(self):
+    def test_existing_authored_floor_and_shoreward_boarding_target(self):
         self.assertIn("FLOOR_LOCATION = (-600.0, 0.0, -100.0)", AUTHOR)
         self.assertIn("FLOOR_SCALE = (63.0, 14.0, 2.0)", AUTHOR)
         self.assertIn('("GangwayVisualMarker", (-1050, 800, 35), (6, 3, .7))', AUTHOR)
-        self.assertIn('Board->SetActorLocation(FVector(-900.f, 790.f, 90.f))', STAGE)
+        self.assertIn('Board->SetActorLocation(FVector(-900.f, 300.f, 90.f))', STAGE)
 
     def test_review_only_and_one_existing_visual_marker(self):
         for token in (

@@ -506,7 +506,7 @@ void StageDockedWakeReview(UWorld* World)
     const FVector OldBoard = Board->GetActorLocation();
     if (!IsValid(Target) ||
         !Captain->SetActorLocation(FVector(-1250.f, 200.f, 90.f)) ||
-        !Board->SetActorLocation(FVector(-900.f, 790.f, 90.f)))
+        !Board->SetActorLocation(FVector(-900.f, 300.f, 90.f)))
     {
         Captain->SetActorLocation(OldCaptain);
         Board->SetActorLocation(OldBoard);
@@ -518,9 +518,9 @@ void StageDockedWakeReview(UWorld* World)
     Target->SetWorldScale3D(FVector(5.f, 2.6f, 1.6f));
     // V5-only: turn the saved, deliberately non-colliding gangway review
     // placeholder into a walkable runtime footing, without modifying the map.
-    // The authored harbor floor ends at Y=700; the separate boarding marker
-    // is at Y=790, beyond its edge. This bridge has top Z=0 like the harbor
-    // floor, covers Y=600..900, and preserves the marker's X footprint.
+    // The boarding target is at Y=300, clear of the placeholder wing.
+    // Harbor floor ends at Y=700. The bridge has top Z=0 like that floor,
+    // covers Y=600..900, and preserves the marker's X footprint.
     AStaticMeshActor* GangwayVisual = nullptr;
     int32 GangwayCount = 0;
     for (TActorIterator<AStaticMeshActor> It(World); It; ++It)

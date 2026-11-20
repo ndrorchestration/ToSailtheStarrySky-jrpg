@@ -367,6 +367,34 @@ void ATSTSSMilestoneActor::UpdateReviewBeacon(const UTSTSSFirstWakeState* State)
     }
     if (bAvailable)
     {
+        // The boarding trace box is enlarged independently of its label. Keep
+        // this V5-only sign readable from the dock rather than inheriting the
+        // root's scale and facing along the wrong axis for this approach.
+        const bool bDockedBoarding = Tags.Contains(TEXT("TSTSS_DOCKED_WAKE_STAGED")) &&
+            !bIsInspectionStation &&
+            Milestone == ETSTSSFirstWakeBeat::BoardedAureateWake &&
+            UGameplayStatics::GetCurrentLevelName(GetWorld(), true) ==
+                TEXT("FirstWake_PreludeInteraction_V5_VisualReview");
+        if (bDockedBoarding)
+        {
+            const FRotator ShoreFacing(0.f, -90.f, 0.f);
+            ReviewBeacon->SetWorldRotation(ShoreFacing);
+            ReviewBeacon->SetWorldScale3D(FVector(.5f));
+            // Keep the displayed label inside the E target's vertical extent.
+            ReviewBeacon->SetWorldLocation(GetActorLocation() + FVector(0.f, 0.f, 45.f));
+            if (IsValid(ReviewBeaconBackdrop))
+            {
+                ReviewBeaconBackdrop->SetWorldRotation(ShoreFacing);
+                ReviewBeaconBackdrop->SetWorldScale3D(FVector(.09f, 3.6f, .45f));
+                ReviewBeaconBackdrop->SetWorldLocation(
+                    ReviewBeacon->GetComponentLocation() + FVector(0.f, 8.f, 0.f));
+                if (UMaterialInterface* HighContrast = LoadObject<UMaterialInterface>(
+                    nullptr, TEXT("/Engine/EngineDebugMaterials/BlackUnlitMaterial.BlackUnlitMaterial")))
+                {
+                    ReviewBeaconBackdrop->SetMaterial(0, HighContrast);
+                }
+            }
+        }
         ReviewBeacon->SetText(FText::FromString(
             FString::Printf(TEXT("[E]  %s"), *GetReviewDisplayName())));
         ReviewBeacon->SetTextRenderColor(FColor(255, 239, 177));
