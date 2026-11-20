@@ -1963,8 +1963,22 @@ void ATSTSSExplorerCharacter::SetupFirstWakeThirdPersonReview(UWorld* World)
 
     // Reuse the existing possession, movement, smart boom collision and E ray.
     const bool bInteriors = Scene == TEXT("VS02_AureateInteriors");
+    // Reversible Ender-only interior camera clearance study. The native
+    // BridgeDeck collider stays enabled, as do all story and pawn collision
+    // gates. No editor asset, map or shipping camera setting is changed.
+    const bool bPrivateEnderCameraPivotReview =
+        bInteriors &&
+        FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderCameraPivotReview")) &&
+        GetClass()->GetPathName() ==
+            TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/BP_EnderLocomotionPreview_NONCANONICAL.BP_EnderLocomotionPreview_NONCANONICAL_C");
     CameraBoom->TargetArmLength = bInteriors ? 340.f : 480.f;
-    CameraBoom->TargetOffset = FVector(0.f, 0.f, bInteriors ? 45.f : 35.f);
+    CameraBoom->TargetOffset = FVector(
+        0.f, 0.f, bInteriors ? (bPrivateEnderCameraPivotReview ? 75.f : 45.f) : 35.f);
+    if (bPrivateEnderCameraPivotReview)
+    {
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_PRIVATE_ENDER_CAMERA_PIVOT_REVIEW offset_z_cm=75 collision_stays_enabled=1 visual_NOT_APPROVED"));
+    }
     CameraBoom->SocketOffset = FVector(0.f, 48.f, 12.f);
     CameraBoom->bEnableCameraLag = true;
     CameraBoom->CameraLagSpeed = 13.f;
