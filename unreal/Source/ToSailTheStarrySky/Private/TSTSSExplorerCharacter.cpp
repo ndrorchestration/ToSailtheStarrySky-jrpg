@@ -127,6 +127,21 @@ void ShowFirstWakeReviewObjective(const UTSTSSFirstWakeState* State)
 }
 
 #if WITH_EDITOR
+// A private, explicit standalone review may bind the existing skeletal body.
+// The normal PIE path and every production map remain unchanged.
+bool IsPrivateEnderStandaloneBinding(const UWorld* World, const ATSTSSExplorerCharacter* Pawn)
+{
+    return World && Pawn &&
+        World->WorldType == EWorldType::Game &&
+        World->GetNetMode() == NM_Standalone &&
+        FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderLowMemReview")) &&
+        World->GetOutermost() &&
+        World->GetOutermost()->GetName() ==
+            TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/FirstWake_PreludeInteraction_V5_VisualReview") &&
+        Pawn->GetClass()->GetPathName() ==
+            TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/BP_EnderLocomotionPreview_NONCANONICAL.BP_EnderLocomotionPreview_NONCANONICAL_C");
+}
+
 void ApplyCoastalRecoveryReviewSignage(UWorld* World)
 {
     if (!World || (World->WorldType != EWorldType::PIE &&
@@ -1713,7 +1728,8 @@ void ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance()
     // native PIE study. The property is blank for all ordinary characters.
     // Only the spawned pawn is touched; no asset/map/save/gameplay mutation.
     UWorld* World = GetWorld();
-    if (!World || World->WorldType != EWorldType::PIE ||
+    const bool bPrivateStandalone = IsPrivateEnderStandaloneBinding(World, this);
+    if (!World || (World->WorldType != EWorldType::PIE && !bPrivateStandalone) ||
         World->GetNetMode() != NM_Standalone ||
         !World->GetOutermost() ||
         !World->GetOutermost()->GetName().StartsWith(
