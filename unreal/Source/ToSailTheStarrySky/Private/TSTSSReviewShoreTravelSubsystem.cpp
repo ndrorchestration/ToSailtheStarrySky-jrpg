@@ -5,6 +5,10 @@
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 #include "Misc/PackageName.h"
+#if WITH_EDITOR
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
+#endif
 
 namespace
 {
@@ -22,6 +26,19 @@ constexpr const TCHAR* PrivateEnderPawnClassPath = TEXT(
     "BP_EnderLocomotionPreview_NONCANONICAL_C");
 constexpr const TCHAR* ShipPackage =
     TEXT("/Game/TSTSS/Review/VerticalSlice/VS02_AureateInteriors");
+#if WITH_EDITOR
+constexpr const TCHAR* PrivatePreludePackage =
+    TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/FirstWake_PreludeInteraction_V5_VisualReview");
+bool IsPrivateEnderStandaloneWorld(const UWorld* World, const TCHAR* ExpectedPackage)
+{
+    return World && ExpectedPackage &&
+        World->WorldType == EWorldType::Game &&
+        World->GetNetMode() == NM_Standalone &&
+        FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderLowMemReview")) &&
+        World->GetOutermost() &&
+        World->GetOutermost()->GetName() == ExpectedPackage;
+}
+#endif
 // A separately built nonshipping optical-review scene. Entry must be explicit
 // from the already-authorized ship interior; K launch still follows the sky.
 constexpr const TCHAR* OpticalName = TEXT("M_EnginePresentationReview");
@@ -134,7 +151,8 @@ bool UTSTSSReviewShoreTravelSubsystem::QueueShore(
     // production scene, save slot or authoring-map mutation.
     PendingPrivateEnderClass = nullptr;
     bPrivateEnderArrivalReady = false;
-    if (World->WorldType == EWorldType::PIE &&
+    if ((World->WorldType == EWorldType::PIE ||
+         IsPrivateEnderStandaloneWorld(World, PrivatePreludePackage)) &&
         SourceMap == VisualReviewPreludeName && Destination == ShipPackage)
     {
         APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0);
@@ -218,7 +236,8 @@ bool UTSTSSReviewShoreTravelSubsystem::ConsumeShoreArrival(
     {
         const bool bRestored = State->Restore(true, Beat, Mask);
         bPrivateEnderArrivalReady =
-            bRestored && World->WorldType == EWorldType::PIE &&
+            bRestored && (World->WorldType == EWorldType::PIE ||
+                IsPrivateEnderStandaloneWorld(World, ShipPackage)) &&
             Target == ShipPackage && IsValid(PendingPrivateEnderClass.Get()) &&
             PendingPrivateEnderClass.Get()->GetPathName() == PrivateEnderPawnClassPath;
         if (!bPrivateEnderArrivalReady)
@@ -255,7 +274,8 @@ bool UTSTSSReviewShoreTravelSubsystem::TryResumePrivateEnderInShipRoom(
     APlayerController* PC = World ? UGameplayStatics::GetPlayerController(World, 0) : nullptr;
     UTSTSSFirstWakeState* State = IsValid(DefaultPawn)
         ? DefaultPawn->GetFirstWakeState() : nullptr;
-    if (!World || World->WorldType != EWorldType::PIE ||
+    if (!World || (World->WorldType != EWorldType::PIE &&
+        !IsPrivateEnderStandaloneWorld(World, ShipPackage)) ||
         World->GetNetMode() != NM_Standalone ||
         !World->GetOutermost() ||
         !World->GetOutermost()->GetName().StartsWith(
@@ -278,8 +298,12 @@ bool UTSTSSReviewShoreTravelSubsystem::TryResumePrivateEnderInShipRoom(
     // GameMode, level assets, script authority, and the original map unchanged.
     FActorSpawnParameters Params;
     Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+    // BeginPlay binds a private body only during this synchronous spawn.
+    // The ticket was already consumed, so no other spawn can reuse it.
+    bPrivateEnderShipSpawnInProgress = true;
     ATSTSSExplorerCharacter* Ender = World->SpawnActor<ATSTSSExplorerCharacter>(
         PrivateClass, DefaultPawn->GetActorTransform(), Params);
+    bPrivateEnderShipSpawnInProgress = false;
     if (!IsValid(Ender) || Ender->GetClass() != PrivateClass ||
         !IsValid(Ender->GetFirstWakeState()) ||
         !Ender->GetFirstWakeState()->Restore(
