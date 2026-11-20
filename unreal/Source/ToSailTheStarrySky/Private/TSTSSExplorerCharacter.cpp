@@ -1068,8 +1068,11 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
         World->WorldType == EWorldType::PIE &&
         World->GetNetMode() == NM_Standalone &&
         World->GetOutermost() &&
-        World->GetOutermost()->GetName() ==
-            TEXT("/Game/TSTSS/Review/VerticalSlice/VS02_AureateInteriors");
+        // The PIE world prefixes the exact review-map leaf with UEDPIE_N_.
+        World->GetOutermost()->GetName().StartsWith(
+            TEXT("/Game/TSTSS/Review/VerticalSlice/UEDPIE_")) &&
+        World->GetOutermost()->GetName().EndsWith(
+            TEXT("_VS02_AureateInteriors"));
     if (!bEnderCameraSweepLogged && bReviewNamespace &&
         Scene == TEXT("VS02_AureateInteriors") &&
         (bPrivateStandaloneShipWorld || bPrivateEditorCameraWorld) &&

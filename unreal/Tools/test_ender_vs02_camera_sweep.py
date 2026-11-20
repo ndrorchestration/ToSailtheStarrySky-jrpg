@@ -23,7 +23,9 @@ class CameraSweepSourceTest(unittest.TestCase):
         self.assertTrue(admitted(CPP))
         self.assertIn('const bool bPrivateStandaloneShipWorld = IsPrivateEnderStandaloneShip(World);', CPP)
         self.assertIn('World->WorldType == EWorldType::PIE', diagnostic(CPP))
-        self.assertIn('TEXT("/Game/TSTSS/Review/VerticalSlice/VS02_AureateInteriors")', diagnostic(CPP))
+        self.assertIn('TEXT("/Game/TSTSS/Review/VerticalSlice/UEDPIE_")', diagnostic(CPP))
+        self.assertIn('TEXT("_VS02_AureateInteriors")', diagnostic(CPP))
+        self.assertNotIn('TEXT("/Game/TSTSS/Review/VerticalSlice/VS02_AureateInteriors")', diagnostic(CPP))
         self.assertIn('float EnderCameraSweepElapsed = 0.f;', HEADER)
         self.assertIn('bool bEnderCameraSweepLogged = false;', HEADER)
 
