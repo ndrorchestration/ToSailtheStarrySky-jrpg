@@ -2269,6 +2269,22 @@ void ATSTSSExplorerCharacter::TryEnderPIELocomotionPreview(uint8 MotionBand)
         UE_LOG(LogTemp, Display,
             TEXT("TSTSS_ENDER_PIE_ROOT_EXTRACTION_REQUESTED root_mode=IgnoreRootMotion capsule_motion_unchanged=1 runtime_NOT_VERIFIED"));
     }
+    // Optional private comparison of cadence against travel speed.
+    if (IsPrivateEnderStandaloneAnimation(World, this) &&
+        FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderSpineFixV1")) &&
+        FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderGaitRateTrial")))
+    {
+        UAnimSingleNodeInstance* Node = Body->GetSingleNodeInstance();
+        if (IsValid(Node) && Node->GetCurrentAsset() == Next)
+        {
+            const float Rate = MotionBand == 1 ? 0.92f :
+                (MotionBand == 2 ? 1.07f : 1.f);
+            Node->SetPlayRate(Rate);
+            UE_LOG(LogTemp, Display,
+                TEXT("TSTSS_ENDER_GAIT_RATE_TRIAL band=%d rate=%.2f gameplay_acceptance_pending=1"),
+                MotionBand, Rate);
+        }
+    }
     LastEnderPIEAnimBand = MotionBand;
     UE_LOG(LogTemp, Display,
         TEXT("TSTSS_ENDER_PIE_ANIM_REQUESTED band=%s clip=%s root_motion_policy_review_only=1 playback_NOT_VERIFIED"),
