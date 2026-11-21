@@ -1275,6 +1275,20 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
                     RouteWaypoint ? RouteWaypoint : TEXT("UNMARKED"),
                     Now, Current.X, Current.Y, Current.Z,
                     bGrounded ? 1 : 0, bFivePointFooting ? 1 : 0);
+                if (IsPrivateEnderStandaloneAnimation(World, this) &&
+                    FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderFacingProbe")) &&
+                    IsValid(GetMesh()) && GetMesh()->DoesSocketExist(TEXT("l_upperarm")) &&
+                    GetMesh()->DoesSocketExist(TEXT("r_upperarm")))
+                {
+                    const FVector ShoulderAxis = GetMesh()->GetSocketLocation(TEXT("r_upperarm")) -
+                        GetMesh()->GetSocketLocation(TEXT("l_upperarm"));
+                    const FVector ChestForward = FVector::CrossProduct(ShoulderAxis, FVector::UpVector);
+                    UE_LOG(LogTemp, Display,
+                        TEXT("TSTSS_ENDER_FACING_SAMPLE speed=%.1f travel_yaw=%.1f chest_yaw=%.1f mesh_rel_yaw=%.1f camera_yaw=%.1f"),
+                        GetVelocity().Size2D(), GetVelocity().Rotation().Yaw, ChestForward.Rotation().Yaw,
+                        GetMesh()->GetRelativeRotation().Yaw, GetControlRotation().Yaw);
+                }
+
                 NextHilltoniaProbeTimeSeconds = Now + 2.f;
             }
         }
@@ -1867,6 +1881,23 @@ void ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance()
     UE_LOG(LogTemp, Display,
         TEXT("TSTSS_ENDER_SLICE_REVIEW_MESH_BOUND bones=%d animation_NOT_VERIFIED art_NOT_APPROVED"),
         Bones.GetNum());
+
+    // Some review bodies face +Y at import while CharacterMovement steers +X.
+    // Detect that convention from the unanimated shoulders in mesh space.
+    const int32 LeftArm = Bones.FindBoneIndex(TEXT("l_upperarm"));
+    const int32 RightArm = Bones.FindBoneIndex(TEXT("r_upperarm"));
+    if (LeftArm != INDEX_NONE && RightArm != INDEX_NONE &&
+        Body->GetAttachParent() == GetCapsuleComponent() &&
+        Body->GetRelativeRotation().IsNearlyZero())
+    {
+        const FVector AcrossShoulders = Bones.GetBoneAbsoluteTransform(RightArm).GetLocation() -
+            Bones.GetBoneAbsoluteTransform(LeftArm).GetLocation();
+        const FVector RefForward = FVector::CrossProduct(AcrossShoulders, FVector::UpVector).GetSafeNormal();
+        if (FVector::DotProduct(RefForward, FVector::RightVector) > 0.98)
+        {
+            Body->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
+        }
+    }
 
     // Ground only the exact opt-in standalone private body. This candidate
     // has a floor-origin mesh while Character's capsule origin is centered.
