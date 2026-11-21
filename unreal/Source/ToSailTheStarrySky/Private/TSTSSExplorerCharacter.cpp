@@ -856,6 +856,15 @@ void ATSTSSExplorerCharacter::BeginPlay()
     bTryHilltoniaOpening = ApplyV5HarborReviewLookdev(GetWorld());
     HilltoniaOpeningAttemptCount = 0;
     ApplyEnderSliceReviewAppearance();
+    // The private foot probe needs multiple samples during each stance phase.
+    // Keep this faster diagnostic tick confined to the opted-in standalone pawn.
+    if (IsPrivateEnderStandaloneAnimation(GetWorld(), this) &&
+        FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderFootProbe")) &&
+        FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderFootDetail")))
+    {
+        SetActorTickInterval(0.05f);
+        UE_LOG(LogTemp, Display, TEXT("TSTSS_ENDER_FOOT_DETAIL interval_s=0.05"));
+    }
     SetupFirstWakeThirdPersonReview(GetWorld());
     StageDockedWakeReview(GetWorld());
     ApplyCoastalRecoveryReviewSignage(GetWorld());
@@ -1208,6 +1217,17 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
         const float SpeedCmS = GetVelocity().Size2D();
         const uint8 MotionBand = SpeedCmS < 10.f ? 0 : (SpeedCmS < 300.f ? 1 : 2);
         TryEnderPIELocomotionPreview(MotionBand);
+        if (FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderFootProbe")) &&
+            IsValid(GetMesh()) && GetMesh()->DoesSocketExist(TEXT("l_toes")) &&
+            GetMesh()->DoesSocketExist(TEXT("r_toes")))
+        {
+            const FVector Left = GetMesh()->GetSocketLocation(TEXT("l_toes"));
+            const FVector Right = GetMesh()->GetSocketLocation(TEXT("r_toes"));
+            UE_LOG(LogTemp, Display,
+                TEXT("TSTSS_ENDER_FOOT_SAMPLE t=%.4f speed=%.1f left_x=%.2f left_y=%.2f left_z=%.2f right_x=%.2f right_y=%.2f right_z=%.2f"),
+                World->GetTimeSeconds(), SpeedCmS, Left.X, Left.Y, Left.Z,
+                Right.X, Right.Y, Right.Z);
+        }
     }
     // Only scoped review worlds advertise live interaction. Visual refresh
     // reads the authoritative state; it cannot advance or save a story beat.
@@ -2268,6 +2288,22 @@ void ATSTSSExplorerCharacter::TryEnderPIELocomotionPreview(uint8 MotionBand)
         NewNode->SetRootMotionMode(ERootMotionMode::IgnoreRootMotion);
         UE_LOG(LogTemp, Display,
             TEXT("TSTSS_ENDER_PIE_ROOT_EXTRACTION_REQUESTED root_mode=IgnoreRootMotion capsule_motion_unchanged=1 runtime_NOT_VERIFIED"));
+    }
+    // Optional private comparison of cadence against travel speed.
+    if (IsPrivateEnderStandaloneAnimation(World, this) &&
+        FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderSpineFixV1")) &&
+        FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderGaitRateTrial")))
+    {
+        UAnimSingleNodeInstance* Node = Body->GetSingleNodeInstance();
+        if (IsValid(Node) && Node->GetCurrentAsset() == Next)
+        {
+            const float Rate = MotionBand == 1 ? 0.92f :
+                (MotionBand == 2 ? 1.07f : 1.f);
+            Node->SetPlayRate(Rate);
+            UE_LOG(LogTemp, Display,
+                TEXT("TSTSS_ENDER_GAIT_RATE_TRIAL band=%d rate=%.2f gameplay_acceptance_pending=1"),
+                MotionBand, Rate);
+        }
     }
     LastEnderPIEAnimBand = MotionBand;
     UE_LOG(LogTemp, Display,
