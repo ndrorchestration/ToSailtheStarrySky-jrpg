@@ -1208,6 +1208,17 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
         const float SpeedCmS = GetVelocity().Size2D();
         const uint8 MotionBand = SpeedCmS < 10.f ? 0 : (SpeedCmS < 300.f ? 1 : 2);
         TryEnderPIELocomotionPreview(MotionBand);
+        if (FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderFootProbe")) &&
+            IsValid(GetMesh()) && GetMesh()->DoesSocketExist(TEXT("l_toes")) &&
+            GetMesh()->DoesSocketExist(TEXT("r_toes")))
+        {
+            const FVector Left = GetMesh()->GetSocketLocation(TEXT("l_toes"));
+            const FVector Right = GetMesh()->GetSocketLocation(TEXT("r_toes"));
+            UE_LOG(LogTemp, Display,
+                TEXT("TSTSS_ENDER_FOOT_SAMPLE t=%.4f speed=%.1f left_x=%.2f left_y=%.2f left_z=%.2f right_x=%.2f right_y=%.2f right_z=%.2f"),
+                World->GetTimeSeconds(), SpeedCmS, Left.X, Left.Y, Left.Z,
+                Right.X, Right.Y, Right.Z);
+        }
     }
     // Only scoped review worlds advertise live interaction. Visual refresh
     // reads the authoritative state; it cannot advance or save a story beat.
