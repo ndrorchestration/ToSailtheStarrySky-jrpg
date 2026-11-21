@@ -856,6 +856,15 @@ void ATSTSSExplorerCharacter::BeginPlay()
     bTryHilltoniaOpening = ApplyV5HarborReviewLookdev(GetWorld());
     HilltoniaOpeningAttemptCount = 0;
     ApplyEnderSliceReviewAppearance();
+    // The private foot probe needs multiple samples during each stance phase.
+    // Keep this faster diagnostic tick confined to the opted-in standalone pawn.
+    if (IsPrivateEnderStandaloneAnimation(GetWorld(), this) &&
+        FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderFootProbe")) &&
+        FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderFootDetail")))
+    {
+        SetActorTickInterval(0.05f);
+        UE_LOG(LogTemp, Display, TEXT("TSTSS_ENDER_FOOT_DETAIL interval_s=0.05"));
+    }
     SetupFirstWakeThirdPersonReview(GetWorld());
     StageDockedWakeReview(GetWorld());
     ApplyCoastalRecoveryReviewSignage(GetWorld());
