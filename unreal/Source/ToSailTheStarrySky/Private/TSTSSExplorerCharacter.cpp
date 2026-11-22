@@ -25,6 +25,8 @@
 #include "Animation/AnimSingleNodeInstance.h"
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
+#include "InputKeyEventArgs.h"
+#include "HAL/PlatformTime.h"
 #include "Components/CapsuleComponent.h"
 #endif
 #include "Engine/StaticMesh.h"
@@ -1149,6 +1151,47 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
     if (bHilltoniaFlyerRead && !IsHilltoniaFlyerOpen())
     {
         DeclineHilltoniaFlyer();
+    }
+    // An opt-in diagnostic must exercise the real Enter action binding.
+    // It is NOT a player keyboard test, and NEVER calls AdvanceTo or
+    // AcceptHilltoniaFlyer directly. Disabled in every ordinary session.
+    const bool bPrivateFlyerInputProbeWorld =
+        FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateFlyerInputProbe")) &&
+        World->WorldType == EWorldType::PIE &&
+        World->GetNetMode() == NM_Standalone &&
+        bReviewNamespace &&
+        Scene == TEXT("FirstWake_PreludeInteraction_V5_VisualReview") &&
+        World->GetOutermost()->GetName().StartsWith(
+            TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/UEDPIE_")) &&
+        GetClass()->GetPathName() ==
+            TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/BP_EnderLocomotionPreview_NONCANONICAL.BP_EnderLocomotionPreview_NONCANONICAL_C") &&
+        IsPlayerControlled() && bHilltoniaOpeningActive;
+    if (bPrivateFlyerInputProbeWorld && PrivateFlyerKeyProbePhase < 2)
+    {
+        APlayerController* PC = Cast<APlayerController>(GetController());
+        if (IsValid(PC) && PC->PlayerInput)
+        {
+            if (PrivateFlyerKeyProbePhase == 0 && IsHilltoniaFlyerOpen())
+            {
+                PrivateFlyerKeyProbePhase = 1;
+                const bool bHandled = PC->InputKey(FInputKeyEventArgs(
+                    nullptr, INPUTDEVICEID_NONE, EKeys::Enter, IE_Pressed,
+                    FPlatformTime::Cycles64()));
+                UE_LOG(LogTemp, Display,
+                    TEXT("TSTSS_PRIVATE_FLYER_KEY_PROBE phase=press key=Enter handled=%d no_direct_story_mutation=1"),
+                    bHandled ? 1 : 0);
+            }
+            else if (PrivateFlyerKeyProbePhase == 1)
+            {
+                PrivateFlyerKeyProbePhase = 2;
+                const bool bHandled = PC->InputKey(FInputKeyEventArgs(
+                    nullptr, INPUTDEVICEID_NONE, EKeys::Enter, IE_Released,
+                    FPlatformTime::Cycles64()));
+                UE_LOG(LogTemp, Display,
+                    TEXT("TSTSS_PRIVATE_FLYER_KEY_PROBE phase=release key=Enter handled=%d no_direct_story_mutation=1"),
+                    bHandled ? 1 : 0);
+            }
+        }
     }
     // Explicitly flagged editor-built -game title preview: movement speed
     // only, never the separate skeletal/animation PIE preview.
