@@ -23,9 +23,14 @@ public:
     // One-shot private pawn continuity for a REAL V5 -> VS02 PIE boarding ticket.
     // Never authorizes travel, story beats, save writes, or production assets.
     bool TryResumePrivateEnderInShipRoom(ATSTSSExplorerCharacter* DefaultPawn);
+    // Optional one-shot continuity preview in the NON-walkable sky review map.
+    // Never authorizes a player flight mechanic or production game content.
+    bool TryResumePrivateEnderInSkyReview(ATSTSSExplorerCharacter* DefaultPawn);
 #if WITH_EDITOR
     // True only during the synchronous spawn after an earned one-use ticket.
     bool IsPrivateEnderShipSpawnInProgress() const { return bPrivateEnderShipSpawnInProgress; }
+    // Exposes ONLY the synchronous, earned, one-shot VS03 private spawn lease.
+    bool IsPrivateEnderSkySpawnInProgress() const { return bPrivateEnderSkySpawnInProgress; }
 #endif
     const FString& GetPendingMapPackage() const { return PendingMapPackage; }
 
@@ -36,8 +41,10 @@ private:
     UPROPERTY(Transient)
     TSubclassOf<ATSTSSExplorerCharacter> PendingPrivateEnderClass;
     bool bPrivateEnderArrivalReady = false;
+    bool bPrivateEnderSkyArrivalReady = false;
 #if WITH_EDITOR
     bool bPrivateEnderShipSpawnInProgress = false;
+    bool bPrivateEnderSkySpawnInProgress = false;
 #endif
     bool bPending = false;
     FString PendingMapPackage;

@@ -23,7 +23,10 @@ def skeletal_precedes_static(src):
     fallback = block.find("UStaticMesh* Body =")
     if start < 0 or fallback < 0 or start >= fallback:
         return False
-    priority = block[start:fallback]
+    # Scope the original skeletal-priority decision, not the separate
+    # sky-only fail-closed path added before the legacy static fallback.
+    sky_hold = block.find("// Do not substitute an unrelated static lookdev body", start)
+    priority = block[start:sky_hold if 0 <= sky_hold < fallback else fallback]
     return all(x in priority for x in (
         "SkeletalBody->IsRegistered()",
         "SkeletalBody->GetSkeletalMeshAsset()",
@@ -84,7 +87,7 @@ class EnderSkeletalPriorityTests(unittest.TestCase):
     def test_mutation_removing_priority_return_is_caught(self):
         block = review_setup(SOURCE)
         priority = block.split("USkeletalMeshComponent* SkeletalBody = GetMesh();", 1)[1].split(
-            "// Local Ender V2 look-development package.", 1
+            "// Do not substitute an unrelated static lookdev body", 1
         )[0]
         self.assertEqual(priority.count("return;"), 1)
         damaged = SOURCE.replace(priority, priority.replace("return;", "/* missing return */"), 1)
