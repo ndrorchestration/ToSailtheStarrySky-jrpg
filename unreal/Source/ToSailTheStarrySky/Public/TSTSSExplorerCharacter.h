@@ -182,6 +182,8 @@ private:
     bool bHilltoniaFlyerRead = false;
     // Explicitly flagged PIE-only native Enter input probe; not save/state authority.
     uint8 PrivateFlyerKeyProbePhase = 0;
+    // One-shot, PIE-only departure key probe; has no save or mode authority.
+    bool bPrivateLaunchKDispatched = false;
     uint64 HilltoniaFlyerGeneration = 0;
     FVector HilltoniaFlyerHit = FVector::ZeroVector;
     TWeakObjectPtr<class ATSTSSMilestoneActor> HilltoniaCaptain;
