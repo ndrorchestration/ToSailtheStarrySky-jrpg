@@ -69,7 +69,12 @@ class EnderSkyContinuityReviewContract(unittest.TestCase):
             "// Explicitly flagged editor-built -game title preview:",1)[0]
         self.assertIn('GetClass() == ATSTSSExplorerCharacter::StaticClass()',probe)
         self.assertIn('World->GetTimeSeconds() >= 6.f',probe)
-        self.assertNotIn('TSTSSPrivateEnderSkyContinuityReview',probe)
+        # The original default-observer predicate remains present, while
+        # the private Ender branch is separately gated by explicit opt-in.
+        self.assertIn('bEarnedPrivateSkeletalSkyTransit',probe)
+        self.assertIn('TSTSSPrivateEnderSkyContinuityReview',probe)
+        self.assertIn('FirstWakeState->AreInspectionsComplete()',probe)
+        self.assertIn('GetMesh()->GetNumBones() >= 80',probe)
 
 if __name__ == "__main__":
     unittest.main()
