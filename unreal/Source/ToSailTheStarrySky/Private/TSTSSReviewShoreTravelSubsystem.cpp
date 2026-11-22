@@ -3,6 +3,7 @@
 #include "UObject/Package.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 #include "Misc/PackageName.h"
@@ -415,13 +416,19 @@ bool UTSTSSReviewShoreTravelSubsystem::TryResumePrivateEnderInSkyReview(
     // camera start and flying observation mode; this is NOT ship piloting.
     FActorSpawnParameters Params;
     Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+    bPrivateEnderSkySpawnInProgress = true;
     ATSTSSExplorerCharacter* Ender = World->SpawnActor<ATSTSSExplorerCharacter>(
         PrivateClass, DefaultPawn->GetActorTransform(), Params);
+    bPrivateEnderSkySpawnInProgress = false;
     if (!IsValid(Ender) || Ender->GetClass() != PrivateClass ||
         !IsValid(Ender->GetFirstWakeState()) ||
         !Ender->GetFirstWakeState()->Restore(
             true, State->GetCurrentBeat(), State->GetInspectionMask()) ||
-        !IsValid(Ender->GetCharacterMovement()))
+        !IsValid(Ender->GetCharacterMovement()) ||
+        !IsValid(Ender->GetMesh()) ||
+        !IsValid(Ender->GetMesh()->GetSkeletalMeshAsset()) ||
+        Ender->GetMesh()->GetNumBones() < 80 ||
+        !Ender->GetMesh()->IsVisible())
     {
         if (IsValid(Ender)) Ender->Destroy();
         UE_LOG(LogTemp, Warning,
@@ -440,9 +447,10 @@ bool UTSTSSReviewShoreTravelSubsystem::TryResumePrivateEnderInSkyReview(
     }
     DefaultPawn->Destroy();
     UE_LOG(LogTemp, Display,
-        TEXT("TSTSS_PRIVATE_ENDER_SKY_REBIND_OK possessed=1 class_exact=1 beat=%d mask=%u movement=observer_flying no_piloting=1 art_NOT_APPROVED"),
+        TEXT("TSTSS_PRIVATE_ENDER_SKY_REBIND_OK possessed=1 class_exact=1 beat=%d mask=%u bones=%d movement=observer_flying no_piloting=1 animation_NOT_VERIFIED art_NOT_APPROVED"),
         static_cast<int32>(Ender->GetFirstWakeState()->GetCurrentBeat()),
-        Ender->GetFirstWakeState()->GetInspectionMask());
+        Ender->GetFirstWakeState()->GetInspectionMask(),
+        Ender->GetMesh()->GetNumBones());
     return true;
 #else
     (void)DefaultPawn;

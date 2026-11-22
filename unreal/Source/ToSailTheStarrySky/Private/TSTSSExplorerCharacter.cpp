@@ -169,6 +169,29 @@ bool IsPrivateEnderShipBinding(const UWorld* World, const ATSTSSExplorerCharacte
 }
 
 
+// The sky level normally uses a generic observer. This exact-class body
+// binding exists ONLY while the authorized one-use sky ticket is spawning.
+bool IsPrivateEnderSkyBinding(const UWorld* World, const ATSTSSExplorerCharacter* Pawn)
+{
+    if (!World || !IsValid(Pawn) || World->WorldType != EWorldType::PIE ||
+        World->GetNetMode() != NM_Standalone ||
+        !FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderSkyContinuityReview")) ||
+        !World->GetOutermost() ||
+        !World->GetOutermost()->GetName().StartsWith(
+            TEXT("/Game/TSTSS/Review/VerticalSlice/UEDPIE_")) ||
+        !World->GetOutermost()->GetName().EndsWith(TEXT("_VS03_FirstWakeSky")) ||
+        UGameplayStatics::GetCurrentLevelName(World, true) != TEXT("VS03_FirstWakeSky") ||
+        Pawn->GetClass()->GetPathName() !=
+            TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/BP_EnderLocomotionPreview_NONCANONICAL.BP_EnderLocomotionPreview_NONCANONICAL_C"))
+    {
+        return false;
+    }
+    UGameInstance* Instance = World->GetGameInstance();
+    const UTSTSSReviewShoreTravelSubsystem* Travel = Instance
+        ? Instance->GetSubsystem<UTSTSSReviewShoreTravelSubsystem>() : nullptr;
+    return Travel && Travel->IsPrivateEnderSkySpawnInProgress();
+}
+
 // Explicit, private, editor-built standalone animation study. This adds no
 // production-world admission and does not relax the animation-owner lease.
 bool IsPrivateEnderStandaloneAnimation(const UWorld* World, const ATSTSSExplorerCharacter* Pawn)
@@ -1968,6 +1991,7 @@ void ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance()
     UWorld* World = GetWorld();
     const bool bPrivateStandalone = IsPrivateEnderStandaloneBinding(World, this) ||
         IsPrivateEnderShipBinding(World, this);
+    const bool bPrivateSkyBody = IsPrivateEnderSkyBinding(World, this);
     if (!World || (World->WorldType != EWorldType::PIE && !bPrivateStandalone) ||
         World->GetNetMode() != NM_Standalone ||
         !World->GetOutermost() ||
@@ -1979,7 +2003,8 @@ void ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance()
     }
     const FString Scene = UGameplayStatics::GetCurrentLevelName(World, true);
     if (Scene != TEXT("FirstWake_PreludeInteraction_V5_VisualReview") &&
-        Scene != TEXT("VS02_AureateInteriors"))
+        Scene != TEXT("VS02_AureateInteriors") &&
+        !(Scene == TEXT("VS03_FirstWakeSky") && bPrivateSkyBody))
     {
         return;
     }
@@ -2111,8 +2136,10 @@ void ATSTSSExplorerCharacter::SetupFirstWakeThirdPersonReview(UWorld* World)
         return;
     }
     const FString Scene = UGameplayStatics::GetCurrentLevelName(World, true);
+    const bool bPrivateSkyBody = IsPrivateEnderSkyBinding(World, this);
     if (Scene != TEXT("FirstWake_PreludeInteraction_V5_VisualReview") &&
-        Scene != TEXT("VS02_AureateInteriors"))
+        Scene != TEXT("VS02_AureateInteriors") &&
+        !(Scene == TEXT("VS03_FirstWakeSky") && bPrivateSkyBody))
     {
         return;
     }
@@ -2158,6 +2185,14 @@ void ATSTSSExplorerCharacter::SetupFirstWakeThirdPersonReview(UWorld* World)
         return;
     }
 
+    // Do not substitute an unrelated static lookdev body if the sky review
+    // skeleton failed to bind. The one-shot travel handler will roll back.
+    if (bPrivateSkyBody)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_PRIVATE_ENDER_SKY_VIEW_HOLD no_visible_skeleton no_static_fallback=1"));
+        return;
+    }
     // Local Ender V2 look-development package. Keep the donor and its materials
     // at their original package paths, outside tracked Content on Neontic.
     constexpr const TCHAR* PackageRoot = TEXT("/Game/ArtLookdev/Characters/EnderFidelityV2/");

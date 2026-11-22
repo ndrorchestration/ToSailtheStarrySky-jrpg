@@ -29,6 +29,8 @@ public:
 #if WITH_EDITOR
     // True only during the synchronous spawn after an earned one-use ticket.
     bool IsPrivateEnderShipSpawnInProgress() const { return bPrivateEnderShipSpawnInProgress; }
+    // Exposes ONLY the synchronous, earned, one-shot VS03 private spawn lease.
+    bool IsPrivateEnderSkySpawnInProgress() const { return bPrivateEnderSkySpawnInProgress; }
 #endif
     const FString& GetPendingMapPackage() const { return PendingMapPackage; }
 
@@ -42,6 +44,7 @@ private:
     bool bPrivateEnderSkyArrivalReady = false;
 #if WITH_EDITOR
     bool bPrivateEnderShipSpawnInProgress = false;
+    bool bPrivateEnderSkySpawnInProgress = false;
 #endif
     bool bPending = false;
     FString PendingMapPackage;

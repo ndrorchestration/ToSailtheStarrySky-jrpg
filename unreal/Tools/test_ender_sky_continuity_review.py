@@ -56,7 +56,7 @@ class EnderSkyContinuityReviewContract(unittest.TestCase):
 
     def test_only_observer_flight_not_ship_physics_or_story(self):
         self.assertIn('SetMovementMode(MOVE_Flying)', SKY)
-        self.assertIn('no_piloting=1 art_NOT_APPROVED', SKY)
+        self.assertIn('no_piloting=1 animation_NOT_VERIFIED art_NOT_APPROVED', SKY)
         for forbidden in ('AdvanceTo(', 'AdvanceWaterBeat(', 'OpenLevel(',
                           'SaveGameToSlot(', 'SetSimulatePhysics(', 'TeleportTo('):
             self.assertNotIn(forbidden, SKY)
