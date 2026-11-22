@@ -1193,6 +1193,53 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
             }
         }
     }
+    // Review-only native K input, not a simulated launch/landing grant.
+    // No ordinary session executes this path; each pawn dispatches at most
+    // one real PlayerController key edge in the exact protected PIE maps.
+    const bool bPrivateLaunchRouteWorld =
+        FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateLaunchInputProbe")) &&
+        World->WorldType == EWorldType::PIE &&
+        World->GetNetMode() == NM_Standalone &&
+        bReviewNamespace && World->GetOutermost() &&
+        World->GetOutermost()->GetName().StartsWith(
+            TEXT("/Game/TSTSS/Review/VerticalSlice/UEDPIE_")) &&
+        IsPlayerControlled() && IsValid(FirstWakeState) &&
+        FirstWakeState->HasStarted() && !bPrivateLaunchKDispatched;
+    if (bPrivateLaunchRouteWorld)
+    {
+        const bool bEarnedShipDeparture =
+            Scene == TEXT("VS02_AureateInteriors") &&
+            GetClass()->GetPathName() ==
+                TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/BP_EnderLocomotionPreview_NONCANONICAL.BP_EnderLocomotionPreview_NONCANONICAL_C") &&
+            FirstWakeState->GetCurrentBeat() == ETSTSSFirstWakeBeat::EngineeringChecked &&
+            FirstWakeState->AreInspectionsComplete();
+        // Sky map has a default temporary spectator character, not an
+        // approved flight controller. Hold for six world-seconds so a
+        // native PIE reviewer can observe the sky before entering the
+        // separate sea review. No storm or piloting gameplay is inferred.
+        const bool bEarnedSkyTransit =
+            Scene == TEXT("VS03_FirstWakeSky") &&
+            GetClass() == ATSTSSExplorerCharacter::StaticClass() &&
+            FirstWakeState->GetCurrentBeat() == ETSTSSFirstWakeBeat::Launched &&
+            World->GetTimeSeconds() >= 6.f;
+        if (bEarnedShipDeparture || bEarnedSkyTransit)
+        {
+            APlayerController* PC = Cast<APlayerController>(GetController());
+            if (IsValid(PC) && IsValid(PC->PlayerInput))
+            {
+                bPrivateLaunchKDispatched = true;
+                UE_LOG(LogTemp, Display,
+                    TEXT("TSTSS_PRIVATE_LAUNCH_K_PROBE pre_dispatch=1 source=%s beat=%d input_edge=K_pressed synthetic_keyboard=1 story_not_directly_mutated=1"),
+                    *Scene, static_cast<int32>(FirstWakeState->GetCurrentBeat()));
+                // Dispatch can change levels and destroy this pawn: do not
+                // dereference any UObject after this call.
+                PC->InputKey(FInputKeyEventArgs(
+                    nullptr, INPUTDEVICEID_NONE, EKeys::K, IE_Pressed,
+                    FPlatformTime::Cycles64()));
+                return;
+            }
+        }
+    }
     // Explicitly flagged editor-built -game title preview: movement speed
     // only, never the separate skeletal/animation PIE preview.
     if (bReviewNamespace && World->WorldType == EWorldType::Game &&

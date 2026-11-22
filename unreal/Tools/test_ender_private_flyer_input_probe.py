@@ -10,7 +10,7 @@ import unittest
 ROOT=Path(__file__).resolve().parents[1]
 CPP=(ROOT/"Source/ToSailTheStarrySky/Private/TSTSSExplorerCharacter.cpp").read_text(encoding="utf-8")
 HEADER=(ROOT/"Source/ToSailTheStarrySky/Public/TSTSSExplorerCharacter.h").read_text(encoding="utf-8")
-BLOCK=CPP.split("// An opt-in diagnostic must exercise the real Enter action binding.",1)[1].split("// Explicitly flagged editor-built -game title preview:",1)[0]
+BLOCK=CPP.split("// An opt-in diagnostic must exercise the real Enter action binding.",1)[1].split("// Review-only native K input, not a simulated launch/landing grant.",1)[0]
 
 
 class PrivateFlyerKeyProbeContract(unittest.TestCase):
