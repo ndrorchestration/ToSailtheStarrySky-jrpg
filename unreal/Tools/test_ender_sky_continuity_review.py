@@ -64,6 +64,18 @@ class EnderSkyContinuityReviewContract(unittest.TestCase):
         self.assertIn('TryResumePrivateEnderInSkyReview', TICK)
         self.assertIn('bool bPrivateEnderSkyArrivalReady = false;', H)
 
+    def test_observer_mode_set_only_after_successful_possession(self):
+        # Native 2026-11-22 review observed the sky pawn possessed but not
+        # flying: ACharacter::Restart can reset the pre-possess movement mode.
+        # Do not accept a falling private pawn over an observer-only sky map.
+        possess=SKY.index("PC->Possess(Ender);")
+        flying=SKY.index("Ender->GetCharacterMovement()->SetMovementMode(MOVE_Flying);")
+        self.assertLess(possess, flying)
+        self.assertLess(flying, SKY.index("DefaultPawn->Destroy();"))
+        self.assertIn("Ender->GetCharacterMovement()->MovementMode != MOVE_Flying", SKY)
+        self.assertIn("TSTSS_PRIVATE_ENDER_SKY_REBIND_HOLD observer_mode", SKY)
+        self.assertLess(SKY.index("PC->GetPawn() != Ender"), flying)
+
     def test_original_unflagged_sky_input_probe_remains_observer_only(self):
         probe = EXP.split("// Review-only native K input, not a simulated launch/landing grant.",1)[1].split(
             "// Explicitly flagged editor-built -game title preview:",1)[0]

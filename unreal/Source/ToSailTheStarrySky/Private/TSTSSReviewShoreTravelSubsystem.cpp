@@ -435,7 +435,8 @@ bool UTSTSSReviewShoreTravelSubsystem::TryResumePrivateEnderInSkyReview(
             TEXT("TSTSS_PRIVATE_ENDER_SKY_REBIND_HOLD spawn_or_story_restore"));
         return false;
     }
-    Ender->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+    // Possession may reset CharacterMovement's default mode. Apply the
+    // observer-only flight mode after possession succeeds, not before.
     PC->Possess(Ender);
     if (PC->GetPawn() != Ender)
     {
@@ -443,6 +444,17 @@ bool UTSTSSReviewShoreTravelSubsystem::TryResumePrivateEnderInSkyReview(
         Ender->Destroy();
         UE_LOG(LogTemp, Warning,
             TEXT("TSTSS_PRIVATE_ENDER_SKY_REBIND_HOLD possess"));
+        return false;
+    }
+    // ACharacter::Restart may reset movement on the possession path. The
+    // no-deck sky review is an observer scene, not walking or ship piloting.
+    Ender->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+    if (Ender->GetCharacterMovement()->MovementMode != MOVE_Flying)
+    {
+        PC->Possess(DefaultPawn);
+        Ender->Destroy();
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_PRIVATE_ENDER_SKY_REBIND_HOLD observer_mode"));
         return false;
     }
     DefaultPawn->Destroy();
