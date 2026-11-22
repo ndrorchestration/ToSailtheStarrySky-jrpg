@@ -1225,7 +1225,7 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
         if (bEarnedShipDeparture || bEarnedSkyTransit)
         {
             APlayerController* PC = Cast<APlayerController>(GetController());
-            if (IsValid(PC) && IsValid(PC->PlayerInput))
+            if (IsValid(PC) && PC->PlayerInput.Get() != nullptr)
             {
                 bPrivateLaunchKDispatched = true;
                 UE_LOG(LogTemp, Display,
