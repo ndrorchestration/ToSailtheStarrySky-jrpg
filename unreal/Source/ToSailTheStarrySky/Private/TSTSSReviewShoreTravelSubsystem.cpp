@@ -2,6 +2,7 @@
 #include "TSTSSExplorerCharacter.h"
 #include "UObject/Package.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 #include "Misc/PackageName.h"
@@ -45,6 +46,7 @@ constexpr const TCHAR* OpticalName = TEXT("M_EnginePresentationReview");
 constexpr const TCHAR* OpticalPackage =
     TEXT("/Game/TSTSS/Review/EngineFocus_V1/M_EnginePresentationReview");
 constexpr const TCHAR* SkyName = TEXT("VS03_FirstWakeSky");
+constexpr const TCHAR* SkyPackage = TEXT("/Game/TSTSS/Review/VerticalSlice/VS03_FirstWakeSky");
 constexpr const TCHAR* SeaName = TEXT("VS04_SplashdownSea");
 constexpr const TCHAR* FuelName = TEXT("VS05_DenithFuelShanty");
 constexpr const TCHAR* ShoreMap = TEXT("/Game/TSTSS/Review/MultipathV1/L_VS06_ShoreMagicEnemyGear_Review");
@@ -151,6 +153,7 @@ bool UTSTSSReviewShoreTravelSubsystem::QueueShore(
     // production scene, save slot or authoring-map mutation.
     PendingPrivateEnderClass = nullptr;
     bPrivateEnderArrivalReady = false;
+    bPrivateEnderSkyArrivalReady = false;
     if ((World->WorldType == EWorldType::PIE ||
          IsPrivateEnderStandaloneWorld(World, PrivatePreludePackage)) &&
         SourceMap == VisualReviewPreludeName && Destination == ShipPackage)
@@ -164,6 +167,32 @@ bool UTSTSSReviewShoreTravelSubsystem::QueueShore(
             PendingPrivateEnderClass = SourcePawn->GetClass();
             UE_LOG(LogTemp, Display,
                 TEXT("TSTSS_PRIVATE_ENDER_REVIEW_BOARDING_CLASS_CUSTODY staged=1 private_only=1"));
+        }
+    }
+    // A separate editor-only experiment may carry the already possessed
+    // exact private Ender study body from earned engineering signoff to
+    // the sky observer map. Without the explicit flag, existing behavior
+    // stays untouched. Never load a licensed class by name here.
+    if (FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderSkyContinuityReview")) &&
+        World->WorldType == EWorldType::PIE &&
+        World->GetNetMode() == NM_Standalone &&
+        World->GetOutermost() &&
+        World->GetOutermost()->GetName().StartsWith(
+            TEXT("/Game/TSTSS/Review/VerticalSlice/UEDPIE_")) &&
+        SourceMap == ShipName && Destination == SkyPackage &&
+        State->GetCurrentBeat() == ETSTSSFirstWakeBeat::Launched &&
+        State->AreInspectionsComplete())
+    {
+        APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0);
+        const ATSTSSExplorerCharacter* SourcePawn = PC
+            ? Cast<ATSTSSExplorerCharacter>(PC->GetPawn()) : nullptr;
+        if (IsValid(SourcePawn) && PC->GetPawn() == SourcePawn &&
+            SourcePawn->GetClass()->GetPathName().Equals(
+                PrivateEnderPawnClassPath, ESearchCase::CaseSensitive))
+        {
+            PendingPrivateEnderClass = SourcePawn->GetClass();
+            UE_LOG(LogTemp, Display,
+                TEXT("TSTSS_PRIVATE_ENDER_SKY_CLASS_CUSTODY staged=1 earned_signoff=1 opted_in=1 review_only=1"));
         }
     }
     PendingBeat = State->GetCurrentBeat();
@@ -225,6 +254,7 @@ bool UTSTSSReviewShoreTravelSubsystem::ConsumeShoreArrival(
     bPending = false;
     PendingMapPackage.Reset();
     bPrivateEnderArrivalReady = false;
+    bPrivateEnderSkyArrivalReady = false;
 #if WITH_EDITOR
     if (bHadTicket && World &&
         (World->WorldType == EWorldType::PIE || World->WorldType == EWorldType::Game) &&
@@ -240,7 +270,18 @@ bool UTSTSSReviewShoreTravelSubsystem::ConsumeShoreArrival(
                 IsPrivateEnderStandaloneWorld(World, ShipPackage)) &&
             Target == ShipPackage && IsValid(PendingPrivateEnderClass.Get()) &&
             PendingPrivateEnderClass.Get()->GetPathName() == PrivateEnderPawnClassPath;
-        if (!bPrivateEnderArrivalReady)
+        bPrivateEnderSkyArrivalReady =
+            bRestored && World->WorldType == EWorldType::PIE &&
+            Target == SkyPackage &&
+            World->GetOutermost()->GetName().StartsWith(
+                TEXT("/Game/TSTSS/Review/VerticalSlice/UEDPIE_")) &&
+            World->GetOutermost()->GetName().EndsWith(
+                TEXT("_VS03_FirstWakeSky")) &&
+            State->GetCurrentBeat() == ETSTSSFirstWakeBeat::Launched &&
+            State->AreInspectionsComplete() &&
+            IsValid(PendingPrivateEnderClass.Get()) &&
+            PendingPrivateEnderClass.Get()->GetPathName() == PrivateEnderPawnClassPath;
+        if (!bPrivateEnderArrivalReady && !bPrivateEnderSkyArrivalReady)
         {
             PendingPrivateEnderClass = nullptr;
         }
@@ -326,6 +367,80 @@ bool UTSTSSReviewShoreTravelSubsystem::TryResumePrivateEnderInShipRoom(
     DefaultPawn->Destroy();
     UE_LOG(LogTemp, Display,
         TEXT("TSTSS_PRIVATE_ENDER_VS02_REBIND_OK possessed=1 class_exact=1 beat=%d mask=%u save_mutation=0 map_unchanged=1 art_NOT_APPROVED"),
+        static_cast<int32>(Ender->GetFirstWakeState()->GetCurrentBeat()),
+        Ender->GetFirstWakeState()->GetInspectionMask());
+    return true;
+#else
+    (void)DefaultPawn;
+    return false;
+#endif
+}
+
+bool UTSTSSReviewShoreTravelSubsystem::TryResumePrivateEnderInSkyReview(
+    ATSTSSExplorerCharacter* DefaultPawn)
+{
+#if WITH_EDITOR
+    if (!bPrivateEnderSkyArrivalReady)
+    {
+        return false;
+    }
+    // The arrival ticket is single-use even if the private asset is missing.
+    UClass* PrivateClass = PendingPrivateEnderClass.Get();
+    bPrivateEnderSkyArrivalReady = false;
+    PendingPrivateEnderClass = nullptr;
+    UWorld* World = IsValid(DefaultPawn) ? DefaultPawn->GetWorld() : nullptr;
+    APlayerController* PC = World ? UGameplayStatics::GetPlayerController(World, 0) : nullptr;
+    UTSTSSFirstWakeState* State = IsValid(DefaultPawn)
+        ? DefaultPawn->GetFirstWakeState() : nullptr;
+    if (!World || World->WorldType != EWorldType::PIE ||
+        World->GetNetMode() != NM_Standalone || !World->GetOutermost() ||
+        !World->GetOutermost()->GetName().StartsWith(
+            TEXT("/Game/TSTSS/Review/VerticalSlice/UEDPIE_")) ||
+        !World->GetOutermost()->GetName().EndsWith(TEXT("_VS03_FirstWakeSky")) ||
+        !FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderSkyContinuityReview")) ||
+        UGameplayStatics::GetCurrentLevelName(World, true) != SkyName ||
+        !IsValid(PC) || PC->GetPawn() != DefaultPawn ||
+        DefaultPawn->GetClass() != ATSTSSExplorerCharacter::StaticClass() ||
+        !IsValid(State) || State->GetCurrentBeat() != ETSTSSFirstWakeBeat::Launched ||
+        !State->AreInspectionsComplete() ||
+        !PrivateClass || !PrivateClass->GetPathName().Equals(
+            PrivateEnderPawnClassPath, ESearchCase::CaseSensitive) ||
+        !PrivateClass->IsChildOf(ATSTSSExplorerCharacter::StaticClass()))
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_PRIVATE_ENDER_SKY_REBIND_HOLD scope_or_earned_state"));
+        return false;
+    }
+    // The original VS03 is an observer scene with NO walkable deck. Reuse its
+    // camera start and flying observation mode; this is NOT ship piloting.
+    FActorSpawnParameters Params;
+    Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+    ATSTSSExplorerCharacter* Ender = World->SpawnActor<ATSTSSExplorerCharacter>(
+        PrivateClass, DefaultPawn->GetActorTransform(), Params);
+    if (!IsValid(Ender) || Ender->GetClass() != PrivateClass ||
+        !IsValid(Ender->GetFirstWakeState()) ||
+        !Ender->GetFirstWakeState()->Restore(
+            true, State->GetCurrentBeat(), State->GetInspectionMask()) ||
+        !IsValid(Ender->GetCharacterMovement()))
+    {
+        if (IsValid(Ender)) Ender->Destroy();
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_PRIVATE_ENDER_SKY_REBIND_HOLD spawn_or_story_restore"));
+        return false;
+    }
+    Ender->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+    PC->Possess(Ender);
+    if (PC->GetPawn() != Ender)
+    {
+        PC->Possess(DefaultPawn);
+        Ender->Destroy();
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_PRIVATE_ENDER_SKY_REBIND_HOLD possess"));
+        return false;
+    }
+    DefaultPawn->Destroy();
+    UE_LOG(LogTemp, Display,
+        TEXT("TSTSS_PRIVATE_ENDER_SKY_REBIND_OK possessed=1 class_exact=1 beat=%d mask=%u movement=observer_flying no_piloting=1 art_NOT_APPROVED"),
         static_cast<int32>(Ender->GetFirstWakeState()->GetCurrentBeat()),
         Ender->GetFirstWakeState()->GetInspectionMask());
     return true;

@@ -30,7 +30,8 @@ def checks(header, route, pawn):
                  "bool UTSTSSReviewShoreTravelSubsystem::QueueOpticalInspection(")
     arrive = body(route, "bool UTSTSSReviewShoreTravelSubsystem::ConsumeShoreArrival(",
                   "bool UTSTSSReviewShoreTravelSubsystem::TryResumePrivateEnderInShipRoom(")
-    resume = body(route, "bool UTSTSSReviewShoreTravelSubsystem::TryResumePrivateEnderInShipRoom(")
+    resume = body(route, "bool UTSTSSReviewShoreTravelSubsystem::TryResumePrivateEnderInShipRoom(",
+                  "bool UTSTSSReviewShoreTravelSubsystem::TryResumePrivateEnderInSkyReview(")
     tick = body(pawn, "void ATSTSSExplorerCharacter::Tick(",
                 "void ATSTSSExplorerCharacter::MoveForward(") if (
                     "void ATSTSSExplorerCharacter::MoveForward(" in pawn

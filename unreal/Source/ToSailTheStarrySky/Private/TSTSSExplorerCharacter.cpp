@@ -1072,6 +1072,21 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
             return;
         }
     }
+    // The sky map has no floor or flight controls. Opt-in review continuity
+    // may replace only its ordinary observer, on one earned travel ticket.
+    // A successful swap destroys this pawn before its next statement.
+    if (bReviewNamespace && World->WorldType == EWorldType::PIE &&
+        World->GetNetMode() == NM_Standalone &&
+        Scene == TEXT("VS03_FirstWakeSky"))
+    {
+        UGameInstance* Instance = World->GetGameInstance();
+        UTSTSSReviewShoreTravelSubsystem* Travel = Instance
+            ? Instance->GetSubsystem<UTSTSSReviewShoreTravelSubsystem>() : nullptr;
+        if (Travel && Travel->TryResumePrivateEnderInSkyReview(this))
+        {
+            return;
+        }
+    }
     // Measure only the exact private Ender ship pawn. Allow an independent
     // PIE-native scripted route as well as the original standalone diagnostic.
     // Both remain opt-in, nonshipping and read-only; never alter camera or story.

@@ -18,7 +18,8 @@ def safe(pawn, route, header):
         world = section(route, "bool IsPrivateEnderStandaloneWorld(", "\n}")
         queue = section(route, "bool UTSTSSReviewShoreTravelSubsystem::QueueShore(", "\nbool UTSTSSReviewShoreTravelSubsystem::QueueOpticalInspection(")
         arrival = section(route, "bool UTSTSSReviewShoreTravelSubsystem::ConsumeShoreArrival(", "\nbool UTSTSSReviewShoreTravelSubsystem::TryResumePrivateEnderInShipRoom(")
-        resume = route.split("bool UTSTSSReviewShoreTravelSubsystem::TryResumePrivateEnderInShipRoom(",1)[1]
+        resume = section(route, "bool UTSTSSReviewShoreTravelSubsystem::TryResumePrivateEnderInShipRoom(",
+                         "bool UTSTSSReviewShoreTravelSubsystem::TryResumePrivateEnderInSkyReview(")
         shipworld = section(pawn, "bool IsPrivateEnderStandaloneShip(", "\nbool IsPrivateEnderShipBinding(")
         visual = section(pawn, "bool IsPrivateEnderShipBinding(", "\nvoid ApplyCoastalRecoveryReviewSignage")
         binding = section(pawn, "void ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance()", "\nvoid ATSTSSExplorerCharacter::SetupFirstWakeThirdPersonReview")
