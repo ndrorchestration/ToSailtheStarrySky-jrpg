@@ -36,7 +36,8 @@ class EnderSkyContinuityReviewContract(unittest.TestCase):
                       'State->AreInspectionsComplete()',
                       'PendingPrivateEnderClass.Get()->GetPathName() == PrivateEnderPawnClassPath'):
             self.assertIn(token, ARRIVE)
-        self.assertIn('if (!bPrivateEnderArrivalReady && !bPrivateEnderSkyArrivalReady)', ARRIVE)
+        self.assertIn('if (!bPrivateEnderArrivalReady && !bPrivateEnderSkyArrivalReady &&', ARRIVE)
+        self.assertIn('!bPrivateEnderSeaArrivalReady)', ARRIVE)
 
     def test_resume_consumes_ticket_before_spawn_and_checks_possession(self):
         token='bPrivateEnderSkyArrivalReady = false;'

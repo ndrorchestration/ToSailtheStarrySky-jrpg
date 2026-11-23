@@ -49,6 +49,7 @@ constexpr const TCHAR* OpticalPackage =
 constexpr const TCHAR* SkyName = TEXT("VS03_FirstWakeSky");
 constexpr const TCHAR* SkyPackage = TEXT("/Game/TSTSS/Review/VerticalSlice/VS03_FirstWakeSky");
 constexpr const TCHAR* SeaName = TEXT("VS04_SplashdownSea");
+constexpr const TCHAR* SeaPackage = TEXT("/Game/TSTSS/Review/VerticalSlice/VS04_SplashdownSea");
 constexpr const TCHAR* FuelName = TEXT("VS05_DenithFuelShanty");
 constexpr const TCHAR* ShoreMap = TEXT("/Game/TSTSS/Review/MultipathV1/L_VS06_ShoreMagicEnemyGear_Review");
 }
@@ -155,6 +156,7 @@ bool UTSTSSReviewShoreTravelSubsystem::QueueShore(
     PendingPrivateEnderClass = nullptr;
     bPrivateEnderArrivalReady = false;
     bPrivateEnderSkyArrivalReady = false;
+    bPrivateEnderSeaArrivalReady = false;
     if ((World->WorldType == EWorldType::PIE ||
          IsPrivateEnderStandaloneWorld(World, PrivatePreludePackage)) &&
         SourceMap == VisualReviewPreludeName && Destination == ShipPackage)
@@ -194,6 +196,36 @@ bool UTSTSSReviewShoreTravelSubsystem::QueueShore(
             PendingPrivateEnderClass = SourcePawn->GetClass();
             UE_LOG(LogTemp, Display,
                 TEXT("TSTSS_PRIVATE_ENDER_SKY_CLASS_CUSTODY staged=1 earned_signoff=1 opted_in=1 review_only=1"));
+        }
+    }
+    // A distinct, doubly opted-in one-use sea ticket can retain ONLY the
+    // previously earned/private sky pawn. Does not grant sea contact,
+    // flotation, flight controls, physics, or story authority.
+    if (FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderSkyContinuityReview")) &&
+        FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderSeaContinuityReview")) &&
+        World->WorldType == EWorldType::PIE &&
+        World->GetNetMode() == NM_Standalone && World->GetOutermost() &&
+        World->GetOutermost()->GetName().StartsWith(
+            TEXT("/Game/TSTSS/Review/VerticalSlice/UEDPIE_")) &&
+        World->GetOutermost()->GetName().EndsWith(TEXT("_VS03_FirstWakeSky")) &&
+        SourceMap == SkyName && Destination == SeaPackage &&
+        State->GetCurrentBeat() == ETSTSSFirstWakeBeat::Launched &&
+        State->AreInspectionsComplete())
+    {
+        APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0);
+        const ATSTSSExplorerCharacter* SourcePawn = PC
+            ? Cast<ATSTSSExplorerCharacter>(PC->GetPawn()) : nullptr;
+        const USkeletalMeshComponent* Body =
+            IsValid(SourcePawn) ? SourcePawn->GetMesh() : nullptr;
+        if (IsValid(SourcePawn) && PC->GetPawn() == SourcePawn &&
+            SourcePawn->GetClass()->GetPathName().Equals(
+                PrivateEnderPawnClassPath, ESearchCase::CaseSensitive) &&
+            IsValid(Body) && IsValid(Body->GetSkeletalMeshAsset()) &&
+            Body->IsVisible() && Body->GetNumBones() >= 80)
+        {
+            PendingPrivateEnderClass = SourcePawn->GetClass();
+            UE_LOG(LogTemp, Display,
+                TEXT("TSTSS_PRIVATE_ENDER_SEA_CLASS_CUSTODY staged=1 earned_launch=1 two_flags=1 no_water_grant=1"));
         }
     }
     PendingBeat = State->GetCurrentBeat();
@@ -256,6 +288,7 @@ bool UTSTSSReviewShoreTravelSubsystem::ConsumeShoreArrival(
     PendingMapPackage.Reset();
     bPrivateEnderArrivalReady = false;
     bPrivateEnderSkyArrivalReady = false;
+    bPrivateEnderSeaArrivalReady = false;
 #if WITH_EDITOR
     if (bHadTicket && World &&
         (World->WorldType == EWorldType::PIE || World->WorldType == EWorldType::Game) &&
@@ -282,7 +315,20 @@ bool UTSTSSReviewShoreTravelSubsystem::ConsumeShoreArrival(
             State->AreInspectionsComplete() &&
             IsValid(PendingPrivateEnderClass.Get()) &&
             PendingPrivateEnderClass.Get()->GetPathName() == PrivateEnderPawnClassPath;
-        if (!bPrivateEnderArrivalReady && !bPrivateEnderSkyArrivalReady)
+        bPrivateEnderSeaArrivalReady =
+            bRestored && World->WorldType == EWorldType::PIE &&
+            Target == SeaPackage &&
+            World->GetOutermost()->GetName().StartsWith(
+                TEXT("/Game/TSTSS/Review/VerticalSlice/UEDPIE_")) &&
+            World->GetOutermost()->GetName().EndsWith(TEXT("_VS04_SplashdownSea")) &&
+            FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderSkyContinuityReview")) &&
+            FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderSeaContinuityReview")) &&
+            State->GetCurrentBeat() == ETSTSSFirstWakeBeat::Launched &&
+            State->AreInspectionsComplete() &&
+            IsValid(PendingPrivateEnderClass.Get()) &&
+            PendingPrivateEnderClass.Get()->GetPathName() == PrivateEnderPawnClassPath;
+        if (!bPrivateEnderArrivalReady && !bPrivateEnderSkyArrivalReady &&
+            !bPrivateEnderSeaArrivalReady)
         {
             PendingPrivateEnderClass = nullptr;
         }
@@ -460,6 +506,101 @@ bool UTSTSSReviewShoreTravelSubsystem::TryResumePrivateEnderInSkyReview(
     DefaultPawn->Destroy();
     UE_LOG(LogTemp, Display,
         TEXT("TSTSS_PRIVATE_ENDER_SKY_REBIND_OK possessed=1 class_exact=1 beat=%d mask=%u bones=%d movement=observer_flying no_piloting=1 animation_NOT_VERIFIED art_NOT_APPROVED"),
+        static_cast<int32>(Ender->GetFirstWakeState()->GetCurrentBeat()),
+        Ender->GetFirstWakeState()->GetInspectionMask(),
+        Ender->GetMesh()->GetNumBones());
+    return true;
+#else
+    (void)DefaultPawn;
+    return false;
+#endif
+}
+
+
+bool UTSTSSReviewShoreTravelSubsystem::TryResumePrivateEnderInSeaReview(
+    ATSTSSExplorerCharacter* DefaultPawn)
+{
+#if WITH_EDITOR
+    if (!bPrivateEnderSeaArrivalReady)
+    {
+        return false;
+    }
+    // Consume the one-use, already-earned custody ticket before spawning.
+    UClass* PrivateClass = PendingPrivateEnderClass.Get();
+    bPrivateEnderSeaArrivalReady = false;
+    PendingPrivateEnderClass = nullptr;
+    UWorld* World = IsValid(DefaultPawn) ? DefaultPawn->GetWorld() : nullptr;
+    APlayerController* PC = World ? UGameplayStatics::GetPlayerController(World, 0) : nullptr;
+    UTSTSSFirstWakeState* State = IsValid(DefaultPawn)
+        ? DefaultPawn->GetFirstWakeState() : nullptr;
+    if (!World || World->WorldType != EWorldType::PIE ||
+        World->GetNetMode() != NM_Standalone || !World->GetOutermost() ||
+        !World->GetOutermost()->GetName().StartsWith(
+            TEXT("/Game/TSTSS/Review/VerticalSlice/UEDPIE_")) ||
+        !World->GetOutermost()->GetName().EndsWith(TEXT("_VS04_SplashdownSea")) ||
+        !FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderSkyContinuityReview")) ||
+        !FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderSeaContinuityReview")) ||
+        UGameplayStatics::GetCurrentLevelName(World, true) != SeaName ||
+        !IsValid(PC) || PC->GetPawn() != DefaultPawn ||
+        DefaultPawn->GetClass() != ATSTSSExplorerCharacter::StaticClass() ||
+        !IsValid(State) || State->GetCurrentBeat() != ETSTSSFirstWakeBeat::Launched ||
+        !State->AreInspectionsComplete() ||
+        !PrivateClass || !PrivateClass->GetPathName().Equals(
+            PrivateEnderPawnClassPath, ESearchCase::CaseSensitive) ||
+        !PrivateClass->IsChildOf(ATSTSSExplorerCharacter::StaticClass()))
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_PRIVATE_ENDER_SEA_REBIND_HOLD scope_or_earned_state"));
+        return false;
+    }
+    // VS04 has no walkable deck. Keep the original observer position and
+    // no-piloting movement behavior; do not teleport the physical hull.
+    FActorSpawnParameters Params;
+    Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+    bPrivateEnderSeaSpawnInProgress = true;
+    ATSTSSExplorerCharacter* Ender = World->SpawnActor<ATSTSSExplorerCharacter>(
+        PrivateClass, DefaultPawn->GetActorTransform(), Params);
+    bPrivateEnderSeaSpawnInProgress = false;
+    if (!IsValid(Ender) || Ender->GetClass() != PrivateClass ||
+        !IsValid(Ender->GetFirstWakeState()) ||
+        !Ender->GetFirstWakeState()->Restore(
+            true, State->GetCurrentBeat(), State->GetInspectionMask()) ||
+        !IsValid(Ender->GetCharacterMovement()) ||
+        !IsValid(Ender->GetMesh()) ||
+        !IsValid(Ender->GetMesh()->GetSkeletalMeshAsset()) ||
+        Ender->GetMesh()->GetNumBones() < 80 ||
+        !Ender->GetMesh()->IsVisible())
+    {
+        if (IsValid(Ender)) Ender->Destroy();
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_PRIVATE_ENDER_SEA_REBIND_HOLD spawn_or_story_restore"));
+        return false;
+    }
+    PC->Possess(Ender);
+    if (PC->GetPawn() != Ender)
+    {
+        PC->Possess(DefaultPawn);
+        Ender->Destroy();
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_PRIVATE_ENDER_SEA_REBIND_HOLD possess"));
+        return false;
+    }
+    // Possession resets CharacterMovement on some private study Blueprints.
+    Ender->GetCharacterMovement()->SetMovementMode(MOVE_Flying);
+    if (Ender->GetCharacterMovement()->MovementMode != MOVE_Flying)
+    {
+        PC->Possess(DefaultPawn);
+        Ender->Destroy();
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_PRIVATE_ENDER_SEA_REBIND_HOLD observer_mode"));
+        return false;
+    }
+    // TSTSSWaterContactAdapter's existing auto-bind observes possession
+    // each tick and resets its gate to the new player's genuine story.
+    // Do NOT manually grant contact, flotation, buoyancy, or another beat.
+    DefaultPawn->Destroy();
+    UE_LOG(LogTemp, Display,
+        TEXT("TSTSS_PRIVATE_ENDER_SEA_REBIND_OK possessed=1 class_exact=1 beat=%d mask=%u bones=%d movement=observer_flying water_physics_UNTOUCHED no_piloting=1 animation_NOT_VERIFIED art_NOT_APPROVED"),
         static_cast<int32>(Ender->GetFirstWakeState()->GetCurrentBeat()),
         Ender->GetFirstWakeState()->GetInspectionMask(),
         Ender->GetMesh()->GetNumBones());
