@@ -21,6 +21,7 @@ START = "void ATSTSSExplorerCharacter::SetupPlayerInputComponent(UInputComponent
 END = "\nvoid ATSTSSExplorerCharacter::MoveForward(float Value)"
 PREFIX = r"""
 #include <algorithm>
+#include <cstddef>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -32,9 +33,14 @@ PREFIX = r"""
 enum class EWorldType { PIE, Game, Editor };
 struct UWorld { EWorldType WorldType; };
 enum EInputEvent { IE_Pressed, IE_Released };
+// Portable key constants for actual source's PIE-only BindKey calls.
+struct EKeys {
+    static constexpr const char* R = "R";
+    static constexpr const char* T = "T";
+};
 struct ATSTSSExplorerCharacter;
 struct UInputComponent {
-    std::vector<std::string> axes, actions, releasedActions;
+    std::vector<std::string> axes, actions, releasedActions, keys;
     template <class Method>
     void BindAxis(const char* name, ATSTSSExplorerCharacter*, Method) { axes.emplace_back(name); }
     template <class Method>
@@ -43,6 +49,12 @@ struct UInputComponent {
             throw std::runtime_error("Unknown input event");
         actions.emplace_back(name);
         if (event == IE_Released) releasedActions.emplace_back(name);
+    }
+    template <class Method>
+    void BindKey(const char* key, EInputEvent event, ATSTSSExplorerCharacter*, Method) {
+        if (event != IE_Pressed)
+            throw std::runtime_error("Storm review keys must be press-only");
+        keys.emplace_back(key);
     }
 };
 struct TSTSSBaseCharacter {
@@ -60,6 +72,8 @@ struct ATSTSSExplorerCharacter : TSTSSBaseCharacter {
     void ToggleEngineFocusPreview();
     void PressEnderPIEReviewSprint(); void ReleaseEnderPIEReviewSprint();
     void AcceptHilltoniaFlyer(); void DeclineHilltoniaFlyer(); void ToggleFirstWakeBokehReview();
+    // PIE-only R/T private storm methods are compiled as genuine member pointers.
+    void PrivateStormSecureLift(); void PrivateStormBraceForDescent();
 };
 // The binder receives real member-function pointers; provide no-op implementations
 // only so the standalone executable links. None of these methods are executed.
@@ -80,6 +94,8 @@ void ATSTSSExplorerCharacter::ReleaseEnderPIEReviewSprint() {}
 void ATSTSSExplorerCharacter::AcceptHilltoniaFlyer() {}
 void ATSTSSExplorerCharacter::DeclineHilltoniaFlyer() {}
 void ATSTSSExplorerCharacter::ToggleFirstWakeBokehReview() {}
+void ATSTSSExplorerCharacter::PrivateStormSecureLift() {}
+void ATSTSSExplorerCharacter::PrivateStormBraceForDescent() {}
 """
 SUFFIX = r"""
 static unsigned cases = 0;
@@ -88,8 +104,9 @@ static void verify(bool passed, const char* what) {
     ++cases;
 }
 static bool hasExactly(const std::vector<std::string>& actions,
-                       const std::string& name, int expected) {
-    return std::count(actions.begin(), actions.end(), name) == expected;
+                       const std::string& name, std::size_t expected) {
+    return static_cast<std::size_t>(
+        std::count(actions.begin(), actions.end(), name)) == expected;
 }
 int main() {
     try {
@@ -112,6 +129,13 @@ int main() {
                    "Hilltonia choice bindings must be available in PIE and Game only");
             verify(hasExactly(input.actions, "FirstWakeBokehReview", questBindings),
                    "B cinematic lens binding must be present once in PIE/Game only");
+            // Direct private storm R/T bindings must exist ONLY in PIE.
+            const std::size_t stormBindings = type == EWorldType::PIE ? 1u : 0u;
+            verify(hasExactly(input.keys, "R", stormBindings) &&
+                   hasExactly(input.keys, "T", stormBindings),
+                   "Private storm R/T bindings missing or enabled outside PIE");
+            verify(input.keys.size() == (type == EWorldType::PIE ? 2u : 0u),
+                   "Unexpected extra, duplicate, or leaked storm key binding");
             verify(hasExactly(input.actions, "ReviewShoreTravel", type == EWorldType::Editor ? 0 : 1),
                    "K review navigation incorrectly enabled or missing");
             verify(hasExactly(input.actions, "ReviewOpticalInspectionTravel", type == EWorldType::PIE ? 1 : 0),
@@ -167,8 +191,9 @@ int main() {
                hasExactly(noWorldInput.actions, "ReviewShoreTravel", 0) &&
                hasExactly(noWorldInput.actions, "AcceptHilltoniaFlyer", 0) &&
                hasExactly(noWorldInput.actions, "DeclineHilltoniaFlyer", 0) &&
-               hasExactly(noWorldInput.actions, "FirstWakeBokehReview", 0),
-               "Null world must fail closed for save and review navigation");
+               hasExactly(noWorldInput.actions, "FirstWakeBokehReview", 0) &&
+               noWorldInput.keys.empty(),
+               "Null world must fail closed for save, review and storm keys");
         std::cout << "PASS: " << cases
                   << " actual-source input binding C++ cases; PIE F6 separated from Game F5\n";
         return 0;
@@ -193,7 +218,9 @@ def method_from(source: str) -> str:
                   'TEXT("ReviewOpticalInspectionTravel")',
                    'TEXT("AcceptHilltoniaFlyer")', 'TEXT("DeclineHilltoniaFlyer")',
                    'TEXT("FirstWakeBokehReview")',
-                    'TEXT("EnderPIEReviewSprint")', 'IE_Released'):
+                    'TEXT("EnderPIEReviewSprint")', 'IE_Released',
+                   'BindKey(EKeys::R, IE_Pressed',
+                   'BindKey(EKeys::T, IE_Pressed'):
         if token not in method:
             raise ValueError("Source method missing expected selection: " + token)
     return method
@@ -285,6 +312,8 @@ def main() -> int:
             ("Hilltonia Accept action missing", 'TEXT("AcceptHilltoniaFlyer")', 'TEXT("ReviewObjective")'),
             ("Hilltonia Decline action missing", 'TEXT("DeclineHilltoniaFlyer")', 'TEXT("ReviewObjective")'),
             ("First Wake Bokeh action missing", 'TEXT("FirstWakeBokehReview")', 'TEXT("ReviewObjective")'),
+            ("Private R storm input removed", 'BindKey(EKeys::R, IE_Pressed', 'BindKey(EKeys::T, IE_Pressed'),
+            ("Private T storm input removed", 'BindKey(EKeys::T, IE_Pressed', 'BindKey(EKeys::R, IE_Pressed'),
         ):
             if original.count(old) != 1:
                 raise RuntimeError("Mutation anchor missing or ambiguous: " + name)

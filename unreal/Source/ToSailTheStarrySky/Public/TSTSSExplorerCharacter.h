@@ -28,6 +28,8 @@ public:
     bool IsHilltoniaFlyerOpen() const;
     bool GetHilltoniaCaptainWaypoint(FVector& Location) const;
     bool GetEngineeringIntercomCaption(FString& Subtitle, FString& NextCheck) const;
+    // Private, transient VS03 R/T response gate; no story/save/flight authority.
+    bool IsPrivateSkyStormReviewComplete() const;
 #endif
 #endif
     UFUNCTION(BlueprintCallable, Category="TSTSS|First Wake")
@@ -184,6 +186,17 @@ private:
     uint8 PrivateFlyerKeyProbePhase = 0;
     // One-shot, PIE-only departure key probe; has no save or mode authority.
     bool bPrivateLaunchKDispatched = false;
+    bool bPrivateSkyStormStarted = false;
+    uint8 PrivateSkyStormResponseStage = 0;
+    float PrivateSkyStormStartWorldSeconds = 0.f;
+    bool bPrivateStormEarlyKProbeDispatched = false;
+    bool bPrivateStormEarlyKProbeReleased = false;
+    bool bPrivateStormRProbeDispatched = false;
+    bool bPrivateStormTProbeDispatched = false;
+    bool IsPrivateSkyStormReviewWorld() const;
+    void BeginPrivateSkyStormReview();
+    void PrivateStormSecureLift();
+    void PrivateStormBraceForDescent();
     uint64 HilltoniaFlyerGeneration = 0;
     FVector HilltoniaFlyerHit = FVector::ZeroVector;
     TWeakObjectPtr<class ATSTSSMilestoneActor> HilltoniaCaptain;
