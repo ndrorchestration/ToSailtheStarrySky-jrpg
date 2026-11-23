@@ -57,6 +57,14 @@ class PrivateEnderBlendSpaceRuntimeTest(unittest.TestCase):
   self.assertIn("TSTSS_ENDER_PRIVATE_BLENDSPACE_BOUND",METHOD)
   self.assertIn("TSTSS_ENDER_PRIVATE_BLENDSPACE_BAND",METHOD)
   self.assertIn("TSTSS_ENDER_PRIVATE_BLENDSPACE_HOLD",METHOD)
+ def test_private_only_resampling_and_runtime_cache_check(self):
+  self.assertIn("Blend->ResampleData();",METHOD)
+  self.assertIn("Blend->GetBlendSamples().Num() != 3",METHOD)
+  self.assertIn("Blend->GetSamplesFromBlendInput(",METHOD)
+  self.assertIn("Samples.IsEmpty()",METHOD)
+  self.assertIn("TSTSS_ENDER_PRIVATE_BLENDSPACE_RESAMPLED",METHOD)
+  self.assertIn("runtime_sample_data_missing",METHOD)
+  self.assertNotIn("SavePackage(",METHOD)
  def test_guard_removal_caught(self):
   for val in ("TSTSSPrivateEnderAnimationReview","TSTSSPrivateEnderSpineFixV1",
    "TSTSSPrivateEnderBlendSpaceV1","IsPrivateEnderStandaloneAnimation(World, this)",

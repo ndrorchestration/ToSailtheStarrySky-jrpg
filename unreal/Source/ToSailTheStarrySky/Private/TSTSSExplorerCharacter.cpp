@@ -2534,6 +2534,35 @@ void ATSTSSExplorerCharacter::TryEnderPrivateBlendSpaceReview(uint8 MotionBand)
             UE_LOG(LogTemp, Warning, TEXT("TSTSS_ENDER_PRIVATE_BLENDSPACE_HOLD missing_or_incompatible_private_asset"));
             return;
         }
+        // Blender/Python-authored BlendSpace SampleData is not sufficient:
+        // in UE 5.8, bIsValid defaults false and runtime segment data must be
+        // resampled. Never save this rebuild; private in-memory review only.
+        if (Blend->GetBlendSamples().Num() != 3)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("TSTSS_ENDER_PRIVATE_BLENDSPACE_HOLD unexpected_sample_count"));
+            return;
+        }
+        Blend->ResampleData();
+        bool bSamplesReady = true;
+        for (const float SpeedCmS : {0.f, 260.f, 600.f})
+        {
+            TArray<FBlendSampleData> Samples;
+            int32 CacheIndex = INDEX_NONE;
+            if (!Blend->GetSamplesFromBlendInput(
+                    FVector(SpeedCmS, 0.f, 0.f), Samples, CacheIndex, false) ||
+                Samples.IsEmpty())
+            {
+                bSamplesReady = false;
+                break;
+            }
+        }
+        if (!bSamplesReady)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("TSTSS_ENDER_PRIVATE_BLENDSPACE_HOLD runtime_sample_data_missing"));
+            return;
+        }
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_ENDER_PRIVATE_BLENDSPACE_RESAMPLED private_memory_only=1 verified_input_speeds=3"));
         // This transient component binding is a private runtime study only.
         // IgnoreRootMotion extracts/discards animation root travel; movement
         // remains exclusively controlled by the existing character capsule.
