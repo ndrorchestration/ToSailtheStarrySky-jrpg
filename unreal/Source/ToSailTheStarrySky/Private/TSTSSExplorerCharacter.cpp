@@ -2563,6 +2563,23 @@ void ATSTSSExplorerCharacter::TryEnderPrivateBlendSpaceReview(uint8 MotionBand)
         }
         UE_LOG(LogTemp, Display,
             TEXT("TSTSS_ENDER_PRIVATE_BLENDSPACE_RESAMPLED private_memory_only=1 verified_input_speeds=3"));
+        // Extra explicitly opted-in measurement ONLY: native asset starts with
+        // Weight Speed=5. In this one private review world, tune the same
+        // in-memory UBlendSpace1D instance to 12 to test stop/turn response.
+        // Never change its .uasset on disk, save, or affect unflagged previews.
+        // No other pawns can be admitted to this exact private ownership lease.
+        if (FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderFastWeightStudyV1")))
+        {
+            if (!FMath::IsNearlyEqual(Blend->TargetWeightInterpolationSpeedPerSec, 5.0f, 0.001f))
+            {
+                UE_LOG(LogTemp, Warning,
+                    TEXT("TSTSS_ENDER_PRIVATE_WEIGHT12_HOLD unexpected_weight_baseline"));
+                return;
+            }
+            Blend->TargetWeightInterpolationSpeedPerSec = 12.0f;
+            UE_LOG(LogTemp, Display,
+                TEXT("TSTSS_ENDER_PRIVATE_WEIGHT12_APPLIED prior=5.00 current=12.00 memory_only=1 default_authorized=0"));
+        }
         // This transient component binding is a private runtime study only.
         // IgnoreRootMotion extracts/discards animation root travel; movement
         // remains exclusively controlled by the existing character capsule.

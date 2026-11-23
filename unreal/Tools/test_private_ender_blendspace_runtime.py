@@ -65,6 +65,15 @@ class PrivateEnderBlendSpaceRuntimeTest(unittest.TestCase):
   self.assertIn("TSTSS_ENDER_PRIVATE_BLENDSPACE_RESAMPLED",METHOD)
   self.assertIn("runtime_sample_data_missing",METHOD)
   self.assertNotIn("SavePackage(",METHOD)
+ def test_optional_private_weight_speed_study_fails_closed(self):
+  self.assertIn("TSTSSPrivateEnderFastWeightStudyV1",METHOD)
+  self.assertIn("Blend->TargetWeightInterpolationSpeedPerSec, 5.0f, 0.001f",METHOD)
+  self.assertIn("Blend->TargetWeightInterpolationSpeedPerSec = 12.0f;",METHOD)
+  self.assertIn("TSTSS_ENDER_PRIVATE_WEIGHT12_HOLD unexpected_weight_baseline",METHOD)
+  self.assertIn("TSTSS_ENDER_PRIVATE_WEIGHT12_APPLIED",METHOD)
+  self.assertLess(METHOD.index("!bSamplesReady"),METHOD.index("TSTSSPrivateEnderFastWeightStudyV1"))
+  self.assertLess(METHOD.index("TSTSSPrivateEnderFastWeightStudyV1"),METHOD.index("Body->SetAnimInstanceClass(Candidate);"))
+  self.assertNotIn("SavePackage(",METHOD)
  def test_guard_removal_caught(self):
   for val in ("TSTSSPrivateEnderAnimationReview","TSTSSPrivateEnderSpineFixV1",
    "TSTSSPrivateEnderBlendSpaceV1","IsPrivateEnderStandaloneAnimation(World, this)",
