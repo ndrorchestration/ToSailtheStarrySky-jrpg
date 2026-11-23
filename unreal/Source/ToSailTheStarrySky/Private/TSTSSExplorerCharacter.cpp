@@ -3311,6 +3311,104 @@ void ATSTSSExplorerCharacter::BeginPrivateSkyStormReview()
         Atmosphere->RequestWeather(ETSTSSWeather::Storm, 2.5f);
         Atmosphere->RequestTimeOfDay(19.0f, 3.0f);
     }
+
+    // An isolated, opt-in composition study of Ender on an actual existing
+    // Aureate Wake four-wing C++ review actor. The protected VS03 sky map
+    // itself has no vessel in the player's camera. This cosmetic witness is
+    // transient, collision-free, not player-controlled and not a vessel sim.
+    // Only an earned Launched / Skybourne ship-form authority can stage it.
+    if (FParse::Param(FCommandLine::Get(),
+            TEXT("TSTSSPrivateSkyVesselCompositionReview")))
+    {
+        const bool bAuthorizedSkybourne =
+            IsValid(FirstWakeState) &&
+            FirstWakeState->IsReviewShipModeAuthorized(
+                FName(TEXT("Skybourne")));
+        bool bPreexistingVessel = false;
+        for (TActorIterator<AAureateWakePreviewActor> It(World); It; ++It)
+        {
+            if (IsValid(*It)) { bPreexistingVessel = true; break; }
+        }
+        AAureateWakePreviewActor* Vessel = nullptr;
+        if (bAuthorizedSkybourne && !bPreexistingVessel)
+        {
+            FActorSpawnParameters ReviewParams;
+            ReviewParams.SpawnCollisionHandlingOverride =
+                ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+            ReviewParams.ObjectFlags |= RF_Transient;
+            const float ViewYaw = Controller
+                ? Controller->GetControlRotation().Yaw
+                : GetActorRotation().Yaw;
+            const FVector VesselPosition =
+                GetActorLocation() + FVector(0.f, 0.f, -70.f);
+            Vessel = World->SpawnActor<AAureateWakePreviewActor>(
+                AAureateWakePreviewActor::StaticClass(),
+                VesselPosition, FRotator(0.f, ViewYaw, 0.f),
+                ReviewParams);
+            if (!IsValid(Vessel) ||
+                !Vessel->BindReviewStory(FirstWakeState) ||
+                Vessel->GetCurrentForm() != EAureateWakeForm::Skyborne ||
+                Vessel->GetWingCount() != 4 ||
+                Vessel->GetHydrofoilCount() != 2)
+            {
+                if (IsValid(Vessel)) Vessel->Destroy();
+                Vessel = nullptr;
+            }
+            if (IsValid(Vessel))
+            {
+                Vessel->SetActorEnableCollision(false);
+                if (IsValid(CameraBoom))
+                {
+                    CameraBoom->TargetArmLength = 790.f;
+                    CameraBoom->TargetOffset = FVector(0.f, 0.f, 75.f);
+                    CameraBoom->SocketOffset = FVector::ZeroVector;
+                }
+                UE_LOG(LogTemp, Display,
+                    TEXT("TSTSS_PRIVATE_SKY_VESSEL_COMPOSITION staged=1 earned_form=Skybourne wings=4 hydrofoils=2 transient=1 collision=0 review_geometry_only=1 piloting=0 Starbourne_locked=1"));
+            }
+        }
+        if (!IsValid(Vessel))
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("TSTSS_PRIVATE_SKY_VESSEL_COMPOSITION_HOLD no_authorized_unique_preview"));
+        }
+
+        // Remove the bind-pose only when the existing exact private Ender
+        // idle study clip has a matching skeleton and no root motion. This
+        // is an idle/stance comparison, NOT a newly authored brace action.
+        USkeletalMeshComponent* Body = GetMesh();
+        UAnimSequence* Idle = LoadObject<UAnimSequence>(nullptr,
+            TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/Animations/MM_Idle_EnderPreview_NONCANONICAL.MM_Idle_EnderPreview_NONCANONICAL"));
+        const bool bSafeIdle =
+            IsValid(Vessel) && IsValid(Body) &&
+            IsValid(Body->GetSkeletalMeshAsset()) &&
+            IsValid(Idle) &&
+            Idle->GetPathName() ==
+                TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/Animations/MM_Idle_EnderPreview_NONCANONICAL.MM_Idle_EnderPreview_NONCANONICAL") &&
+            Idle->GetSkeleton() ==
+                Body->GetSkeletalMeshAsset()->GetSkeleton() &&
+            !Idle->bEnableRootMotion && Body->GetAnimClass() == nullptr;
+        if (bSafeIdle)
+        {
+            Body->PlayAnimation(Idle, true);
+            UAnimSingleNodeInstance* Node = Body->GetSingleNodeInstance();
+            if (IsValid(Node) && Node->GetCurrentAsset() == Idle)
+            {
+                UE_LOG(LogTemp, Display,
+                    TEXT("TSTSS_PRIVATE_SKY_ENDER_IDLE_STAGED clip_exact=1 skeleton_match=1 root_motion=0 single_node=1 animation_visual_NOT_APPROVED brace_NOT_AUTHORED"));
+            }
+            else
+            {
+                UE_LOG(LogTemp, Warning,
+                    TEXT("TSTSS_PRIVATE_SKY_ENDER_IDLE_HOLD single_node_not_bound"));
+            }
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("TSTSS_PRIVATE_SKY_ENDER_IDLE_HOLD unsafe_or_missing_private_clip"));
+        }
+    }
     UE_LOG(LogTemp, Display,
         TEXT("TSTSS_PRIVATE_SKY_STORM_START beat=4 mask=7 stage=0 weather_requested=%d transient_director=%d no_story_grant=1"),
         IsValid(Atmosphere) ? 1 : 0, bSpawned ? 1 : 0);
