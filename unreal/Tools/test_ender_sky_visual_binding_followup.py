@@ -10,7 +10,7 @@ S=(ROOT/"Source/ToSailTheStarrySky/Private/TSTSSReviewShoreTravelSubsystem.cpp")
 H=(ROOT/"Source/ToSailTheStarrySky/Public/TSTSSReviewShoreTravelSubsystem.h").read_text(encoding="utf8")
 def between(text,a,b):
     return text.split(a,1)[1].split(b,1)[0]
-GUARD=between(P,"bool IsPrivateEnderSkyBinding(", "// Explicit, private, editor-built standalone animation study.")
+GUARD=between(P,"bool IsPrivateEnderSkyBinding(", "bool IsPrivateEnderSeaBinding(")
 APPEAR=between(P,"void ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance()", "void ATSTSSExplorerCharacter::SetupFirstWakeThirdPersonReview")
 CAMERA=between(P,"void ATSTSSExplorerCharacter::SetupFirstWakeThirdPersonReview", "void ATSTSSExplorerCharacter::TryEnderPIELocomotionPreview")
 SKY=S.split("bool UTSTSSReviewShoreTravelSubsystem::TryResumePrivateEnderInSkyReview(",1)[1]

@@ -192,6 +192,30 @@ bool IsPrivateEnderSkyBinding(const UWorld* World, const ATSTSSExplorerCharacter
     return Travel && Travel->IsPrivateEnderSkySpawnInProgress();
 }
 
+// The sea-level private Ender is only a visual observer. Never bind an
+// unearned/default VS04 scene, nor make a shipping asset dependency.
+bool IsPrivateEnderSeaBinding(const UWorld* World, const ATSTSSExplorerCharacter* Pawn)
+{
+    if (!World || !IsValid(Pawn) || World->WorldType != EWorldType::PIE ||
+        World->GetNetMode() != NM_Standalone ||
+        !FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderSkyContinuityReview")) ||
+        !FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderSeaContinuityReview")) ||
+        !World->GetOutermost() ||
+        !World->GetOutermost()->GetName().StartsWith(
+            TEXT("/Game/TSTSS/Review/VerticalSlice/UEDPIE_")) ||
+        !World->GetOutermost()->GetName().EndsWith(TEXT("_VS04_SplashdownSea")) ||
+        UGameplayStatics::GetCurrentLevelName(World, true) != TEXT("VS04_SplashdownSea") ||
+        Pawn->GetClass()->GetPathName() !=
+            TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/BP_EnderLocomotionPreview_NONCANONICAL.BP_EnderLocomotionPreview_NONCANONICAL_C"))
+    {
+        return false;
+    }
+    UGameInstance* Instance = World->GetGameInstance();
+    const UTSTSSReviewShoreTravelSubsystem* Travel = Instance
+        ? Instance->GetSubsystem<UTSTSSReviewShoreTravelSubsystem>() : nullptr;
+    return Travel && Travel->IsPrivateEnderSeaSpawnInProgress();
+}
+
 // Explicit, private, editor-built standalone animation study. This adds no
 // production-world admission and does not relax the animation-owner lease.
 bool IsPrivateEnderStandaloneAnimation(const UWorld* World, const ATSTSSExplorerCharacter* Pawn)
@@ -1109,6 +1133,56 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
         {
             return;
         }
+    }
+    // An independent two-flag, one-use VS03 -> VS04 custody ticket may
+    // replace the default sea observer. The water adapter auto-reconciles
+    // the newly possessed player story; no physics or milestone shortcuts.
+    if (bReviewNamespace && World->WorldType == EWorldType::PIE &&
+        World->GetNetMode() == NM_Standalone &&
+        Scene == TEXT("VS04_SplashdownSea"))
+    {
+        UGameInstance* Instance = World->GetGameInstance();
+        UTSTSSReviewShoreTravelSubsystem* Travel = Instance
+            ? Instance->GetSubsystem<UTSTSSReviewShoreTravelSubsystem>() : nullptr;
+        if (Travel && Travel->TryResumePrivateEnderInSeaReview(this))
+        {
+            return;
+        }
+    }
+    // Read-only native diagnostic for the actual possessed, skeletal sea
+    // review pawn. Does NOT prove final art, piloting or a rendered shot.
+    if (!bEnderPIEPossessionLogged && bReviewNamespace &&
+        World->WorldType == EWorldType::PIE &&
+        World->GetNetMode() == NM_Standalone && World->GetOutermost() &&
+        World->GetOutermost()->GetName().StartsWith(
+            TEXT("/Game/TSTSS/Review/VerticalSlice/UEDPIE_")) &&
+        World->GetOutermost()->GetName().EndsWith(TEXT("_VS04_SplashdownSea")) &&
+        Scene == TEXT("VS04_SplashdownSea") &&
+        FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderSkyContinuityReview")) &&
+        FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderSeaContinuityReview")) &&
+        GetClass()->GetPathName() ==
+            TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/BP_EnderLocomotionPreview_NONCANONICAL.BP_EnderLocomotionPreview_NONCANONICAL_C") &&
+        IsValid(FirstWakeState) &&
+        FirstWakeState->GetCurrentBeat() >= ETSTSSFirstWakeBeat::Launched &&
+        FirstWakeState->AreInspectionsComplete() &&
+        World->GetTimeSeconds() >= 0.5f)
+    {
+        bEnderPIEPossessionLogged = true;
+        USkeletalMeshComponent* Body = GetMesh();
+        APlayerController* PC = Cast<APlayerController>(GetController());
+        const bool bVisibleSkeletal = IsValid(Body) && Body->IsRegistered() &&
+            IsValid(Body->GetSkeletalMeshAsset()) && Body->GetNumBones() >= 80 &&
+            Body->IsVisible();
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_PRIVATE_ENDER_SEA_OBSERVATION possessed=%d view_target_ender=%d skeletal_visible=%d bones=%d third_person=%d camera_active=%d observer_flying=%d beat=%d water_physics_UNTOUCHED animation_NOT_VERIFIED visual_NOT_APPROVED"),
+            IsValid(PC) && PC->GetPawn() == this ? 1 : 0,
+            IsValid(PC) && PC->GetViewTarget() == this ? 1 : 0,
+            bVisibleSkeletal ? 1 : 0, bVisibleSkeletal ? Body->GetNumBones() : 0,
+            bFirstWakeThirdPersonReview ? 1 : 0,
+            IsValid(FollowCamera) && FollowCamera->IsActive() ? 1 : 0,
+            GetCharacterMovement() &&
+                GetCharacterMovement()->MovementMode == MOVE_Flying ? 1 : 0,
+            static_cast<int32>(FirstWakeState->GetCurrentBeat()));
     }
     // One read-only observation AFTER possession, never during the class
     // ticket's synchronous BeginPlay. A log is NOT proof of an approved image,
@@ -2041,6 +2115,7 @@ void ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance()
     const bool bPrivateStandalone = IsPrivateEnderStandaloneBinding(World, this) ||
         IsPrivateEnderShipBinding(World, this);
     const bool bPrivateSkyBody = IsPrivateEnderSkyBinding(World, this);
+    const bool bPrivateSeaBody = IsPrivateEnderSeaBinding(World, this);
     if (!World || (World->WorldType != EWorldType::PIE && !bPrivateStandalone) ||
         World->GetNetMode() != NM_Standalone ||
         !World->GetOutermost() ||
@@ -2053,7 +2128,8 @@ void ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance()
     const FString Scene = UGameplayStatics::GetCurrentLevelName(World, true);
     if (Scene != TEXT("FirstWake_PreludeInteraction_V5_VisualReview") &&
         Scene != TEXT("VS02_AureateInteriors") &&
-        !(Scene == TEXT("VS03_FirstWakeSky") && bPrivateSkyBody))
+        !(Scene == TEXT("VS03_FirstWakeSky") && bPrivateSkyBody) &&
+        !(Scene == TEXT("VS04_SplashdownSea") && bPrivateSeaBody))
     {
         return;
     }
@@ -2186,9 +2262,11 @@ void ATSTSSExplorerCharacter::SetupFirstWakeThirdPersonReview(UWorld* World)
     }
     const FString Scene = UGameplayStatics::GetCurrentLevelName(World, true);
     const bool bPrivateSkyBody = IsPrivateEnderSkyBinding(World, this);
+    const bool bPrivateSeaBody = IsPrivateEnderSeaBinding(World, this);
     if (Scene != TEXT("FirstWake_PreludeInteraction_V5_VisualReview") &&
         Scene != TEXT("VS02_AureateInteriors") &&
-        !(Scene == TEXT("VS03_FirstWakeSky") && bPrivateSkyBody))
+        !(Scene == TEXT("VS03_FirstWakeSky") && bPrivateSkyBody) &&
+        !(Scene == TEXT("VS04_SplashdownSea") && bPrivateSeaBody))
     {
         return;
     }
@@ -2240,6 +2318,12 @@ void ATSTSSExplorerCharacter::SetupFirstWakeThirdPersonReview(UWorld* World)
     {
         UE_LOG(LogTemp, Warning,
             TEXT("TSTSS_PRIVATE_ENDER_SKY_VIEW_HOLD no_visible_skeleton no_static_fallback=1"));
+        return;
+    }
+    if (bPrivateSeaBody)
+    {
+        UE_LOG(LogTemp, Warning,
+            TEXT("TSTSS_PRIVATE_ENDER_SEA_VIEW_HOLD no_visible_skeleton no_static_fallback=1"));
         return;
     }
     // Local Ender V2 look-development package. Keep the donor and its materials
