@@ -219,16 +219,52 @@ bool IsPrivateEnderSeaBinding(const UWorld* World, const ATSTSSExplorerCharacter
     return Travel && Travel->IsPrivateEnderSeaSpawnInProgress();
 }
 
-// Explicit, private, editor-built standalone animation study. This adds no
-// production-world admission and does not relax the animation-owner lease.
+// The older SpineFixV1 review was restricted to -game WorldType::Game.
+// The actual First Wake vertical slice is now a PIE world, so even two
+// correct explicit opt-in flags silently left the deforming original clips
+// playing. Accept ONLY the same private Ender class in the exact V5 / VS02
+// PIE review maps; do not admit sky/sea observers or production worlds.
+// No new animation asset or retarget config is created by this adapter.
+bool IsPrivateEnderPIESpineFixBinding(
+    const UWorld* World, const ATSTSSExplorerCharacter* Pawn)
+{
+    if (!World || !IsValid(Pawn) || World->WorldType != EWorldType::PIE ||
+        World->GetNetMode() != NM_Standalone || !World->GetOutermost() ||
+        !FParse::Param(FCommandLine::Get(),
+            TEXT("TSTSSPrivateEnderAnimationReview")) ||
+        !FParse::Param(FCommandLine::Get(),
+            TEXT("TSTSSPrivateEnderSpineFixV1")) ||
+        Pawn->GetClass()->GetPathName() !=
+            TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/BP_EnderLocomotionPreview_NONCANONICAL.BP_EnderLocomotionPreview_NONCANONICAL_C"))
+    {
+        return false;
+    }
+    const FString Package = World->GetOutermost()->GetName();
+    const FString Scene = UGameplayStatics::GetCurrentLevelName(World, true);
+    const bool bPrelude = Package.StartsWith(
+            TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/UEDPIE_")) &&
+        Package.EndsWith(TEXT("_FirstWake_PreludeInteraction_V5_VisualReview")) &&
+        Scene == TEXT("FirstWake_PreludeInteraction_V5_VisualReview");
+    const bool bInteriors = Package.StartsWith(
+            TEXT("/Game/TSTSS/Review/VerticalSlice/UEDPIE_")) &&
+        Package.EndsWith(TEXT("_VS02_AureateInteriors")) &&
+        Scene == TEXT("VS02_AureateInteriors");
+    return bPrelude || bInteriors;
+}
+
+// Explicit, private-only animation study. Preserve the old standalone
+// admission and add a separate, exact-map PIE lease for the existing spine
+// candidates. The subsequent clip-path, ownership, skeleton and root-motion
+// gates remain unchanged and fail closed.
 bool IsPrivateEnderStandaloneAnimation(const UWorld* World, const ATSTSSExplorerCharacter* Pawn)
 {
-    return World && IsValid(Pawn) &&
+    return (World && IsValid(Pawn) &&
         FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderAnimationReview")) &&
         (IsPrivateEnderStandaloneBinding(World, Pawn) ||
          (IsPrivateEnderStandaloneShip(World) &&
           Pawn->GetClass()->GetPathName() ==
-            TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/BP_EnderLocomotionPreview_NONCANONICAL.BP_EnderLocomotionPreview_NONCANONICAL_C")));
+            TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/BP_EnderLocomotionPreview_NONCANONICAL.BP_EnderLocomotionPreview_NONCANONICAL_C")))) ||
+        IsPrivateEnderPIESpineFixBinding(World, Pawn);
 }
 
 void ApplyCoastalRecoveryReviewSignage(UWorld* World)
