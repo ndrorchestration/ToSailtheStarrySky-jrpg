@@ -45,6 +45,9 @@
 #if WITH_EDITOR
 #include "Review/TSTSSPresentationCoordinatorSubsystem.h"
 #include "TSTSSAtmosphereDirector.h"
+#include "Engine/DirectionalLight.h"
+#include "Components/LightComponentBase.h"
+#include "Components/SkyAtmosphereComponent.h"
 #include "CineCameraActor.h"
 #include "CineCameraComponent.h"
 #include "HAL/PlatformTime.h"
@@ -3262,6 +3265,47 @@ void ATSTSSExplorerCharacter::BeginPrivateSkyStormReview()
             FVector::ZeroVector, FRotator::ZeroRotator);
         bSpawned = IsValid(Atmosphere);
     }
+    // The authored VS03 review map already contains its own SunKey and
+    // SkyAmbient. A transient director creates another sun, moon, sky
+    // light and sky-atmosphere. D3D11 proof showed blown-out Ender and
+    // Unreal's "multiple directional lights" warning. On only this
+    // private PIE-created director, retain fog/cloud/weather cue logic
+    // but suppress its duplicate lighting components. Never hide or
+    // modify any pre-existing map actor or any production director.
+    bool bAuthoredSunExists = false;
+    for (TActorIterator<ADirectionalLight> It(World); It; ++It)
+    {
+        if (IsValid(*It)) { bAuthoredSunExists = true; break; }
+    }
+    int32 SuppressedPrivateLights = 0;
+    int32 SuppressedPrivateSkies = 0;
+    if (bSpawned && bAuthoredSunExists && IsValid(Atmosphere))
+    {
+        TArray<ULightComponentBase*> PrivateLights;
+        Atmosphere->GetComponents<ULightComponentBase>(PrivateLights);
+        for (ULightComponentBase* Light : PrivateLights)
+        {
+            if (IsValid(Light))
+            {
+                Light->SetVisibility(false);
+                ++SuppressedPrivateLights;
+            }
+        }
+        TArray<USkyAtmosphereComponent*> PrivateSkies;
+        Atmosphere->GetComponents<USkyAtmosphereComponent>(PrivateSkies);
+        for (USkyAtmosphereComponent* Sky : PrivateSkies)
+        {
+            if (IsValid(Sky))
+            {
+                Sky->SetVisibility(false);
+                ++SuppressedPrivateSkies;
+            }
+        }
+    }
+    UE_LOG(LogTemp, Display,
+        TEXT("TSTSS_PRIVATE_STORM_LIGHT_CUSTODY authored_sun=%d transient_only=%d suppressed_private_lights=%d suppressed_private_sky=%d original_lights_untouched=1"),
+        bAuthoredSunExists ? 1 : 0, bSpawned ? 1 : 0,
+        SuppressedPrivateLights, SuppressedPrivateSkies);
     if (IsValid(Atmosphere))
     {
         Atmosphere->RequestWeather(ETSTSSWeather::Storm, 2.5f);
