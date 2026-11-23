@@ -61,6 +61,7 @@ def admitted():
                              "unreal/Config/DefaultInput.ini"}
     drift = [line for line in git("status", "--porcelain").splitlines()
              if line]
+    REPORT["editor_git_porcelain"] = drift
     require(all(line.startswith(" M ") and line[3:] in expected_editor_drift
                 for line in drift), "UNEXPECTED_SOURCE_DRIFT")
     require(os.getenv("TSTSS_PRIVATE_DIRECTIONAL_CREATE") == "1",
