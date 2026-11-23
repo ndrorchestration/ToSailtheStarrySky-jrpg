@@ -23,6 +23,9 @@
 #include "Animation/Skeleton.h"
 #include "Animation/AnimSequence.h"
 #include "Animation/AnimSingleNodeInstance.h"
+#include "Animation/AnimInstance.h"
+#include "Animation/BlendSpace1D.h"
+#include "UObject/UnrealType.h"
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
 #include "InputKeyEventArgs.h"
@@ -2483,6 +2486,101 @@ void ATSTSSExplorerCharacter::SetupFirstWakeThirdPersonReview(UWorld* World)
         *Scene, Height);
 }
 
+void ATSTSSExplorerCharacter::TryEnderPrivateBlendSpaceReview(uint8 MotionBand)
+{
+    // A third explicit flag permits this exact private preview only; never
+    // replace a different animation owner or any production character.
+    const UWorld* World = GetWorld();
+    if (!World || MotionBand > 2 || !IsPlayerControlled() ||
+        !FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderAnimationReview")) ||
+        !FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderSpineFixV1")) ||
+        !FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderBlendSpaceV1")) ||
+        !IsPrivateEnderStandaloneAnimation(World, this) ||
+        !bAllowEnderPIERootMotionExtractionReview ||
+        (World->WorldType != EWorldType::Game && World->WorldType != EWorldType::PIE))
+    {
+        return;
+    }
+    USkeletalMeshComponent* Body = GetMesh();
+    if (!IsValid(Body) || !Body->IsRegistered() ||
+        !IsValid(Body->GetSkeletalMeshAsset()) ||
+        EnderSliceReviewBody.IsNull() ||
+        Body->GetSkeletalMeshAsset() != EnderSliceReviewBody.Get())
+    {
+        return;
+    }
+    const FString ExactClassPath = TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/BlendReview_PRIVATE/ABP_EnderIdleWalkRun_V1_PRIVATE.ABP_EnderIdleWalkRun_V1_PRIVATE_C");
+    if (!bEnderPrivateBlendReviewChecked)
+    {
+        bEnderPrivateBlendReviewChecked = true;
+        if (bEnderPIEAnimPreviewChecked || bEnderPIEAnimPreviewActive ||
+            Body->GetAnimationMode() != EAnimationMode::AnimationBlueprint ||
+            Body->GetAnimClass() != nullptr || Body->GetAnimInstance() != nullptr)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("TSTSS_ENDER_PRIVATE_BLENDSPACE_HOLD existing_animation_owner"));
+            return;
+        }
+        UBlendSpace1D* Blend = LoadObject<UBlendSpace1D>(nullptr,
+            TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/BlendReview_PRIVATE/BS_EnderIdleWalkRun_V1_NONCANONICAL.BS_EnderIdleWalkRun_V1_NONCANONICAL"));
+        UClass* Candidate = LoadClass<UAnimInstance>(nullptr, *ExactClassPath);
+        const USkeleton* Skeleton = Body->GetSkeletalMeshAsset()->GetSkeleton();
+        if (!IsValid(Blend) || !IsValid(Candidate) ||
+            Candidate->GetPathName() != ExactClassPath ||
+            !Candidate->IsChildOf(UAnimInstance::StaticClass()) ||
+            !IsValid(Skeleton) || Blend->GetSkeleton() != Skeleton ||
+            !IsValid(Candidate->GetDefaultObject<UAnimInstance>()) ||
+            !FindFProperty<FDoubleProperty>(Candidate, TEXT("SpeedCmS")))
+        {
+            UE_LOG(LogTemp, Warning, TEXT("TSTSS_ENDER_PRIVATE_BLENDSPACE_HOLD missing_or_incompatible_private_asset"));
+            return;
+        }
+        // This transient component binding is a private runtime study only.
+        // IgnoreRootMotion extracts/discards animation root travel; movement
+        // remains exclusively controlled by the existing character capsule.
+        Body->SetAnimInstanceClass(Candidate);
+        UAnimInstance* Active = Body->GetAnimInstance();
+        if (!IsValid(Active) || Active->GetClass() != Candidate ||
+            Body->GetAnimClass() != Candidate)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("TSTSS_ENDER_PRIVATE_BLENDSPACE_HOLD runtime_instance_not_established"));
+            return;
+        }
+        Active->SetRootMotionMode(ERootMotionMode::IgnoreRootMotion);
+        bEnderPrivateBlendReviewActive = true;
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_ENDER_PRIVATE_BLENDSPACE_BOUND class=%s blend=BS_EnderIdleWalkRun_V1_NONCANONICAL root=IgnoreRootMotion game_authorized=0"),
+            *Active->GetClass()->GetName());
+    }
+    if (!bEnderPrivateBlendReviewActive)
+    {
+        return; // Failed initial admission never falls back to abrupt clips.
+    }
+    UAnimInstance* Current = Body->GetAnimInstance();
+    if (!IsValid(Current) || !IsValid(Body->GetAnimClass()) ||
+        Body->GetAnimClass()->GetPathName() != ExactClassPath ||
+        Current->GetClass() != Body->GetAnimClass())
+    {
+        bEnderPrivateBlendReviewActive = false;
+        UE_LOG(LogTemp, Warning, TEXT("TSTSS_ENDER_PRIVATE_BLENDSPACE_HOLD animation_owner_changed"));
+        return; // Never wrest animation ownership from another system.
+    }
+    if (LastEnderPrivateBlendBand != MotionBand)
+    {
+        const FDoubleProperty* Speed = FindFProperty<FDoubleProperty>(
+            Current->GetClass(), TEXT("SpeedCmS"));
+        if (!Speed)
+        {
+            bEnderPrivateBlendReviewActive = false;
+            UE_LOG(LogTemp, Warning, TEXT("TSTSS_ENDER_PRIVATE_BLENDSPACE_HOLD no_speed_variable"));
+            return;
+        }
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_ENDER_PRIVATE_BLENDSPACE_BAND band=%d capsule_speed_cm_s=%.2f anim_speed_cm_s=%.2f"),
+            static_cast<int32>(MotionBand), GetVelocity().Size2D(),
+            Speed->GetPropertyValue_InContainer(Current));
+        LastEnderPrivateBlendBand = MotionBand;
+    }
+}
 void ATSTSSExplorerCharacter::TryEnderPIELocomotionPreview(uint8 MotionBand)
 {
     // This is an isolated, deliberately abrupt three-clip pose preview,
@@ -2520,7 +2618,13 @@ void ATSTSSExplorerCharacter::TryEnderPIELocomotionPreview(uint8 MotionBand)
     {
         return; // No implicit jumping or falling animation.
     }
-    if (!bEnderPIEAnimPreviewChecked)
+    // Brand-new opt-in Animation Blueprint path. Do not silently run the
+    // legacy PlayAnimation baseline if the private graph cannot be admitted.
+    if (FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderBlendSpaceV1")))
+    {
+        TryEnderPrivateBlendSpaceReview(MotionBand);
+        return;
+    }    if (!bEnderPIEAnimPreviewChecked)
     {
         bEnderPIEAnimPreviewChecked = true; // Report each HOLD only once per PIE.
         if (Body->GetAnimClass() != nullptr ||

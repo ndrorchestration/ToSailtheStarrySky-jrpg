@@ -128,6 +128,7 @@ private:
 #if WITH_EDITOR
     void ApplyEnderSliceReviewAppearance();
     void TryEnderPIELocomotionPreview(uint8 MotionBand);
+    void TryEnderPrivateBlendSpaceReview(uint8 MotionBand);
     void PressEnderPIEReviewSprint();
     void ReleaseEnderPIEReviewSprint();
     void TryEnderPIEWalkRunControls();
@@ -141,6 +142,9 @@ private:
     bool bEnderPIEAnimPreviewActive = false;
     bool bEnderPIERootMotionExtractionActive = false;
     uint8 LastEnderPIEAnimBand = 255;
+    bool bEnderPrivateBlendReviewChecked = false;
+    bool bEnderPrivateBlendReviewActive = false;
+    uint8 LastEnderPrivateBlendBand = 255;
 #endif
 #if !UE_BUILD_SHIPPING
     bool HasSupportedReviewFooting(const UWorld* World, const FVector& PawnLocation) const;
