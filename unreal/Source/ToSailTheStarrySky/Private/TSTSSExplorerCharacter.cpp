@@ -1587,6 +1587,52 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
                 TEXT("TSTSS_ENDER_FOOT_SAMPLE t=%.4f speed=%.1f left_x=%.2f left_y=%.2f left_z=%.2f right_x=%.2f right_y=%.2f right_z=%.2f"),
                 World->GetTimeSeconds(), SpeedCmS, Left.X, Left.Y, Left.Z,
                 Right.X, Right.Y, Right.Z);
+            // Separate opt-in, READ-ONLY collision truth: actual engine
+            // visibility hit ACTOR / COMPONENT compared with CharacterMovement's
+            // independent CurrentFloor hit for this same grounded pawn.
+            // Never infer foot-plant from toe height or silently accept
+            // an unrelated visibility blocker as the walking surface.
+            if (bEnderPrivateBlendReviewActive &&
+                FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderNamedFootTraceV1")) &&
+                FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderFootDetail")) &&
+                FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderAnimationReview")) &&
+                FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderSpineFixV1")) &&
+                FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateEnderBlendSpaceV1")))
+            {
+                const FHitResult& GroundHit = GetCharacterMovement()->CurrentFloor.HitResult;
+                const UPrimitiveComponent* GroundComponent = GroundHit.GetComponent();
+                const AActor* GroundActor = GroundHit.GetActor();
+                FCollisionQueryParams TraceParams(
+                    SCENE_QUERY_STAT(TSTSSPrivateEnderNamedFootTrace), false, this);
+                TraceParams.AddIgnoredActor(this);
+                for (int32 FootIndex = 0; FootIndex < 2; ++FootIndex)
+                {
+                    const FVector Toe = FootIndex == 0 ? Left : Right;
+                    const TCHAR* FootLabel = FootIndex == 0 ? TEXT("left") : TEXT("right");
+                    FHitResult ToeHit;
+                    const bool bToeHit = World->LineTraceSingleByChannel(
+                        ToeHit, Toe + FVector(0.f, 0.f, 50.f),
+                        Toe - FVector(0.f, 0.f, 130.f),
+                        ECC_Visibility, TraceParams);
+                    const bool bNamedFloorComponentMatch =
+                        bToeHit && GroundComponent != nullptr &&
+                        ToeHit.GetComponent() == GroundComponent;
+                    const bool bNamedFloorActorMatch =
+                        bToeHit && GroundActor != nullptr &&
+                        ToeHit.GetActor() == GroundActor;
+                    const float ToeAboveBlocker =
+                        bToeHit ? (Toe.Z - ToeHit.ImpactPoint.Z) : 0.f;
+                    UE_LOG(LogTemp, Display,
+                        TEXT("TSTSS_ENDER_NAMED_FOOT_TRACE t=%.4f foot=%s capsule_speed=%.2f toe_x=%.2f toe_y=%.2f toe_z=%.2f toe_above_blocker_cm=%.2f hit=%d actor=%s component=%s floor_actor=%s floor_component=%s match_actor=%d match_component=%d movement_floor_walkable=%d"),
+                        World->GetTimeSeconds(), FootLabel, SpeedCmS,
+                        Toe.X, Toe.Y, Toe.Z, ToeAboveBlocker, bToeHit ? 1 : 0,
+                        *GetNameSafe(ToeHit.GetActor()), *GetNameSafe(ToeHit.GetComponent()),
+                        *GetNameSafe(GroundActor), *GetNameSafe(GroundComponent),
+                        bNamedFloorActorMatch ? 1 : 0,
+                        bNamedFloorComponentMatch ? 1 : 0,
+                        GetCharacterMovement()->CurrentFloor.IsWalkableFloor() ? 1 : 0);
+                }
+            }
         }
     }
     // Only scoped review worlds advertise live interaction. Visual refresh
