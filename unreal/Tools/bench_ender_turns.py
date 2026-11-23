@@ -108,19 +108,68 @@ def guarded_hold(pid, seconds):
 
 
 def make_video(pid, output, stderr):
+    """Capture only the foreground owned game rectangle from desktop compositor.
+
+    Window GDI frame capture returns stale Direct3D surfaces on this machine.
+    Never capture a whole display: require an onscreen exact-PID game window.
+    """
     ffmpeg = shutil.which("ffmpeg")
     if not ffmpeg:
         return None
-    _, title = owned_foreground(pid)
+    hwnd, title = owned_foreground(pid)
     need(title and "\n" not in title and "\r" not in title, "WINDOW_TITLE")
+    rectangle = wintypes.RECT()
+    need(U.GetWindowRect(hwnd, ctypes.byref(rectangle)), "CAPTURE_RECT")
+    width = rectangle.right - rectangle.left
+    height = rectangle.bottom - rectangle.top
+    screen_width = U.GetSystemMetrics(0)
+    screen_height = U.GetSystemMetrics(1)
+    need(640 <= width <= screen_width and 480 <= height <= screen_height,
+         "CAPTURE_SIZE")
+    need(0 <= rectangle.left < rectangle.right <= screen_width
+         and 0 <= rectangle.top < rectangle.bottom <= screen_height,
+         "CAPTURE_NOT_ENTIRELY_ON_PRIMARY_SCREEN")
     return subprocess.Popen([
         ffmpeg, "-hide_banner", "-loglevel", "error", "-n",
         "-f", "gdigrab", "-draw_mouse", "0", "-framerate", "18",
-        "-i", "title=" + title, "-c:v", "libx264", "-preset", "veryfast",
+        "-offset_x", str(rectangle.left), "-offset_y", str(rectangle.top),
+        "-video_size", str(width) + "x" + str(height),
+        "-i", "desktop", "-c:v", "libx264", "-preset", "veryfast",
         "-crf", "29", "-pix_fmt", "yuv420p", str(output)],
         stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=stderr,
         creationflags=subprocess.CREATE_NO_WINDOW)
 
+
+def validate_video(path):
+    """Reject stale-frame captures. Frame count alone is insufficient."""
+    if not path.is_file() or not shutil.which("ffprobe") or not shutil.which("ffmpeg"):
+        return False, {"status": "HOLD_VIDEO_OR_TOOLS_MISSING"}
+    meta = subprocess.run([
+        "ffprobe", "-v", "error", "-count_frames", "-select_streams", "v:0",
+        "-show_entries", "stream=nb_read_frames,duration,width,height,r_frame_rate",
+        "-of", "json", str(path)], check=True, text=True,
+        capture_output=True, timeout=12)
+    streams = json.loads(meta.stdout)["streams"]
+    need(len(streams) == 1, "UNEXPECTED_VIDEO_STREAMS")
+    stream = streams[0]
+    frames = int(stream["nb_read_frames"])
+    duration = float(stream["duration"])
+    hashes_process = subprocess.run([
+        "ffmpeg", "-v", "error", "-i", str(path), "-f", "framemd5", "-"],
+        check=True, text=True, capture_output=True, timeout=18)
+    hashes = [line.split(",")[-1].strip() for line in
+              hashes_process.stdout.splitlines()
+              if line and not line.startswith("#") and "," in line]
+    unique = len(set(hashes))
+    eligible = (frames >= 140 and len(hashes) == frames and
+                unique >= 70 and duration >= 8.5 and
+                stream["width"] >= 640 and stream["height"] >= 480)
+    return eligible, {"status": "DYNAMIC_REGION_VIDEO_PASS" if eligible
+                       else "HOLD_STALE_OR_TOO_SHORT_VIDEO",
+                       "frames": frames, "unique_frame_md5": unique,
+                       "duration_seconds": round(duration, 3),
+                       "width": int(stream["width"]),
+                       "height": int(stream["height"])}
 
 def main():
     parser = argparse.ArgumentParser()
@@ -243,15 +292,25 @@ def main():
                 and startinfo.get("child_exit_code") == 0
                 and startinfo.get("assets_unchanged") is True
                 and startinfo.get("source_clean") is True)
-        videook = vidfile.is_file() and vidfile.stat().st_size > 120000
+        videook = False
+        video_metadata = {"status": "NOT_EVALUATED"}
+        if video is not None and video.returncode == 0:
+            try:
+                videook, video_metadata = validate_video(vidfile)
+            except Exception as exc:
+                video_metadata = {"status": "HOLD_VIDEO_PROBE", "error": str(exc)}
+        (out / "video-validation.json").write_text(
+            json.dumps(video_metadata, indent=2), encoding="utf8")
+        good = good and videook
         receipt = {
             "source_sha": args.head,
             "status": "NATIVE_AUTOMATED_ENDER_PIVOT_INPUT_PASS" if good else "HOLD_ENDER_PIVOT",
             "variant": args.variant, "errors": errors,
             "events": events, "frame_count": len([x for x in events if "image" in x]),
-            "video": "recorded_native_window" if videook and video and video.returncode == 0
+            "video": "DYNAMIC_OWNED_GAME_REGION" if videook and video and video.returncode == 0
                      else "NOT_VERIFIED",
             "video_bytes": vidfile.stat().st_size if vidfile.exists() else 0,
+            "video_validation": video_metadata,
             "facing_sample_count": len(facing),
             "facing_samples": facing,
             "toe_sample_count": len(toe),

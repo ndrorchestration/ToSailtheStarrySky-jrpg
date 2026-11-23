@@ -22,7 +22,13 @@ class EnderPivotBenchTests(unittest.TestCase):
                   "WINDOW_FOCUSED_OS_INJECTED_NOT_HUMAN","KEY_RELEASE_"):
             with self.subTest(value=s):
                 self.assertIn(s,SRC)
-        self.assertNotIn('"-i", "desktop"',SRC)
+        self.assertIn('"-offset_x", str(rectangle.left)', SRC)
+        self.assertIn('"-offset_y", str(rectangle.top)', SRC)
+        self.assertIn('"-video_size", str(width) + "x" + str(height)', SRC)
+        self.assertIn('"CAPTURE_NOT_ENTIRELY_ON_PRIMARY_SCREEN"', SRC)
+        self.assertIn('"-i", "desktop"', SRC)
+        self.assertIn('unique >= 70', SRC)
+        self.assertIn('HOLD_STALE_OR_TOO_SHORT_VIDEO', SRC)
 
     def test_no_external_input_or_hidden_simulated_state(self):
         for bad in ("SetActorLocation","set_actor_location","set_world_location",
