@@ -54,7 +54,15 @@ def admitted():
     receipt = os.getenv("TSTSS_DIRECTIONAL_RECEIPT")
     require(head and len(head) == 40 and git("rev-parse", "HEAD") == head,
             "WRONG_HEAD")
-    require(not git("status", "--porcelain"), "DIRTY_TRACKED_SOURCE")
+    # This editor writes exactly these two tracked defaults during startup.
+    # The host independently verified a clean HEAD BEFORE launch and restores
+    # only these paths AFTER exit. No other tracked or staged changes admitted.
+    expected_editor_drift = {"unreal/Config/DefaultEngine.ini",
+                             "unreal/Config/DefaultInput.ini"}
+    drift = [line for line in git("status", "--porcelain").splitlines()
+             if line]
+    require(all(line.startswith(" M ") and line[3:] in expected_editor_drift
+                for line in drift), "UNEXPECTED_SOURCE_DRIFT")
     require(os.getenv("TSTSS_PRIVATE_DIRECTIONAL_CREATE") == "1",
             "OPT_IN_MISSING")
     require(unreal.SystemLibrary.get_engine_version().startswith("5.8.4-"),

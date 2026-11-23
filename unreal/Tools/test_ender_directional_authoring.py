@@ -20,13 +20,21 @@ class EnderDirectionalAuthorTests(unittest.TestCase):
 
     def test_native_asset_guards_and_root_provenance(self):
         for value in ("TSTSS_DIRECTIONAL_EXPECTED_HEAD", "TSTSS_PRIVATE_DIRECTIONAL_CREATE",
-                      "DIRTY_TRACKED_SOURCE", "SOURCE_HASH_", "OUTPUT_ALREADY_EXISTS_",
+                      "UNEXPECTED_SOURCE_DRIFT", "SOURCE_HASH_", "OUTPUT_ALREADY_EXISTS_",
                       "OUTPUT_NOT_IGNORED", "TARGET_IDLE", "SOURCE_MESH", "TARGET_MESH",
                       "IKRetargetBatchOperationInputs", "overwrite_existing_files=False",
                       "include_referenced_assets=False", "source_skeleton", "target_skeleton",
                       "PRIVATE_DIRECTIONAL_RETARGET_CREATED_NOT_PLAYBACK_ACCEPTED"):
             self.assertIn(value, AUTHOR)
 
+    def test_host_renewed_exact_source_and_editor_drift_only(self):
+        self.assertIn('expected_editor_drift', AUTHOR)
+        self.assertIn('line.startswith(" M ")', AUTHOR)
+        self.assertIn('UNEXPECTED_SOURCE_DRIFT', AUTHOR)
+        self.assertIn('EXISTING_SOURCE_COUNT', HOST)
+        self.assertIn('EXISTING_SOURCE_HASH_', HOST)
+        self.assertIn('PRIVATE_OUTPUT_ALREADY_EXISTS', HOST)
+        self.assertIn('CONFIG_RESTORE', HOST)
     def test_only_ignored_review_output_and_no_direct_playback(self):
         self.assertIn("DirectionalWalkV1_PRIVATE", AUTHOR)
         self.assertIn("MannequinWalkSources_PRIVATE", AUTHOR)

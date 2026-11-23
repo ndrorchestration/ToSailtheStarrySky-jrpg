@@ -39,7 +39,7 @@ Need ((Test-Path $Editor) -and (Test-Path $Author) -and (Test-Path $Uproject)) '
 Need (@(Get-Process UnrealEditor,UnrealEditor-Cmd,UnrealBuildTool,LiveCodingConsole -ErrorAction SilentlyContinue).Count -eq 0) 'ENGINE_BUSY'
 Need ((Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory/1048576 -ge 6.5) 'RAM'
 Need ((Get-PSDrive C).Free/1GB -ge 16.5) 'DISK'
-Need (!(Test-Path $SourceDir) -and !(Test-Path $OutputDir)) 'PRIVATE_SOURCE_OR_OUTPUT_ALREADY_EXISTS'
+Need (!(Test-Path $OutputDir)) 'PRIVATE_OUTPUT_ALREADY_EXISTS'
 $Protected=@(
   (Get-ChildItem $PrivateRoot -Recurse -File -Filter '*.uasset' | Select-Object -ExpandProperty FullName)
   ) + @(
@@ -64,17 +64,24 @@ foreach($name in $CandidateNames){
 $RunDir=Join-Path $Project ('Saved\MigrationEvidence\EnderDirectionalWalk_'+$ExpectedHead.Substring(0,10)+'_'+(Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssfffZ'))
 Need (!(Test-Path $RunDir)) 'EVIDENCE_COLLISION'
 New-Item -Path $RunDir -ItemType Directory | Out-Null
-New-Item -Path $SourceDir -ItemType Directory | Out-Null
-$Staged=@()
-foreach($name in $CandidateNames){
- $from=Join-Path $SourceRoot ($name+'.uasset')
- $to=Join-Path $SourceDir ($name+'.uasset')
- Need (!(Test-Path $to)) 'STAGED_ALREADY_EXISTS'
- [System.IO.File]::Copy($from,$to,$false)
- Need ((Sha $to) -eq $ShaTable[$name]) ('COPY_HASH_'+$name)
- $Staged += $to
-}
-$Log=Join-Path $RunDir 'native-editor.log'
+if(Test-Path $SourceDir){
+  # A retry may only reuse exactly three already-hashed previous input files.
+  Need (@(Get-ChildItem $SourceDir -File).Count -eq 3) 'EXISTING_SOURCE_COUNT'
+  Need (@(Get-ChildItem $SourceDir -Directory).Count -eq 0) 'EXISTING_SOURCE_SUBDIRECTORIES'
+  foreach($name in $CandidateNames){
+    $to=Join-Path $SourceDir ($name+'.uasset')
+    Need ((Test-Path $to) -and (Sha $to) -eq $ShaTable[$name]) ('EXISTING_SOURCE_HASH_'+$name)
+  }
+} else {
+  New-Item -Path $SourceDir -ItemType Directory | Out-Null
+  foreach($name in $CandidateNames){
+    $from=Join-Path $SourceRoot ($name+'.uasset')
+    $to=Join-Path $SourceDir ($name+'.uasset')
+    Need (!(Test-Path $to)) 'STAGED_ALREADY_EXISTS'
+    [System.IO.File]::Copy($from,$to,$false)
+    Need ((Sha $to) -eq $ShaTable[$name]) ('COPY_HASH_'+$name)
+  }
+}$Log=Join-Path $RunDir 'native-editor.log'
 $Receipt=Join-Path $RunDir 'author-receipt.json'
 $env:TSTSS_DIRECTIONAL_EXPECTED_HEAD=$ExpectedHead
 $env:TSTSS_DIRECTIONAL_RECEIPT=$Receipt
