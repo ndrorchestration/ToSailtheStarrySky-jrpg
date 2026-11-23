@@ -46,7 +46,7 @@ def require(condition, label):
 def git(*args):
     p = subprocess.run(["git", "-C", str(REPO), *args],
                        check=True, capture_output=True, text=True, timeout=20)
-    return p.stdout.strip()
+    return p.stdout.rstrip("\r\n")
 
 
 def admitted():

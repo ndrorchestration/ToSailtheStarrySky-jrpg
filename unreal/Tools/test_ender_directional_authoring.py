@@ -29,6 +29,8 @@ class EnderDirectionalAuthorTests(unittest.TestCase):
 
     def test_host_renewed_exact_source_and_editor_drift_only(self):
         self.assertIn('expected_editor_drift', AUTHOR)
+        self.assertIn('p.stdout.rstrip(', AUTHOR)
+        self.assertNotIn('p.stdout.strip()', AUTHOR)
         self.assertIn('line.startswith(" M ")', AUTHOR)
         self.assertIn('UNEXPECTED_SOURCE_DRIFT', AUTHOR)
         self.assertIn('EXISTING_SOURCE_COUNT', HOST)
