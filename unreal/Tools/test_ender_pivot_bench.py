@@ -25,6 +25,8 @@ class EnderPivotBenchTests(unittest.TestCase):
         self.assertIn('"-offset_x", str(rectangle.left)', SRC)
         self.assertIn('"-offset_y", str(rectangle.top)', SRC)
         self.assertIn('"-video_size", str(width) + "x" + str(height)', SRC)
+        self.assertIn("width -= width % 2", SRC)
+        self.assertIn("height -= height % 2", SRC)
         self.assertIn('"CAPTURE_NOT_ENTIRELY_ON_PRIMARY_SCREEN"', SRC)
         self.assertIn('"-i", "desktop"', SRC)
         self.assertIn('unique >= 70', SRC)

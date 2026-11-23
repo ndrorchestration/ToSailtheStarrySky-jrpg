@@ -122,6 +122,9 @@ def make_video(pid, output, stderr):
     need(U.GetWindowRect(hwnd, ctypes.byref(rectangle)), "CAPTURE_RECT")
     width = rectangle.right - rectangle.left
     height = rectangle.bottom - rectangle.top
+    # H.264 yuv420p requires even dimensions; discard at most one border pixel.
+    width -= width % 2
+    height -= height % 2
     screen_width = U.GetSystemMetrics(0)
     screen_height = U.GetSystemMetrics(1)
     need(640 <= width <= screen_width and 480 <= height <= screen_height,
