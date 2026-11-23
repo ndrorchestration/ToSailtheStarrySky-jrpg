@@ -2220,6 +2220,8 @@ void ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance()
     UWorld* World = GetWorld();
     const bool bPrivateStandalone = IsPrivateEnderStandaloneBinding(World, this) ||
         IsPrivateEnderShipBinding(World, this);
+    // Admit private PIE mesh grounding only under the exact dual-flag spine-fix lease.
+    const bool bPrivatePIESpineFix = IsPrivateEnderPIESpineFixBinding(World, this);
     const bool bPrivateSkyBody = IsPrivateEnderSkyBinding(World, this);
     const bool bPrivateSeaBody = IsPrivateEnderSeaBinding(World, this);
     if (!World || (World->WorldType != EWorldType::PIE && !bPrivateStandalone) ||
@@ -2280,10 +2282,10 @@ void ATSTSSExplorerCharacter::ApplyEnderSliceReviewAppearance()
         }
     }
 
-    // Ground only the exact opt-in standalone private body. This candidate
+    // Ground only the exact opt-in standalone or spine-fix PIE private body. This candidate
     // has a floor-origin mesh while Character's capsule origin is centered.
     // Do not override an already-authored offset or a differently scaled body.
-    if (bPrivateStandalone && IsValid(GetCapsuleComponent()) &&
+    if ((bPrivateStandalone || bPrivatePIESpineFix) && IsValid(GetCapsuleComponent()) &&
         Body->GetAttachParent() == GetCapsuleComponent() &&
         Body->GetRelativeLocation().IsNearlyZero(0.1f) &&
         Body->GetComponentScale().Equals(FVector(1.f), 0.01f))
