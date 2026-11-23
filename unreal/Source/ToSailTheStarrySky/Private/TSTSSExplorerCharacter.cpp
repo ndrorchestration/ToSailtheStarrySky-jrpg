@@ -1134,6 +1134,70 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
             return;
         }
     }
+    // Start only after real sky possession, and never on the default pawn.
+    if (IsPrivateSkyStormReviewWorld())
+    {
+        if (!bPrivateSkyStormStarted)
+        {
+            BeginPrivateSkyStormReview();
+        }
+        // Automated PIE probe uses the same R/T InputKey edges as a human.
+        // It is not human input evidence and never edits the gate directly.
+        if (bPrivateSkyStormStarted &&
+            FParse::Param(FCommandLine::Get(),
+                TEXT("TSTSSPrivateStormInputProbe")))
+        {
+            APlayerController* PC = Cast<APlayerController>(GetController());
+            const float Elapsed = World->GetTimeSeconds() -
+                PrivateSkyStormStartWorldSeconds;
+            // Negative proof: K is attempted before any R/T response.
+            // The real review travel handler must reject it. Release the
+            // key on a later tick so the authorized K can fire after R/T.
+            if (IsValid(PC) && PC->PlayerInput.Get() != nullptr &&
+                !bPrivateStormEarlyKProbeDispatched && Elapsed >= 0.65f)
+            {
+                bPrivateStormEarlyKProbeDispatched = true;
+                UE_LOG(LogTemp, Display,
+                    TEXT("TSTSS_PRIVATE_STORM_KEY_PROBE key=K_EARLY input_edge=pressed expected_travel_hold=1"));
+                PC->InputKey(FInputKeyEventArgs(
+                    nullptr, INPUTDEVICEID_NONE, EKeys::K, IE_Pressed,
+                    FPlatformTime::Cycles64()));
+                return;
+            }
+            else if (IsValid(PC) && PC->PlayerInput.Get() != nullptr &&
+                bPrivateStormEarlyKProbeDispatched &&
+                !bPrivateStormEarlyKProbeReleased && Elapsed >= 0.8f)
+            {
+                bPrivateStormEarlyKProbeReleased = true;
+                PC->InputKey(FInputKeyEventArgs(
+                    nullptr, INPUTDEVICEID_NONE, EKeys::K, IE_Released,
+                    FPlatformTime::Cycles64()));
+                return;
+            }
+            else if (IsValid(PC) && PC->PlayerInput.Get() != nullptr &&
+                bPrivateStormEarlyKProbeReleased &&
+                !bPrivateStormRProbeDispatched && Elapsed >= 1.25f)
+            {
+                bPrivateStormRProbeDispatched = true;
+                UE_LOG(LogTemp, Display,
+                    TEXT("TSTSS_PRIVATE_STORM_KEY_PROBE key=R input_edge=pressed synthetic_keyboard=1 no_direct_story_mutation=1"));
+                PC->InputKey(FInputKeyEventArgs(
+                    nullptr, INPUTDEVICEID_NONE, EKeys::R, IE_Pressed,
+                    FPlatformTime::Cycles64()));
+            }
+            else if (IsValid(PC) && PC->PlayerInput.Get() != nullptr &&
+                bPrivateStormRProbeDispatched &&
+                !bPrivateStormTProbeDispatched && Elapsed >= 2.25f)
+            {
+                bPrivateStormTProbeDispatched = true;
+                UE_LOG(LogTemp, Display,
+                    TEXT("TSTSS_PRIVATE_STORM_KEY_PROBE key=T input_edge=pressed synthetic_keyboard=1 no_direct_story_mutation=1"));
+                PC->InputKey(FInputKeyEventArgs(
+                    nullptr, INPUTDEVICEID_NONE, EKeys::T, IE_Pressed,
+                    FPlatformTime::Cycles64()));
+            }
+        }
+    }
     // An independent two-flag, one-use VS03 -> VS04 custody ticket may
     // replace the default sea observer. The water adapter auto-reconciles
     // the newly possessed player story; no physics or milestone shortcuts.
@@ -1379,6 +1443,9 @@ void ATSTSSExplorerCharacter::Tick(float DeltaSeconds)
             GetMesh()->GetNumBones() >= 80 && GetMesh()->IsVisible();
         const bool bEarnedSkyTransit =
             Scene == TEXT("VS03_FirstWakeSky") &&
+            (!FParse::Param(FCommandLine::Get(),
+                TEXT("TSTSSPrivateSkyStormResponseReview")) ||
+             IsPrivateSkyStormReviewComplete()) &&
             (GetClass() == ATSTSSExplorerCharacter::StaticClass() ||
              bEarnedPrivateSkeletalSkyTransit) &&
             FirstWakeState->GetCurrentBeat() == ETSTSSFirstWakeBeat::Launched &&
@@ -2814,6 +2881,15 @@ void ATSTSSExplorerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
             this, &ATSTSSExplorerCharacter::DeclineHilltoniaFlyer);
         PlayerInputComponent->BindAction(TEXT("FirstWakeBokehReview"), IE_Pressed,
             this, &ATSTSSExplorerCharacter::ToggleFirstWakeBokehReview);
+        // Physical R/T key actions remain inert outside the exact opt-in
+        // private Ender sky PIE. No input config or shipping bindings change.
+        if (InputWorld->WorldType == EWorldType::PIE)
+        {
+            PlayerInputComponent->BindKey(EKeys::R, IE_Pressed,
+                this, &ATSTSSExplorerCharacter::PrivateStormSecureLift);
+            PlayerInputComponent->BindKey(EKeys::T, IE_Pressed,
+                this, &ATSTSSExplorerCharacter::PrivateStormBraceForDescent);
+        }
     }
 #endif
 }
@@ -3130,6 +3206,105 @@ void ATSTSSExplorerCharacter::ShowObjectiveReview()
 }
 
 #if WITH_EDITOR
+bool ATSTSSExplorerCharacter::IsPrivateSkyStormReviewWorld() const
+{
+    const UWorld* World = GetWorld();
+    const USkeletalMeshComponent* Body = GetMesh();
+    return World && World->WorldType == EWorldType::PIE &&
+        World->GetNetMode() == NM_Standalone && World->GetOutermost() &&
+        World->GetOutermost()->GetName().StartsWith(
+            TEXT("/Game/TSTSS/Review/VerticalSlice/UEDPIE_")) &&
+        World->GetOutermost()->GetName().EndsWith(TEXT("_VS03_FirstWakeSky")) &&
+        FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateSkyStormResponseReview")) &&
+        UGameplayStatics::GetCurrentLevelName(World, true) == TEXT("VS03_FirstWakeSky") &&
+        GetClass()->GetPathName() ==
+            TEXT("/Game/TSTSS/Review/Characters/EnderRetarget_NONCANONICAL/BP_EnderLocomotionPreview_NONCANONICAL.BP_EnderLocomotionPreview_NONCANONICAL_C") &&
+        IsPlayerControlled() && bFirstWakeThirdPersonReview &&
+        IsValid(FirstWakeState) && FirstWakeState->HasStarted() &&
+        FirstWakeState->GetCurrentBeat() == ETSTSSFirstWakeBeat::Launched &&
+        FirstWakeState->AreInspectionsComplete() &&
+        IsValid(Body) && Body->IsRegistered() &&
+        IsValid(Body->GetSkeletalMeshAsset()) && Body->GetNumBones() >= 80 &&
+        Body->IsVisible();
+}
+
+bool ATSTSSExplorerCharacter::IsPrivateSkyStormReviewComplete() const
+{
+    const UWorld* World = GetWorld();
+    // Both distinct manual action bindings (R then T) must run. A delay
+    // alone never approves the transition or changes the story beat.
+    return IsPrivateSkyStormReviewWorld() && bPrivateSkyStormStarted &&
+        PrivateSkyStormResponseStage == 2 && World &&
+        World->GetTimeSeconds() - PrivateSkyStormStartWorldSeconds >= 4.0f;
+}
+
+void ATSTSSExplorerCharacter::BeginPrivateSkyStormReview()
+{
+    if (!IsPrivateSkyStormReviewWorld() || bPrivateSkyStormStarted) return;
+    UWorld* World = GetWorld();
+    bPrivateSkyStormStarted = true;
+    PrivateSkyStormResponseStage = 0;
+    PrivateSkyStormStartWorldSeconds = World->GetTimeSeconds();
+
+    // Reuse the existing weather/audio director; create a transient review
+    // actor only when the exact private sky PIE has none. A weather cue is
+    // presentation only, not a verified storm or landing gameplay result.
+    ATSTSSAtmosphereDirector* Atmosphere = nullptr;
+    bool bSpawned = false;
+    for (TActorIterator<ATSTSSAtmosphereDirector> It(World); It; ++It)
+    {
+        if (IsValid(*It)) { Atmosphere = *It; break; }
+    }
+    if (!Atmosphere)
+    {
+        Atmosphere = World->SpawnActor<ATSTSSAtmosphereDirector>(
+            ATSTSSAtmosphereDirector::StaticClass(),
+            FVector::ZeroVector, FRotator::ZeroRotator);
+        bSpawned = IsValid(Atmosphere);
+    }
+    if (IsValid(Atmosphere))
+    {
+        Atmosphere->RequestWeather(ETSTSSWeather::Storm, 2.5f);
+        Atmosphere->RequestTimeOfDay(19.0f, 3.0f);
+    }
+    UE_LOG(LogTemp, Display,
+        TEXT("TSTSS_PRIVATE_SKY_STORM_START beat=4 mask=7 stage=0 weather_requested=%d transient_director=%d no_story_grant=1"),
+        IsValid(Atmosphere) ? 1 : 0, bSpawned ? 1 : 0);
+    if (GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 16.f, FColor::Yellow,
+            TEXT("FIRST WAKE - STORM RESPONSE: [R] secure harmonic lift, then [T] brace for descent. K locked."));
+    }
+}
+
+void ATSTSSExplorerCharacter::PrivateStormSecureLift()
+{
+    if (!IsPrivateSkyStormReviewWorld() || !bPrivateSkyStormStarted ||
+        PrivateSkyStormResponseStage != 0) return;
+    PrivateSkyStormResponseStage = 1;
+    UE_LOG(LogTemp, Display,
+        TEXT("TSTSS_PRIVATE_SKY_STORM_INPUT action=secure_lift key=R stage=1 real_action_binding=1 story_unchanged=1"));
+    if (GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 12.f, FColor::Yellow,
+            TEXT("Harmonic lift secured. [T] brace for the emergency descent."));
+    }
+}
+
+void ATSTSSExplorerCharacter::PrivateStormBraceForDescent()
+{
+    if (!IsPrivateSkyStormReviewWorld() || !bPrivateSkyStormStarted ||
+        PrivateSkyStormResponseStage != 1) return;
+    PrivateSkyStormResponseStage = 2;
+    UE_LOG(LogTemp, Display,
+        TEXT("TSTSS_PRIVATE_SKY_STORM_INPUT action=brace_descent key=T stage=2 real_action_binding=1 story_unchanged=1"));
+    if (GEngine)
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 12.f, FColor::Cyan,
+            TEXT("Storm response complete. [K] continue to the sea landing review."));
+    }
+}
+
 void ATSTSSExplorerCharacter::ReviewShoreTravel()
 {
     UWorld* World = GetWorld();

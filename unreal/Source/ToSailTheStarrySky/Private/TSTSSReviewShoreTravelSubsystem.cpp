@@ -139,6 +139,24 @@ bool UTSTSSReviewShoreTravelSubsystem::QueueShore(
     {
         return false;
     }
+    // Optional genuine R-then-T storm-response interaction must finish
+    // before K can queue VS03->VS04. Even synthetic K input cannot bypass it.
+    // All preexisting sky/sea routes remain unchanged without the flag.
+    if (SourceMap == SkyName &&
+        FParse::Param(FCommandLine::Get(), TEXT("TSTSSPrivateSkyStormResponseReview")))
+    {
+        APlayerController* PC = UGameplayStatics::GetPlayerController(World, 0);
+        const ATSTSSExplorerCharacter* Ender = PC
+            ? Cast<ATSTSSExplorerCharacter>(PC->GetPawn()) : nullptr;
+        if (!IsValid(Ender) || !Ender->IsPrivateSkyStormReviewComplete())
+        {
+            UE_LOG(LogTemp, Warning,
+                TEXT("TSTSS_PRIVATE_STORM_TRAVEL_HOLD R_then_T_required=1 no_ticket=1"));
+            return false;
+        }
+        UE_LOG(LogTemp, Display,
+            TEXT("TSTSS_PRIVATE_STORM_TRAVEL_AUTHORIZED actions=2 minimum_cue_s=4 story_unchanged=1"));
+    }
     // K explicitly requests travel; only the ship/legacy V2 departure
     // counts as launch. Water beats require physical observation.
     // V5 -> engine room preserves BoardedAureateWake AND all inspection bits.
