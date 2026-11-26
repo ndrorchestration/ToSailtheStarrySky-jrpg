@@ -268,6 +268,18 @@ void UTSTSSOpeningReviewWidget::StartOpening()
             OpeningPlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(
                 Controller, Sequence, Settings, SpawnedActor);
             OpeningActor = SpawnedActor;
+            // Reject a mismatched duration or nonzero start: never silently
+            // drop the creator's final line or run subtitles on another clock.
+            if (!OpeningPlayer ||
+                !FMath::IsNearlyEqual(OpeningPlayer->GetDuration().AsSeconds(), static_cast<double>(Duration), 0.1) ||
+                !FMath::IsNearlyZero(OpeningPlayer->GetStartTime().AsSeconds(), 0.1))
+            {
+                if (OpeningPlayer) OpeningPlayer->Stop();
+                if (IsValid(OpeningActor)) OpeningActor->Destroy();
+                OpeningPlayer = nullptr;
+                OpeningActor = nullptr;
+                UE_LOG(LogTemp, Warning, TEXT("TSTSS_FIRST_WAKE_NARRATION_ASSET_HOLD reason=clock_contract"));
+            }
         }
     }
 
@@ -286,7 +298,7 @@ void UTSTSSOpeningReviewWidget::StartOpening()
         Black->SetVisibility(ESlateVisibility::HitTestInvisible);
         OpeningStage = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
         OpeningStage->SetJustification(ETextJustify::Center);
-        OpeningStage->SetColorAndOpacity(FSlateColor(FLinearColor(0.7f, 0.8f, 0.85f)));
+        OpeningStage->SetColorAndOpacity(FSlateColor(FLinearColor(0.7f, 0.8f, 0.85f, 1.f)));
         UCanvasPanelSlot* StageSlot = Panel->AddChildToCanvas(OpeningStage);
         StageSlot->SetAnchors(FAnchors(0.1f, 0.25f, 0.9f, 0.5f));
         StageSlot->SetOffsets(FMargin(0));
@@ -337,6 +349,16 @@ void UTSTSSOpeningReviewWidget::NativeTick(const FGeometry& MyGeometry, float In
         // must be checked against the authored cue contract in native QA.
         if (!OpeningPlayer->IsPlaying())
         {
+            if (OpeningSeconds < TSTSSFirstWakeOpening::Duration - 0.1f)
+            {
+                UE_LOG(LogTemp, Warning, TEXT("TSTSS_FIRST_WAKE_NARRATION_ASSET_HOLD reason=early_end"));
+                // Reopen the title's text fallback rather than claim a
+                // full cinematic has played or auto-travel from a bad cut.
+                StopOpening();
+                if (FallbackPanel) FallbackPanel->SetVisibility(ESlateVisibility::Visible);
+                if (NewGameButton && GetOwningPlayer()) NewGameButton->SetUserFocus(GetOwningPlayer());
+                return;
+            }
             UE_LOG(LogTemp, Display, TEXT("TSTSS_FIRST_WAKE_NARRATION_SEQUENCE_ENDED seconds=%.2f"), OpeningSeconds);
             FinishOpening();
             return;
