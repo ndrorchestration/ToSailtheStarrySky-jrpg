@@ -33,12 +33,15 @@ private:
     UFUNCTION()
     void FinishOpening();
     UFUNCTION()
+    void OnOpeningSequenceFinished();
+    UFUNCTION()
     void OnMovieOpened(FString OpenedUrl);
     UFUNCTION()
     void OnMovieOpenFailed(FString FailedUrl);
 
     bool bOpeningActive = false;
     bool bOpeningCompleted = false;
+    bool bOpeningSequenceFinished = false;
     float OpeningSeconds = 0.f;
     int32 OpeningCueIndex = INDEX_NONE;
     UPROPERTY() TObjectPtr<UWidget> OpeningPanel;
