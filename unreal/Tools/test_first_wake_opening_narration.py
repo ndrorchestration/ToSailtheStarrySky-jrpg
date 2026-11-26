@@ -8,7 +8,7 @@ CUES = (SOURCE / "Private/TSTSSFirstWakeOpeningCues.h").read_text(encoding="utf-
 WIDGET = (SOURCE / "Private/TSTSSOpeningReviewWidget.cpp").read_text(encoding="utf-8")
 HEADER = (SOURCE / "Public/TSTSSOpeningReviewWidget.h").read_text(encoding="utf-8")
 BUILD = (SOURCE / "ToSailTheStarrySky.Build.cs").read_text(encoding="utf-8")
-ROWS = re.findall(r'\{(\d+(?:\.\d+)?)(?:f), TEXT\("([^"]*)"\), TEXT\("([^"]*)"\), (true|false)\}', CUES)
+ROWS = re.findall(r'\{(\d+(?:\.\d*)?)(?:f), TEXT\("([^"]*)"\), TEXT\("([^"]*)"\), (true|false)\}', CUES)
 
 class FirstWakeOpeningContract(unittest.TestCase):
     def test_cue_clock(self):
