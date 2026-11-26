@@ -242,6 +242,7 @@ void UTSTSSOpeningReviewWidget::StartOpening()
 
     bOpeningActive = true;
     OpeningSeconds = 0.f;
+    bOpeningSequenceFinished = false;
     OpeningCueIndex = INDEX_NONE;
     if (MoviePlayer)
     {
@@ -332,7 +333,11 @@ void UTSTSSOpeningReviewWidget::StartOpening()
 
     UE_LOG(LogTemp, Display, TEXT("TSTSS_FIRST_WAKE_NARRATION_START native_sequence=%d duration=%.1f"),
         OpeningPlayer ? 1 : 0, Duration);
-    if (OpeningPlayer) OpeningPlayer->Play();
+    if (OpeningPlayer)
+    {
+        OpeningPlayer->OnFinished.AddDynamic(this, &UTSTSSOpeningReviewWidget::OnOpeningSequenceFinished);
+        OpeningPlayer->Play();
+    }
     RefreshOpeningCue();
 }
 
@@ -340,6 +345,12 @@ void UTSTSSOpeningReviewWidget::NativeTick(const FGeometry& MyGeometry, float In
 {
     Super::NativeTick(MyGeometry, InDeltaTime);
     if (!bOpeningActive) return;
+    if (bOpeningSequenceFinished)
+    {
+        OpeningSeconds = TSTSSFirstWakeOpening::Duration;
+        FinishOpening();
+        return;
+    }
     // Use the native sequence clock when authored; otherwise a text-only
     // review uses widget tick time. Paused/invalid clocks do not advance.
     if (OpeningPlayer)
@@ -394,14 +405,25 @@ void UTSTSSOpeningReviewWidget::RefreshOpeningCue()
 void UTSTSSOpeningReviewWidget::StopOpening()
 {
     bOpeningActive = false;
-    if (OpeningPlayer) OpeningPlayer->Stop();
+    if (OpeningPlayer)
+    {
+        OpeningPlayer->OnFinished.RemoveDynamic(this, &UTSTSSOpeningReviewWidget::OnOpeningSequenceFinished);
+        OpeningPlayer->Stop();
+    }
     if (IsValid(OpeningActor)) OpeningActor->Destroy();
     OpeningPlayer = nullptr;
     OpeningActor = nullptr;
+    bOpeningSequenceFinished = false;
     if (OpeningPanel) OpeningPanel->RemoveFromParent();
     OpeningPanel = nullptr;
     OpeningStage = nullptr;
     OpeningCaption = nullptr;
+}
+
+void UTSTSSOpeningReviewWidget::OnOpeningSequenceFinished()
+{
+    // Defer cleanup out of the sequence player's evaluation callback.
+    if (bOpeningActive) bOpeningSequenceFinished = true;
 }
 
 void UTSTSSOpeningReviewWidget::FinishOpening()
