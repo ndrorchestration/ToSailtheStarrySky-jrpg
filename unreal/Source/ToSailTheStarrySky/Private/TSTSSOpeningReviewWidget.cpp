@@ -1,4 +1,10 @@
 #include "TSTSSOpeningReviewWidget.h"
+#include "TSTSSFirstWakeOpeningCues.h"
+#include "LevelSequence.h"
+#include "LevelSequenceActor.h"
+#include "LevelSequencePlayer.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 #include "Blueprint/WidgetTree.h"
 #include "Brushes/SlateColorBrush.h"
 #include "Components/Border.h"
@@ -143,7 +149,7 @@ void UTSTSSOpeningReviewWidget::NativeOnInitialized()
 void UTSTSSOpeningReviewWidget::OnMovieOpened(FString OpenedUrl)
 {
     (void)OpenedUrl;
-    if (!MoviePlayer || !VideoPanel || !FallbackPanel) return;
+    if (bOpeningActive || bOpeningCompleted || !MoviePlayer || !VideoPanel || !FallbackPanel) return;
     MoviePlayer->SetLooping(true);
     FallbackPanel->SetVisibility(ESlateVisibility::Collapsed);
     VideoPanel->SetVisibility(ESlateVisibility::Visible);
@@ -153,6 +159,7 @@ void UTSTSSOpeningReviewWidget::OnMovieOpened(FString OpenedUrl)
 void UTSTSSOpeningReviewWidget::OnMovieOpenFailed(FString FailedUrl)
 {
     (void)FailedUrl;
+    if (bOpeningActive || bOpeningCompleted) return;
     if (VideoPanel) VideoPanel->SetVisibility(ESlateVisibility::Collapsed);
     if (FallbackPanel) FallbackPanel->SetVisibility(ESlateVisibility::Visible);
     if (NewGameButton && GetOwningPlayer()) NewGameButton->SetUserFocus(GetOwningPlayer());
@@ -166,6 +173,7 @@ UWidget* UTSTSSOpeningReviewWidget::GetInitialFocus() const
 
 void UTSTSSOpeningReviewWidget::NativeDestruct()
 {
+    StopOpening();
     if (MovieSound)
     {
         MovieSound->Stop();
@@ -205,6 +213,13 @@ void UTSTSSOpeningReviewWidget::BeginJourney()
         return; // Keep the menu intact; never pretend the game has started.
     }
 
+#if !UE_BUILD_SHIPPING
+    if (!bOpeningCompleted && FParse::Param(FCommandLine::Get(), TEXT("TSTSSFirstWakeNarrationReview")))
+    {
+        if (!bOpeningActive) StartOpening();
+        return;
+    }
+#endif
     // The title controller explicitly selected UIOnly input. Return focus to
     // gameplay BEFORE opening the traversable review level; otherwise Slate
     // may keep the old menu focused and WASD/E never reach the new pawn.
@@ -216,4 +231,213 @@ void UTSTSSOpeningReviewWidget::BeginJourney()
         TEXT("TSTSS_REVIEW_NEW_GAME_ROUTE route=%s input_mode=game_only progress_reset_by_fresh_map=1"),
         *PreludeMap);
     UGameplayStatics::OpenLevel(Controller, FName(*PreludeMap));
+}
+
+void UTSTSSOpeningReviewWidget::StartOpening()
+{
+    using namespace TSTSSFirstWakeOpening;
+    APlayerController* Controller = GetOwningPlayer();
+    UCanvasPanel* Root = WidgetTree ? Cast<UCanvasPanel>(WidgetTree->RootWidget) : nullptr;
+    if (!Controller || !Root || bOpeningActive || bOpeningCompleted) return;
+
+    bOpeningActive = true;
+    OpeningSeconds = 0.f;
+    bOpeningSequenceFinished = false;
+    OpeningCueIndex = INDEX_NONE;
+    if (MoviePlayer)
+    {
+        MoviePlayer->OnMediaOpened.RemoveDynamic(this, &UTSTSSOpeningReviewWidget::OnMovieOpened);
+        MoviePlayer->OnMediaOpenFailed.RemoveDynamic(this, &UTSTSSOpeningReviewWidget::OnMovieOpenFailed);
+        MoviePlayer->Close();
+    }
+    if (MovieSound) MovieSound->Stop();
+    if (FallbackPanel) FallbackPanel->SetVisibility(ESlateVisibility::Collapsed);
+    if (VideoPanel) VideoPanel->SetVisibility(ESlateVisibility::Collapsed);
+
+    // Native Sequencer asset remains private until its visuals, voices and
+    // map bindings are verified. No third-party MP4 is used here.
+    const TCHAR* SequencePackage = TEXT("/Game/TSTSS/Review/Cinematics/LS_FirstWakeOpening_PRIVATE");
+    // Possessable camera bindings belong to the isolated staging world only.
+    // The original title map remains a text-only review, not a broken cut.
+    const bool bExactOpeningStage = UGameplayStatics::GetCurrentLevelName(
+        Controller, true) == TEXT("L_FirstWakeOpeningStage_PRIVATE");
+    if (bExactOpeningStage && FPackageName::DoesPackageExist(SequencePackage))
+    {
+        ULevelSequence* Sequence = LoadObject<ULevelSequence>(nullptr,
+            TEXT("/Game/TSTSS/Review/Cinematics/LS_FirstWakeOpening_PRIVATE.LS_FirstWakeOpening_PRIVATE"));
+        if (Sequence)
+        {
+            FMovieSceneSequencePlaybackSettings Settings;
+            Settings.bAutoPlay = false;
+            ALevelSequenceActor* SpawnedActor = nullptr;
+            OpeningPlayer = ULevelSequencePlayer::CreateLevelSequencePlayer(
+                Controller, Sequence, Settings, SpawnedActor);
+            OpeningActor = SpawnedActor;
+            // Reject a mismatched duration or nonzero start: never silently
+            // drop the creator's final line or run subtitles on another clock.
+            if (!OpeningPlayer ||
+                !FMath::IsNearlyEqual(OpeningPlayer->GetDuration().AsSeconds(), static_cast<double>(Duration), 0.1) ||
+                !FMath::IsNearlyZero(OpeningPlayer->GetStartTime().AsSeconds(), 0.1))
+            {
+                if (OpeningPlayer) OpeningPlayer->Stop();
+                if (IsValid(OpeningActor)) OpeningActor->Destroy();
+                OpeningPlayer = nullptr;
+                OpeningActor = nullptr;
+                UE_LOG(LogTemp, Warning, TEXT("TSTSS_FIRST_WAKE_NARRATION_ASSET_HOLD reason=clock_contract"));
+            }
+        }
+    }
+
+    UCanvasPanel* Panel = WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass());
+    OpeningPanel = Panel;
+    UCanvasPanelSlot* PanelSlot = Root->AddChildToCanvas(Panel);
+    PanelSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+    PanelSlot->SetOffsets(FMargin(0));
+    if (!OpeningPlayer)
+    {
+        UBorder* Black = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass());
+        Black->SetBrushColor(FLinearColor(0.008f, 0.012f, 0.02f, 1.f));
+        UCanvasPanelSlot* BlackSlot = Panel->AddChildToCanvas(Black);
+        BlackSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+        BlackSlot->SetOffsets(FMargin(0));
+        Black->SetVisibility(ESlateVisibility::HitTestInvisible);
+        OpeningStage = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
+        OpeningStage->SetJustification(ETextJustify::Center);
+        OpeningStage->SetColorAndOpacity(FSlateColor(FLinearColor(0.7f, 0.8f, 0.85f, 1.f)));
+        UCanvasPanelSlot* StageSlot = Panel->AddChildToCanvas(OpeningStage);
+        StageSlot->SetAnchors(FAnchors(0.1f, 0.25f, 0.9f, 0.5f));
+        StageSlot->SetOffsets(FMargin(0));
+    }
+    UBorder* SubtitleBack = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass());
+    SubtitleBack->SetBrushColor(FLinearColor(0.015f, 0.02f, 0.03f, 0.85f));
+    SubtitleBack->SetPadding(FMargin(20.f, 12.f));
+    UCanvasPanelSlot* SubtitleSlot = Panel->AddChildToCanvas(SubtitleBack);
+    SubtitleSlot->SetAnchors(FAnchors(0.12f, 0.69f, 0.88f, 0.91f));
+    SubtitleSlot->SetOffsets(FMargin(0));
+    OpeningCaption = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
+    FSlateFontInfo Font = OpeningCaption->GetFont();
+    Font.Size = 24;
+    OpeningCaption->SetFont(Font);
+    OpeningCaption->SetAutoWrapText(true);
+    OpeningCaption->SetJustification(ETextJustify::Center);
+    OpeningCaption->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+    SubtitleBack->AddChild(OpeningCaption);
+
+    UButton* Skip = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass());
+    UTextBlock* SkipText = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
+    SkipText->SetText(FText::FromString(TEXT("  Skip opening  ")));
+    Skip->AddChild(SkipText);
+    Skip->OnClicked.AddDynamic(this, &UTSTSSOpeningReviewWidget::FinishOpening);
+    UCanvasPanelSlot* SkipSlot = Panel->AddChildToCanvas(Skip);
+    SkipSlot->SetAnchors(FAnchors(1.f, 0.f));
+    SkipSlot->SetAlignment(FVector2D(1.f, 0.f));
+    SkipSlot->SetPosition(FVector2D(-24.f, 24.f));
+    SkipSlot->SetAutoSize(true);
+    Skip->SetUserFocus(Controller);
+
+    UE_LOG(LogTemp, Display, TEXT("TSTSS_FIRST_WAKE_NARRATION_START native_sequence=%d duration=%.1f"),
+        OpeningPlayer ? 1 : 0, Duration);
+    if (OpeningPlayer)
+    {
+        OpeningPlayer->OnFinished.AddDynamic(this, &UTSTSSOpeningReviewWidget::OnOpeningSequenceFinished);
+        OpeningPlayer->Play();
+    }
+    RefreshOpeningCue();
+}
+
+void UTSTSSOpeningReviewWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+    Super::NativeTick(MyGeometry, InDeltaTime);
+    if (!bOpeningActive) return;
+    if (bOpeningSequenceFinished)
+    {
+        OpeningSeconds = TSTSSFirstWakeOpening::Duration;
+        FinishOpening();
+        return;
+    }
+    // Use the native sequence clock when authored; otherwise a text-only
+    // review uses widget tick time. Paused/invalid clocks do not advance.
+    if (OpeningPlayer)
+    {
+        OpeningSeconds = OpeningPlayer->GetCurrentTime().AsSeconds();
+        // An ended sequence must not trap the title UI. The asset duration
+        // must be checked against the authored cue contract in native QA.
+        if (!OpeningPlayer->IsPlaying())
+        {
+            if (OpeningSeconds < TSTSSFirstWakeOpening::Duration - 0.1f)
+            {
+                UE_LOG(LogTemp, Warning, TEXT("TSTSS_FIRST_WAKE_NARRATION_ASSET_HOLD reason=early_end"));
+                // Reopen the title's text fallback rather than claim a
+                // full cinematic has played or auto-travel from a bad cut.
+                StopOpening();
+                if (FallbackPanel) FallbackPanel->SetVisibility(ESlateVisibility::Visible);
+                if (NewGameButton && GetOwningPlayer()) NewGameButton->SetUserFocus(GetOwningPlayer());
+                return;
+            }
+            UE_LOG(LogTemp, Display, TEXT("TSTSS_FIRST_WAKE_NARRATION_SEQUENCE_ENDED seconds=%.2f"), OpeningSeconds);
+            FinishOpening();
+            return;
+        }
+    }
+    else if (FMath::IsFinite(InDeltaTime) && InDeltaTime > 0.f)
+    {
+        OpeningSeconds += InDeltaTime;
+    }
+    if (OpeningSeconds >= TSTSSFirstWakeOpening::Duration)
+    {
+        FinishOpening();
+        return;
+    }
+    RefreshOpeningCue();
+}
+
+void UTSTSSOpeningReviewWidget::RefreshOpeningCue()
+{
+    using namespace TSTSSFirstWakeOpening;
+    const int32 Index = CueAt(OpeningSeconds);
+    if (Index == OpeningCueIndex) return;
+    OpeningCueIndex = Index;
+    const FCue& Cue = Cues[Index];
+    if (OpeningCaption) OpeningCaption->SetText(FText::FromString(Cue.Copy));
+    if (OpeningStage)
+    {
+        OpeningStage->SetText(FText::FromString(FString(TEXT("Opening storyboard — text-only review\n")) + Cue.Shot));
+    }
+    UE_LOG(LogTemp, Display, TEXT("TSTSS_FIRST_WAKE_NARRATION_CUE index=%d spoken=%d"), Index, Cue.bSpoken ? 1 : 0);
+}
+
+void UTSTSSOpeningReviewWidget::StopOpening()
+{
+    bOpeningActive = false;
+    if (OpeningPlayer)
+    {
+        OpeningPlayer->OnFinished.RemoveDynamic(this, &UTSTSSOpeningReviewWidget::OnOpeningSequenceFinished);
+        OpeningPlayer->Stop();
+    }
+    if (IsValid(OpeningActor)) OpeningActor->Destroy();
+    OpeningPlayer = nullptr;
+    OpeningActor = nullptr;
+    bOpeningSequenceFinished = false;
+    if (OpeningPanel) OpeningPanel->RemoveFromParent();
+    OpeningPanel = nullptr;
+    OpeningStage = nullptr;
+    OpeningCaption = nullptr;
+}
+
+void UTSTSSOpeningReviewWidget::OnOpeningSequenceFinished()
+{
+    // Defer cleanup out of the sequence player's evaluation callback.
+    if (bOpeningActive) bOpeningSequenceFinished = true;
+}
+
+void UTSTSSOpeningReviewWidget::FinishOpening()
+{
+    if (!bOpeningActive) return;
+    bOpeningCompleted = true;
+    UE_LOG(LogTemp, Display, TEXT("TSTSS_FIRST_WAKE_NARRATION_FINISH seconds=%.2f"), OpeningSeconds);
+    StopOpening();
+    // Existing validated fresh-map path is the sole gameplay handoff.
+    if (FallbackPanel) FallbackPanel->SetVisibility(ESlateVisibility::Visible);
+    if (NewGameButton && GetOwningPlayer()) NewGameButton->SetUserFocus(GetOwningPlayer());
+    BeginJourney();
 }
