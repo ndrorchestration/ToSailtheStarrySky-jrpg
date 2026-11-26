@@ -1,0 +1,132 @@
+{
+  "schema": 1,
+  "status": "PROPOSED_PRIVATE_AUTHORING",
+  "duration_seconds": 86,
+  "fps": 24,
+  "sequence": "/Game/TSTSS/Review/Cinematics/LS_FirstWakeOpening_PRIVATE",
+  "stage_map": "/Game/TSTSS/Review/Cinematics/L_FirstWakeOpeningStage_PRIVATE",
+  "shots": [
+    {
+      "id": "stars",
+      "start": 0,
+      "end": 7,
+      "lens_mm": 35,
+      "environment": "celestial stage; first harmonic and subtle star movement"
+    },
+    {
+      "id": "horizon",
+      "start": 7,
+      "end": 23,
+      "lens_mm": 32,
+      "environment": "planet curvature and dawn; no celestial lore spoilers"
+    },
+    {
+      "id": "coast",
+      "start": 23,
+      "end": 34,
+      "lens_mm": 35,
+      "environment": "ocean to eastern harbor, Aureate Wake distant"
+    },
+    {
+      "id": "uplands",
+      "start": 34,
+      "end": 45,
+      "lens_mm": 40,
+      "environment": "hillside town below dormant volcanic rim and lake; no beach town"
+    },
+    {
+      "id": "canopy",
+      "start": 45,
+      "end": 55,
+      "lens_mm": 28,
+      "environment": "Greenwood canopy to trail"
+    },
+    {
+      "id": "approach",
+      "start": 55,
+      "end": 71,
+      "lens_mm": 50,
+      "environment": "shared Ender seated, final internal thought"
+    },
+    {
+      "id": "staff",
+      "start": 71,
+      "end": 83,
+      "lens_mm": 55,
+      "environment": "same Ender speaks aloud, discordance then clear resonance; stand and staff pickup"
+    },
+    {
+      "id": "handoff",
+      "start": 83,
+      "end": 86,
+      "lens_mm": 35,
+      "environment": "behind Ender aligned to real exploration camera; location card"
+    }
+  ],
+  "voice_windows": [
+    {
+      "cue": 1,
+      "start": 3,
+      "end": 7
+    },
+    {
+      "cue": 2,
+      "start": 7,
+      "end": 19
+    },
+    {
+      "cue": 3,
+      "start": 19,
+      "end": 23
+    },
+    {
+      "cue": 4,
+      "start": 23,
+      "end": 34
+    },
+    {
+      "cue": 5,
+      "start": 34,
+      "end": 45
+    },
+    {
+      "cue": 6,
+      "start": 45,
+      "end": 55
+    },
+    {
+      "cue": 7,
+      "start": 55,
+      "end": 61
+    },
+    {
+      "cue": 8,
+      "start": 61,
+      "end": 71
+    },
+    {
+      "cue": 9,
+      "start": 71,
+      "end": 77
+    },
+    {
+      "cue": 10,
+      "start": 77,
+      "end": 83
+    }
+  ],
+  "required_stage_labels": [
+    "FW_STAGE_PLANET",
+    "FW_STAGE_COAST",
+    "FW_STAGE_GREENWOOD",
+    "FW_STAGE_ENDER_SHARED"
+  ],
+  "constraints": [
+    "Each shot uses authored FW_CAM_<id>_START and FW_CAM_<id>_END CineCameraActor markers in the isolated map.",
+    "Markers specify actual camera world transforms and optics; never use fabricated planet or landscape scale.",
+    "Same reviewed Ender asset and staff; no imported HeyGen video.",
+    "Ten SoundWave clips from one voice, exact cue text, no overlapping speech; internal vs spoken processing by source recording or postproduction.",
+    "No save, quest, roster or main-map mutation.",
+    "No output when required assets or camera markers are absent; no automatic publication."
+  ]
+}
