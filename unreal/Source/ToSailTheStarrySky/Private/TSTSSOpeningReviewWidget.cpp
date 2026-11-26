@@ -257,7 +257,11 @@ void UTSTSSOpeningReviewWidget::StartOpening()
     // Native Sequencer asset remains private until its visuals, voices and
     // map bindings are verified. No third-party MP4 is used here.
     const TCHAR* SequencePackage = TEXT("/Game/TSTSS/Review/Cinematics/LS_FirstWakeOpening_PRIVATE");
-    if (FPackageName::DoesPackageExist(SequencePackage))
+    // Possessable camera bindings belong to the isolated staging world only.
+    // The original title map remains a text-only review, not a broken cut.
+    const bool bExactOpeningStage = UGameplayStatics::GetCurrentLevelName(
+        Controller, true) == TEXT("L_FirstWakeOpeningStage_PRIVATE");
+    if (bExactOpeningStage && FPackageName::DoesPackageExist(SequencePackage))
     {
         ULevelSequence* Sequence = LoadObject<ULevelSequence>(nullptr,
             TEXT("/Game/TSTSS/Review/Cinematics/LS_FirstWakeOpening_PRIVATE.LS_FirstWakeOpening_PRIVATE"));
